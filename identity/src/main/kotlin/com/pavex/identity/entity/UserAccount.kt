@@ -28,6 +28,7 @@ class UserAccount(
     )
     var passwordHash: String = "",
 
+
     @Enumerated(EnumType.STRING)
     @Column(
         nullable = false,
@@ -35,6 +36,14 @@ class UserAccount(
     )
     var status: AccountStatus = AccountStatus.ACTIVE,
 
+    @Enumerated(EnumType.STRING)
+    @Column(
+        name = "profile_status",
+        nullable = false,
+        length = 32,
+    )
+    var profileStatus: ProfileStatus =
+        ProfileStatus.INCOMPLETE,
     @Column(
         name = "email_verified",
         nullable = false,
@@ -45,6 +54,7 @@ class UserAccount(
         name = "failed_login_attempts",
         nullable = false,
     )
+
     var failedLoginAttempts: Int = 0,
 
     @Column(name = "lockout_end_at")
@@ -74,4 +84,10 @@ enum class AccountStatus {
     ACTIVE,
     SUSPENDED,
     DISABLED,
+}
+enum class ProfileStatus {
+    INCOMPLETE,
+    COMPLETED,
+    PENDING_VERIFICATION,
+    REJECTED,
 }
