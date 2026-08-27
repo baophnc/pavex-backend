@@ -69,15 +69,22 @@
             <scope>runtime</scope>
         </dependency>
 
-        <!-- Flyway -->
+        <!-- Flyway auto configuration for Spring Boot 4 -->
         <dependency>
-            <groupId>org.flywaydb</groupId>
-            <artifactId>flyway-core</artifactId>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-flyway</artifactId>
         </dependency>
 
+        <!-- PostgreSQL support for Flyway -->
         <dependency>
             <groupId>org.flywaydb</groupId>
             <artifactId>flyway-database-postgresql</artifactId>
+        </dependency>
+        <!-- Password hashing only.
+     Chưa bật full Spring Security ở milestone này. -->
+        <dependency>
+            <groupId>org.springframework.security</groupId>
+            <artifactId>spring-security-crypto</artifactId>
         </dependency>
 
     </dependencies>
@@ -132,6 +139,7 @@
                         <goals>
                             <goal>compile</goal>
                         </goals>
+                        <configuration/>
                     </execution>
 
                     <execution>
