@@ -18,6 +18,7 @@ class OpaqueTokenService {
     )
 
     fun issue(): IssuedToken {
+
         val bytes =
             ByteArray(32)
 
@@ -37,12 +38,15 @@ class OpaqueTokenService {
         )
     }
 
+
     fun generateRawToken(): String =
         issue().raw
+
 
     fun hash(
         rawToken: String,
     ): String {
+
         val digest =
             MessageDigest
                 .getInstance("SHA-256")
@@ -53,9 +57,12 @@ class OpaqueTokenService {
                 )
 
         return digest.joinToString("") {
-            "%02x".format(it)
+            "%02x".format(
+                it.toInt() and 0xff
+            )
         }
     }
+
 
     fun hashToken(
         rawToken: String,

@@ -4,6 +4,7 @@ import com.pavex.identity.entity.PasswordResetToken
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Modifying
 import org.springframework.data.jpa.repository.Query
+import org.springframework.data.repository.query.Param
 import java.time.Instant
 import java.util.UUID
 
@@ -13,6 +14,7 @@ interface PasswordResetTokenRepository :
     fun findByTokenHash(
         tokenHash: String,
     ): PasswordResetToken?
+
 
     @Modifying(
         clearAutomatically = true,
@@ -29,9 +31,13 @@ interface PasswordResetTokenRepository :
         """
     )
     fun consumeIfValid(
+        @Param("id")
         id: UUID,
+
+        @Param("now")
         now: Instant,
     ): Int
+
 
     @Modifying(
         clearAutomatically = true,
@@ -47,7 +53,34 @@ interface PasswordResetTokenRepository :
         """
     )
     fun revokeUnusedByUserId(
+        @Param("userId")
         userId: UUID,
+
+        @Param("now")
         now: Instant,
+    ): Int
+
+
+    @Modifying(
+        clearAutomatically = true,
+        flushAutomatically = true,
+    )
+    @Query(
+        """
+        delete from PasswordResetToken t
+        where t.expiresAt < :cutoff
+           or (
+                t.usedAt is not null
+                and t.usedAt < :cutoff
+           )
+           or (
+                t.revokedAt is not null
+                and t.revokedAt < :cutoff
+           )
+        """
+    )
+    fun deleteStale(
+        @Param("cutoff")
+        cutoff: Instant,
     ): Int
 }

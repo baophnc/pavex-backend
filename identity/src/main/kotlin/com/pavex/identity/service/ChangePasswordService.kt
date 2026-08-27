@@ -12,7 +12,8 @@ import java.util.UUID
 
 @Service
 class ChangePasswordService(
-
+    private val advisoryLockService:
+    AdvisoryLockService,
     private val userAccountRepository:
         UserAccountRepository,
 
@@ -29,6 +30,10 @@ class ChangePasswordService(
         currentPassword: String,
         newPassword: String,
     ) {
+        advisoryLockService
+            .lockUserSessions(
+                userId
+            )
         val account =
             userAccountRepository
                 .findById(userId)
@@ -89,8 +94,11 @@ class ChangePasswordService(
          */
         refreshSessionRepository
             .revokeAllActiveByUserId(
-                userId,
-                now,
+                userId =
+                    userId,
+
+                now =
+                    now,
             )
     }
 }

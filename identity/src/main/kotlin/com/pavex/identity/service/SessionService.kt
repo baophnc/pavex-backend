@@ -13,6 +13,9 @@ class SessionService(
 
     private val refreshSessionRepository:
         RefreshSessionRepository,
+
+    private val advisoryLockService:
+        AdvisoryLockService,
 ) {
 
     @Transactional(
@@ -34,13 +37,10 @@ class SessionService(
                 SessionResponse(
                     sessionId =
                         session.id,
-
                     ipAddress =
                         session.ipAddress,
-
                     userAgent =
                         session.userAgent,
-
                     expiresAt =
                         session.expiresAt,
                 )
@@ -53,6 +53,12 @@ class SessionService(
         userId: UUID,
         sessionId: UUID,
     ) {
+
+        advisoryLockService
+            .lockUserSessions(
+                userId
+            )
+
         val now =
             Instant.now()
 
@@ -78,10 +84,21 @@ class SessionService(
     fun logoutAll(
         userId: UUID,
     ) {
+
+        advisoryLockService
+            .lockUserSessions(
+                userId
+            )
+
+        val now =
+            Instant.now()
+
         refreshSessionRepository
             .revokeAllActiveByUserId(
-                userId = userId,
-                now = Instant.now(),
+                userId =
+                    userId,
+                now =
+                    now,
             )
     }
 }

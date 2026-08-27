@@ -15,10 +15,12 @@ interface EmailVerificationTokenRepository :
         tokenHash: String,
     ): EmailVerificationToken?
 
+
     fun existsByUserIdAndCreatedAtGreaterThanEqual(
         userId: UUID,
         createdAt: Instant,
     ): Boolean
+
 
     @Modifying(
         flushAutomatically = true,
@@ -26,11 +28,11 @@ interface EmailVerificationTokenRepository :
     )
     @Query(
         """
-        UPDATE EmailVerificationToken token
-        SET token.usedAt = :now
-        WHERE token.id = :id
-          AND token.usedAt IS NULL
-          AND token.expiresAt > :now
+        update EmailVerificationToken token
+        set token.usedAt = :now
+        where token.id = :id
+          and token.usedAt is null
+          and token.expiresAt > :now
         """
     )
     fun consumeIfValid(
@@ -39,5 +41,25 @@ interface EmailVerificationTokenRepository :
 
         @Param("now")
         now: Instant,
+    ): Int
+
+
+    @Modifying(
+        flushAutomatically = true,
+        clearAutomatically = true,
+    )
+    @Query(
+        """
+        delete from EmailVerificationToken token
+        where token.expiresAt < :cutoff
+           or (
+                token.usedAt is not null
+                and token.usedAt < :cutoff
+           )
+        """
+    )
+    fun deleteStale(
+        @Param("cutoff")
+        cutoff: Instant,
     ): Int
 }

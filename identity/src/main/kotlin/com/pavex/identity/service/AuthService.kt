@@ -15,6 +15,7 @@ import com.pavex.identity.exception.AccountSuspendedException
 import com.pavex.identity.exception.EmailAlreadyExistsException
 import com.pavex.identity.exception.InvalidCredentialsException
 import com.pavex.identity.exception.InvalidRefreshTokenException
+import com.pavex.identity.exception.RefreshTokenReuseDetectedException
 import com.pavex.identity.repository.UserAccountRepository
 import com.pavex.identity.repository.UserProfileRepository
 import com.pavex.identity.security.JwtService
@@ -39,13 +40,20 @@ class AuthService(
     private val jwtService:
         JwtService,
 
+    private val authSessionService:
+        AuthSessionService,
+
     private val refreshTokenService:
         RefreshTokenService,
 
     private val roleService:
         RoleService,
+
     private val emailVerificationService:
-    EmailVerificationService,
+        EmailVerificationService,
+
+    private val advisoryLockService:
+        AdvisoryLockService,
 ) {
 
     @Transactional
@@ -54,11 +62,24 @@ class AuthService(
     ): RegisterResponse {
 
         val email =
-            normalizeEmail(request.email)
+            normalizeEmail(
+                request.email
+            )
+
+        /*
+         * Serialize register/admin-create/Google-first-link
+         * theo normalized email để tránh check-then-insert race.
+         */
+        advisoryLockService
+            .lockEmail(
+                email
+            )
 
         if (
             userAccountRepository
-                .existsByEmail(email)
+                .existsByEmail(
+                    email
+                )
         ) {
             throw EmailAlreadyExistsException(
                 email
@@ -104,14 +125,13 @@ class AuthService(
             savedAccount.id,
             now,
         )
+
         emailVerificationService
             .issueForRegistration(
                 userId =
                     savedAccount.id,
-
                 email =
                     savedAccount.email,
-
                 now =
                     now,
             )
@@ -119,19 +139,14 @@ class AuthService(
         return RegisterResponse(
             id =
                 savedAccount.id,
-
             email =
                 savedAccount.email,
-
             status =
                 savedAccount.status.name,
-
             emailVerified =
                 savedAccount.emailVerified,
-
             emailVerificationRequired =
                 !savedAccount.emailVerified,
-
             createdAt =
                 savedAccount.createdAt,
         )
@@ -146,20 +161,26 @@ class AuthService(
     fun login(
         request: LoginRequest,
         clientMetadata: ClientMetadata,
-    ): AuthResponse{
+    ): AuthResponse {
 
         val email =
-            normalizeEmail(request.email)
+            normalizeEmail(
+                request.email
+            )
 
         val account =
             userAccountRepository
-                .findByEmail(email)
+                .findByEmail(
+                    email
+                )
                 ?: throw InvalidCredentialsException()
 
         val now =
             Instant.now()
 
-        checkAccountStatus(account)
+        checkAccountStatus(
+            account
+        )
 
         val lockoutEnd =
             account.lockoutEndAt
@@ -218,15 +239,19 @@ class AuthService(
             account
         )
 
-    return createAuthResponse(
-    account = account,
-    now = now,
-    clientMetadata = clientMetadata,
-    )
+        return createAuthResponse(
+            account = account,
+            now = now,
+            clientMetadata = clientMetadata,
+        )
     }
 
 
-    @Transactional
+    @Transactional(
+        noRollbackFor = [
+            RefreshTokenReuseDetectedException::class,
+        ],
+    )
     fun refresh(
         request: RefreshTokenRequest,
         clientMetadata: ClientMetadata,
@@ -239,10 +264,8 @@ class AuthService(
             refreshTokenService.rotate(
                 rawToken =
                     request.refreshToken,
-
                 now =
                     now,
-
                 clientMetadata =
                     clientMetadata,
             )
@@ -256,7 +279,9 @@ class AuthService(
                     InvalidRefreshTokenException()
                 }
 
-        checkAccountStatus(account)
+        checkAccountStatus(
+            account
+        )
 
         val accessToken =
             jwtService.createAccessToken(
@@ -281,8 +306,10 @@ class AuthService(
     ) {
 
         refreshTokenService.revoke(
-            request.refreshToken,
-            Instant.now(),
+            rawToken =
+                request.refreshToken,
+            now =
+                Instant.now(),
         )
     }
 
@@ -293,32 +320,15 @@ class AuthService(
         clientMetadata: ClientMetadata,
     ): AuthResponse {
 
-        val accessToken =
-            jwtService.createAccessToken(
-                account,
-                now,
-            )
-
-        val refreshToken =
-            refreshTokenService.create(
-                userId =
-                    account.id,
-
+        return authSessionService
+            .issue(
+                account =
+                    account,
                 now =
                     now,
-
                 clientMetadata =
                     clientMetadata,
             )
-
-        return AuthResponse(
-            accessToken =
-                accessToken.token,
-            refreshToken =
-                refreshToken.token,
-            expiresIn =
-                accessToken.expiresIn,
-        )
     }
 
 

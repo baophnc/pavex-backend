@@ -2,56 +2,64 @@ package com.pavex.identity.service
 
 import com.pavex.identity.entity.RefreshSession
 import com.pavex.identity.exception.InvalidRefreshTokenException
+import com.pavex.identity.exception.RefreshTokenReuseDetectedException
 import com.pavex.identity.repository.RefreshSessionRepository
+import com.pavex.identity.security.OpaqueTokenService
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
-import java.nio.charset.StandardCharsets
-import java.security.MessageDigest
-import java.security.SecureRandom
+import org.springframework.transaction.annotation.Propagation
+import org.springframework.transaction.annotation.Transactional
 import java.time.Duration
 import java.time.Instant
-import java.util.Base64
 import java.util.UUID
 
 @Service
 class RefreshTokenService(
 
     private val refreshSessionRepository:
-    RefreshSessionRepository,
+        RefreshSessionRepository,
+
+    private val opaqueTokenService:
+        OpaqueTokenService,
+
+    private val advisoryLockService:
+        AdvisoryLockService,
 
     @Value("\${security.jwt.refresh-token-ttl}")
-    private val refreshTokenTtl: Duration,
+    private val refreshTokenTtl:
+        Duration,
 ) {
 
-    private val secureRandom =
-        SecureRandom()
-
+    @Transactional(
+        propagation = Propagation.MANDATORY,
+    )
     fun create(
         userId: UUID,
         now: Instant,
         clientMetadata: ClientMetadata,
     ): IssuedRefreshToken {
 
-        val rawToken =
-            generateToken()
+        val issued =
+            opaqueTokenService.issue()
 
-        val session = RefreshSession(
-            userId = userId,
-            tokenHash = hashToken(rawToken),
-            createdAt = now,
-            expiresAt = now.plus(
-                refreshTokenTtl
-            ),
-            ipAddress =
-                clientMetadata
-                    .ipAddress
-                    ?.take(64),
-
-            userAgent =
-                clientMetadata
-                    .userAgent
-                    ?.take(512),
-        )
+        val session =
+            RefreshSession(
+                userId = userId,
+                tokenHash = issued.hash,
+                createdAt = now,
+                expiresAt =
+                    now.plus(
+                        refreshTokenTtl
+                    ),
+                ipAddress =
+                    clientMetadata
+                        .ipAddress
+                        ?.take(64),
+                userAgent =
+                    clientMetadata
+                        .userAgent
+                        ?.take(512),
+            )
 
         val saved =
             refreshSessionRepository.save(
@@ -59,45 +67,93 @@ class RefreshTokenService(
             )
 
         return IssuedRefreshToken(
-            token = rawToken,
+            token = issued.raw,
             sessionId = saved.id,
             expiresAt = saved.expiresAt,
         )
     }
 
+
+    @Transactional(
+        propagation = Propagation.MANDATORY,
+        noRollbackFor = [
+            RefreshTokenReuseDetectedException::class,
+        ],
+    )
     fun rotate(
         rawToken: String,
         now: Instant,
         clientMetadata: ClientMetadata,
     ): RotatedRefreshToken {
 
-        val current =
+        val tokenHash =
+            opaqueTokenService.hash(
+                rawToken
+            )
+
+        /*
+         * Lần đọc đầu chỉ lấy scalar userId.
+         * Không load entity trước advisory lock để tránh
+         * JPA first-level cache giữ state cũ khi phải chờ lock.
+         */
+        val userId =
             refreshSessionRepository
-                .findByTokenHash(
-                    hashToken(rawToken)
+                .findUserIdByTokenHash(
+                    tokenHash
                 )
                 ?: throw InvalidRefreshTokenException()
 
-        if (
-            current.revokedAt != null ||
-            !current.expiresAt.isAfter(now)
-        ) {
+        advisoryLockService
+            .lockUserSessions(
+                userId
+            )
+
+        val current =
+            refreshSessionRepository
+                .findByTokenHash(
+                    tokenHash
+                )
+                ?: throw InvalidRefreshTokenException()
+
+        if (current.revokedAt != null) {
+
+            /*
+             * Token đã từng rotate mà bị dùng lại:
+             * coi như refresh-token theft/reuse.
+             * Revoke mọi active refresh session của account.
+             *
+             * AuthService.refresh() cấu hình noRollbackFor cho
+             * RefreshTokenReuseDetectedException để việc revoke
+             * này vẫn COMMIT dù HTTP response là 401.
+             */
+            if (current.replacedBySessionId != null) {
+
+                refreshSessionRepository
+                    .revokeAllActiveByUserId(
+                        userId = current.userId,
+                        now = now,
+                    )
+
+                throw RefreshTokenReuseDetectedException()
+            }
+
+            throw InvalidRefreshTokenException()
+        }
+
+        if (!current.expiresAt.isAfter(now)) {
             throw InvalidRefreshTokenException()
         }
 
         val replacement =
             create(
-                userId =
-                    current.userId,
-
-                now =
-                    now,
-
+                userId = current.userId,
+                now = now,
                 clientMetadata =
                     clientMetadata,
             )
 
-        current.revokedAt = now
+        current.revokedAt =
+            now
 
         current.replacedBySessionId =
             replacement.sessionId
@@ -109,71 +165,62 @@ class RefreshTokenService(
         return RotatedRefreshToken(
             userId = current.userId,
             token = replacement.token,
-            expiresAt =
-                replacement.expiresAt,
+            expiresAt = replacement.expiresAt,
         )
     }
 
+
+    @Transactional(
+        propagation = Propagation.MANDATORY,
+    )
     fun revoke(
         rawToken: String,
         now: Instant,
     ) {
 
+        val tokenHash =
+            opaqueTokenService.hash(
+                rawToken
+            )
+
+        val userId =
+            refreshSessionRepository
+                .findUserIdByTokenHash(
+                    tokenHash
+                )
+                ?: return
+
+        advisoryLockService
+            .lockUserSessions(
+                userId
+            )
+
         val session =
             refreshSessionRepository
                 .findByTokenHash(
-                    hashToken(rawToken)
+                    tokenHash
                 )
                 ?: return
 
         if (session.revokedAt == null) {
-            session.revokedAt = now
+
+            session.revokedAt =
+                now
 
             refreshSessionRepository.save(
                 session
             )
         }
     }
-
-    private fun generateToken(): String {
-
-        val bytes =
-            ByteArray(32)
-
-        secureRandom.nextBytes(bytes)
-
-        return Base64
-            .getUrlEncoder()
-            .withoutPadding()
-            .encodeToString(bytes)
-    }
-
-    private fun hashToken(
-        token: String,
-    ): String {
-
-        val digest =
-            MessageDigest
-                .getInstance("SHA-256")
-                .digest(
-                    token.toByteArray(
-                        StandardCharsets.UTF_8
-                    )
-                )
-
-        return digest.joinToString("") {
-            "%02x".format(
-                it.toInt() and 0xff
-            )
-        }
-    }
 }
+
 
 data class IssuedRefreshToken(
     val token: String,
     val sessionId: UUID,
     val expiresAt: Instant,
 )
+
 
 data class RotatedRefreshToken(
     val userId: UUID,

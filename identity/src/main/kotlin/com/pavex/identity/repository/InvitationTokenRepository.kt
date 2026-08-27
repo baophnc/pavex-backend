@@ -57,4 +57,24 @@ interface InvitationTokenRepository :
         @Param("now")
         now: Instant,
     ): Int
+
+
+    @Modifying(
+        clearAutomatically = true,
+        flushAutomatically = true,
+    )
+    @Query(
+        """
+        delete from InvitationToken t
+        where t.expiresAt < :cutoff
+           or (
+                t.usedAt is not null
+                and t.usedAt < :cutoff
+           )
+        """
+    )
+    fun deleteStale(
+        @Param("cutoff")
+        cutoff: Instant,
+    ): Int
 }

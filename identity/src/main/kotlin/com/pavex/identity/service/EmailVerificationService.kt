@@ -32,6 +32,9 @@ class EmailVerificationService(
     private val eventPublisher:
         ApplicationEventPublisher,
 
+    private val advisoryLockService:
+        AdvisoryLockService,
+
     @Value(
         "\${identity.security.verification-token-ttl:PT24H}"
     )
@@ -86,8 +89,26 @@ class EmailVerificationService(
                 )
                 ?: throw InvalidEmailVerificationTokenException()
 
+        advisoryLockService
+            .lockEmailVerification(
+                verificationToken.userId
+            )
+
         val now =
             Instant.now()
+
+        val consumed =
+            emailVerificationTokenRepository
+                .consumeIfValid(
+                    id =
+                        verificationToken.id,
+                    now =
+                        now,
+                )
+
+        if (consumed != 1) {
+            throw InvalidEmailVerificationTokenException()
+        }
 
         val account =
             userAccountRepository
@@ -97,28 +118,6 @@ class EmailVerificationService(
                 .orElseThrow {
                     InvalidEmailVerificationTokenException()
                 }
-
-        /*
-         * Atomic consume:
-         *
-         * - chưa used
-         * - chưa expired
-         *
-         * Chỉ 1 concurrent request có thể update.
-         */
-        val consumed =
-            emailVerificationTokenRepository
-                .consumeIfValid(
-                    id =
-                        verificationToken.id,
-
-                    now =
-                        now,
-                )
-
-        if (consumed != 1) {
-            throw InvalidEmailVerificationTokenException()
-        }
 
         if (!account.emailVerified) {
 
@@ -145,11 +144,6 @@ class EmailVerificationService(
                 request.email
             )
 
-        /*
-         * Anti-enumeration:
-         *
-         * request invalid vẫn silent success.
-         */
         if (!looksLikeEmail(email)) {
             return
         }
@@ -160,6 +154,11 @@ class EmailVerificationService(
                     email
                 )
                 ?: return
+
+        advisoryLockService
+            .lockEmailVerification(
+                account.id
+            )
 
         if (account.emailVerified) {
             return
@@ -178,7 +177,6 @@ class EmailVerificationService(
                 .existsByUserIdAndCreatedAtGreaterThanEqual(
                     userId =
                         account.id,
-
                     createdAt =
                         cooldownStart,
                 )
@@ -190,10 +188,8 @@ class EmailVerificationService(
         issue(
             userId =
                 account.id,
-
             email =
                 account.email,
-
             now =
                 now,
         )
@@ -209,41 +205,30 @@ class EmailVerificationService(
         val issued =
             opaqueTokenService.issue()
 
-        val rawToken =
-            issued.raw
-
-        val tokenHash =
-            issued.hash
-
         val verificationToken =
             EmailVerificationToken(
                 userId =
                     userId,
-
                 tokenHash =
-                    tokenHash,
-
+                    issued.hash,
                 expiresAt =
                     now.plus(
                         verificationTokenTtl
                     ),
-
                 createdAt =
                     now,
             )
 
-        emailVerificationTokenRepository
-            .save(
-                verificationToken
-            )
+        emailVerificationTokenRepository.save(
+            verificationToken
+        )
 
         eventPublisher.publishEvent(
             EmailVerificationRequestedEvent(
                 email =
                     email,
-
                 rawToken =
-                    rawToken,
+                    issued.raw,
             )
         )
     }
@@ -267,12 +252,11 @@ class EmailVerificationService(
             email.indexOf('@')
 
         return atIndex > 0 &&
-                atIndex <
-                email.length - 1 &&
-                email
-                    .substring(
-                        atIndex + 1
-                    )
-                    .contains('.')
+            atIndex < email.length - 1 &&
+            email
+                .substring(
+                    atIndex + 1
+                )
+                .contains('.')
     }
 }

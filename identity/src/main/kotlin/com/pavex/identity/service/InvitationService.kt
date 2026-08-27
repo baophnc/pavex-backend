@@ -37,6 +37,9 @@ class InvitationService(
     private val eventPublisher:
         ApplicationEventPublisher,
 
+    private val advisoryLockService:
+        AdvisoryLockService,
+
     @Value(
         "\${identity.security.invitation-token-ttl:PT24H}"
     )
@@ -48,6 +51,15 @@ class InvitationService(
     fun sendInvite(
         userId: UUID,
     ) {
+
+        /*
+         * userId đã biết từ URL, lock trước khi load entity
+         * để state đọc sau khi chờ lock là state mới nhất.
+         */
+        advisoryLockService
+            .lockInvitation(
+                userId
+            )
 
         val user =
             userAccountRepository
@@ -73,39 +85,27 @@ class InvitationService(
         val now =
             Instant.now()
 
-        /*
-         * Resend invite:
-         *
-         * token cũ chưa dùng bị vô hiệu hóa.
-         *
-         * Chỉ token mới nhất còn dùng được.
-         */
         invitationTokenRepository
             .invalidateUnusedByUserId(
                 userId =
                     user.id,
-
                 now =
                     now,
             )
 
         val issued =
-            opaqueTokenService
-                .issue()
+            opaqueTokenService.issue()
 
         invitationTokenRepository.save(
             InvitationToken(
                 userId =
                     user.id,
-
                 tokenHash =
                     issued.hash,
-
                 expiresAt =
                     now.plus(
                         invitationTokenTtl
                     ),
-
                 createdAt =
                     now,
             )
@@ -115,7 +115,6 @@ class InvitationService(
             InvitationRequestedEvent(
                 email =
                     user.email,
-
                 rawToken =
                     issued.raw,
             )
@@ -130,14 +129,12 @@ class InvitationService(
     ) {
 
         val rawToken =
-            rawTokenInput
-                .trim()
+            rawTokenInput.trim()
 
         val tokenHash =
-            opaqueTokenService
-                .hash(
-                    rawToken
-                )
+            opaqueTokenService.hash(
+                rawToken
+            )
 
         val invitation =
             invitationTokenRepository
@@ -146,18 +143,19 @@ class InvitationService(
                 )
                 ?: throw InvalidInvitationTokenException()
 
+        advisoryLockService
+            .lockInvitation(
+                invitation.userId
+            )
+
         val now =
             Instant.now()
 
-        /*
-         * Atomic consume.
-         */
         val consumed =
             invitationTokenRepository
                 .consumeIfValid(
                     id =
                         invitation.id,
-
                     now =
                         now,
                 )
@@ -188,32 +186,19 @@ class InvitationService(
                 "Password encoder returned null"
             }
 
-        user.emailVerified =
-            true
-
-        user.failedLoginAttempts =
-            0
-
-        user.lockoutEndAt =
-            null
-
-        user.updatedAt =
-            now
+        user.emailVerified = true
+        user.failedLoginAttempts = 0
+        user.lockoutEndAt = null
+        user.updatedAt = now
 
         userAccountRepository.save(
             user
         )
 
-        /*
-         * Defensive cleanup:
-         * nếu còn token invitation khác
-         * thì kill hết.
-         */
         invitationTokenRepository
             .invalidateUnusedByUserId(
                 userId =
                     user.id,
-
                 now =
                     now,
             )

@@ -53,11 +53,18 @@ security:
 identity:
   google:
     client-ids: ${GOOGLE_CLIENT_IDS:${GOOGLE_CLIENT_ID:}}
+
   security:
     verification-token-ttl: PT24H
     verification-resend-cooldown: PT2M
     password-reset-token-ttl: PT1H
     invitation-token-ttl: PT24H
+
+  cleanup:
+    enabled: ${IDENTITY_CLEANUP_ENABLED:true}
+    token-retention: ${IDENTITY_TOKEN_RETENTION:P7D}
+    cron: ${IDENTITY_CLEANUP_CRON:0 17 * * * *}
+    zone: ${IDENTITY_CLEANUP_ZONE:UTC}
 
 
 pavex:

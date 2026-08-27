@@ -57,6 +57,9 @@ class AdminUserService(
 
     private val opaqueTokenService:
     OpaqueTokenService,
+
+    private val advisoryLockService:
+        AdvisoryLockService,
 ) {
 
     @Transactional
@@ -72,6 +75,11 @@ class AdminUserService(
             request.email
                 .trim()
                 .lowercase()
+
+        advisoryLockService
+            .lockEmail(
+                email
+            )
 
         if (
             userAccountRepository
@@ -665,6 +673,11 @@ class AdminUserService(
         newStatus: AccountStatus,
 
     ) {
+
+        advisoryLockService
+            .lockUserSessions(
+                userId
+            )
 
         val account =
             userAccountRepository

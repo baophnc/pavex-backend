@@ -36,16 +36,21 @@ class PasswordResetService(
     private val eventPublisher:
         ApplicationEventPublisher,
 
+    private val advisoryLockService:
+        AdvisoryLockService,
+
     @Value(
         "\${identity.security.password-reset-token-ttl:PT1H}"
     )
-    private val passwordResetTokenTtl: Duration,
+    private val passwordResetTokenTtl:
+        Duration,
 ) {
 
     @Transactional
     fun forgotPassword(
         emailInput: String,
     ) {
+
         val email =
             emailInput
                 .trim()
@@ -53,20 +58,30 @@ class PasswordResetService(
 
         val account =
             userAccountRepository
-                .findByEmail(email)
+                .findByEmail(
+                    email
+                )
                 ?: return
+
+        advisoryLockService
+            .lockPasswordReset(
+                account.id
+            )
 
         val now =
             Instant.now()
 
         /*
-         * Latest-token-only:
-         * token reset cũ chưa dùng sẽ bị revoke.
+         * Latest-token-only.
+         * Hai request forgot chạy đồng thời cũng serialize
+         * theo user nên chỉ token mới nhất còn active.
          */
         passwordResetTokenRepository
             .revokeUnusedByUserId(
-                account.id,
-                now,
+                userId =
+                    account.id,
+                now =
+                    now,
             )
 
         val issued =
@@ -74,20 +89,25 @@ class PasswordResetService(
 
         passwordResetTokenRepository.save(
             PasswordResetToken(
-                userId = account.id,
-                tokenHash = issued.hash,
+                userId =
+                    account.id,
+                tokenHash =
+                    issued.hash,
                 expiresAt =
                     now.plus(
                         passwordResetTokenTtl
                     ),
-                createdAt = now,
+                createdAt =
+                    now,
             )
         )
 
         eventPublisher.publishEvent(
             PasswordResetRequestedEvent(
-                email = account.email,
-                rawToken = issued.raw,
+                email =
+                    account.email,
+                rawToken =
+                    issued.raw,
             )
         )
     }
@@ -98,6 +118,7 @@ class PasswordResetService(
         rawTokenInput: String,
         newPassword: String,
     ) {
+
         val rawToken =
             rawTokenInput.trim()
 
@@ -117,17 +138,33 @@ class PasswordResetService(
                 )
                 ?: throw InvalidPasswordResetTokenException()
 
-        val now =
-            Instant.now()
-
         val userId =
             token.userId
+
+        /*
+         * Thứ tự lock cố định:
+         * password-reset -> user-session.
+         */
+        advisoryLockService
+            .lockPasswordReset(
+                userId
+            )
+
+        advisoryLockService
+            .lockUserSessions(
+                userId
+            )
+
+        val now =
+            Instant.now()
 
         val consumed =
             passwordResetTokenRepository
                 .consumeIfValid(
-                    token.id,
-                    now,
+                    id =
+                        token.id,
+                    now =
+                        now,
                 )
 
         if (consumed != 1) {
@@ -136,7 +173,9 @@ class PasswordResetService(
 
         val account =
             userAccountRepository
-                .findById(userId)
+                .findById(
+                    userId
+                )
                 .orElseThrow {
                     InvalidPasswordResetTokenException()
                 }
@@ -150,10 +189,6 @@ class PasswordResetService(
                 "Password encoder returned null"
             }
 
-        /*
-         * Reset password cũng mở lockout
-         * do nhập sai password trước đó.
-         */
         account.failedLoginAttempts = 0
         account.lockoutEndAt = null
         account.updatedAt = now
@@ -162,23 +197,20 @@ class PasswordResetService(
             account
         )
 
-        /*
-         * Không token reset nào khác
-         * được phép dùng sau khi password đổi.
-         */
         passwordResetTokenRepository
             .revokeUnusedByUserId(
-                userId,
-                now,
+                userId =
+                    userId,
+                now =
+                    now,
             )
 
-        /*
-         * Bắt toàn bộ thiết bị phải login lại.
-         */
         refreshSessionRepository
             .revokeAllActiveByUserId(
-                userId,
-                now,
+                userId =
+                    userId,
+                now =
+                    now,
             )
     }
 }
