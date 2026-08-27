@@ -1,75 +1,331 @@
 package com.pavex.identity.service
 
+import com.pavex.identity.dto.auth.AuthResponse
+import com.pavex.identity.dto.auth.LoginRequest
+import com.pavex.identity.dto.auth.LogoutRequest
+import com.pavex.identity.dto.auth.RefreshTokenRequest
 import com.pavex.identity.dto.auth.RegisterRequest
 import com.pavex.identity.dto.auth.RegisterResponse
+import com.pavex.identity.entity.AccountStatus
 import com.pavex.identity.entity.UserAccount
 import com.pavex.identity.entity.UserProfile
+import com.pavex.identity.exception.AccountDisabledException
+import com.pavex.identity.exception.AccountLockedException
+import com.pavex.identity.exception.AccountSuspendedException
 import com.pavex.identity.exception.EmailAlreadyExistsException
+import com.pavex.identity.exception.InvalidCredentialsException
+import com.pavex.identity.exception.InvalidRefreshTokenException
 import com.pavex.identity.repository.UserAccountRepository
 import com.pavex.identity.repository.UserProfileRepository
+import com.pavex.identity.security.JwtService
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
+import java.time.Duration
 import java.time.Instant
 
 @Service
 class AuthService(
-    private val userAccountRepository: UserAccountRepository,
-    private val userProfileRepository: UserProfileRepository,
-    private val passwordEncoder: PasswordEncoder,
+
+    private val userAccountRepository:
+    UserAccountRepository,
+
+    private val userProfileRepository:
+    UserProfileRepository,
+
+    private val passwordEncoder:
+    PasswordEncoder,
+
+    private val jwtService:
+    JwtService,
+
+    private val refreshTokenService:
+    RefreshTokenService,
 ) {
 
     @Transactional
-    fun register(request: RegisterRequest): RegisterResponse {
+    fun register(
+        request: RegisterRequest,
+    ): RegisterResponse {
 
-        // Chuẩn hóa email
-        val email = request.email
-            .trim()
-            .lowercase()
+        val email =
+            normalizeEmail(
+                request.email
+            )
 
-        // Kiểm tra email đã tồn tại chưa
-        if (userAccountRepository.existsByEmail(email)) {
-            throw EmailAlreadyExistsException(email)
-        }
-
-        // Thời gian hiện tại
-        val now = Instant.now()
-
-        // Hash password
-        val encodedPassword = requireNotNull(
-            passwordEncoder.encode(request.password)
+        if (
+            userAccountRepository
+                .existsByEmail(email)
         ) {
-            "Password encoder returned null"
+            throw EmailAlreadyExistsException(
+                email
+            )
         }
 
-        // Tạo account
-        val account = UserAccount(
-            email = email,
-            passwordHash = encodedPassword,
-            createdAt = now,
-            updatedAt = now,
+        val now =
+            Instant.now()
+
+        val encodedPassword =
+            requireNotNull(
+                passwordEncoder.encode(
+                    request.password
+                )
+            ) {
+                "Password encoder returned null"
+            }
+
+        val account =
+            UserAccount(
+                email = email,
+                passwordHash =
+                    encodedPassword,
+                createdAt = now,
+                updatedAt = now,
+            )
+
+        val savedAccount =
+            userAccountRepository.save(
+                account
+            )
+
+        val profile =
+            UserProfile(
+                userId =
+                    savedAccount.id,
+                createdAt = now,
+                updatedAt = now,
+            )
+
+        userProfileRepository.save(
+            profile
         )
 
-        // Lưu account
-        val savedAccount = userAccountRepository.save(account)
-
-        // Tạo profile rỗng cho user
-        val profile = UserProfile(
-            userId = savedAccount.id,
-            createdAt = now,
-            updatedAt = now,
-        )
-
-        // Lưu profile
-        userProfileRepository.save(profile)
-
-        // Trả response
         return RegisterResponse(
             id = savedAccount.id,
             email = savedAccount.email,
-            status = savedAccount.status.name,
-            emailVerified = savedAccount.emailVerified,
-            createdAt = savedAccount.createdAt,
+            status =
+                savedAccount.status.name,
+            emailVerified =
+                savedAccount.emailVerified,
+            createdAt =
+                savedAccount.createdAt,
         )
+    }
+
+
+    @Transactional(
+        noRollbackFor = [
+            InvalidCredentialsException::class,
+        ],
+    )
+    fun login(
+        request: LoginRequest,
+    ): AuthResponse {
+
+        val email =
+            normalizeEmail(
+                request.email
+            )
+
+        val account =
+            userAccountRepository
+                .findByEmail(email)
+                ?: throw InvalidCredentialsException()
+
+        val now =
+            Instant.now()
+
+        checkAccountStatus(
+            account
+        )
+
+        val lockoutEnd =
+            account.lockoutEndAt
+
+        if (
+            lockoutEnd != null &&
+            lockoutEnd.isAfter(now)
+        ) {
+            throw AccountLockedException(
+                lockoutEnd
+            )
+        }
+
+        // Lockout cũ đã hết.
+        if (
+            lockoutEnd != null &&
+            !lockoutEnd.isAfter(now)
+        ) {
+            account.failedLoginAttempts = 0
+            account.lockoutEndAt = null
+        }
+
+        val passwordMatches =
+            passwordEncoder.matches(
+                request.password,
+                account.passwordHash,
+            )
+
+        if (!passwordMatches) {
+
+            account.failedLoginAttempts += 1
+            account.updatedAt = now
+
+            if (
+                account.failedLoginAttempts >=
+                MAX_FAILED_LOGIN_ATTEMPTS
+            ) {
+                account.lockoutEndAt =
+                    now.plus(
+                        LOGIN_LOCKOUT_DURATION
+                    )
+            }
+
+            userAccountRepository.save(
+                account
+            )
+
+            throw InvalidCredentialsException()
+        }
+
+        account.failedLoginAttempts = 0
+        account.lockoutEndAt = null
+        account.lastLoginAt = now
+        account.updatedAt = now
+
+        userAccountRepository.save(
+            account
+        )
+
+        return createAuthResponse(
+            account,
+            now,
+        )
+    }
+
+
+    @Transactional
+    fun refresh(
+        request: RefreshTokenRequest,
+    ): AuthResponse {
+
+        val now =
+            Instant.now()
+
+        val rotated =
+            refreshTokenService.rotate(
+                request.refreshToken,
+                now,
+            )
+
+        val account =
+            userAccountRepository
+                .findById(
+                    rotated.userId
+                )
+                .orElseThrow {
+                    InvalidRefreshTokenException()
+                }
+
+        checkAccountStatus(
+            account
+        )
+
+        val accessToken =
+            jwtService.createAccessToken(
+                account,
+                now,
+            )
+
+        return AuthResponse(
+            accessToken =
+                accessToken.token,
+
+            refreshToken =
+                rotated.token,
+
+            expiresIn =
+                accessToken.expiresIn,
+        )
+    }
+
+
+    @Transactional
+    fun logout(
+        request: LogoutRequest,
+    ) {
+
+        refreshTokenService.revoke(
+            request.refreshToken,
+            Instant.now(),
+        )
+    }
+
+
+    private fun createAuthResponse(
+        account: UserAccount,
+        now: Instant,
+    ): AuthResponse {
+
+        val accessToken =
+            jwtService.createAccessToken(
+                account,
+                now,
+            )
+
+        val refreshToken =
+            refreshTokenService.create(
+                account.id,
+                now,
+            )
+
+        return AuthResponse(
+            accessToken =
+                accessToken.token,
+
+            refreshToken =
+                refreshToken.token,
+
+            expiresIn =
+                accessToken.expiresIn,
+        )
+    }
+
+
+    private fun checkAccountStatus(
+        account: UserAccount,
+    ) {
+
+        when (account.status) {
+
+            AccountStatus.ACTIVE -> Unit
+
+            AccountStatus.SUSPENDED ->
+                throw AccountSuspendedException()
+
+            AccountStatus.DISABLED ->
+                throw AccountDisabledException()
+        }
+    }
+
+
+    private fun normalizeEmail(
+        email: String,
+    ): String {
+
+        return email
+            .trim()
+            .lowercase()
+    }
+
+
+    companion object {
+
+        private const val
+                MAX_FAILED_LOGIN_ATTEMPTS = 5
+
+        private val
+                LOGIN_LOCKOUT_DURATION =
+            Duration.ofMinutes(15)
     }
 }

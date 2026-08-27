@@ -1,5 +1,9 @@
 package com.pavex.identity.controller
 
+import com.pavex.identity.dto.auth.AuthResponse
+import com.pavex.identity.dto.auth.LoginRequest
+import com.pavex.identity.dto.auth.LogoutRequest
+import com.pavex.identity.dto.auth.RefreshTokenRequest
 import com.pavex.identity.dto.auth.RegisterRequest
 import com.pavex.identity.dto.auth.RegisterResponse
 import com.pavex.identity.service.AuthService
@@ -26,7 +30,47 @@ class AuthController(
     ): RegisterResponse {
 
         return authService.register(
-            request,
+            request
+        )
+    }
+
+
+    @PostMapping("/login")
+    fun login(
+        @Valid
+        @RequestBody
+        request: LoginRequest,
+    ): AuthResponse {
+
+        return authService.login(
+            request
+        )
+    }
+
+
+    @PostMapping("/refresh")
+    fun refresh(
+        @Valid
+        @RequestBody
+        request: RefreshTokenRequest,
+    ): AuthResponse {
+
+        return authService.refresh(
+            request
+        )
+    }
+
+
+    @PostMapping("/logout")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    fun logout(
+        @Valid
+        @RequestBody
+        request: LogoutRequest,
+    ) {
+
+        authService.logout(
+            request
         )
     }
 }
