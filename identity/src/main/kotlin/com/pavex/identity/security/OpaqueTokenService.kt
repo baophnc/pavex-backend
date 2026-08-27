@@ -12,8 +12,12 @@ class OpaqueTokenService {
     private val secureRandom =
         SecureRandom()
 
-    fun generate(): String {
+    data class IssuedToken(
+        val raw: String,
+        val hash: String,
+    )
 
+    fun issue(): IssuedToken {
         val bytes =
             ByteArray(32)
 
@@ -21,16 +25,24 @@ class OpaqueTokenService {
             bytes
         )
 
-        return Base64
-            .getUrlEncoder()
-            .withoutPadding()
-            .encodeToString(bytes)
+        val raw =
+            Base64
+                .getUrlEncoder()
+                .withoutPadding()
+                .encodeToString(bytes)
+
+        return IssuedToken(
+            raw = raw,
+            hash = hash(raw),
+        )
     }
+
+    fun generateRawToken(): String =
+        issue().raw
 
     fun hash(
         rawToken: String,
     ): String {
-
         val digest =
             MessageDigest
                 .getInstance("SHA-256")
@@ -41,9 +53,12 @@ class OpaqueTokenService {
                 )
 
         return digest.joinToString("") {
-            "%02x".format(
-                it.toInt() and 0xff
-            )
+            "%02x".format(it)
         }
     }
+
+    fun hashToken(
+        rawToken: String,
+    ): String =
+        hash(rawToken)
 }

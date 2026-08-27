@@ -18,12 +18,17 @@ import com.pavex.identity.dto.auth.MessageResponse
 import com.pavex.identity.dto.auth.ResendVerificationRequest
 import com.pavex.identity.dto.auth.VerifyEmailRequest
 import com.pavex.identity.service.EmailVerificationService
+import com.pavex.identity.dto.auth.ForgotPasswordRequest
+import com.pavex.identity.dto.auth.ResetPasswordRequest
+import com.pavex.identity.service.PasswordResetService
 @RestController
 @RequestMapping("/api/v1/auth")
 class AuthController(
     private val authService: AuthService,
     private val emailVerificationService:
     EmailVerificationService,
+    private val passwordResetService:
+    PasswordResetService,
 ) {
 
     @PostMapping("/register")
@@ -110,6 +115,45 @@ class AuthController(
         return MessageResponse(
             message =
                 "If the account exists and is not verified, a verification email has been sent."
+        )
+    }
+    @PostMapping("/forgot-password")
+    fun forgotPassword(
+        @Valid
+        @RequestBody
+        request: ForgotPasswordRequest,
+    ): MessageResponse {
+
+        passwordResetService
+            .forgotPassword(
+                request.email
+            )
+
+        return MessageResponse(
+            message =
+                "If the account exists, a password reset email has been sent.",
+        )
+    }
+
+
+    @PostMapping("/reset-password")
+    fun resetPassword(
+        @Valid
+        @RequestBody
+        request: ResetPasswordRequest,
+    ): MessageResponse {
+
+        passwordResetService
+            .resetPassword(
+                rawTokenInput =
+                    request.token,
+                newPassword =
+                    request.newPassword,
+            )
+
+        return MessageResponse(
+            message =
+                "Password reset successfully.",
         )
     }
 }

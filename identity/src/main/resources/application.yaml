@@ -54,10 +54,11 @@ identity:
   security:
     verification-token-ttl: PT24H
     verification-resend-cooldown: PT2M
+    password-reset-token-ttl: PT1H
 
 
 pavex:
   email:
     from: ${MAIL_FROM:no-reply@pavex.local}
-
     verification-url: ${EMAIL_VERIFICATION_URL:http://localhost:3000/verify-email}
+    password-reset-url: ${PASSWORD_RESET_URL:http://localhost:3000/reset-password}

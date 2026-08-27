@@ -206,13 +206,14 @@ class EmailVerificationService(
         now: Instant,
     ) {
 
+        val issued =
+            opaqueTokenService.issue()
+
         val rawToken =
-            opaqueTokenService.generate()
+            issued.raw
 
         val tokenHash =
-            opaqueTokenService.hash(
-                rawToken
-            )
+            issued.hash
 
         val verificationToken =
             EmailVerificationToken(

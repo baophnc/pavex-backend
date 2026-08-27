@@ -20,13 +20,9 @@ class EmailVerificationEmailListener(
             EmailVerificationRequestedEvent,
     ) {
 
-        emailService
-            .sendEmailVerification(
-                toEmail =
-                    event.email,
-
-                rawToken =
-                    event.rawToken,
-            )
+        emailService.sendVerificationEmail(
+            event.email,
+            event.rawToken,
+        )
     }
 }
