@@ -36,4 +36,8 @@ class UserRole(
         nullable = false,
     )
     var assignedAt: Instant = Instant.now(),
+    @Column(
+        name = "assigned_by",
+    )
+    var assignedBy: UUID? = null,
 )

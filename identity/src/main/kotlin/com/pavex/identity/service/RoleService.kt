@@ -9,7 +9,14 @@ import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.time.Instant
 import java.util.UUID
-
+import com.pavex.identity.dto.role.PermissionResponse
+import com.pavex.identity.dto.role.RoleResponse
+import com.pavex.identity.entity.AccountStatus
+import com.pavex.identity.exception.CannotRemoveOwnAdminRoleException
+import com.pavex.identity.exception.LastActiveAdminException
+import com.pavex.identity.exception.RoleNotFoundException
+import com.pavex.identity.exception.UserNotFoundException
+import com.pavex.identity.repository.UserAccountRepository
 @Service
 class RoleService(
 
@@ -24,6 +31,8 @@ class RoleService(
 
     private val permissionRepository:
         PermissionRepository,
+    private val userAccountRepository:
+    UserAccountRepository,
 ) {
 
     @Transactional
@@ -108,11 +117,252 @@ class RoleService(
                 .toSet(),
         )
     }
+    @Transactional(
+        readOnly = true,
+    )
+    fun getRoles():
+            List<RoleResponse> {
+
+        val roles =
+            roleRepository
+                .findAllByOrderByCodeAsc()
+
+        if (roles.isEmpty()) {
+            return emptyList()
+        }
+
+        val roleIds =
+            roles
+                .map { it.id }
+
+        val mappings =
+            rolePermissionRepository
+                .findAllByRoleIdIn(
+                    roleIds
+                )
+
+        val permissionIds =
+            mappings
+                .map { it.permissionId }
+                .toSet()
+
+        val permissions =
+            if (permissionIds.isEmpty()) {
+                emptyMap()
+            } else {
+                permissionRepository
+                    .findAllByIdIn(
+                        permissionIds
+                    )
+                    .associateBy {
+                        it.id
+                    }
+            }
+
+        val permissionsByRole =
+            mappings
+                .groupBy {
+                    it.roleId
+                }
+
+        return roles.map { role ->
+
+            val rolePermissions =
+                permissionsByRole[
+                    role.id
+                ]
+                    .orEmpty()
+                    .mapNotNull {
+                        permissions[
+                            it.permissionId
+                        ]
+                    }
+                    .sortedBy {
+                        it.code
+                    }
+                    .map {
+                        PermissionResponse(
+                            id = it.id,
+                            code = it.code,
+                            name = it.name,
+                            description =
+                                it.description,
+                        )
+                    }
+
+            RoleResponse(
+                id = role.id,
+                code = role.code,
+                name = role.name,
+                description =
+                    role.description,
+                isSystem =
+                    role.isSystem,
+                permissions =
+                    rolePermissions,
+            )
+        }
+    }
+    @Transactional
+    fun assignRole(
+        actorUserId: UUID,
+        targetUserId: UUID,
+        rawRoleCode: String,
+    ) {
+        val roleCode =
+            normalizeRoleCode(
+                rawRoleCode
+            )
+
+        val user =
+            userAccountRepository
+                .findById(
+                    targetUserId
+                )
+                .orElseThrow {
+                    UserNotFoundException()
+                }
+
+        val role =
+            roleRepository
+                .findByCode(
+                    roleCode
+                )
+                ?: throw RoleNotFoundException()
+
+        val existing =
+            userRoleRepository
+                .findByUserIdAndRoleId(
+                    userId =
+                        user.id,
+
+                    roleId =
+                        role.id,
+                )
+
+        /*
+         * Idempotent:
+         * assign role đã tồn tại -> success.
+         */
+        if (existing != null) {
+            return
+        }
+
+        userRoleRepository.save(
+            UserRole(
+                userId =
+                    user.id,
+
+                roleId =
+                    role.id,
+
+                assignedAt =
+                    Instant.now(),
+
+                assignedBy =
+                    actorUserId,
+            )
+        )
+    }
+    @Transactional
+    fun removeRole(
+        actorUserId: UUID,
+        targetUserId: UUID,
+        rawRoleCode: String,
+    ) {
+        val roleCode =
+            normalizeRoleCode(
+                rawRoleCode
+            )
+
+        if (
+            roleCode == ADMIN_ROLE &&
+            actorUserId == targetUserId
+        ) {
+            throw CannotRemoveOwnAdminRoleException()
+        }
+
+        /*
+         * Riêng ADMIN lấy pessimistic lock
+         * trên role row.
+         *
+         * Hai request remove ADMIN song song
+         * không thể cùng kiểm tra count rồi xóa.
+         */
+        val role =
+            if (roleCode == ADMIN_ROLE) {
+
+                roleRepository
+                    .findByCodeForUpdate(
+                        ADMIN_ROLE
+                    )
+
+            } else {
+
+                roleRepository
+                    .findByCode(
+                        roleCode
+                    )
+            }
+                ?: throw RoleNotFoundException()
+
+        val user =
+            userAccountRepository
+                .findById(
+                    targetUserId
+                )
+                .orElseThrow {
+                    UserNotFoundException()
+                }
+
+        val userRole =
+            userRoleRepository
+                .findByUserIdAndRoleId(
+                    userId =
+                        user.id,
+
+                    roleId =
+                        role.id,
+                )
+                ?: throw RoleNotFoundException()
+
+        if (
+            roleCode == ADMIN_ROLE &&
+            user.status == AccountStatus.ACTIVE
+        ) {
+
+            val activeAdmins =
+                userRoleRepository
+                    .countActiveUsersWithRoleCode(
+                        ADMIN_ROLE
+                    )
+
+            if (activeAdmins <= 1) {
+                throw LastActiveAdminException()
+            }
+        }
+
+        userRoleRepository.delete(
+            userRole
+        )
+    }
 
 
     companion object {
+
         const val CUSTOMER_ROLE =
             "CUSTOMER"
+
+        const val ADMIN_ROLE =
+            "ADMIN"
+    }
+    private fun normalizeRoleCode(
+        value: String,
+    ): String {
+
+        return value
+            .trim()
+            .uppercase()
     }
 }
 
