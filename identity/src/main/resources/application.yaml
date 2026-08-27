@@ -73,3 +73,26 @@ pavex:
     verification-url: ${EMAIL_VERIFICATION_URL:http://localhost:3000/verify-email}
     password-reset-url: ${PASSWORD_RESET_URL:http://localhost:3000/reset-password}
     invitation-url: ${INVITATION_URL:http://localhost:3000/accept-invite}
+
+eureka:
+  client:
+    enabled: ${EUREKA_ENABLED:true}
+    register-with-eureka: ${EUREKA_REGISTER_WITH_EUREKA:true}
+    fetch-registry: ${EUREKA_FETCH_REGISTRY:true}
+    service-url:
+      defaultZone: ${EUREKA_DEFAULT_ZONE:http://localhost:8761/eureka/}
+    healthcheck:
+      enabled: true
+
+  instance:
+    prefer-ip-address: ${EUREKA_PREFER_IP_ADDRESS:false}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+
+  endpoint:
+    health:
+      show-details: never
