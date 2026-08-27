@@ -50,6 +50,17 @@ class RefreshSession(
     @Column(name = "replaced_by_session_id")
     var replacedBySessionId: UUID? = null,
 
+    @Column(
+        name = "ip_address",
+        length = 64,
+    )
+    var ipAddress: String? = null,
+
+    @Column(
+        name = "user_agent",
+        length = 512,
+    )
+    var userAgent: String? = null,
     @Version
     @Column(nullable = false)
     var version: Long = 0,

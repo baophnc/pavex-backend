@@ -29,6 +29,7 @@ class RefreshTokenService(
     fun create(
         userId: UUID,
         now: Instant,
+        clientMetadata: ClientMetadata,
     ): IssuedRefreshToken {
 
         val rawToken =
@@ -41,6 +42,15 @@ class RefreshTokenService(
             expiresAt = now.plus(
                 refreshTokenTtl
             ),
+            ipAddress =
+                clientMetadata
+                    .ipAddress
+                    ?.take(64),
+
+            userAgent =
+                clientMetadata
+                    .userAgent
+                    ?.take(512),
         )
 
         val saved =
@@ -58,6 +68,7 @@ class RefreshTokenService(
     fun rotate(
         rawToken: String,
         now: Instant,
+        clientMetadata: ClientMetadata,
     ): RotatedRefreshToken {
 
         val current =
@@ -76,8 +87,14 @@ class RefreshTokenService(
 
         val replacement =
             create(
-                current.userId,
-                now,
+                userId =
+                    current.userId,
+
+                now =
+                    now,
+
+                clientMetadata =
+                    clientMetadata,
             )
 
         current.revokedAt = now

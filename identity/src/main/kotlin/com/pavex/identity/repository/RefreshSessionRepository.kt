@@ -6,6 +6,7 @@ import java.util.UUID
 import org.springframework.data.jpa.repository.Modifying
 import org.springframework.data.jpa.repository.Query
 import java.time.Instant
+
 interface RefreshSessionRepository :
     JpaRepository<RefreshSession, UUID> {
 
@@ -29,4 +30,14 @@ interface RefreshSessionRepository :
         userId: UUID,
         now: Instant,
     ): Int
+    fun findAllByUserIdAndRevokedAtIsNullAndExpiresAtAfterOrderByExpiresAtDesc(
+        userId: UUID,
+        expiresAt: Instant,
+    ): List<RefreshSession>
+
+    fun findByIdAndUserIdAndRevokedAtIsNullAndExpiresAtAfter(
+        id: UUID,
+        userId: UUID,
+        expiresAt: Instant,
+    ): RefreshSession?
 }

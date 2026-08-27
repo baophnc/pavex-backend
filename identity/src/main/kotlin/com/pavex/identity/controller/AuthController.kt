@@ -25,6 +25,12 @@ import com.pavex.identity.dto.auth.ChangePasswordRequest
 import com.pavex.identity.service.ChangePasswordService
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken
 import java.util.UUID
+import com.pavex.identity.service.ClientMetadata
+import com.pavex.identity.service.SessionService
+import jakarta.servlet.http.HttpServletRequest
+import org.springframework.web.bind.annotation.DeleteMapping
+import org.springframework.web.bind.annotation.GetMapping
+import org.springframework.web.bind.annotation.PathVariable
 @RestController
 @RequestMapping("/api/v1/auth")
 class AuthController(
@@ -35,6 +41,8 @@ class AuthController(
     PasswordResetService,
     private val changePasswordService:
     ChangePasswordService,
+    private val sessionService:
+    SessionService,
 ) {
 
     @PostMapping("/register")
@@ -51,15 +59,21 @@ class AuthController(
     }
 
 
-    @PostMapping("/login")
     fun login(
         @Valid
         @RequestBody
         request: LoginRequest,
+
+        httpRequest: HttpServletRequest,
     ): AuthResponse {
 
         return authService.login(
-            request
+            request = request,
+
+            clientMetadata =
+                clientMetadata(
+                    httpRequest
+                ),
         )
     }
 
@@ -69,10 +83,17 @@ class AuthController(
         @Valid
         @RequestBody
         request: RefreshTokenRequest,
+
+        httpRequest: HttpServletRequest,
     ): AuthResponse {
 
         return authService.refresh(
-            request
+            request = request,
+
+            clientMetadata =
+                clientMetadata(
+                    httpRequest
+                ),
         )
     }
 
@@ -188,6 +209,83 @@ class AuthController(
         return MessageResponse(
             message =
                 "Password changed successfully.",
+        )
+    }
+    @GetMapping("/sessions")
+    fun sessions(
+        authentication:
+        JwtAuthenticationToken,
+    ) =
+        sessionService.getSessions(
+            userId =
+                UUID.fromString(
+                    authentication
+                        .token
+                        .subject
+                )
+        )
+
+
+    @DeleteMapping(
+        "/sessions/{sessionId}"
+    )
+    @ResponseStatus(
+        HttpStatus.NO_CONTENT
+    )
+    fun revokeSession(
+        authentication:
+        JwtAuthenticationToken,
+
+        @PathVariable
+        sessionId: UUID,
+    ) {
+        sessionService.revokeSession(
+            userId =
+                UUID.fromString(
+                    authentication
+                        .token
+                        .subject
+                ),
+
+            sessionId =
+                sessionId,
+        )
+    }
+
+
+    @PostMapping("/logout-all")
+    @ResponseStatus(
+        HttpStatus.NO_CONTENT
+    )
+    fun logoutAll(
+        authentication:
+        JwtAuthenticationToken,
+    ) {
+        sessionService.logoutAll(
+            userId =
+                UUID.fromString(
+                    authentication
+                        .token
+                        .subject
+                )
+        )
+    }
+    private fun clientMetadata(
+        request: HttpServletRequest,
+    ): ClientMetadata {
+
+        return ClientMetadata(
+            ipAddress =
+                request
+                    .remoteAddr
+                    ?.take(64),
+
+            userAgent =
+                request
+                    .getHeader(
+                        "User-Agent"
+                    )
+                    ?.take(512),
         )
     }
 }

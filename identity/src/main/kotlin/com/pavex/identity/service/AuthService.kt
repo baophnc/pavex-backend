@@ -145,7 +145,8 @@ class AuthService(
     )
     fun login(
         request: LoginRequest,
-    ): AuthResponse {
+        clientMetadata: ClientMetadata,
+    ): AuthResponse{
 
         val email =
             normalizeEmail(request.email)
@@ -217,16 +218,18 @@ class AuthService(
             account
         )
 
-        return createAuthResponse(
-            account,
-            now,
-        )
+    return createAuthResponse(
+    account = account,
+    now = now,
+    clientMetadata = clientMetadata,
+    )
     }
 
 
     @Transactional
     fun refresh(
         request: RefreshTokenRequest,
+        clientMetadata: ClientMetadata,
     ): AuthResponse {
 
         val now =
@@ -234,8 +237,14 @@ class AuthService(
 
         val rotated =
             refreshTokenService.rotate(
-                request.refreshToken,
-                now,
+                rawToken =
+                    request.refreshToken,
+
+                now =
+                    now,
+
+                clientMetadata =
+                    clientMetadata,
             )
 
         val account =
@@ -281,6 +290,7 @@ class AuthService(
     private fun createAuthResponse(
         account: UserAccount,
         now: Instant,
+        clientMetadata: ClientMetadata,
     ): AuthResponse {
 
         val accessToken =
@@ -291,8 +301,14 @@ class AuthService(
 
         val refreshToken =
             refreshTokenService.create(
-                account.id,
-                now,
+                userId =
+                    account.id,
+
+                now =
+                    now,
+
+                clientMetadata =
+                    clientMetadata,
             )
 
         return AuthResponse(
