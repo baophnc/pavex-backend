@@ -22,14 +22,23 @@ import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.ResponseStatus
 import org.springframework.web.bind.annotation.RestController
 import java.util.UUID
-
+import com.pavex.identity.dto.admin.CreateUserRequest
+import com.pavex.identity.dto.admin.CreateUserResponse
+import com.pavex.identity.service.InvitationService
+import org.springframework.http.ResponseEntity
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken
+import org.springframework.web.bind.annotation.PostMapping
+import java.net.URI
 @RestController
 @RequestMapping("/api/v1/users")
 class AdminUserController(
 
     private val adminUserService:
-        AdminUserService,
-) {
+    AdminUserService,
+
+    private val invitationService:
+    InvitationService,
+){
 
     @PreAuthorize(
         "hasAuthority('${AuthorizationPermissions.Identity.READ_USERS}')"
@@ -173,6 +182,69 @@ class AdminUserController(
 
                 newStatus =
                     request.status,
+            )
+    }
+    @PreAuthorize(
+        "hasAuthority('${AuthorizationPermissions.Identity.CREATE_USERS}') " +
+                "and " +
+                "hasAuthority('${AuthorizationPermissions.Identity.ASSIGN_ROLE}')"
+    )
+    @PostMapping
+    fun createUser(
+
+        authentication:
+        JwtAuthenticationToken,
+
+        @Valid
+        @RequestBody
+        request:
+        CreateUserRequest,
+
+        ): ResponseEntity<CreateUserResponse> {
+
+        val result =
+            adminUserService
+                .createUser(
+                    actorUserId =
+                        UUID.fromString(
+                            authentication
+                                .token
+                                .subject
+                        ),
+
+                    request =
+                        request,
+                )
+
+        return ResponseEntity
+            .created(
+                URI.create(
+                    "/api/v1/users/${result.userId}"
+                )
+            )
+            .body(
+                result
+            )
+    }
+    @PreAuthorize(
+        "hasAuthority('${AuthorizationPermissions.Identity.INVITE_USERS}')"
+    )
+    @PostMapping(
+        "/{userId}/invite"
+    )
+    @ResponseStatus(
+        HttpStatus.NO_CONTENT
+    )
+    fun inviteUser(
+
+        @PathVariable
+        userId: UUID,
+
+        ) {
+
+        invitationService
+            .sendInvite(
+                userId
             )
     }
 }

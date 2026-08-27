@@ -42,8 +42,8 @@ class SecurityConfig {
                     "/api/v1/auth/resend-verification",
                     "/api/v1/auth/forgot-password",
                     "/api/v1/auth/reset-password",
-                )
-                    .permitAll()
+                    "/api/v1/auth/accept-invite",
+                ).permitAll()
 
                     .anyRequest()
                     .authenticated()

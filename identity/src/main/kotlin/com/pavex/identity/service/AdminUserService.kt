@@ -26,7 +26,12 @@ import java.net.URISyntaxException
 import java.time.Instant
 import java.time.LocalDate
 import java.util.UUID
-
+import com.pavex.identity.dto.admin.CreateUserRequest
+import com.pavex.identity.dto.admin.CreateUserResponse
+import com.pavex.identity.entity.UserRole
+import com.pavex.identity.exception.EmailAlreadyExistsException
+import com.pavex.identity.security.OpaqueTokenService
+import org.springframework.security.crypto.password.PasswordEncoder
 @Service
 class AdminUserService(
 
@@ -47,8 +52,210 @@ class AdminUserService(
 
     private val roleService:
         RoleService,
+    private val passwordEncoder:
+    PasswordEncoder,
+
+    private val opaqueTokenService:
+    OpaqueTokenService,
 ) {
 
+    @Transactional
+    fun createUser(
+
+        actorUserId: UUID,
+
+        request: CreateUserRequest,
+
+        ): CreateUserResponse {
+
+        val email =
+            request.email
+                .trim()
+                .lowercase()
+
+        if (
+            userAccountRepository
+                .existsByEmail(
+                    email
+                )
+        ) {
+            throw EmailAlreadyExistsException(
+                email
+            )
+        }
+
+        val roleCode =
+            request.roleCode
+                .trim()
+                .uppercase()
+
+        val role =
+            roleRepository
+                .findByCode(
+                    roleCode
+                )
+                ?: throw RoleNotFoundException()
+
+        validateAvatarUrl(
+            request.avatarUrl
+        )
+
+        val now =
+            Instant.now()
+
+        /*
+         * Account được tạo nhưng admin
+         * KHÔNG biết password.
+         *
+         * User chỉ đặt password thật
+         * qua invitation.
+         */
+        val internalSecret =
+            opaqueTokenService
+                .generateRawToken()
+
+        val internalPasswordHash =
+            requireNotNull(
+                passwordEncoder.encode(
+                    internalSecret
+                )
+            ) {
+                "Password encoder returned null"
+            }
+
+        val account =
+            UserAccount(
+                email =
+                    email,
+
+                passwordHash =
+                    internalPasswordHash,
+
+                createdAt =
+                    now,
+
+                updatedAt =
+                    now,
+            )
+
+        val savedAccount =
+            userAccountRepository.save(
+                account
+            )
+
+        val firstName =
+            normalize(
+                request.firstName
+            )
+
+        val lastName =
+            normalize(
+                request.lastName
+            )
+
+        val displayName =
+            normalize(
+                request.displayName
+            )
+
+        val avatarUrl =
+            normalize(
+                request.avatarUrl
+            )
+
+        val shouldCreateProfile =
+            firstName != null ||
+                    lastName != null ||
+                    displayName != null ||
+                    request.gender !=
+                    Gender.UNSPECIFIED ||
+                    request.dateOfBirth != null ||
+                    avatarUrl != null
+
+        if (shouldCreateProfile) {
+
+            val profile =
+                UserProfile(
+                    userId =
+                        savedAccount.id,
+
+                    firstName =
+                        firstName,
+
+                    lastName =
+                        lastName,
+
+                    displayName =
+                        displayName,
+
+                    gender =
+                        request.gender,
+
+                    dateOfBirth =
+                        request.dateOfBirth,
+
+                    avatarUrl =
+                        avatarUrl,
+
+                    createdAt =
+                        now,
+
+                    updatedAt =
+                        now,
+                )
+
+            userProfileRepository.save(
+                profile
+            )
+
+            if (
+                hasRequiredDetails(
+                    firstName =
+                        firstName,
+
+                    lastName =
+                        lastName,
+
+                    gender =
+                        request.gender,
+
+                    dateOfBirth =
+                        request.dateOfBirth,
+                )
+            ) {
+                savedAccount.profileStatus =
+                    ProfileStatus.COMPLETED
+
+                savedAccount.updatedAt =
+                    now
+
+                userAccountRepository.save(
+                    savedAccount
+                )
+            }
+        }
+
+        userRoleRepository.save(
+            UserRole(
+                userId =
+                    savedAccount.id,
+
+                roleId =
+                    role.id,
+
+                assignedAt =
+                    now,
+
+                assignedBy =
+                    actorUserId,
+            )
+        )
+
+        return CreateUserResponse(
+            userId =
+                savedAccount.id,
+        )
+    }
     @Transactional(
         readOnly = true,
     )

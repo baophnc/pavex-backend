@@ -1,0 +1,234 @@
+### ==========================================
+### PAVEX Identity - User Invitations
+### ==========================================
+
+@baseUrl = http://localhost:8081
+
+@adminEmail = ADMIN_EMAIL@gmail.com
+@adminPassword = Pavex@123456
+
+### NÊN DÙNG EMAIL/ALIAS CHƯA REGISTER
+@inviteEmail = YOUR_EMAIL+invite12@gmail.com
+
+@invitePassword = InvitedPavex@123456
+
+### Sau khi nhận mail paste token vào đây
+@oldInviteToken = PASTE_OLD_INVITE_TOKEN
+@inviteToken = PASTE_LATEST_INVITE_TOKEN
+
+
+### ==================================================
+### 1. LOGIN ADMIN
+### ==================================================
+
+POST {{baseUrl}}/api/v1/auth/login
+Content-Type: application/json
+
+{
+  "email": "{{adminEmail}}",
+  "password": "{{adminPassword}}"
+}
+
+> {%
+    client.global.set(
+        "adminAccessToken",
+        response.body.accessToken
+    );
+%}
+
+
+### ==================================================
+### 2. CREATE USER
+### PHẢI 201
+### ==================================================
+
+POST {{baseUrl}}/api/v1/users
+Authorization: Bearer {{adminAccessToken}}
+Content-Type: application/json
+
+{
+  "email": "{{inviteEmail}}",
+  "roleCode": "CUSTOMER",
+  "firstName": "Invite",
+  "lastName": "Test",
+  "displayName": "Invite Test",
+  "gender": "MALE",
+  "dateOfBirth": "2003-01-01",
+  "avatarUrl": null
+}
+
+> {%
+    client.global.set(
+        "invitedUserId",
+        response.body.userId
+    );
+%}
+
+
+### ==================================================
+### 3. CREATE CÙNG EMAIL LẦN NỮA
+### PHẢI 409 email_already_exists
+### ==================================================
+
+POST {{baseUrl}}/api/v1/users
+Authorization: Bearer {{adminAccessToken}}
+Content-Type: application/json
+
+{
+  "email": "{{inviteEmail}}",
+  "roleCode": "CUSTOMER"
+}
+
+
+### ==================================================
+### 4. USER DETAIL TRƯỚC INVITE
+### emailVerified phải false
+### ==================================================
+
+GET {{baseUrl}}/api/v1/users/{{invitedUserId}}
+Authorization: Bearer {{adminAccessToken}}
+
+
+### ==================================================
+### 5. SEND INVITE
+### PHẢI 204
+### ==================================================
+
+POST {{baseUrl}}/api/v1/users/{{invitedUserId}}/invite
+Authorization: Bearer {{adminAccessToken}}
+
+
+### ==================================================
+### 6. RESEND INVITE
+### PHẢI 204
+###
+### Token bước 5 sẽ bị invalid.
+### Token bước này là token mới nhất.
+### ==================================================
+
+POST {{baseUrl}}/api/v1/users/{{invitedUserId}}/invite
+Authorization: Bearer {{adminAccessToken}}
+
+
+### ==================================================
+### 7. ACCEPT TOKEN CŨ
+### Nếu đã resend -> PHẢI 400
+### ==================================================
+
+POST {{baseUrl}}/api/v1/auth/accept-invite
+Content-Type: application/json
+
+{
+  "token": "{{oldInviteToken}}",
+  "password": "{{invitePassword}}"
+}
+
+
+### ==================================================
+### 8. ACCEPT TOKEN MỚI NHẤT
+### PHẢI 204
+### ==================================================
+
+POST {{baseUrl}}/api/v1/auth/accept-invite
+Content-Type: application/json
+
+{
+  "token": "{{inviteToken}}",
+  "password": "{{invitePassword}}"
+}
+
+
+### ==================================================
+### 9. REUSE CÙNG TOKEN
+### PHẢI 400 invalid_invitation_token
+### ==================================================
+
+POST {{baseUrl}}/api/v1/auth/accept-invite
+Content-Type: application/json
+
+{
+  "token": "{{inviteToken}}",
+  "password": "{{invitePassword}}"
+}
+
+
+### ==================================================
+### 10. LOGIN BẰNG PASSWORD ĐÃ SET
+### PHẢI 200
+### ==================================================
+
+POST {{baseUrl}}/api/v1/auth/login
+Content-Type: application/json
+
+{
+  "email": "{{inviteEmail}}",
+  "password": "{{invitePassword}}"
+}
+
+> {%
+    client.global.set(
+        "invitedAccessToken",
+        response.body.accessToken
+    );
+%}
+
+
+### ==================================================
+### 11. /ME
+### emailVerified = true
+### role CUSTOMER
+### ==================================================
+
+GET {{baseUrl}}/api/v1/auth/me
+Authorization: Bearer {{invitedAccessToken}}
+
+
+### ==================================================
+### 12. INVITE ACCOUNT ĐÃ ACTIVATE
+### PHẢI 409 account_already_activated
+### ==================================================
+
+POST {{baseUrl}}/api/v1/users/{{invitedUserId}}/invite
+Authorization: Bearer {{adminAccessToken}}
+
+
+### ==================================================
+### 13. INVALID TOKEN
+### PHẢI 400
+### ==================================================
+
+POST {{baseUrl}}/api/v1/auth/accept-invite
+Content-Type: application/json
+
+{
+  "token": "this-is-not-a-valid-token",
+  "password": "{{invitePassword}}"
+}
+
+
+### ==================================================
+### 14. WEAK PASSWORD
+### PHẢI 400 VALIDATION
+### ==================================================
+
+POST {{baseUrl}}/api/v1/auth/accept-invite
+Content-Type: application/json
+
+{
+  "token": "{{inviteToken}}",
+  "password": "12345678"
+}
+
+
+### ==================================================
+### 15. CREATE USER KHÔNG JWT
+### PHẢI 401
+### ==================================================
+
+POST {{baseUrl}}/api/v1/users
+Content-Type: application/json
+
+{
+  "email": "unauthorized@example.com",
+  "roleCode": "CUSTOMER"
+}

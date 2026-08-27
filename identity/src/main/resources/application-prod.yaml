@@ -23,5 +23,6 @@ spring:
 pavex:
   email:
     from: ${GMAIL_SMTP_FROM_EMAIL}
-
+    password-reset-url: ${PASSWORD_RESET_URL}
     verification-url: ${EMAIL_VERIFICATION_URL}
+    invitation-url: ${INVITATION_URL}

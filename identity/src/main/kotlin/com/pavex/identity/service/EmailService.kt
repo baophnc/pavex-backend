@@ -25,6 +25,8 @@ class EmailService(
         "\${pavex.email.password-reset-url:http://localhost:3000/reset-password}"
     )
     private val passwordResetUrl: String,
+    @Value("\${pavex.email.invitation-url}")
+    private val invitationUrl: String,
 ) {
 
     fun sendVerificationEmail(
@@ -153,5 +155,70 @@ class EmailService(
         )
 
         mailSender.send(message)
+    }
+    fun sendInvitationEmail(
+        to: String,
+        rawToken: String,
+    ) {
+
+        val invitationLink =
+            "$invitationUrl?token=$rawToken"
+
+        val message =
+            mailSender.createMimeMessage()
+
+        val helper =
+            MimeMessageHelper(
+                message,
+                true,
+                "UTF-8",
+            )
+
+        helper.setFrom(
+            from
+        )
+
+        helper.setTo(
+            to
+        )
+
+        helper.setSubject(
+            "You have been invited to PAVEX"
+        )
+
+        helper.setText(
+            """
+        <h2>You have been invited to PAVEX</h2>
+
+        <p>
+            An account has been created for you in PAVEX.
+        </p>
+
+        <p>
+            Use the link below to activate your account
+            and create your password.
+        </p>
+
+        <p>
+            <a href="$invitationLink">
+                Accept invitation
+            </a>
+        </p>
+
+        <p>
+            This invitation expires in 24 hours.
+        </p>
+
+        <p>
+            If you were not expecting this invitation,
+            you can ignore this email.
+        </p>
+        """.trimIndent(),
+            true,
+        )
+
+        mailSender.send(
+            message
+        )
     }
 }
