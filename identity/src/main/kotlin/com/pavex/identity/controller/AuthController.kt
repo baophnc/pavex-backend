@@ -33,6 +33,8 @@ import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import com.pavex.identity.dto.auth.AcceptInviteRequest
 import com.pavex.identity.service.InvitationService
+import com.pavex.identity.dto.auth.GoogleLoginRequest
+import com.pavex.identity.service.GoogleAuthService
 @RestController
 @RequestMapping("/api/v1/auth")
 class AuthController(
@@ -47,6 +49,8 @@ class AuthController(
     SessionService,
     private val invitationService:
     InvitationService,
+    private val googleAuthService:
+    GoogleAuthService,
 ) {
 
     @PostMapping("/register")
@@ -314,6 +318,30 @@ class AuthController(
 
                 password =
                     request.password,
+            )
+    }
+    @PostMapping("/google")
+    fun googleLogin(
+
+        @Valid
+        @RequestBody
+        request:
+        GoogleLoginRequest,
+
+        httpRequest:
+        HttpServletRequest,
+
+        ): AuthResponse {
+
+        return googleAuthService
+            .login(
+                rawIdToken =
+                    request.idToken,
+
+                clientMetadata =
+                    clientMetadata(
+                        httpRequest
+                    ),
             )
     }
 }

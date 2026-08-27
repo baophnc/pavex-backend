@@ -51,6 +51,8 @@ security:
 
 
 identity:
+  google:
+    client-ids: ${GOOGLE_CLIENT_IDS:${GOOGLE_CLIENT_ID:}}
   security:
     verification-token-ttl: PT24H
     verification-resend-cooldown: PT2M

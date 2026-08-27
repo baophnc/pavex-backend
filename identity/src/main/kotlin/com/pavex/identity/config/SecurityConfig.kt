@@ -43,6 +43,7 @@ class SecurityConfig {
                     "/api/v1/auth/forgot-password",
                     "/api/v1/auth/reset-password",
                     "/api/v1/auth/accept-invite",
+                    "/api/v1/auth/google",
                 ).permitAll()
 
                     .anyRequest()
