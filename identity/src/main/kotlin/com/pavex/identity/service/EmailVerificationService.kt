@@ -4,12 +4,12 @@ import com.pavex.identity.dto.auth.ResendVerificationRequest
 import com.pavex.identity.dto.auth.VerifyEmailRequest
 import com.pavex.identity.entity.EmailVerificationToken
 import com.pavex.identity.event.EmailVerificationRequestedEvent
+import com.pavex.identity.messaging.IdentityMessagingTopology
 import com.pavex.identity.exception.InvalidEmailVerificationTokenException
 import com.pavex.identity.repository.EmailVerificationTokenRepository
 import com.pavex.identity.repository.UserAccountRepository
 import com.pavex.identity.security.OpaqueTokenService
 import org.springframework.beans.factory.annotation.Value
-import org.springframework.context.ApplicationEventPublisher
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Propagation
 import org.springframework.transaction.annotation.Transactional
@@ -29,8 +29,8 @@ class EmailVerificationService(
     private val opaqueTokenService:
         OpaqueTokenService,
 
-    private val eventPublisher:
-        ApplicationEventPublisher,
+    private val outboxService:
+        OutboxService,
 
     private val advisoryLockService:
         AdvisoryLockService,
@@ -223,13 +223,17 @@ class EmailVerificationService(
             verificationToken
         )
 
-        eventPublisher.publishEvent(
-            EmailVerificationRequestedEvent(
-                email =
-                    email,
-                rawToken =
-                    issued.raw,
-            )
+        outboxService.enqueue(
+            eventType =
+                IdentityMessagingTopology.EMAIL_VERIFICATION_REQUESTED,
+            payload =
+                EmailVerificationRequestedEvent(
+                    email = email,
+                    rawToken = issued.raw,
+                ),
+            aggregateType = "user",
+            aggregateId = userId,
+            occurredAt = now,
         )
     }
 

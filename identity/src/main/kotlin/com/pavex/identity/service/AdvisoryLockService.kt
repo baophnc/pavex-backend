@@ -45,7 +45,7 @@ class AdvisoryLockService(
                 resultSet.getBoolean(1)
             },
             key,
-        ) ?: false
+        )
     }
 
 

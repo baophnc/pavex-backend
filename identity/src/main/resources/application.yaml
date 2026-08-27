@@ -33,6 +33,29 @@ spring:
           starttls:
             enable: ${MAIL_STARTTLS:false}
 
+  rabbitmq:
+    host: ${RABBITMQ_HOST:localhost}
+    port: ${RABBITMQ_PORT:5672}
+    username: ${RABBITMQ_USERNAME:pavex}
+    password: ${RABBITMQ_PASSWORD:pavex}
+    virtual-host: ${RABBITMQ_VHOST:pavex}
+    connection-timeout: ${RABBITMQ_CONNECTION_TIMEOUT:3s}
+    publisher-confirm-type: correlated
+    publisher-returns: true
+
+    template:
+      mandatory: true
+
+    listener:
+      simple:
+        default-requeue-rejected: false
+        retry:
+          enabled: true
+          initial-interval: 2s
+          multiplier: 2
+          max-interval: 30s
+          max-attempts: 5
+
 
 server:
   port: 8081
@@ -66,6 +89,20 @@ identity:
     cron: ${IDENTITY_CLEANUP_CRON:0 17 * * * *}
     zone: ${IDENTITY_CLEANUP_ZONE:UTC}
 
+  messaging:
+    exchange: ${IDENTITY_MESSAGING_EXCHANGE:pavex.events}
+    email-consumer-enabled: ${IDENTITY_EMAIL_CONSUMER_ENABLED:true}
+
+  outbox:
+    publisher-enabled: ${IDENTITY_OUTBOX_PUBLISHER_ENABLED:true}
+    poll-delay-ms: ${IDENTITY_OUTBOX_POLL_DELAY_MS:2000}
+    batch-size: ${IDENTITY_OUTBOX_BATCH_SIZE:10}
+    max-attempts: ${IDENTITY_OUTBOX_MAX_ATTEMPTS:100}
+    confirm-timeout: ${IDENTITY_OUTBOX_CONFIRM_TIMEOUT:PT5S}
+    published-retention: ${IDENTITY_OUTBOX_PUBLISHED_RETENTION:P7D}
+    consumed-retention: ${IDENTITY_CONSUMED_MESSAGE_RETENTION:P30D}
+    payload-encryption-key: ${OUTBOX_PAYLOAD_ENCRYPTION_KEY:}
+
 
 pavex:
   email:
@@ -88,6 +125,10 @@ eureka:
     prefer-ip-address: ${EUREKA_PREFER_IP_ADDRESS:false}
 
 management:
+  health:
+    rabbit:
+      enabled: false
+
   endpoints:
     web:
       exposure:

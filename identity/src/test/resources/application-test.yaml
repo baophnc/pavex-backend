@@ -1,7 +1,7 @@
 security:
   jwt:
-    private-key: file:./.keys/private.pem
-    public-key: file:./.keys/public.pem
+    private-key: classpath:keys/test-private.pem
+    public-key: classpath:keys/test-public.pem
 
 spring:
   cloud:
@@ -11,3 +11,16 @@ spring:
 eureka:
   client:
     enabled: false
+
+identity:
+  messaging:
+    email-consumer-enabled: false
+
+  outbox:
+    publisher-enabled: false
+    payload-encryption-key: MDEyMzQ1Njc4OWFiY2RlZjAxMjM0NTY3ODlhYmNkZWY=
+
+management:
+  health:
+    rabbit:
+      enabled: false

@@ -3,12 +3,12 @@ package com.pavex.identity.service
 import com.pavex.identity.entity.PasswordResetToken
 import com.pavex.identity.event.PasswordResetRequestedEvent
 import com.pavex.identity.exception.InvalidPasswordResetTokenException
+import com.pavex.identity.messaging.IdentityMessagingTopology
 import com.pavex.identity.repository.PasswordResetTokenRepository
 import com.pavex.identity.repository.RefreshSessionRepository
 import com.pavex.identity.repository.UserAccountRepository
 import com.pavex.identity.security.OpaqueTokenService
 import org.springframework.beans.factory.annotation.Value
-import org.springframework.context.ApplicationEventPublisher
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -33,8 +33,8 @@ class PasswordResetService(
     private val passwordEncoder:
         PasswordEncoder,
 
-    private val eventPublisher:
-        ApplicationEventPublisher,
+    private val outboxService:
+        OutboxService,
 
     private val advisoryLockService:
         AdvisoryLockService,
@@ -102,13 +102,17 @@ class PasswordResetService(
             )
         )
 
-        eventPublisher.publishEvent(
-            PasswordResetRequestedEvent(
-                email =
-                    account.email,
-                rawToken =
-                    issued.raw,
-            )
+        outboxService.enqueue(
+            eventType =
+                IdentityMessagingTopology.PASSWORD_RESET_REQUESTED,
+            payload =
+                PasswordResetRequestedEvent(
+                    email = account.email,
+                    rawToken = issued.raw,
+                ),
+            aggregateType = "user",
+            aggregateId = account.id,
+            occurredAt = now,
         )
     }
 

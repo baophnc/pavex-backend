@@ -10,8 +10,8 @@ import com.pavex.identity.exception.UserNotFoundException
 import com.pavex.identity.repository.InvitationTokenRepository
 import com.pavex.identity.repository.UserAccountRepository
 import com.pavex.identity.security.OpaqueTokenService
+import com.pavex.identity.messaging.IdentityMessagingTopology
 import org.springframework.beans.factory.annotation.Value
-import org.springframework.context.ApplicationEventPublisher
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -34,8 +34,8 @@ class InvitationService(
     private val passwordEncoder:
         PasswordEncoder,
 
-    private val eventPublisher:
-        ApplicationEventPublisher,
+    private val outboxService:
+        OutboxService,
 
     private val advisoryLockService:
         AdvisoryLockService,
@@ -111,13 +111,17 @@ class InvitationService(
             )
         )
 
-        eventPublisher.publishEvent(
-            InvitationRequestedEvent(
-                email =
-                    user.email,
-                rawToken =
-                    issued.raw,
-            )
+        outboxService.enqueue(
+            eventType =
+                IdentityMessagingTopology.INVITATION_REQUESTED,
+            payload =
+                InvitationRequestedEvent(
+                    email = user.email,
+                    rawToken = issued.raw,
+                ),
+            aggregateType = "user",
+            aggregateId = user.id,
+            occurredAt = now,
         )
     }
 

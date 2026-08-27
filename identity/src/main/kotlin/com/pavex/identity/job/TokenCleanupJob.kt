@@ -1,7 +1,9 @@
 package com.pavex.identity.job
 
 import com.pavex.identity.repository.EmailVerificationTokenRepository
+import com.pavex.identity.repository.ConsumedMessageRepository
 import com.pavex.identity.repository.InvitationTokenRepository
+import com.pavex.identity.repository.OutboxMessageRepository
 import com.pavex.identity.repository.PasswordResetTokenRepository
 import com.pavex.identity.repository.RefreshSessionRepository
 import com.pavex.identity.service.AdvisoryLockService
@@ -38,10 +40,28 @@ class TokenCleanupJob(
     private val advisoryLockService:
         AdvisoryLockService,
 
+    private val outboxMessageRepository:
+        OutboxMessageRepository,
+
+    private val consumedMessageRepository:
+        ConsumedMessageRepository,
+
     @Value(
         "\${identity.cleanup.token-retention:P7D}"
     )
     private val tokenRetention:
+        Duration,
+
+    @Value(
+        "\${identity.outbox.published-retention:P7D}"
+    )
+    private val outboxPublishedRetention:
+        Duration,
+
+    @Value(
+        "\${identity.outbox.consumed-retention:P30D}"
+    )
+    private val consumedMessageRetention:
         Duration,
 ) {
 
@@ -101,21 +121,44 @@ class TokenCleanupJob(
                     cutoff
                 )
 
+        val now =
+            Instant.now()
+
+        val outboxCount =
+            outboxMessageRepository
+                .deletePublishedBefore(
+                    now.minus(
+                        outboxPublishedRetention
+                    )
+                )
+
+        val consumedMessageCount =
+            consumedMessageRepository
+                .deleteProcessedBefore(
+                    now.minus(
+                        consumedMessageRetention
+                    )
+                )
+
         val total =
             emailVerificationCount +
                 passwordResetCount +
                 invitationCount +
-                refreshSessionCount
+                refreshSessionCount +
+                outboxCount +
+                consumedMessageCount
 
         if (total > 0) {
 
             logger.info(
-                "Identity token cleanup removed {} records: emailVerification={}, passwordReset={}, invitations={}, refreshSessions={}",
+                "Identity cleanup removed {} records: emailVerification={}, passwordReset={}, invitations={}, refreshSessions={}, outbox={}, consumedMessages={}",
                 total,
                 emailVerificationCount,
                 passwordResetCount,
                 invitationCount,
                 refreshSessionCount,
+                outboxCount,
+                consumedMessageCount,
             )
         }
     }
