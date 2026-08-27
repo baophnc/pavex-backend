@@ -21,6 +21,10 @@ import com.pavex.identity.service.EmailVerificationService
 import com.pavex.identity.dto.auth.ForgotPasswordRequest
 import com.pavex.identity.dto.auth.ResetPasswordRequest
 import com.pavex.identity.service.PasswordResetService
+import com.pavex.identity.dto.auth.ChangePasswordRequest
+import com.pavex.identity.service.ChangePasswordService
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken
+import java.util.UUID
 @RestController
 @RequestMapping("/api/v1/auth")
 class AuthController(
@@ -29,6 +33,8 @@ class AuthController(
     EmailVerificationService,
     private val passwordResetService:
     PasswordResetService,
+    private val changePasswordService:
+    ChangePasswordService,
 ) {
 
     @PostMapping("/register")
@@ -154,6 +160,34 @@ class AuthController(
         return MessageResponse(
             message =
                 "Password reset successfully.",
+        )
+    }
+    @PostMapping("/change-password")
+    fun changePassword(
+        authentication: JwtAuthenticationToken,
+
+        @Valid
+        @RequestBody
+        request: ChangePasswordRequest,
+    ): MessageResponse {
+
+        val userId =
+            UUID.fromString(
+                authentication.token.subject
+            )
+
+        changePasswordService
+            .changePassword(
+                userId = userId,
+                currentPassword =
+                    request.currentPassword,
+                newPassword =
+                    request.newPassword,
+            )
+
+        return MessageResponse(
+            message =
+                "Password changed successfully.",
         )
     }
 }
