@@ -1,0 +1,4 @@
+security:
+  jwt:
+    private-key: file:./.keys/private.pem
+    public-key: file:./.keys/public.pem

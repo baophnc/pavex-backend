@@ -14,11 +14,16 @@ import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.ResponseStatus
 import org.springframework.web.bind.annotation.RestController
-
+import com.pavex.identity.dto.auth.MessageResponse
+import com.pavex.identity.dto.auth.ResendVerificationRequest
+import com.pavex.identity.dto.auth.VerifyEmailRequest
+import com.pavex.identity.service.EmailVerificationService
 @RestController
 @RequestMapping("/api/v1/auth")
 class AuthController(
     private val authService: AuthService,
+    private val emailVerificationService:
+    EmailVerificationService,
 ) {
 
     @PostMapping("/register")
@@ -71,6 +76,40 @@ class AuthController(
 
         authService.logout(
             request
+        )
+    }
+    @PostMapping("/verify-email")
+    fun verifyEmail(
+        @RequestBody
+        request: VerifyEmailRequest,
+    ): MessageResponse {
+
+        emailVerificationService
+            .verify(
+                request
+            )
+
+        return MessageResponse(
+            message =
+                "Email verified successfully."
+        )
+    }
+
+
+    @PostMapping("/resend-verification")
+    fun resendVerification(
+        @RequestBody
+        request: ResendVerificationRequest,
+    ): MessageResponse {
+
+        emailVerificationService
+            .resend(
+                request
+            )
+
+        return MessageResponse(
+            message =
+                "If the account exists and is not verified, a verification email has been sent."
         )
     }
 }

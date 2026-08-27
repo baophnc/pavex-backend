@@ -44,6 +44,8 @@ class AuthService(
 
     private val roleService:
         RoleService,
+    private val emailVerificationService:
+    EmailVerificationService,
 ) {
 
     @Transactional
@@ -102,14 +104,34 @@ class AuthService(
             savedAccount.id,
             now,
         )
+        emailVerificationService
+            .issueForRegistration(
+                userId =
+                    savedAccount.id,
+
+                email =
+                    savedAccount.email,
+
+                now =
+                    now,
+            )
 
         return RegisterResponse(
-            id = savedAccount.id,
-            email = savedAccount.email,
+            id =
+                savedAccount.id,
+
+            email =
+                savedAccount.email,
+
             status =
                 savedAccount.status.name,
+
             emailVerified =
                 savedAccount.emailVerified,
+
+            emailVerificationRequired =
+                !savedAccount.emailVerified,
+
             createdAt =
                 savedAccount.createdAt,
         )

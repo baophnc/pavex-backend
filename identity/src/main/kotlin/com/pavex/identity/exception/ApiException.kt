@@ -58,3 +58,9 @@ class InvalidRefreshTokenException :
         code = "invalid_refresh_token",
         message = "Refresh token is invalid or expired",
     )
+class InvalidEmailVerificationTokenException :
+    ApiException(
+        status = HttpStatus.BAD_REQUEST,
+        code = "invalid_email_verification_token",
+        message = "Invalid or expired verification token.",
+    )

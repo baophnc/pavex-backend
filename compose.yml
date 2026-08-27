@@ -20,5 +20,13 @@ services:
       timeout: 5s
       retries: 10
 
+  mailpit:
+    image: axllent/mailpit
+    container_name: pavex-mailpit
+
+    ports:
+      - "8025:8025"
+      - "1025:1025"
+
 volumes:
   identity_postgres_data:
