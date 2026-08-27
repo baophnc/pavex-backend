@@ -1,0 +1,21 @@
+@baseUrl = http://localhost:8080
+
+### Gateway health
+GET {{baseUrl}}/actuator/health
+
+### Login routed through Gateway -> Eureka -> Identity
+POST {{baseUrl}}/api/v1/auth/login
+Content-Type: application/json
+X-Request-Id: gateway-login-test
+
+{
+  "email": "YOUR_EMAIL@example.com",
+  "password": "YOUR_PASSWORD"
+}
+
+### Unknown route should not be auto-exposed from Eureka
+GET {{baseUrl}}/identity-service/api/v1/auth/login
+
+### Gateway request id: invalid client value is replaced
+GET {{baseUrl}}/actuator/health
+X-Request-Id: this value contains spaces and should be replaced

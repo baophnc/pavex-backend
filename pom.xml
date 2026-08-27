@@ -42,6 +42,7 @@
     <modules>
         <module>identity</module>
         <module>platform/discovery-server</module>
+        <module>platform/api-gateway</module>
     </modules>
 
 </project>

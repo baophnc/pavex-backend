@@ -28,5 +28,23 @@ services:
       - "8025:8025"
       - "1025:1025"
 
+  gateway-redis:
+    image: redis:8.2-alpine
+    container_name: pavex-gateway-redis
+
+    ports:
+      - "6379:6379"
+
+    command:
+      - redis-server
+      - --appendonly
+      - "no"
+
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
 volumes:
   identity_postgres_data:
