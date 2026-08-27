@@ -1,6 +1,7 @@
 package com.pavex.identity.security
 
 import com.pavex.identity.entity.UserAccount
+import com.pavex.identity.service.RoleService
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.security.oauth2.jose.jws.SignatureAlgorithm
 import org.springframework.security.oauth2.jwt.JwtClaimsSet
@@ -14,13 +15,18 @@ import java.time.Instant
 @Service
 class JwtService(
 
-    private val jwtEncoder: JwtEncoder,
+    private val jwtEncoder:
+        JwtEncoder,
+
+    private val roleService:
+        RoleService,
 
     @Value("\${security.jwt.issuer}")
     private val issuer: String,
 
     @Value("\${security.jwt.access-token-ttl}")
-    private val accessTokenTtl: Duration,
+    private val accessTokenTtl:
+        Duration,
 ) {
 
     fun createAccessToken(
@@ -28,47 +34,63 @@ class JwtService(
         now: Instant,
     ): AccessToken {
 
+        val authorization =
+            roleService.getAuthorization(
+                account.id
+            )
+
         val expiresAt =
-            now.plus(accessTokenTtl)
+            now.plus(
+                accessTokenTtl
+            )
 
-        val claims = JwtClaimsSet
-            .builder()
-            .issuer(issuer)
-            .subject(account.id.toString())
-            .issuedAt(now)
-            .expiresAt(expiresAt)
-            .claim(
-                "email",
-                account.email,
-            )
-            .claim(
-                "roles",
-                emptyList<String>(),
-            )
-            .claim(
-                "permissions",
-                emptyList<String>(),
-            )
-            .build()
+        val claims =
+            JwtClaimsSet
+                .builder()
+                .issuer(issuer)
+                .subject(
+                    account.id.toString()
+                )
+                .issuedAt(now)
+                .expiresAt(expiresAt)
+                .claim(
+                    "email",
+                    account.email,
+                )
+                .claim(
+                    "roles",
+                    authorization.roles,
+                )
+                .claim(
+                    "permissions",
+                    authorization.permissions,
+                )
+                .build()
 
-        val headers = JwsHeader
-            .with(SignatureAlgorithm.RS256)
-            .build()
+        val header =
+            JwsHeader
+                .with(
+                    SignatureAlgorithm.RS256
+                )
+                .build()
 
-        val jwt = jwtEncoder.encode(
-            JwtEncoderParameters.from(
-                headers,
-                claims,
+        val jwt =
+            jwtEncoder.encode(
+                JwtEncoderParameters.from(
+                    header,
+                    claims,
+                )
             )
-        )
 
         return AccessToken(
             token = jwt.tokenValue,
             expiresAt = expiresAt,
-            expiresIn = accessTokenTtl.seconds,
+            expiresIn =
+                accessTokenTtl.seconds,
         )
     }
 }
+
 
 data class AccessToken(
     val token: String,

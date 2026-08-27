@@ -2,10 +2,14 @@ package com.pavex.identity.config
 
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
-import org.springframework.security.config.Customizer
+import org.springframework.core.convert.converter.Converter
+import org.springframework.security.authentication.AbstractAuthenticationToken
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity
 import org.springframework.security.config.annotation.web.builders.HttpSecurity
 import org.springframework.security.config.http.SessionCreationPolicy
+import org.springframework.security.core.authority.SimpleGrantedAuthority
+import org.springframework.security.oauth2.jwt.Jwt
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken
 import org.springframework.security.web.SecurityFilterChain
 
 @Configuration
@@ -18,36 +22,88 @@ class SecurityConfig {
     ): SecurityFilterChain {
 
         http
-            .csrf { csrf ->
-                csrf.disable()
+            .csrf {
+                it.disable()
             }
 
-            .sessionManagement { session ->
-                session.sessionCreationPolicy(
+            .sessionManagement {
+                it.sessionCreationPolicy(
                     SessionCreationPolicy.STATELESS
                 )
             }
 
-            .authorizeHttpRequests { auth ->
-                auth
-                    .requestMatchers(
-                        "/api/v1/auth/register",
-                        "/api/v1/auth/login",
-                        "/api/v1/auth/refresh",
-                        "/api/v1/auth/logout",
-                    )
+            .authorizeHttpRequests {
+                it.requestMatchers(
+                    "/api/v1/auth/register",
+                    "/api/v1/auth/login",
+                    "/api/v1/auth/refresh",
+                    "/api/v1/auth/logout",
+                )
                     .permitAll()
 
                     .anyRequest()
                     .authenticated()
             }
 
-            .oauth2ResourceServer { resourceServer ->
-                resourceServer.jwt(
-                    Customizer.withDefaults()
-                )
+            .oauth2ResourceServer {
+                it.jwt { jwt ->
+                    jwt.jwtAuthenticationConverter(
+                        jwtAuthenticationConverter()
+                    )
+                }
             }
 
         return http.build()
+    }
+
+
+    @Bean
+    fun jwtAuthenticationConverter():
+        Converter<Jwt, AbstractAuthenticationToken> {
+
+        return Converter { jwt ->
+
+            val authorities =
+                mutableListOf<SimpleGrantedAuthority>()
+
+            val roles =
+                jwt.getClaimAsStringList(
+                    "roles"
+                ) ?: emptyList()
+
+            roles.forEach { role ->
+
+                authorities.add(
+                    SimpleGrantedAuthority(
+                        "ROLE_$role"
+                    )
+                )
+            }
+
+            val permissions =
+                jwt.getClaimAsStringList(
+                    "permissions"
+                ) ?: emptyList()
+
+            permissions.forEach {
+                permission ->
+
+                authorities.add(
+                    SimpleGrantedAuthority(
+                        permission
+                    )
+                )
+            }
+
+            val subject = requireNotNull(jwt.subject) {
+                "JWT subject is missing"
+            }
+
+            JwtAuthenticationToken(
+                jwt,
+                authorities,
+                subject,
+            )
+        }
     }
 }

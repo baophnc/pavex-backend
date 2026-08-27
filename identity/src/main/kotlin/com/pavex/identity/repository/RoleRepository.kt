@@ -7,7 +7,11 @@ import java.util.UUID
 interface RoleRepository :
     JpaRepository<Role, UUID> {
 
-    fun findByCode(code: String): Role?
+    fun findByCode(
+        code: String,
+    ): Role?
 
-    fun existsByCode(code: String): Boolean
+    fun findAllByIdIn(
+        ids: Collection<UUID>,
+    ): List<Role>
 }

@@ -28,19 +28,22 @@ import java.time.Instant
 class AuthService(
 
     private val userAccountRepository:
-    UserAccountRepository,
+        UserAccountRepository,
 
     private val userProfileRepository:
-    UserProfileRepository,
+        UserProfileRepository,
 
     private val passwordEncoder:
-    PasswordEncoder,
+        PasswordEncoder,
 
     private val jwtService:
-    JwtService,
+        JwtService,
 
     private val refreshTokenService:
-    RefreshTokenService,
+        RefreshTokenService,
+
+    private val roleService:
+        RoleService,
 ) {
 
     @Transactional
@@ -49,9 +52,7 @@ class AuthService(
     ): RegisterResponse {
 
         val email =
-            normalizeEmail(
-                request.email
-            )
+            normalizeEmail(request.email)
 
         if (
             userAccountRepository
@@ -88,16 +89,18 @@ class AuthService(
                 account
             )
 
-        val profile =
+        userProfileRepository.save(
             UserProfile(
                 userId =
                     savedAccount.id,
                 createdAt = now,
                 updatedAt = now,
             )
+        )
 
-        userProfileRepository.save(
-            profile
+        roleService.assignDefaultCustomerRole(
+            savedAccount.id,
+            now,
         )
 
         return RegisterResponse(
@@ -123,9 +126,7 @@ class AuthService(
     ): AuthResponse {
 
         val email =
-            normalizeEmail(
-                request.email
-            )
+            normalizeEmail(request.email)
 
         val account =
             userAccountRepository
@@ -135,9 +136,7 @@ class AuthService(
         val now =
             Instant.now()
 
-        checkAccountStatus(
-            account
-        )
+        checkAccountStatus(account)
 
         val lockoutEnd =
             account.lockoutEndAt
@@ -151,7 +150,6 @@ class AuthService(
             )
         }
 
-        // Lockout cũ đã hết.
         if (
             lockoutEnd != null &&
             !lockoutEnd.isAfter(now)
@@ -160,13 +158,13 @@ class AuthService(
             account.lockoutEndAt = null
         }
 
-        val passwordMatches =
+        val matches =
             passwordEncoder.matches(
                 request.password,
                 account.passwordHash,
             )
 
-        if (!passwordMatches) {
+        if (!matches) {
 
             account.failedLoginAttempts += 1
             account.updatedAt = now
@@ -227,9 +225,7 @@ class AuthService(
                     InvalidRefreshTokenException()
                 }
 
-        checkAccountStatus(
-            account
-        )
+        checkAccountStatus(account)
 
         val accessToken =
             jwtService.createAccessToken(
@@ -240,10 +236,8 @@ class AuthService(
         return AuthResponse(
             accessToken =
                 accessToken.token,
-
             refreshToken =
                 rotated.token,
-
             expiresIn =
                 accessToken.expiresIn,
         )
@@ -282,10 +276,8 @@ class AuthService(
         return AuthResponse(
             accessToken =
                 accessToken.token,
-
             refreshToken =
                 refreshToken.token,
-
             expiresIn =
                 accessToken.expiresIn,
         )
@@ -298,7 +290,8 @@ class AuthService(
 
         when (account.status) {
 
-            AccountStatus.ACTIVE -> Unit
+            AccountStatus.ACTIVE ->
+                Unit
 
             AccountStatus.SUSPENDED ->
                 throw AccountSuspendedException()
@@ -322,10 +315,10 @@ class AuthService(
     companion object {
 
         private const val
-                MAX_FAILED_LOGIN_ATTEMPTS = 5
+            MAX_FAILED_LOGIN_ATTEMPTS = 5
 
         private val
-                LOGIN_LOCKOUT_DURATION =
-            Duration.ofMinutes(15)
+            LOGIN_LOCKOUT_DURATION =
+                Duration.ofMinutes(15)
     }
 }
