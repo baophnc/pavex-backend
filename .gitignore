@@ -27,4 +27,4 @@ Thumbs.db
 *.pem
 *.key
 *.p12
-*.jks
+*.jksidentity/.keys/
