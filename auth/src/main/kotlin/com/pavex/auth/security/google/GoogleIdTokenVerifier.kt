@@ -3,6 +3,8 @@ package com.pavex.auth.security.google
 import com.pavex.auth.exception.GoogleAuthenticationNotConfiguredException
 import com.pavex.auth.exception.InvalidGoogleTokenException
 import org.springframework.beans.factory.annotation.Value
+import org.springframework.core.env.Environment
+import org.springframework.core.env.Profiles
 import org.springframework.security.oauth2.core.DelegatingOAuth2TokenValidator
 import org.springframework.security.oauth2.core.OAuth2Error
 import org.springframework.security.oauth2.core.OAuth2TokenValidator
@@ -21,9 +23,11 @@ class GoogleIdTokenVerifier(
         "\${auth.google.client-ids:}"
     )
     rawClientIds: String,
+
+    environment: Environment,
 ) {
 
-    private val clientIds =
+    private val configuredClientIds =
         rawClientIds
             .split(",")
             .map {
@@ -33,6 +37,18 @@ class GoogleIdTokenVerifier(
                 it.isNotEmpty()
             }
             .toSet()
+
+    private val clientIds =
+        if (
+            configuredClientIds.isEmpty() &&
+            !environment.acceptsProfiles(
+                Profiles.of("prod")
+            )
+        ) {
+            setOf(LOCAL_DEVELOPMENT_CLIENT_ID)
+        } else {
+            configuredClientIds
+        }
 
 
     private val decoder by lazy {
@@ -234,5 +250,9 @@ class GoogleIdTokenVerifier(
                     "accounts.google.com",
                     "https://accounts.google.com",
                 )
+
+        private const val
+            LOCAL_DEVELOPMENT_CLIENT_ID =
+                "718173529385-hden9ogj5u4br4bu6um7dk65jdodsnq2.apps.googleusercontent.com"
     }
 }
