@@ -22,8 +22,8 @@ class SecurityConfig {
 
     /**
      * Partners receives the narrowest Identity permission possible. It may read
-     * merchant-application eligibility only; its service token cannot use the
-     * broader Auth-owned /internal identity endpoints.
+     * merchant-application eligibility and synchronize only the MERCHANT role;
+     * its service token cannot use broader Auth-owned /internal endpoints.
      */
     @Bean
     @Order(1)
@@ -34,7 +34,8 @@ class SecurityConfig {
     ): SecurityFilterChain =
         http
             .securityMatcher(
-                "/internal/v1/identities/*/merchant-eligibility"
+                "/internal/v1/identities/*/merchant-eligibility",
+                "/internal/v1/identities/*/merchant-role",
             )
             .csrf { it.disable() }
             .sessionManagement {

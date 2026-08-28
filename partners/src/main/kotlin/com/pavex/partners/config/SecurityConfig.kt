@@ -9,6 +9,7 @@ import org.springframework.security.authentication.AbstractAuthenticationToken
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity
 import org.springframework.security.config.annotation.web.builders.HttpSecurity
 import org.springframework.security.config.http.SessionCreationPolicy
+import org.springframework.core.annotation.Order
 import org.springframework.security.core.authority.SimpleGrantedAuthority
 import org.springframework.security.oauth2.jwt.Jwt
 import org.springframework.security.oauth2.jwt.JwtDecoder
@@ -20,6 +21,25 @@ import org.springframework.security.web.SecurityFilterChain
 class SecurityConfig {
 
     @Bean
+    @Order(1)
+    fun internalSecurityFilterChain(
+        http: HttpSecurity,
+        @Qualifier("shipmentServiceJwtDecoder") shipmentServiceJwtDecoder: JwtDecoder,
+    ): SecurityFilterChain =
+        http
+            .securityMatcher("/internal/v1/merchants/**")
+            .csrf { it.disable() }
+            .sessionManagement { it.sessionCreationPolicy(SessionCreationPolicy.STATELESS) }
+            .authorizeHttpRequests {
+                it.anyRequest().hasAuthority("SCOPE_partners.orders.evaluate")
+            }
+            .oauth2ResourceServer { resourceServer ->
+                resourceServer.jwt { jwt -> jwt.decoder(shipmentServiceJwtDecoder) }
+            }
+            .build()
+
+    @Bean
+    @Order(2)
     fun apiSecurityFilterChain(
         http: HttpSecurity,
         @Qualifier("userJwtDecoder") userJwtDecoder: JwtDecoder,
@@ -36,7 +56,6 @@ class SecurityConfig {
                     "/actuator/health",
                     "/actuator/health/**",
                 ).permitAll()
-                    // Province/ward lookup becomes a public read-only catalog in Patch 03.
                     .requestMatchers(HttpMethod.GET, "/api/v1/locations/**").permitAll()
                     .requestMatchers(
                         "/api/v1/partners/**",

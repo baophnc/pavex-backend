@@ -24,21 +24,49 @@ development. Calls to Identity use short-lived service JWTs:
 - scope: `identity.merchant`
 
 The scope is deliberately narrow. Identity accepts it only for merchant
-eligibility and keeps Auth's broader `identity.internal` boundary separate.
+eligibility and idempotent `MERCHANT` role synchronization; Auth's broader
+`identity.internal` boundary remains separate. Role changes are written to a
+Partners outbox in the same transaction as merchant status changes and retried
+until Identity accepts them.
 
-## Patch 01 boundary
+Shipment calls the internal order-capability endpoint with its own service JWT:
 
-This foundation patch provides runtime wiring only:
+- subject: `shipment-service`
+- audience: `partners-service`
+- token type: `service`
+- scope: `partners.orders.evaluate`
 
-- Spring Boot/Kotlin service on port `8083`
-- dedicated PostgreSQL database/schema
-- Flyway ownership boundary
-- Eureka registration
-- Auth-issued user JWT validation
-- explicit API Gateway route ownership
-- centralized Swagger/OpenAPI aggregation
+Production must provide `SHIPMENT_SERVICE_JWT_ISSUER` and
+`SHIPMENT_SERVICE_JWT_PUBLIC_KEY`.
 
-Business tables and endpoints intentionally start in later patches. Patch 02
-adds Partners -> Identity service authentication and canonical merchant
-eligibility without creating any Partners business tables. Patch 03 starts
-locations and addresses.
+## API surface
+
+- Public location catalog: `/api/v1/locations/**`
+- Personal addresses: `/api/v1/partners/me/addresses/**`
+- Merchant profile: `/api/v1/merchants/me/profile/**`
+- Merchant pickup addresses: `/api/v1/merchants/me/pickup-addresses/**`
+- Merchant administration: `/api/v1/admin/merchants/**`
+- Shipment capability contract:
+  `/internal/v1/merchants/by-user/{userId}/order-capability`
+
+Merchant application eligibility is sourced from Identity. A merchant can
+create an order only when the Identity account remains eligible, the merchant
+is `ACTIVE`, and a default pickup address exists. Shipment receives restriction
+codes instead of reconstructing those rules from JWT roles.
+
+## Implemented boundary
+
+The service currently owns:
+
+- the current Vietnam province/ward dataset;
+- user-address CRUD with a single-default invariant;
+- merchant application, update and rejected-profile resubmission;
+- business-facing merchant codes (`PVM000001`, ...);
+- pickup-address CRUD with a single-default invariant;
+- admin search, approval, rejection, suspension and reactivation;
+- merchant status history and durable Identity role synchronization;
+- the canonical `canCreateOrder` decision used by Shipment.
+
+Staff/employees, multiple owners, branches, bank accounts, wallets,
+commissions, billing, contracts, business document upload and merchant API keys
+remain outside this MVP.

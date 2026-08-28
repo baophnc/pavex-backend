@@ -21,6 +21,9 @@ security:
     ttl: PT1M
     private-key: classpath:keys/test-private.pem
     public-key: classpath:keys/test-public.pem
+    partners:
+      issuer: http://localhost:8083
+      public-key: classpath:keys/test-public.pem
 
 eureka:
   client:

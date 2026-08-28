@@ -420,6 +420,30 @@ class RoleService(
         userAccountRepository.save(user)
     }
 
+    /**
+     * Narrow, idempotent operation used by Partners' durable outbox. A retry
+     * after a lost HTTP response must not fail merely because the desired role
+     * state was already committed.
+     */
+    @Transactional
+    fun synchronizeMerchantRole(
+        actorUserId: UUID,
+        targetUserId: UUID,
+        enabled: Boolean,
+    ) {
+        if (enabled) {
+            assignRole(actorUserId, targetUserId, MERCHANT_ROLE)
+            return
+        }
+
+        val role = roleRepository.findByCode(MERCHANT_ROLE)
+            ?: throw RoleNotFoundException()
+        if (userRoleRepository.findByUserIdAndRoleId(targetUserId, role.id) == null) {
+            return
+        }
+        removeRole(actorUserId, targetUserId, MERCHANT_ROLE)
+    }
+
 
     companion object {
 
@@ -428,6 +452,9 @@ class RoleService(
 
         const val ADMIN_ROLE =
             "ADMIN"
+
+        const val MERCHANT_ROLE =
+            "MERCHANT"
     }
     private fun normalizeRoleCode(
         value: String,

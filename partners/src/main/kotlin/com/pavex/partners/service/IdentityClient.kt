@@ -1,6 +1,7 @@
 package com.pavex.partners.service
 
 import com.pavex.contracts.identity.MerchantEligibilityResponse
+import com.pavex.contracts.identity.MerchantRoleSyncRequest
 import com.pavex.partners.exception.IdentityServiceUnavailableException
 import com.pavex.partners.security.service.ServiceJwtIssuer
 import org.springframework.beans.factory.annotation.Value
@@ -18,13 +19,13 @@ class IdentityClient(
     @Value("\${partners.identity.service-url:http://identity-service}")
     serviceUrl: String,
     private val serviceJwtIssuer: ServiceJwtIssuer,
-) {
+) : IdentityMerchantGateway {
 
     private val client = builder
         .baseUrl(serviceUrl)
         .build()
 
-    fun findMerchantEligibility(
+    override fun findMerchantEligibility(
         userId: UUID,
     ): MerchantEligibilityResponse? =
         try {
@@ -49,4 +50,21 @@ class IdentityClient(
         } catch (exception: RestClientException) {
             throw IdentityServiceUnavailableException()
         }
+
+    override fun synchronizeMerchantRole(
+        userId: UUID,
+        request: MerchantRoleSyncRequest,
+    ) {
+        try {
+            client
+                .put()
+                .uri("/internal/v1/identities/{userId}/merchant-role", userId)
+                .headers { headers -> headers.setBearerAuth(serviceJwtIssuer.issueForIdentity()) }
+                .body(request)
+                .retrieve()
+                .toBodilessEntity()
+        } catch (exception: RestClientException) {
+            throw IdentityServiceUnavailableException()
+        }
+    }
 }
