@@ -9,6 +9,7 @@ import com.pavex.auth.dto.auth.RegisterResponse
 import com.pavex.auth.entity.UserAccount
 import com.pavex.auth.exception.AccountLockedException
 import com.pavex.auth.exception.EmailAlreadyExistsException
+import com.pavex.auth.exception.EmailNotVerifiedException
 import com.pavex.auth.exception.InvalidCredentialsException
 import com.pavex.auth.exception.InvalidRefreshTokenException
 import com.pavex.auth.exception.RefreshTokenReuseDetectedException
@@ -204,6 +205,10 @@ class AuthService(
             )
 
             throw InvalidCredentialsException()
+        }
+
+        if (!account.emailVerified) {
+            throw EmailNotVerifiedException()
         }
 
         account.failedLoginAttempts = 0
