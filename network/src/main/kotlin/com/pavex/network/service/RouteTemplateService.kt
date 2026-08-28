@@ -41,6 +41,7 @@ class RouteTemplateService(
     private val templateLegs: RouteTemplateLegRepository,
     private val lanes: HubLaneRepository,
     private val schedules: LaneScheduleRepository,
+    private val capacitySnapshots: DepartureCapacitySnapshotFactory,
     private val hubs: HubRepository,
     private val audit: NetworkAuditService,
     @Value("\${network.routing.transfer-buffer-minutes:30}")
@@ -163,6 +164,7 @@ class RouteTemplateService(
         val allLaneIds = lookup.paths.values.flatten().map { it.id }.distinct()
         val activeSchedules = if (allLaneIds.isEmpty()) emptyList() else
             schedules.findAllByLaneIdInAndStatus(allLaneIds, LaneScheduleStatus.ACTIVE)
+        val capacity = capacitySnapshots.build(activeSchedules, readyAt, scheduleSearchDays)
 
         candidates.forEach { template ->
             val path = lookup.paths[template.id].orEmpty()
@@ -177,6 +179,8 @@ class RouteTemplateService(
                 schedules = activeSchedules,
                 transferBufferMinutes = transferBufferMinutes,
                 scheduleSearchDays = scheduleSearchDays,
+                shipmentWeightKg = shipmentWeightKg,
+                capacity = capacity,
             ) ?: return@forEach
 
             val arrivalAt = planned.last().arrivalAt
@@ -217,6 +221,9 @@ class RouteTemplateService(
                         waitMinutes = leg.waitMinutes,
                         transitMinutes = leg.lane.estimatedTransitMinutes,
                         distanceKm = leg.lane.distanceKm,
+                        departureCapacityKg = leg.schedule.capacityKg,
+                        allocatedCapacityKg = capacity.allocated(leg.schedule, leg.serviceDate),
+                        remainingCapacityKg = capacity.remaining(leg.schedule, leg.serviceDate),
                     )
                 },
             )
@@ -397,7 +404,7 @@ class RouteTemplateService(
 
     private fun templateJourneyNotFound() = NotFoundException(
         "route_template_not_available",
-        "No active route template can currently carry this shipment between the selected hubs.",
+        "No active route template with enough remaining departure capacity can currently carry this shipment between the selected hubs.",
     )
 
     private data class ResponseLookup(

@@ -56,4 +56,7 @@ data class RoutePlanLegResponse(
     val waitMinutes: Long,
     val transitMinutes: Int,
     val distanceKm: BigDecimal?,
+    val departureCapacityKg: BigDecimal,
+    val allocatedCapacityKg: BigDecimal,
+    val remainingCapacityKg: BigDecimal,
 )

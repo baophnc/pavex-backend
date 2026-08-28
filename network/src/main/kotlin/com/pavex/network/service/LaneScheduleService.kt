@@ -4,7 +4,9 @@ import com.pavex.network.dto.lane.CreateLaneScheduleRequest
 import com.pavex.network.dto.lane.LaneScheduleResponse
 import com.pavex.network.dto.lane.UpdateLaneScheduleRequest
 import com.pavex.network.dto.lane.UpdateLaneScheduleStatusRequest
+import com.pavex.network.entity.HubLane
 import com.pavex.network.entity.HubLaneStatus
+import com.pavex.network.entity.LaneCapacityReservationStatus
 import com.pavex.network.entity.LaneSchedule
 import com.pavex.network.entity.LaneScheduleStatus
 import com.pavex.network.entity.NetworkAuditAction
@@ -13,9 +15,12 @@ import com.pavex.network.exception.ConflictException
 import com.pavex.network.exception.InvalidNetworkRequestException
 import com.pavex.network.exception.NotFoundException
 import com.pavex.network.repository.HubLaneRepository
+import com.pavex.network.repository.LaneCapacityReservationRepository
 import com.pavex.network.repository.LaneScheduleRepository
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
+import java.math.BigDecimal
+import java.time.Instant
 import java.time.LocalDate
 import java.util.UUID
 
@@ -23,6 +28,8 @@ import java.util.UUID
 class LaneScheduleService(
     private val lanes: HubLaneRepository,
     private val schedules: LaneScheduleRepository,
+    private val reservations: LaneCapacityReservationRepository,
+    private val transactionLocks: NetworkTransactionLockService,
     private val audit: NetworkAuditService,
 ) {
     @Transactional(readOnly = true)
@@ -37,14 +44,17 @@ class LaneScheduleService(
 
     @Transactional
     fun create(laneId: UUID, request: CreateLaneScheduleRequest, actorUserId: UUID): LaneScheduleResponse {
-        findLane(laneId)
+        transactionLocks.lock("lane:$laneId")
+        val lane = findLane(laneId)
         validateRange(request.daysOfWeek, request.effectiveFrom, request.effectiveTo)
+        validateCapacity(lane, request.capacityKg)
         val schedule = LaneSchedule.create(
             laneId = laneId,
             departureTime = request.departureTime,
             daysOfWeek = request.daysOfWeek,
             effectiveFrom = request.effectiveFrom,
             effectiveTo = request.effectiveTo,
+            capacityKg = request.capacityKg,
             active = request.active,
         )
         if (schedule.status == LaneScheduleStatus.ACTIVE) ensureNoOverlap(schedule, null)
@@ -61,11 +71,28 @@ class LaneScheduleService(
         request: UpdateLaneScheduleRequest,
         actorUserId: UUID,
     ): LaneScheduleResponse {
+        transactionLocks.lock("lane:$laneId")
+        transactionLocks.lock("schedule:$scheduleId")
         val lane = findLane(laneId)
         val schedule = findSchedule(laneId, scheduleId)
         val before = LaneScheduleResponse.from(schedule)
         validateRange(request.daysOfWeek, request.effectiveFrom, request.effectiveTo)
-        schedule.update(request.departureTime, request.daysOfWeek, request.effectiveFrom, request.effectiveTo)
+        validateCapacity(lane, request.capacityKg)
+
+        val scheduleDefinitionChanged = schedule.departureTime != request.departureTime ||
+            schedule.daysOfWeek() != request.daysOfWeek ||
+            schedule.effectiveFrom != request.effectiveFrom ||
+            schedule.effectiveTo != request.effectiveTo
+        if (scheduleDefinitionChanged) ensureNoFutureReservedCapacity(scheduleId)
+        ensureCapacityNotBelowAllocated(scheduleId, request.capacityKg)
+
+        schedule.update(
+            request.departureTime,
+            request.daysOfWeek,
+            request.effectiveFrom,
+            request.effectiveTo,
+            request.capacityKg,
+        )
         if (schedule.status == LaneScheduleStatus.ACTIVE) ensureNoOverlap(schedule, scheduleId)
         if (lane.status == HubLaneStatus.ACTIVE) ensureLaneHasUsableSchedule(laneId, schedule)
         val saved = schedules.save(schedule)
@@ -81,6 +108,8 @@ class LaneScheduleService(
         request: UpdateLaneScheduleStatusRequest,
         actorUserId: UUID,
     ): LaneScheduleResponse {
+        transactionLocks.lock("lane:$laneId")
+        transactionLocks.lock("schedule:$scheduleId")
         val lane = findLane(laneId)
         val schedule = findSchedule(laneId, scheduleId)
         val before = LaneScheduleResponse.from(schedule)
@@ -89,6 +118,7 @@ class LaneScheduleService(
             schedule.setActive(true)
             ensureNoOverlap(schedule, scheduleId)
         } else {
+            if (schedule.status == LaneScheduleStatus.ACTIVE) ensureNoFutureReservedCapacity(scheduleId)
             schedule.setActive(false)
             if (lane.status == HubLaneStatus.ACTIVE) ensureLaneHasUsableSchedule(laneId, schedule)
         }
@@ -134,6 +164,49 @@ class LaneScheduleService(
             throw ConflictException(
                 "active_lane_requires_schedule",
                 "Deactivate the lane before removing its last current or future schedule.",
+            )
+        }
+    }
+
+    private fun ensureNoFutureReservedCapacity(scheduleId: UUID) {
+        if (reservations.existsByScheduleIdAndStatusAndDepartureAtAfter(
+                scheduleId,
+                LaneCapacityReservationStatus.RESERVED,
+                Instant.now(),
+            )
+        ) {
+            throw ConflictException(
+                "schedule_has_reserved_capacity",
+                "Release future capacity reservations before changing or deactivating this schedule.",
+            )
+        }
+    }
+
+    private fun ensureCapacityNotBelowAllocated(scheduleId: UUID, capacityKg: BigDecimal) {
+        val today = LocalDate.now(LaneScheduleCalculator.VIETNAM_ZONE)
+        val allocatedByDate = reservations.findAllByScheduleIdAndStatusIn(
+            scheduleId,
+            listOf(LaneCapacityReservationStatus.RESERVED, LaneCapacityReservationStatus.CONSUMED),
+        ).asSequence()
+            .filter { !it.serviceDate.isBefore(today) }
+            .groupBy { it.serviceDate }
+            .mapValues { (_, items) -> items.fold(BigDecimal.ZERO) { total, item -> total.add(item.reservedWeightKg) } }
+        if (allocatedByDate.values.any { it > capacityKg }) {
+            throw ConflictException(
+                "schedule_capacity_below_allocated",
+                "Schedule capacity cannot be reduced below capacity already allocated to a departure.",
+            )
+        }
+    }
+
+    private fun validateCapacity(lane: HubLane, capacityKg: BigDecimal) {
+        if (capacityKg.signum() <= 0) {
+            throw InvalidNetworkRequestException("invalid_schedule_capacity", "Departure capacity must be positive.")
+        }
+        if (capacityKg < lane.maxShipmentWeightKg) {
+            throw InvalidNetworkRequestException(
+                "schedule_capacity_below_lane_max",
+                "Departure capacity must carry at least one maximum-weight shipment for the lane.",
             )
         }
     }

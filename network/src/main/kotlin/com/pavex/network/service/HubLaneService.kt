@@ -9,6 +9,7 @@ import com.pavex.network.entity.Hub
 import com.pavex.network.entity.HubLane
 import com.pavex.network.entity.HubLaneStatus
 import com.pavex.network.entity.HubStatus
+import com.pavex.network.entity.LaneCapacityReservationStatus
 import com.pavex.network.entity.LaneScheduleStatus
 import com.pavex.network.entity.NetworkAuditAction
 import com.pavex.network.entity.NetworkAuditEntityType
@@ -19,6 +20,7 @@ import com.pavex.network.exception.InvalidNetworkRequestException
 import com.pavex.network.exception.NotFoundException
 import com.pavex.network.repository.HubLaneRepository
 import com.pavex.network.repository.HubRepository
+import com.pavex.network.repository.LaneCapacityReservationRepository
 import com.pavex.network.repository.LaneScheduleRepository
 import com.pavex.network.repository.RouteTemplateLegRepository
 import org.springframework.data.domain.PageRequest
@@ -31,8 +33,10 @@ import java.util.UUID
 class HubLaneService(
     private val lanes: HubLaneRepository,
     private val schedules: LaneScheduleRepository,
+    private val capacityReservations: LaneCapacityReservationRepository,
     private val hubs: HubRepository,
     private val routeTemplateLegs: RouteTemplateLegRepository,
+    private val transactionLocks: NetworkTransactionLockService,
     private val audit: NetworkAuditService,
 ) {
     @Transactional(readOnly = true)
@@ -105,12 +109,15 @@ class HubLaneService(
 
     @Transactional
     fun update(id: UUID, request: UpdateHubLaneRequest, actorUserId: UUID): HubLaneResponse {
+        transactionLocks.lock("lane:$id")
         val lane = find(id)
         val beforeEndpoints = getEndpoints(lane.fromHubId, lane.toHubId)
         val before = HubLaneResponse.from(lane, beforeEndpoints.first, beforeEndpoints.second)
         validateOperationalDetails(request.estimatedTransitMinutes, request.distanceKm, request.maxShipmentWeightKg)
         val (fromHub, toHub) = getEndpoints(request.fromHubId, request.toHubId)
         validateDifferentEndpoints(fromHub.id, toHub.id)
+        ensureNoFutureReservedCapacity(id)
+        ensureScheduleCapacitiesSupportLane(id, request.maxShipmentWeightKg)
 
         val topologyChanged = lane.fromHubId != request.fromHubId ||
             lane.toHubId != request.toHubId || lane.transportMode != request.transportMode
@@ -137,6 +144,7 @@ class HubLaneService(
 
     @Transactional
     fun updateStatus(id: UUID, request: UpdateHubLaneStatusRequest, actorUserId: UUID): HubLaneResponse {
+        transactionLocks.lock("lane:$id")
         val lane = find(id)
         val (fromHub, toHub) = getEndpoints(lane.fromHubId, lane.toHubId)
         val before = HubLaneResponse.from(lane, fromHub, toHub)
@@ -155,13 +163,14 @@ class HubLaneService(
                     "Add at least one active current or future schedule before activating the lane.",
                 )
             }
-        } else if (lane.status == HubLaneStatus.ACTIVE &&
-            routeTemplateLegs.existsByLaneIdAndTemplateStatus(id, RouteTemplateStatus.ACTIVE)
-        ) {
-            throw ConflictException(
-                "lane_used_by_active_route_template",
-                "Deactivate route templates using this lane before deactivating the lane.",
-            )
+        } else if (lane.status == HubLaneStatus.ACTIVE) {
+            ensureNoFutureReservedCapacity(id)
+            if (routeTemplateLegs.existsByLaneIdAndTemplateStatus(id, RouteTemplateStatus.ACTIVE)) {
+                throw ConflictException(
+                    "lane_used_by_active_route_template",
+                    "Deactivate route templates using this lane before deactivating the lane.",
+                )
+            }
         }
 
         lane.setActive(request.active)
@@ -177,6 +186,29 @@ class HubLaneService(
             request.reason,
         )
         return response
+    }
+
+    private fun ensureNoFutureReservedCapacity(laneId: UUID) {
+        if (capacityReservations.existsByLaneIdAndStatusAndDepartureAtAfter(
+                laneId,
+                LaneCapacityReservationStatus.RESERVED,
+                java.time.Instant.now(),
+            )
+        ) {
+            throw ConflictException(
+                "lane_has_reserved_capacity",
+                "Release future capacity reservations before changing or deactivating this lane.",
+            )
+        }
+    }
+
+    private fun ensureScheduleCapacitiesSupportLane(laneId: UUID, maxShipmentWeightKg: java.math.BigDecimal) {
+        if (schedules.findAllByLaneIdOrderByDepartureTimeAsc(laneId).any { it.capacityKg < maxShipmentWeightKg }) {
+            throw ConflictException(
+                "lane_schedule_capacity_too_low",
+                "Increase every schedule capacity before raising the lane maximum shipment weight.",
+            )
+        }
     }
 
     fun find(id: UUID): HubLane = lanes.findById(id).orElseThrow {

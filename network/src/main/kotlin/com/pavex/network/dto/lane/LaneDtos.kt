@@ -96,6 +96,8 @@ data class CreateLaneScheduleRequest(
     val daysOfWeek: Set<DayOfWeek>,
     val effectiveFrom: LocalDate,
     val effectiveTo: LocalDate? = null,
+    @field:DecimalMin(value = "0.001")
+    val capacityKg: BigDecimal,
     val active: Boolean = true,
 )
 
@@ -105,6 +107,8 @@ data class UpdateLaneScheduleRequest(
     val daysOfWeek: Set<DayOfWeek>,
     val effectiveFrom: LocalDate,
     val effectiveTo: LocalDate? = null,
+    @field:DecimalMin(value = "0.001")
+    val capacityKg: BigDecimal,
 )
 
 data class UpdateLaneScheduleStatusRequest(
@@ -119,6 +123,7 @@ data class LaneScheduleResponse(
     val daysOfWeek: Set<DayOfWeek>,
     val effectiveFrom: LocalDate,
     val effectiveTo: LocalDate?,
+    val capacityKg: BigDecimal,
     val status: LaneScheduleStatus,
     val createdAt: Instant,
     val updatedAt: Instant,
@@ -131,6 +136,7 @@ data class LaneScheduleResponse(
             daysOfWeek = schedule.daysOfWeek(),
             effectiveFrom = schedule.effectiveFrom,
             effectiveTo = schedule.effectiveTo,
+            capacityKg = schedule.capacityKg,
             status = schedule.status,
             createdAt = schedule.createdAt,
             updatedAt = schedule.updatedAt,

@@ -13,6 +13,7 @@ object LaneScheduleCalculator {
         schedule: LaneSchedule,
         readyAt: Instant,
         searchDays: Int,
+        accept: (ScheduledDeparture) -> Boolean = { true },
     ): ScheduledDeparture? {
         require(searchDays in 1..366) { "Schedule search horizon must be between 1 and 366 days." }
         val localReadyAt = readyAt.atZone(VIETNAM_ZONE)
@@ -21,9 +22,10 @@ object LaneScheduleCalculator {
 
         while (!date.isAfter(lastDate)) {
             if (schedule.operatesOn(date)) {
-                val departure = ZonedDateTime.of(date, schedule.departureTime, VIETNAM_ZONE).toInstant()
-                if (!departure.isBefore(readyAt)) {
-                    return ScheduledDeparture(date, departure)
+                val departureAt = ZonedDateTime.of(date, schedule.departureTime, VIETNAM_ZONE).toInstant()
+                if (!departureAt.isBefore(readyAt)) {
+                    val departure = ScheduledDeparture(date, departureAt)
+                    if (accept(departure)) return departure
                 }
             }
             date = date.plusDays(1)

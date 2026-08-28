@@ -7,6 +7,7 @@ import jakarta.persistence.Enumerated
 import jakarta.persistence.Id
 import jakarta.persistence.Table
 import jakarta.persistence.Version
+import java.math.BigDecimal
 import java.time.DayOfWeek
 import java.time.Instant
 import java.time.LocalDate
@@ -42,6 +43,8 @@ class LaneSchedule(
     var effectiveFrom: LocalDate = LocalDate.now(),
     @Column(name = "effective_to")
     var effectiveTo: LocalDate? = null,
+    @Column(name = "capacity_kg", nullable = false, precision = 14, scale = 3)
+    var capacityKg: BigDecimal = BigDecimal("1000.000"),
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
     var status: LaneScheduleStatus = LaneScheduleStatus.ACTIVE,
@@ -57,11 +60,13 @@ class LaneSchedule(
         daysOfWeek: Set<DayOfWeek>,
         effectiveFrom: LocalDate,
         effectiveTo: LocalDate?,
+        capacityKg: BigDecimal,
     ) {
         this.departureTime = departureTime
         setDays(daysOfWeek)
         this.effectiveFrom = effectiveFrom
         this.effectiveTo = effectiveTo
+        this.capacityKg = capacityKg
         updatedAt = Instant.now()
     }
 
@@ -103,11 +108,13 @@ class LaneSchedule(
             effectiveFrom: LocalDate,
             effectiveTo: LocalDate?,
             active: Boolean,
+            capacityKg: BigDecimal = BigDecimal("1000.000"),
         ): LaneSchedule = LaneSchedule(
             laneId = laneId,
             departureTime = departureTime,
             effectiveFrom = effectiveFrom,
             effectiveTo = effectiveTo,
+            capacityKg = capacityKg,
             status = if (active) LaneScheduleStatus.ACTIVE else LaneScheduleStatus.INACTIVE,
         ).also { it.setDays(daysOfWeek) }
     }

@@ -33,6 +33,7 @@ class NetworkRoutePlanner(
     private val hubs: HubRepository,
     private val lanes: HubLaneRepository,
     private val schedules: LaneScheduleRepository,
+    private val capacitySnapshots: DepartureCapacitySnapshotFactory,
     private val templates: RouteTemplateRepository,
     private val templateLegs: RouteTemplateLegRepository,
     @Value("\${network.routing.transfer-buffer-minutes:30}")
@@ -49,6 +50,7 @@ class NetworkRoutePlanner(
         shipmentWeightKg: BigDecimal,
         readyAt: Instant,
         mode: RoutePlanningMode = RoutePlanningMode.PREFER_TEMPLATE,
+        excludedDepartures: Set<DepartureKey> = emptySet(),
     ): RoutePlanResponse {
         if (shipmentWeightKg.signum() <= 0) {
             throw InvalidNetworkRequestException("invalid_shipment_weight", "Shipment weight must be positive.")
@@ -89,14 +91,17 @@ class NetworkRoutePlanner(
         } else {
             schedules.findAllByLaneIdInAndStatus(laneIds, LaneScheduleStatus.ACTIVE)
         }
+        val capacity = capacitySnapshots.build(activeSchedules, readyAt, scheduleSearchDays, excludedDepartures)
 
         if (mode != RoutePlanningMode.GRAPH_ONLY) {
             val preferred = tryPreferredTemplate(
                 originHubId = origin.primaryHubId,
                 destinationHubId = destination.primaryHubId,
                 readyAt = readyAt,
+                shipmentWeightKg = shipmentWeightKg,
                 eligibleLanes = eligibleLanes,
                 activeSchedules = activeSchedules,
+                capacity = capacity,
             )
             if (preferred != null) {
                 return buildPlan(
@@ -112,6 +117,7 @@ class NetworkRoutePlanner(
                     readyAt = readyAt,
                     path = preferred.path,
                     activeHubs = activeHubs,
+                    capacity = capacity,
                 )
             }
             if (mode == RoutePlanningMode.TEMPLATE_ONLY) throw templateRouteNotFound()
@@ -126,6 +132,8 @@ class NetworkRoutePlanner(
             schedules = activeSchedules,
             transferBufferMinutes = transferBufferMinutes,
             scheduleSearchDays = scheduleSearchDays,
+            shipmentWeightKg = shipmentWeightKg,
+            capacity = capacity,
         ) ?: throw routeNotFound()
 
         return buildPlan(
@@ -141,6 +149,7 @@ class NetworkRoutePlanner(
             readyAt = readyAt,
             path = path,
             activeHubs = activeHubs,
+            capacity = capacity,
         )
     }
 
@@ -148,8 +157,10 @@ class NetworkRoutePlanner(
         originHubId: UUID,
         destinationHubId: UUID,
         readyAt: Instant,
+        shipmentWeightKg: BigDecimal,
         eligibleLanes: List<HubLane>,
         activeSchedules: List<LaneSchedule>,
+        capacity: DepartureCapacitySnapshot,
     ): PreferredTemplatePlan? {
         val candidates = templates.findAllByOriginHubIdAndDestinationHubIdAndStatusOrderByPriorityAscCodeAsc(
             originHubId,
@@ -175,6 +186,8 @@ class NetworkRoutePlanner(
                 schedules = activeSchedules,
                 transferBufferMinutes = transferBufferMinutes,
                 scheduleSearchDays = scheduleSearchDays,
+                shipmentWeightKg = shipmentWeightKg,
+                capacity = capacity,
             ) ?: return@forEach
             return PreferredTemplatePlan(template, planned)
         }
@@ -200,6 +213,7 @@ class NetworkRoutePlanner(
         readyAt: Instant,
         path: List<PlannedGraphLeg>,
         activeHubs: Map<UUID, Hub>,
+        capacity: DepartureCapacitySnapshot,
     ): RoutePlanResponse {
         val arrivalAt = path.last().arrivalAt
         val allDistancesKnown = path.all { it.lane.distanceKm != null }
@@ -227,6 +241,7 @@ class NetworkRoutePlanner(
             inTransitMinutes = path.sumOf { it.lane.estimatedTransitMinutes },
             totalDistanceKm = totalDistance,
             legs = path.mapIndexed { index, leg ->
+                val allocated = capacity.allocated(leg.schedule, leg.serviceDate)
                 RoutePlanLegResponse(
                     sequence = index + 1,
                     laneId = leg.lane.id,
@@ -244,6 +259,9 @@ class NetworkRoutePlanner(
                     waitMinutes = leg.waitMinutes,
                     transitMinutes = leg.lane.estimatedTransitMinutes,
                     distanceKm = leg.lane.distanceKm,
+                    departureCapacityKg = leg.schedule.capacityKg,
+                    allocatedCapacityKg = allocated,
+                    remainingCapacityKg = leg.schedule.capacityKg.subtract(allocated).max(BigDecimal.ZERO),
                 )
             },
         )
@@ -251,16 +269,17 @@ class NetworkRoutePlanner(
 
     private fun routeNotFound() = NotFoundException(
         "route_not_found",
-        "No active scheduled transport route can carry this shipment between the resolved hubs.",
+        "No active scheduled transport route with enough remaining capacity can carry this shipment between the resolved hubs.",
     )
 
     private fun templateRouteNotFound() = NotFoundException(
         "route_template_not_available",
-        "No active route template can currently carry this shipment between the resolved hubs.",
+        "No active route template with enough remaining capacity can currently carry this shipment between the resolved hubs.",
     )
 
     private data class PreferredTemplatePlan(
         val template: RouteTemplate,
         val path: List<PlannedGraphLeg>,
     )
+
 }

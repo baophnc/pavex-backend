@@ -2,6 +2,7 @@ package com.pavex.network.service
 
 import com.pavex.network.entity.HubLane
 import com.pavex.network.entity.LaneSchedule
+import java.math.BigDecimal
 import java.time.Duration
 import java.time.Instant
 import java.util.PriorityQueue
@@ -16,6 +17,8 @@ object EarliestArrivalPathFinder {
         schedules: List<LaneSchedule>,
         transferBufferMinutes: Int,
         scheduleSearchDays: Int,
+        shipmentWeightKg: BigDecimal = BigDecimal.ZERO,
+        capacity: DepartureCapacitySnapshot = DepartureCapacitySnapshot.EMPTY,
     ): List<PlannedGraphLeg>? {
         require(transferBufferMinutes >= 0) { "Transfer buffer cannot be negative." }
         if (originHubId == destinationHubId) return emptyList()
@@ -42,8 +45,14 @@ object EarliestArrivalPathFinder {
                 val next = schedulesByLane[lane.id]
                     .orEmpty()
                     .mapNotNull { schedule ->
-                        LaneScheduleCalculator.nextDeparture(schedule, departureReadyAt, scheduleSearchDays)
-                            ?.let { schedule to it }
+                        LaneScheduleCalculator.nextDeparture(
+                            schedule,
+                            departureReadyAt,
+                            scheduleSearchDays,
+                        ) { departure ->
+                            shipmentWeightKg.signum() <= 0 ||
+                                capacity.canCarry(schedule, departure.serviceDate, shipmentWeightKg)
+                        }?.let { schedule to it }
                     }
                     .minByOrNull { (_, departure) -> departure.departureAt }
                     ?: continue
