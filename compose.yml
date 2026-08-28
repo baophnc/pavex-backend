@@ -1,7 +1,6 @@
 services:
   auth-db:
     image: postgres:18.6-alpine
-    container_name: pavex-auth-db
 
     environment:
       POSTGRES_DB: pavex_auth
@@ -22,7 +21,6 @@ services:
 
   identity-db:
     image: postgres:18.6-alpine
-    container_name: pavex-identity-db
 
     environment:
       POSTGRES_DB: pavex_identity
@@ -33,7 +31,9 @@ services:
       - "5434:5432"
 
     volumes:
-      - identity_postgres_data:/var/lib/postgresql
+      # Do not reuse the pre-split identity volume: its Flyway history belongs
+      # to the legacy combined Auth/Identity service.
+      - identity_profile_postgres_data:/var/lib/postgresql
 
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U pavex -d pavex_identity"]
@@ -43,7 +43,6 @@ services:
 
   mailpit:
     image: axllent/mailpit
-    container_name: pavex-mailpit
 
     ports:
       - "8025:8025"
@@ -51,7 +50,6 @@ services:
 
   gateway-redis:
     image: redis:8.2-alpine
-    container_name: pavex-gateway-redis
 
     ports:
       - "6379:6379"
@@ -69,7 +67,6 @@ services:
 
   rabbitmq:
     image: rabbitmq:4-management-alpine
-    container_name: pavex-rabbitmq
 
     environment:
       RABBITMQ_DEFAULT_USER: pavex
@@ -91,5 +88,5 @@ services:
 
 volumes:
   auth_postgres_data:
-  identity_postgres_data:
+  identity_profile_postgres_data:
   rabbitmq_data:
