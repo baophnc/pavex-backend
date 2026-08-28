@@ -61,6 +61,26 @@ services:
       timeout: 5s
       retries: 10
 
+  network-db:
+    image: postgres:18.6-alpine
+
+    environment:
+      POSTGRES_DB: pavex_network
+      POSTGRES_USER: pavex
+      POSTGRES_PASSWORD: pavex
+
+    ports:
+      - "5436:5432"
+
+    volumes:
+      - network_postgres_data:/var/lib/postgresql
+
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U pavex -d pavex_network"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
   mailpit:
     image: axllent/mailpit
 
@@ -110,4 +130,5 @@ volumes:
   auth_postgres_data:
   identity_profile_postgres_data:
   partners_postgres_data:
+  network_postgres_data:
   rabbitmq_data:

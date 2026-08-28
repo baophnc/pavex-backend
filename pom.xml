@@ -46,6 +46,7 @@
         <module>auth</module>
         <module>identity</module>
         <module>partners</module>
+        <module>network</module>
         <module>platform/discovery-server</module>
         <module>platform/api-gateway</module>
     </modules>
