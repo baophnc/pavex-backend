@@ -74,6 +74,8 @@ security:
 
 
 auth:
+  internal-token: ${IDENTITY_INTERNAL_TOKEN:}
+
   identity:
     service-url: ${IDENTITY_SERVICE_URL:http://identity-service}
     internal-token: ${IDENTITY_INTERNAL_TOKEN:}

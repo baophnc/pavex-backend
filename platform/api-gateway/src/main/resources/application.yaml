@@ -53,7 +53,37 @@ spring:
                 max-age: 3600
 
           routes:
+            # /api/v1/auth/** is mostly owned by Auth, but the current-user
+            # profile endpoints are Identity-owned. Give these exact routes a
+            # lower order value so they win before the Auth wildcard route.
+            - id: identity-current-user-me
+              order: -111
+              uri: lb://identity-service
+              predicates:
+                - Path=/api/v1/auth/me
+              filters:
+                - name: RequestRateLimiter
+                  args:
+                    key-resolver: "#{@clientIpKeyResolver}"
+                    redis-rate-limiter.replenishRate: ${GATEWAY_API_REPLENISH_RATE:30}
+                    redis-rate-limiter.burstCapacity: ${GATEWAY_API_BURST_CAPACITY:60}
+                    redis-rate-limiter.requestedTokens: 1
+
+            - id: identity-current-user-profile
+              order: -110
+              uri: lb://identity-service
+              predicates:
+                - Path=/api/v1/auth/me/profile
+              filters:
+                - name: RequestRateLimiter
+                  args:
+                    key-resolver: "#{@clientIpKeyResolver}"
+                    redis-rate-limiter.replenishRate: ${GATEWAY_API_REPLENISH_RATE:30}
+                    redis-rate-limiter.burstCapacity: ${GATEWAY_API_BURST_CAPACITY:60}
+                    redis-rate-limiter.requestedTokens: 1
+
             - id: auth
+              order: -100
               uri: lb://auth-service
               predicates:
                 - Path=/api/v1/auth/**
@@ -66,9 +96,7 @@ spring:
                     redis-rate-limiter.requestedTokens: 1
 
             - id: identity-users
-              # User administration remains on Auth during the staged
-              # extraction; new profile APIs are owned by Identity below.
-              uri: lb://auth-service
+              uri: lb://identity-service
               predicates:
                 - Path=/api/v1/users/**
               filters:
@@ -80,7 +108,7 @@ spring:
                     redis-rate-limiter.requestedTokens: 1
 
             - id: identity-roles
-              uri: lb://auth-service
+              uri: lb://identity-service
               predicates:
                 - Path=/api/v1/roles/**
               filters:

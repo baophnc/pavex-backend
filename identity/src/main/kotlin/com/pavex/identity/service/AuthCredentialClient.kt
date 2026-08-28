@@ -1,5 +1,6 @@
 package com.pavex.identity.service
 
+import com.pavex.contracts.identity.CredentialInvitationRequest
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.cloud.client.loadbalancer.LoadBalanced
 import org.springframework.http.MediaType
@@ -30,5 +31,3 @@ class AuthCredentialClient(
 
     companion object { private const val INTERNAL_TOKEN_HEADER = "X-Pavex-Internal-Token" }
 }
-
-data class CredentialInvitationRequest(val userId: UUID, val email: String)

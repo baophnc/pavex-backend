@@ -71,3 +71,10 @@ class IdentityServiceUnavailableException :
         code = "identity_service_unavailable",
         message = "Identity service is temporarily unavailable",
     )
+
+class CredentialProvisionConflictException :
+    ApiException(
+        status = HttpStatus.CONFLICT,
+        code = "credential_provision_conflict",
+        message = "Credential identity does not match the requested user",
+    )

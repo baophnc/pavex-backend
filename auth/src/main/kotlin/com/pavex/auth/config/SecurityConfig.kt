@@ -11,6 +11,7 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority
 import org.springframework.security.oauth2.jwt.Jwt
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken
 import org.springframework.security.web.SecurityFilterChain
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter
 
 @Configuration
 @EnableMethodSecurity
@@ -19,6 +20,7 @@ class SecurityConfig {
     @Bean
     fun securityFilterChain(
         http: HttpSecurity,
+        internalServiceTokenFilter: InternalServiceTokenFilter,
     ): SecurityFilterChain {
 
         http
@@ -47,6 +49,7 @@ class SecurityConfig {
                     "/actuator/health",
                     "/actuator/health/**",
                 ).permitAll()
+                    .requestMatchers("/internal/**").permitAll()
 
                     .anyRequest()
                     .authenticated()
@@ -59,6 +62,11 @@ class SecurityConfig {
                     )
                 }
             }
+
+            .addFilterBefore(
+                internalServiceTokenFilter,
+                UsernamePasswordAuthenticationFilter::class.java,
+            )
 
         return http.build()
     }
