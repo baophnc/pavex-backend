@@ -1,6 +1,8 @@
 package com.pavex.auth.security
 
 import com.pavex.auth.entity.UserAccount
+import com.pavex.auth.exception.AccountDisabledException
+import com.pavex.auth.service.IdentityClient
 import com.pavex.auth.service.RoleService
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.security.oauth2.jose.jws.SignatureAlgorithm
@@ -18,6 +20,17 @@ class JwtService(
     private val jwtEncoder:
         JwtEncoder,
 
+    private val identityClient:
+        IdentityClient,
+
+    /*
+     * Transitional fallback only.
+     *
+     * Existing users may not have been copied to the Identity DB yet.
+     * If Identity returns 404, bootstrap that one account with the legacy
+     * Auth roles, then all normal authorization reads come from Identity.
+     * This dependency is removed after the Auth RBAC tables are deleted.
+     */
     private val roleService:
         RoleService,
 
@@ -35,9 +48,13 @@ class JwtService(
     ): AccessToken {
 
         val authorization =
-            roleService.getAuthorization(
-                account.id
-            )
+            identityClient
+                .findAuthContext(account.id)
+                ?: bootstrapIdentity(account)
+
+        if (!authorization.active) {
+            throw AccountDisabledException()
+        }
 
         val expiresAt =
             now.plus(
@@ -54,8 +71,16 @@ class JwtService(
                 .issuedAt(now)
                 .expiresAt(expiresAt)
                 .claim(
+                    "typ",
+                    USER_TOKEN_TYPE,
+                )
+                .claim(
                     "email",
                     account.email,
+                )
+                .claim(
+                    "email_verified",
+                    authorization.emailVerified,
                 )
                 .claim(
                     "roles",
@@ -64,6 +89,10 @@ class JwtService(
                 .claim(
                     "permissions",
                     authorization.permissions,
+                )
+                .claim(
+                    "authz_version",
+                    authorization.authorizationVersion,
                 )
                 .build()
 
@@ -88,6 +117,29 @@ class JwtService(
             expiresIn =
                 accessTokenTtl.seconds,
         )
+    }
+
+    private fun bootstrapIdentity(
+        account: UserAccount,
+    ): com.pavex.contracts.identity.IdentityAuthContext {
+
+        val legacyAuthorization =
+            roleService.getAuthorization(
+                account.id
+            )
+
+        identityClient.provision(
+            account = account,
+            roles = legacyAuthorization.roles,
+        )
+
+        return identityClient.getAuthContext(
+            account.id
+        )
+    }
+
+    companion object {
+        private const val USER_TOKEN_TYPE = "user"
     }
 }
 

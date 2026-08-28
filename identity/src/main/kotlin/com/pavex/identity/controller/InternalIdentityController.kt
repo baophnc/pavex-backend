@@ -2,7 +2,7 @@ package com.pavex.identity.controller
 
 import com.pavex.contracts.identity.IdentityAuthContext
 import com.pavex.identity.dto.IdentityProfileResponse
-import com.pavex.identity.dto.ProvisionIdentityRequest
+import com.pavex.contracts.identity.ProvisionIdentityRequest
 import com.pavex.identity.service.IdentityProfileService
 import jakarta.validation.Valid
 import org.springframework.web.bind.annotation.GetMapping

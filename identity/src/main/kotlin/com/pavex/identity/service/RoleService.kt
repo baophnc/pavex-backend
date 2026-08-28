@@ -65,6 +65,73 @@ class RoleService(
     }
 
 
+    @Transactional
+    fun bootstrapRoles(
+        userId: UUID,
+        rawRoleCodes: Set<String>,
+        now: Instant,
+    ) {
+        val user = userAccountRepository
+            .findById(userId)
+            .orElseThrow { UserNotFoundException() }
+
+        val roleCodes = rawRoleCodes
+            .map { normalizeRoleCode(it) }
+            .filter { it.isNotBlank() }
+            .toSet()
+
+        if (roleCodes.isEmpty()) {
+            assignDefaultCustomerRole(userId, now)
+            return
+        }
+
+        val desiredRoles = roleCodes.associateWith { code ->
+            roleRepository.findByCode(code)
+                ?: throw RoleNotFoundException()
+        }
+
+        val existingAssignments = userRoleRepository
+            .findAllByUserId(userId)
+
+        val existingRoleIds = existingAssignments
+            .map { it.roleId }
+            .toSet()
+
+        val desiredRoleIds = desiredRoles
+            .values
+            .map { it.id }
+            .toSet()
+
+        var changed = false
+
+        existingAssignments
+            .filter { it.roleId !in desiredRoleIds }
+            .forEach { assignment ->
+                userRoleRepository.delete(assignment)
+                changed = true
+            }
+
+        desiredRoles.values
+            .filter { it.id !in existingRoleIds }
+            .forEach { role ->
+                userRoleRepository.save(
+                    UserRole(
+                        userId = userId,
+                        roleId = role.id,
+                        assignedAt = now,
+                    )
+                )
+                changed = true
+            }
+
+        if (changed) {
+            user.authorizationVersion += 1
+            user.updatedAt = now
+            userAccountRepository.save(user)
+        }
+    }
+
+
     @Transactional(readOnly = true)
     fun getAuthorization(
         userId: UUID,

@@ -74,6 +74,10 @@ security:
 
 
 auth:
+  identity:
+    service-url: ${IDENTITY_SERVICE_URL:http://identity-service}
+    internal-token: ${IDENTITY_INTERNAL_TOKEN:}
+
   google:
     client-ids: ${GOOGLE_CLIENT_IDS:${GOOGLE_CLIENT_ID:}}
 

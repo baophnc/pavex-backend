@@ -2,7 +2,7 @@ package com.pavex.identity.service
 
 import com.pavex.contracts.identity.IdentityAuthContext
 import com.pavex.identity.dto.IdentityProfileResponse
-import com.pavex.identity.dto.ProvisionIdentityRequest
+import com.pavex.contracts.identity.ProvisionIdentityRequest
 import com.pavex.identity.dto.UpdateIdentityProfileRequest
 import com.pavex.identity.entity.AccountStatus
 import com.pavex.identity.entity.UserAccount
@@ -39,9 +39,7 @@ class IdentityProfileService(
                     createdAt = now,
                     updatedAt = now,
                 )
-            ).also {
-                roleService.assignDefaultCustomerRole(it.id, now)
-            }
+            )
         } else {
             val authorizationChanged = existing.status != requestedStatus
             existing.email = normalizedEmail
@@ -52,6 +50,18 @@ class IdentityProfileService(
             }
             existing.updatedAt = now
             accounts.save(existing)
+        }
+
+        if (request.roles.isEmpty()) {
+            if (existing == null) {
+                roleService.assignDefaultCustomerRole(account.id, now)
+            }
+        } else {
+            roleService.bootstrapRoles(
+                userId = account.id,
+                rawRoleCodes = request.roles,
+                now = now,
+            )
         }
 
         return toResponse(account, profiles.findById(account.id).orElse(null))

@@ -1,16 +1,7 @@
 package com.pavex.identity.dto
 
-import jakarta.validation.constraints.Email
-import jakarta.validation.constraints.NotBlank
 import jakarta.validation.constraints.Size
 import java.util.UUID
-
-data class ProvisionIdentityRequest(
-    val userId: UUID,
-    @field:Email val email: String,
-    val emailVerified: Boolean = false,
-    val status: String = "ACTIVE",
-)
 
 data class UpdateIdentityProfileRequest(
     @field:Size(max = 100) val firstName: String? = null,

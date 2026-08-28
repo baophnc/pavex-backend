@@ -64,3 +64,10 @@ class InvalidEmailVerificationTokenException :
         code = "invalid_email_verification_token",
         message = "Invalid or expired verification token.",
     )
+
+class IdentityServiceUnavailableException :
+    ApiException(
+        status = HttpStatus.SERVICE_UNAVAILABLE,
+        code = "identity_service_unavailable",
+        message = "Identity service is temporarily unavailable",
+    )
