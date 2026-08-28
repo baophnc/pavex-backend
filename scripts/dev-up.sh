@@ -105,9 +105,60 @@ docker compose up -d --wait
 # this branch's executable jars.
 ./mvnw -DskipTests clean install
 
+preflight_auth_identity_cutover() {
+  local user_table_exists legacy_rbac_exists account_count marker_table_exists marker_complete
+
+  user_table_exists="$(docker compose exec -T auth-db psql -U pavex -d pavex_auth -Atqc     "SELECT CASE WHEN to_regclass('auth.user_account') IS NOT NULL THEN 'yes' ELSE 'no' END")"
+
+  # A brand-new database has not run Auth Flyway yet. V15 is safe there because
+  # there are no legacy users to migrate.
+  if [[ "$user_table_exists" != "yes" ]]; then
+    return 0
+  fi
+
+  legacy_rbac_exists="$(docker compose exec -T auth-db psql -U pavex -d pavex_auth -Atqc     "SELECT CASE WHEN to_regclass('auth.user_role') IS NOT NULL THEN 'yes' ELSE 'no' END")"
+
+  # V15 has already finalized this database.
+  if [[ "$legacy_rbac_exists" != "yes" ]]; then
+    return 0
+  fi
+
+  account_count="$(docker compose exec -T auth-db psql -U pavex -d pavex_auth -Atqc     'SELECT COUNT(*) FROM auth.user_account')"
+
+  if [[ "$account_count" == "0" ]]; then
+    return 0
+  fi
+
+  marker_table_exists="$(docker compose exec -T auth-db psql -U pavex -d pavex_auth -Atqc     "SELECT CASE WHEN to_regclass('auth.identity_cutover_marker') IS NOT NULL THEN 'yes' ELSE 'no' END")"
+
+  marker_complete="no"
+  if [[ "$marker_table_exists" == "yes" ]]; then
+    marker_complete="$(docker compose exec -T auth-db psql -U pavex -d pavex_auth -Atqc       "SELECT CASE WHEN EXISTS (SELECT 1 FROM auth.identity_cutover_marker WHERE id=1 AND completed_at IS NOT NULL) THEN 'yes' ELSE 'no' END")"
+  fi
+
+  if [[ "$marker_complete" != "yes" ]]; then
+    cat >&2 <<'EOF'
+Existing Auth users still need the one-time Auth -> Identity cutover.
+Identity has already been started first so its V1-V3 schema is ready.
+
+Run:
+  ./scripts/cutover-auth-identity.sh --apply
+
+Then rerun:
+  ./scripts/dev-up.sh
+EOF
+    return 1
+  fi
+}
+
 start_app discovery-server platform/discovery-server/target/discovery-server-0.0.1-SNAPSHOT.jar http://localhost:8761/actuator/health
-start_app auth-service auth/target/auth-service-0.0.1-SNAPSHOT.jar http://localhost:8081/actuator/health
+
+# Start Identity before Auth. This guarantees Identity Flyway V1-V3 is ready
+# before a legacy Auth database is allowed to cross the destructive V15 cutover.
 start_app identity-service identity/target/identity-service-0.0.1-SNAPSHOT.jar http://localhost:8082/actuator/health
+preflight_auth_identity_cutover
+
+start_app auth-service auth/target/auth-service-0.0.1-SNAPSHOT.jar http://localhost:8081/actuator/health
 start_app api-gateway platform/api-gateway/target/api-gateway-0.0.1-SNAPSHOT.jar http://localhost:8080/actuator/health
 
 trap - ERR
