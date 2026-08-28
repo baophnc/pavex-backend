@@ -122,6 +122,11 @@ auth:
 
 
 pavex:
+  bootstrap-admin:
+    enabled: ${BOOTSTRAP_ADMIN_ENABLED:false}
+    id: ${BOOTSTRAP_ADMIN_ID:00000000-0000-0000-0000-000000000001}
+    email: ${BOOTSTRAP_ADMIN_EMAIL:admin@pavex.com}
+    password: ${BOOTSTRAP_ADMIN_PASSWORD:}
   openapi:
     gateway-url: ${PAVEX_PUBLIC_BASE_URL:http://localhost:8080}
   email:

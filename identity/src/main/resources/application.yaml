@@ -34,6 +34,10 @@ security:
       public-key: ${PARTNERS_SERVICE_JWT_PUBLIC_KEY:file:./partners/.keys/public.pem}
 
 pavex:
+  bootstrap-admin:
+    enabled: ${BOOTSTRAP_ADMIN_ENABLED:false}
+    id: ${BOOTSTRAP_ADMIN_ID:00000000-0000-0000-0000-000000000001}
+    email: ${BOOTSTRAP_ADMIN_EMAIL:admin@pavex.com}
   openapi:
     gateway-url: ${PAVEX_PUBLIC_BASE_URL:http://localhost:8080}
 
