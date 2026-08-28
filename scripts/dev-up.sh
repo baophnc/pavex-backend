@@ -25,6 +25,9 @@ export DB_PASSWORD="pavex"
 export IDENTITY_DB_URL="jdbc:postgresql://localhost:5434/pavex_identity"
 export IDENTITY_DB_USERNAME="pavex"
 export IDENTITY_DB_PASSWORD="pavex"
+export PARTNERS_DB_URL="jdbc:postgresql://localhost:5435/pavex_partners"
+export PARTNERS_DB_USERNAME="pavex"
+export PARTNERS_DB_PASSWORD="pavex"
 export JWT_ISSUER="http://localhost:8081"
 export JWT_PRIVATE_KEY="file:$repo_dir/auth/.keys/private.pem"
 export JWT_PUBLIC_KEY="file:$repo_dir/auth/.keys/public.pem"
@@ -164,6 +167,7 @@ start_app identity-service identity/target/identity-service-0.0.1-SNAPSHOT.jar h
 preflight_auth_identity_cutover
 
 start_app auth-service auth/target/auth-service-0.0.1-SNAPSHOT.jar http://localhost:8081/actuator/health
+start_app partners-service partners/target/partners-service-0.0.1-SNAPSHOT.jar http://localhost:8083/actuator/health
 start_app api-gateway platform/api-gateway/target/api-gateway-0.0.1-SNAPSHOT.jar http://localhost:8080/actuator/health
 
 trap - ERR
