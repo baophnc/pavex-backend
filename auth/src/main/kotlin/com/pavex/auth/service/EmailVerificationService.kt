@@ -35,6 +35,9 @@ class EmailVerificationService(
     private val advisoryLockService:
         AdvisoryLockService,
 
+    private val identityStateSyncService:
+        IdentityStateSyncService,
+
     @Value(
         "\${auth.security.verification-token-ttl:PT24H}"
     )
@@ -131,6 +134,11 @@ class EmailVerificationService(
                 account
             )
         }
+
+        identityStateSyncService
+            .emailVerifiedAfterCommit(
+                account.id
+            )
     }
 
 

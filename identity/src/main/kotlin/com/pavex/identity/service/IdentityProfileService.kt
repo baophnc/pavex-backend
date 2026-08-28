@@ -64,7 +64,24 @@ class IdentityProfileService(
             )
         }
 
-        return toResponse(account, profiles.findById(account.id).orElse(null))
+        val existingProfile = profiles.findById(account.id).orElse(null)
+        val displayName = normalize(request.displayName)
+        val avatarUrl = normalize(request.avatarUrl)
+        val profile = if (displayName != null || avatarUrl != null) {
+            val target = existingProfile ?: UserProfile(
+                userId = account.id,
+                createdAt = now,
+                updatedAt = now,
+            )
+            if (displayName != null) target.displayName = displayName
+            if (avatarUrl != null) target.avatarUrl = avatarUrl
+            target.updatedAt = now
+            profiles.save(target)
+        } else {
+            existingProfile
+        }
+
+        return toResponse(account, profile)
     }
 
     @Transactional(readOnly = true)
@@ -105,12 +122,31 @@ class IdentityProfileService(
 
         return IdentityAuthContext(
             userId = account.id,
+            status = account.status.name,
             active = account.status == AccountStatus.ACTIVE,
             emailVerified = account.emailVerified,
             roles = authorization.roles,
             permissions = authorization.permissions,
             authorizationVersion = account.authorizationVersion,
         )
+    }
+
+
+    @Transactional
+    fun updateEmailVerification(
+        userId: UUID,
+        emailVerified: Boolean,
+    ): IdentityAuthContext {
+        val account = findAccount(userId)
+
+        if (account.emailVerified != emailVerified) {
+            account.emailVerified = emailVerified
+            account.authorizationVersion += 1
+            account.updatedAt = Instant.now()
+            accounts.save(account)
+        }
+
+        return authContext(userId)
     }
 
     private fun findAccount(userId: UUID): UserAccount =

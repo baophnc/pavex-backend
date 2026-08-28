@@ -1,18 +1,14 @@
 package com.pavex.auth.service
 
 import com.pavex.auth.dto.auth.AuthResponse
-import com.pavex.auth.entity.AccountStatus
 import com.pavex.auth.entity.ExternalIdentity
 import com.pavex.auth.entity.UserAccount
-import com.pavex.auth.entity.UserProfile
-import com.pavex.auth.exception.AccountDisabledException
-import com.pavex.auth.exception.AccountSuspendedException
 import com.pavex.auth.exception.ExternalIdentityLinkRequiredException
 import com.pavex.auth.exception.GoogleEmailNotAuthoritativeException
 import com.pavex.auth.exception.InvalidGoogleTokenException
 import com.pavex.auth.repository.ExternalIdentityRepository
 import com.pavex.auth.repository.UserAccountRepository
-import com.pavex.auth.repository.UserProfileRepository
+import com.pavex.auth.security.JwtService
 import com.pavex.auth.security.OpaqueTokenService
 import com.pavex.auth.security.google.GoogleIdTokenVerifier
 import org.springframework.security.crypto.password.PasswordEncoder
@@ -32,12 +28,6 @@ class GoogleAuthService(
     private val userAccountRepository:
         UserAccountRepository,
 
-    private val userProfileRepository:
-        UserProfileRepository,
-
-    private val roleService:
-        RoleService,
-
     private val passwordEncoder:
         PasswordEncoder,
 
@@ -47,361 +37,183 @@ class GoogleAuthService(
     private val authSessionService:
         AuthSessionService,
 
+    private val jwtService:
+        JwtService,
+
+    private val identityClient:
+        IdentityClient,
+
     private val advisoryLockService:
         AdvisoryLockService,
 ) {
 
     @Transactional
     fun login(
-
         rawIdToken: String,
-
-        clientMetadata:
-            ClientMetadata,
-
+        clientMetadata: ClientMetadata,
     ): AuthResponse {
 
         val googleUser =
             googleIdTokenVerifier
-                .verify(
-                    rawIdToken
-                )
+                .verify(rawIdToken)
 
-        advisoryLockService
-            .lockGoogleIdentity(
-                subject =
-                    googleUser.subject,
-                email =
-                    googleUser.email,
-            )
+        advisoryLockService.lockGoogleIdentity(
+            subject = googleUser.subject,
+            email = googleUser.email,
+        )
 
-        val now =
-            Instant.now()
+        val now = Instant.now()
 
-        /*
-         * Sau advisory lock mới query DB.
-         * Hai first-login song song cùng Google sub/email
-         * không thể cùng create account/external_auth.
-         *
-         * Identity chính là:
-         *
-         * GOOGLE + sub
-         *
-         * KHÔNG phải email.
-         */
         val linkedIdentity =
             externalIdentityRepository
                 .findByProviderAndProviderUserId(
-                    provider =
-                        GOOGLE_PROVIDER,
-
-                    providerUserId =
-                        googleUser.subject,
+                    provider = GOOGLE_PROVIDER,
+                    providerUserId = googleUser.subject,
                 )
 
         val account =
             if (linkedIdentity != null) {
-
-                val linkedAccount =
-                    userAccountRepository
-                        .findById(
-                            linkedIdentity.userId
-                        )
-                        .orElseThrow {
-                            InvalidGoogleTokenException()
-                        }
-
-                requireActive(
-                    linkedAccount
-                )
-
-                linkedAccount
-
+                userAccountRepository
+                    .findById(linkedIdentity.userId)
+                    .orElseThrow {
+                        InvalidGoogleTokenException()
+                    }
             } else {
-
                 resolveOrCreateAccount(
-                    email =
-                        googleUser.email,
-
-                    emailAuthoritative =
-                        googleUser.emailAuthoritative,
-
-                    displayName =
-                        googleUser.displayName,
-
-                    avatarUrl =
-                        googleUser.avatarUrl,
-
-                    googleSubject =
-                        googleUser.subject,
-
-                    now =
-                        now,
+                    email = googleUser.email,
+                    emailAuthoritative = googleUser.emailAuthoritative,
+                    displayName = googleUser.displayName,
+                    avatarUrl = googleUser.avatarUrl,
+                    googleSubject = googleUser.subject,
+                    now = now,
                 )
             }
 
-        account.lastLoginAt =
-            now
+        /*
+         * Identity owns ACTIVE/SUSPENDED/DISABLED and authorization. Resolving
+         * the context here makes Google login fail closed before a session is
+         * issued and also repairs a missed email-verification synchronization.
+         */
+        val authorization =
+            jwtService.resolveAuthorization(account)
 
-        account.failedLoginAttempts =
-            0
+        account.lastLoginAt = now
+        account.failedLoginAttempts = 0
+        account.lockoutEndAt = null
+        account.updatedAt = now
 
-        account.lockoutEndAt =
-            null
+        userAccountRepository.save(account)
 
-        account.updatedAt =
-            now
-
-        userAccountRepository.save(
-            account
+        return authSessionService.issue(
+            account = account,
+            now = now,
+            clientMetadata = clientMetadata,
+            authorization = authorization,
         )
-
-        return authSessionService
-            .issue(
-                account =
-                    account,
-
-                now =
-                    now,
-
-                clientMetadata =
-                    clientMetadata,
-            )
     }
 
-
     private fun resolveOrCreateAccount(
-
         email: String,
-
         emailAuthoritative: Boolean,
-
         displayName: String?,
-
         avatarUrl: String?,
-
         googleSubject: String,
-
         now: Instant,
-
     ): UserAccount {
 
         val existingAccount =
-            userAccountRepository
-                .findByEmail(
-                    email
-                )
+            userAccountRepository.findByEmail(email)
 
-        /*
-         * PAVEX account đã tồn tại.
-         */
         if (existingAccount != null) {
-
-            requireActive(
-                existingAccount
-            )
-
             /*
-             * Improvement:
-             *
-             * Không bypass invitation /
-             * email-verification flow.
+             * Auth still owns the verification credential flow during this
+             * extraction checkpoint. The mirror is synchronized to Identity
+             * after verification and self-healed before token issuance.
              */
             if (!existingAccount.emailVerified) {
                 throw ExternalIdentityLinkRequiredException()
             }
 
-            /*
-             * Không auto-link email mà Google
-             * không authoritative.
-             */
             if (!emailAuthoritative) {
                 throw ExternalIdentityLinkRequiredException()
             }
 
             createExternalIdentity(
-                account =
-                    existingAccount,
-
-                googleSubject =
-                    googleSubject,
-
-                email =
-                    email,
-
-                now =
-                    now,
+                account = existingAccount,
+                googleSubject = googleSubject,
+                email = email,
+                now = now,
             )
 
             return existingAccount
         }
 
-        /*
-         * Account hoàn toàn mới.
-         *
-         * Không tạo PAVEX user từ một Google
-         * account mà Google không authoritative
-         * cho email đó.
-         */
         if (!emailAuthoritative) {
             throw GoogleEmailNotAuthoritativeException()
         }
 
-        /*
-         * Password nội bộ random.
-         *
-         * Không ai biết password này.
-         * User Google không tự nhiên có
-         * password login PAVEX.
-         */
         val internalSecret =
-            opaqueTokenService
-                .issue()
-                .raw
+            opaqueTokenService.issue().raw
 
         val passwordHash =
             requireNotNull(
-                passwordEncoder
-                    .encode(
-                        internalSecret
-                    )
+                passwordEncoder.encode(internalSecret)
             ) {
                 "Password encoder returned null"
             }
 
-        val account =
-            UserAccount(
-                email =
-                    email,
-
-                passwordHash =
-                    passwordHash,
-
-                emailVerified =
-                    true,
-
-                createdAt =
-                    now,
-
-                updatedAt =
-                    now,
-            )
-
         val savedAccount =
-            userAccountRepository
-                .save(
-                    account
+            userAccountRepository.save(
+                UserAccount(
+                    email = email,
+                    passwordHash = passwordHash,
+                    emailVerified = true,
+                    createdAt = now,
+                    updatedAt = now,
                 )
-
-        userProfileRepository.save(
-            UserProfile(
-                userId =
-                    savedAccount.id,
-
-                displayName =
-                    displayName
-                        ?.trim()
-                        ?.takeIf {
-                            it.isNotEmpty()
-                        },
-
-                avatarUrl =
-                    avatarUrl
-                        ?.trim()
-                        ?.takeIf {
-                            it.isNotEmpty()
-                        },
-
-                createdAt =
-                    now,
-
-                updatedAt =
-                    now,
             )
+
+        /*
+         * New Google users are provisioned directly into the Identity-owned
+         * user/RBAC/profile model. Auth no longer writes user_profile or role
+         * assignments for new accounts.
+         */
+        identityClient.provision(
+            account = savedAccount,
+            roles = setOf(DEFAULT_CUSTOMER_ROLE),
+            displayName = displayName,
+            avatarUrl = avatarUrl,
         )
 
-        roleService
-            .assignDefaultCustomerRole(
-                userId =
-                    savedAccount.id,
-
-                now =
-                    now,
-            )
-
         createExternalIdentity(
-            account =
-                savedAccount,
-
-            googleSubject =
-                googleSubject,
-
-            email =
-                email,
-
-            now =
-                now,
+            account = savedAccount,
+            googleSubject = googleSubject,
+            email = email,
+            now = now,
         )
 
         return savedAccount
     }
 
-
     private fun createExternalIdentity(
-
         account: UserAccount,
-
         googleSubject: String,
-
         email: String,
-
         now: Instant,
-
     ) {
-
         externalIdentityRepository.save(
             ExternalIdentity(
-                userId =
-                    account.id,
-
-                provider =
-                    GOOGLE_PROVIDER,
-
-                providerUserId =
-                    googleSubject,
-
-                email =
-                    email,
-
-                createdAt =
-                    now,
+                userId = account.id,
+                provider = GOOGLE_PROVIDER,
+                providerUserId = googleSubject,
+                email = email,
+                createdAt = now,
             )
         )
     }
 
-
-    private fun requireActive(
-        account: UserAccount,
-    ) {
-
-        when (account.status) {
-
-            AccountStatus.ACTIVE ->
-                Unit
-
-            AccountStatus.SUSPENDED ->
-                throw AccountSuspendedException()
-
-            AccountStatus.DISABLED ->
-                throw AccountDisabledException()
-        }
-    }
-
-
     companion object {
-
-        private const val
-            GOOGLE_PROVIDER =
-                "GOOGLE"
+        private const val GOOGLE_PROVIDER = "GOOGLE"
+        private const val DEFAULT_CUSTOMER_ROLE = "CUSTOMER"
     }
 }

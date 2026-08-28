@@ -6,18 +6,13 @@ import com.pavex.auth.dto.auth.LogoutRequest
 import com.pavex.auth.dto.auth.RefreshTokenRequest
 import com.pavex.auth.dto.auth.RegisterRequest
 import com.pavex.auth.dto.auth.RegisterResponse
-import com.pavex.auth.entity.AccountStatus
 import com.pavex.auth.entity.UserAccount
-import com.pavex.auth.entity.UserProfile
-import com.pavex.auth.exception.AccountDisabledException
 import com.pavex.auth.exception.AccountLockedException
-import com.pavex.auth.exception.AccountSuspendedException
 import com.pavex.auth.exception.EmailAlreadyExistsException
 import com.pavex.auth.exception.InvalidCredentialsException
 import com.pavex.auth.exception.InvalidRefreshTokenException
 import com.pavex.auth.exception.RefreshTokenReuseDetectedException
 import com.pavex.auth.repository.UserAccountRepository
-import com.pavex.auth.repository.UserProfileRepository
 import com.pavex.auth.security.JwtService
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service
@@ -31,9 +26,6 @@ class AuthService(
     private val userAccountRepository:
         UserAccountRepository,
 
-    private val userProfileRepository:
-        UserProfileRepository,
-
     private val passwordEncoder:
         PasswordEncoder,
 
@@ -45,9 +37,6 @@ class AuthService(
 
     private val refreshTokenService:
         RefreshTokenService,
-
-    private val roleService:
-        RoleService,
 
     private val emailVerificationService:
         EmailVerificationService,
@@ -112,20 +101,6 @@ class AuthService(
                 account
             )
 
-        userProfileRepository.save(
-            UserProfile(
-                userId =
-                    savedAccount.id,
-                createdAt = now,
-                updatedAt = now,
-            )
-        )
-
-        roleService.assignDefaultCustomerRole(
-            savedAccount.id,
-            now,
-        )
-
         emailVerificationService
             .issueForRegistration(
                 userId =
@@ -178,9 +153,10 @@ class AuthService(
         val now =
             Instant.now()
 
-        checkAccountStatus(
-            account
-        )
+        val authorization =
+            jwtService.resolveAuthorization(
+                account
+            )
 
         val lockoutEnd =
             account.lockoutEndAt
@@ -243,6 +219,7 @@ class AuthService(
             account = account,
             now = now,
             clientMetadata = clientMetadata,
+            authorization = authorization,
         )
     }
 
@@ -279,14 +256,16 @@ class AuthService(
                     InvalidRefreshTokenException()
                 }
 
-        checkAccountStatus(
-            account
-        )
+        val authorization =
+            jwtService.resolveAuthorization(
+                account
+            )
 
         val accessToken =
             jwtService.createAccessToken(
-                account,
-                now,
+                account = account,
+                now = now,
+                authorization = authorization,
             )
 
         return AuthResponse(
@@ -318,6 +297,7 @@ class AuthService(
         account: UserAccount,
         now: Instant,
         clientMetadata: ClientMetadata,
+        authorization: com.pavex.contracts.identity.IdentityAuthContext,
     ): AuthResponse {
 
         return authSessionService
@@ -328,25 +308,9 @@ class AuthService(
                     now,
                 clientMetadata =
                     clientMetadata,
+                authorization =
+                    authorization,
             )
-    }
-
-
-    private fun checkAccountStatus(
-        account: UserAccount,
-    ) {
-
-        when (account.status) {
-
-            AccountStatus.ACTIVE ->
-                Unit
-
-            AccountStatus.SUSPENDED ->
-                throw AccountSuspendedException()
-
-            AccountStatus.DISABLED ->
-                throw AccountDisabledException()
-        }
     }
 
 

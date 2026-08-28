@@ -3,6 +3,7 @@ package com.pavex.auth.service
 import com.pavex.auth.dto.auth.AuthResponse
 import com.pavex.auth.entity.UserAccount
 import com.pavex.auth.security.JwtService
+import com.pavex.contracts.identity.IdentityAuthContext
 import org.springframework.stereotype.Service
 import java.time.Instant
 
@@ -21,14 +22,22 @@ class AuthSessionService(
         now: Instant,
         clientMetadata:
             ClientMetadata,
+        authorization: IdentityAuthContext? = null,
     ): AuthResponse {
 
         val accessToken =
-            jwtService
-                .createAccessToken(
+            if (authorization == null) {
+                jwtService.createAccessToken(
                     account,
                     now,
                 )
+            } else {
+                jwtService.createAccessToken(
+                    account = account,
+                    now = now,
+                    authorization = authorization,
+                )
+            }
 
         val refreshToken =
             refreshTokenService

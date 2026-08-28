@@ -1,6 +1,5 @@
 package com.pavex.auth.service
 
-import com.pavex.auth.entity.AccountStatus
 import com.pavex.auth.entity.InvitationToken
 import com.pavex.auth.event.InvitationRequestedEvent
 import com.pavex.auth.exception.AccountAlreadyActivatedException
@@ -40,6 +39,12 @@ class InvitationService(
     private val advisoryLockService:
         AdvisoryLockService,
 
+    private val jwtService:
+        com.pavex.auth.security.JwtService,
+
+    private val identityStateSyncService:
+        IdentityStateSyncService,
+
     @Value(
         "\${auth.security.invitation-token-ttl:PT24H}"
     )
@@ -70,15 +75,16 @@ class InvitationService(
                     UserNotFoundException()
                 }
 
-        if (user.emailVerified) {
+        val authorization =
+            jwtService.resolveAuthorization(
+                user
+            )
+
+        if (authorization.emailVerified) {
             throw AccountAlreadyActivatedException()
         }
 
-        if (
-            user.status !=
-                AccountStatus.ACTIVE ||
-            user.email.isBlank()
-        ) {
+        if (user.email.isBlank()) {
             throw UserCannotBeInvitedException()
         }
 
@@ -177,7 +183,12 @@ class InvitationService(
                     InvalidInvitationTokenException()
                 }
 
-        if (user.emailVerified) {
+        val authorization =
+            jwtService.resolveAuthorization(
+                user
+            )
+
+        if (authorization.emailVerified) {
             throw AccountAlreadyActivatedException()
         }
 
@@ -205,6 +216,11 @@ class InvitationService(
                     user.id,
                 now =
                     now,
+            )
+
+        identityStateSyncService
+            .emailVerifiedAfterCommit(
+                user.id
             )
     }
 }

@@ -4,6 +4,7 @@ import com.pavex.auth.entity.UserAccount
 import com.pavex.auth.exception.IdentityServiceUnavailableException
 import com.pavex.contracts.identity.IdentityAuthContext
 import com.pavex.contracts.identity.ProvisionIdentityRequest
+import com.pavex.contracts.identity.UpdateIdentityEmailVerificationRequest
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.cloud.client.loadbalancer.LoadBalanced
 import org.springframework.http.HttpStatus
@@ -56,6 +57,8 @@ class IdentityClient(
     fun provision(
         account: UserAccount,
         roles: Set<String>,
+        displayName: String? = null,
+        avatarUrl: String? = null,
     ) {
         val request = ProvisionIdentityRequest(
             userId = account.id,
@@ -63,6 +66,8 @@ class IdentityClient(
             emailVerified = account.emailVerified,
             status = account.status.name,
             roles = roles,
+            displayName = displayName,
+            avatarUrl = avatarUrl,
         )
 
         try {
@@ -78,6 +83,30 @@ class IdentityClient(
             throw IdentityServiceUnavailableException()
         }
     }
+
+    fun updateEmailVerification(
+        userId: UUID,
+        emailVerified: Boolean,
+    ): Boolean =
+        try {
+            client
+                .patch()
+                .uri("/internal/v1/identities/{userId}/email-verification", userId)
+                .header(INTERNAL_TOKEN_HEADER, internalToken)
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(UpdateIdentityEmailVerificationRequest(emailVerified))
+                .retrieve()
+                .toBodilessEntity()
+            true
+        } catch (exception: RestClientResponseException) {
+            if (exception.statusCode == HttpStatus.NOT_FOUND) {
+                false
+            } else {
+                throw IdentityServiceUnavailableException()
+            }
+        } catch (exception: RestClientException) {
+            throw IdentityServiceUnavailableException()
+        }
 
     private fun fetchAuthContext(
         userId: UUID,

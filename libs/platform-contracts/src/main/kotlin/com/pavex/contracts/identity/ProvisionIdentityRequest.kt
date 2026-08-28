@@ -8,4 +8,6 @@ data class ProvisionIdentityRequest(
     val emailVerified: Boolean = false,
     val status: String = "ACTIVE",
     val roles: Set<String> = emptySet(),
+    val displayName: String? = null,
+    val avatarUrl: String? = null,
 )
