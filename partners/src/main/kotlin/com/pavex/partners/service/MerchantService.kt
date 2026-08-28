@@ -147,8 +147,12 @@ class MerchantService(
         val safeSize = pageSize.coerceIn(1, 100)
         val result = merchants.search(
             status,
-            normalize(search),
-            PageRequest.of(safePage - 1, safeSize, Sort.by(Sort.Direction.DESC, "createdAt")),
+            normalize(search).orEmpty(),
+            PageRequest.of(
+                safePage - 1,
+                safeSize,
+                Sort.by(Sort.Direction.DESC, "createdAt"),
+            ),
         )
         return MerchantListResponse(
             result.content.map { it.toResponse() },

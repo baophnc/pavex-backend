@@ -18,18 +18,19 @@ interface MerchantRepository : JpaRepository<Merchant, UUID> {
 
     @Query(
         """
-        SELECT m FROM Merchant m
-        WHERE (:status IS NULL OR m.status = :status)
-          AND (:search IS NULL OR
-               LOWER(m.merchantCode) LIKE LOWER(CONCAT('%', :search, '%')) OR
-               LOWER(m.businessName) LIKE LOWER(CONCAT('%', :search, '%')) OR
-               LOWER(COALESCE(m.taxCode, '')) LIKE LOWER(CONCAT('%', :search, '%')) OR
-               LOWER(COALESCE(m.contactEmail, '')) LIKE LOWER(CONCAT('%', :search, '%')))
-        """,
+    SELECT m FROM Merchant m
+    WHERE (:status IS NULL OR m.status = :status)
+      AND (
+           LOWER(m.merchantCode) LIKE LOWER(CONCAT('%', :search, '%')) OR
+           LOWER(m.businessName) LIKE LOWER(CONCAT('%', :search, '%')) OR
+           LOWER(COALESCE(m.taxCode, '')) LIKE LOWER(CONCAT('%', :search, '%')) OR
+           LOWER(COALESCE(m.contactEmail, '')) LIKE LOWER(CONCAT('%', :search, '%'))
+      )
+    """,
     )
     fun search(
         @Param("status") status: MerchantStatus?,
-        @Param("search") search: String?,
+        @Param("search") search: String,
         pageable: Pageable,
     ): Page<Merchant>
 }
