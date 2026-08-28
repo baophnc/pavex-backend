@@ -20,8 +20,38 @@ import org.springframework.security.web.SecurityFilterChain
 @EnableMethodSecurity
 class SecurityConfig {
 
+    /**
+     * Partners receives the narrowest Identity permission possible. It may read
+     * merchant-application eligibility only; its service token cannot use the
+     * broader Auth-owned /internal identity endpoints.
+     */
     @Bean
     @Order(1)
+    fun partnersMerchantSecurityFilterChain(
+        http: HttpSecurity,
+        @Qualifier("partnersServiceJwtDecoder")
+        partnersServiceJwtDecoder: JwtDecoder,
+    ): SecurityFilterChain =
+        http
+            .securityMatcher(
+                "/internal/v1/identities/*/merchant-eligibility"
+            )
+            .csrf { it.disable() }
+            .sessionManagement {
+                it.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+            }
+            .authorizeHttpRequests {
+                it.anyRequest().hasAuthority(IDENTITY_MERCHANT_AUTHORITY)
+            }
+            .oauth2ResourceServer { resourceServer ->
+                resourceServer.jwt { jwt ->
+                    jwt.decoder(partnersServiceJwtDecoder)
+                }
+            }
+            .build()
+
+    @Bean
+    @Order(2)
     fun internalSecurityFilterChain(
         http: HttpSecurity,
         @Qualifier("authServiceJwtDecoder")
@@ -44,7 +74,7 @@ class SecurityConfig {
             .build()
 
     @Bean
-    @Order(2)
+    @Order(3)
     fun apiSecurityFilterChain(
         http: HttpSecurity,
         @Qualifier("userJwtDecoder")
@@ -103,5 +133,6 @@ class SecurityConfig {
 
     companion object {
         private const val IDENTITY_INTERNAL_AUTHORITY = "SCOPE_identity.internal"
+        private const val IDENTITY_MERCHANT_AUTHORITY = "SCOPE_identity.merchant"
     }
 }

@@ -29,6 +29,9 @@ security:
     ttl: ${SERVICE_JWT_TTL:PT1M}
     private-key: ${IDENTITY_SERVICE_JWT_PRIVATE_KEY:file:./identity/.keys/private.pem}
     public-key: ${IDENTITY_SERVICE_JWT_PUBLIC_KEY:file:./identity/.keys/public.pem}
+    partners:
+      issuer: ${PARTNERS_SERVICE_JWT_ISSUER:http://localhost:8083}
+      public-key: ${PARTNERS_SERVICE_JWT_PUBLIC_KEY:file:./partners/.keys/public.pem}
 
 pavex:
   openapi:
