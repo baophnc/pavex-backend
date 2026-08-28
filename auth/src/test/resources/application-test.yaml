@@ -31,6 +31,9 @@ eureka:
     enabled: false
 
 auth:
+  security:
+    key-hash-secret: MDEyMzQ1Njc4OWFiY2RlZjAxMjM0NTY3ODlhYmNkZWY=
+
   messaging:
     email-consumer-enabled: false
 

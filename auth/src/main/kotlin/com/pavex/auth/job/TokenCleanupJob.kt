@@ -1,11 +1,13 @@
 package com.pavex.auth.job
 
+import com.pavex.auth.repository.AuthAuditLogRepository
 import com.pavex.auth.repository.EmailVerificationTokenRepository
 import com.pavex.auth.repository.ConsumedMessageRepository
 import com.pavex.auth.repository.InvitationTokenRepository
 import com.pavex.auth.repository.OutboxMessageRepository
 import com.pavex.auth.repository.PasswordResetTokenRepository
 import com.pavex.auth.repository.RefreshSessionRepository
+import com.pavex.auth.security.abuse.AuthRateLimitService
 import com.pavex.auth.service.AdvisoryLockService
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
@@ -46,6 +48,12 @@ class TokenCleanupJob(
     private val consumedMessageRepository:
         ConsumedMessageRepository,
 
+    private val authAuditLogRepository:
+        AuthAuditLogRepository,
+
+    private val authRateLimitService:
+        AuthRateLimitService,
+
     @Value(
         "\${auth.cleanup.token-retention:P7D}"
     )
@@ -62,6 +70,12 @@ class TokenCleanupJob(
         "\${auth.outbox.consumed-retention:P30D}"
     )
     private val consumedMessageRetention:
+        Duration,
+
+    @Value(
+        "\${auth.cleanup.audit-retention:P90D}"
+    )
+    private val auditRetention:
         Duration,
 ) {
 
@@ -140,18 +154,34 @@ class TokenCleanupJob(
                     )
                 )
 
+        val auditCount =
+            authAuditLogRepository
+                .deleteBefore(
+                    now.minus(
+                        auditRetention
+                    )
+                )
+
+        val rateLimitCount =
+            authRateLimitService
+                .deleteExpired(
+                    now
+                )
+
         val total =
             emailVerificationCount +
                 passwordResetCount +
                 invitationCount +
                 refreshSessionCount +
                 outboxCount +
-                consumedMessageCount
+                consumedMessageCount +
+                auditCount +
+                rateLimitCount
 
         if (total > 0) {
 
             logger.info(
-                "Auth cleanup removed {} records: emailVerification={}, passwordReset={}, invitations={}, refreshSessions={}, outbox={}, consumedMessages={}",
+                "Auth cleanup removed {} records: emailVerification={}, passwordReset={}, invitations={}, refreshSessions={}, outbox={}, consumedMessages={}, audit={}, rateLimits={}",
                 total,
                 emailVerificationCount,
                 passwordResetCount,
@@ -159,6 +189,8 @@ class TokenCleanupJob(
                 refreshSessionCount,
                 outboxCount,
                 consumedMessageCount,
+                auditCount,
+                rateLimitCount,
             )
         }
     }

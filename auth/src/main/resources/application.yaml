@@ -91,10 +91,12 @@ auth:
     verification-resend-cooldown: PT2M
     password-reset-token-ttl: PT1H
     invitation-token-ttl: PT24H
+    key-hash-secret: ${AUTH_SECURITY_KEY_HASH_SECRET:}
 
   cleanup:
     enabled: ${AUTH_CLEANUP_ENABLED:true}
     token-retention: ${AUTH_TOKEN_RETENTION:P7D}
+    audit-retention: ${AUTH_AUDIT_RETENTION:P90D}
     cron: ${AUTH_CLEANUP_CRON:0 17 * * * *}
     zone: ${AUTH_CLEANUP_ZONE:UTC}
 

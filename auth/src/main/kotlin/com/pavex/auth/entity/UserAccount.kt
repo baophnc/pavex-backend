@@ -1,6 +1,10 @@
 package com.pavex.auth.entity
 
-import jakarta.persistence.*
+import jakarta.persistence.Column
+import jakarta.persistence.Entity
+import jakarta.persistence.Id
+import jakarta.persistence.Table
+import jakarta.persistence.Version
 import java.time.Instant
 import java.util.UUID
 
@@ -28,22 +32,6 @@ class UserAccount(
     )
     var passwordHash: String = "",
 
-
-    @Enumerated(EnumType.STRING)
-    @Column(
-        nullable = false,
-        length = 32,
-    )
-    var status: AccountStatus = AccountStatus.ACTIVE,
-
-    @Enumerated(EnumType.STRING)
-    @Column(
-        name = "profile_status",
-        nullable = false,
-        length = 32,
-    )
-    var profileStatus: ProfileStatus =
-        ProfileStatus.INCOMPLETE,
     @Column(
         name = "email_verified",
         nullable = false,
@@ -85,15 +73,3 @@ class UserAccount(
     @Column(nullable = false)
     var version: Long = 0,
 )
-
-enum class AccountStatus {
-    ACTIVE,
-    SUSPENDED,
-    DISABLED,
-}
-enum class ProfileStatus {
-    INCOMPLETE,
-    COMPLETED,
-    PENDING_VERIFICATION,
-    REJECTED,
-}

@@ -1,5 +1,7 @@
 package com.pavex.auth.controller
 
+import com.pavex.auth.audit.AuthAuditActions
+import com.pavex.auth.audit.AuthAuditService
 import com.pavex.auth.dto.auth.AcceptInviteRequest
 import com.pavex.auth.dto.auth.AuthResponse
 import com.pavex.auth.dto.auth.ChangePasswordRequest
@@ -14,6 +16,9 @@ import com.pavex.auth.dto.auth.RegisterResponse
 import com.pavex.auth.dto.auth.ResendVerificationRequest
 import com.pavex.auth.dto.auth.ResetPasswordRequest
 import com.pavex.auth.dto.auth.VerifyEmailRequest
+import com.pavex.auth.exception.ApiException
+import com.pavex.auth.security.abuse.AuthRateLimitPolicy
+import com.pavex.auth.security.abuse.AuthRateLimitService
 import com.pavex.auth.service.AuthService
 import com.pavex.auth.service.ChangePasswordService
 import com.pavex.auth.service.ClientMetadata
@@ -40,26 +45,15 @@ import java.util.UUID
 @RequestMapping("/api/v1/auth")
 class AuthController(
 
-    private val authService:
-        AuthService,
-
-    private val emailVerificationService:
-        EmailVerificationService,
-
-    private val passwordResetService:
-        PasswordResetService,
-
-    private val changePasswordService:
-        ChangePasswordService,
-
-    private val sessionService:
-        SessionService,
-
-    private val invitationService:
-        InvitationService,
-
-    private val googleAuthService:
-        GoogleAuthService,
+    private val authService: AuthService,
+    private val emailVerificationService: EmailVerificationService,
+    private val passwordResetService: PasswordResetService,
+    private val changePasswordService: ChangePasswordService,
+    private val sessionService: SessionService,
+    private val invitationService: InvitationService,
+    private val googleAuthService: GoogleAuthService,
+    private val authAuditService: AuthAuditService,
+    private val authRateLimitService: AuthRateLimitService,
 ) {
 
     @PostMapping("/register")
@@ -68,13 +62,23 @@ class AuthController(
         @Valid
         @RequestBody
         request: RegisterRequest,
+        httpRequest: HttpServletRequest,
     ): RegisterResponse {
+        val metadata = clientMetadata(httpRequest)
+        val subject = normalizeEmail(request.email)
 
-        return authService.register(
-            request
-        )
+        return audited(
+            action = AuthAuditActions.REGISTER,
+            metadata = metadata,
+            subject = subject,
+        ) {
+            authRateLimitService.check(
+                AuthRateLimitPolicy.REGISTER_EMAIL,
+                subject,
+            )
+            authService.register(request)
+        }
     }
-
 
     @PostMapping("/login")
     fun login(
@@ -83,16 +87,24 @@ class AuthController(
         request: LoginRequest,
         httpRequest: HttpServletRequest,
     ): AuthResponse {
+        val metadata = clientMetadata(httpRequest)
+        val subject = normalizeEmail(request.email)
 
-        return authService.login(
-            request = request,
-            clientMetadata =
-                clientMetadata(
-                    httpRequest
-                ),
-        )
+        return audited(
+            action = AuthAuditActions.LOGIN,
+            metadata = metadata,
+            subject = subject,
+        ) {
+            authRateLimitService.check(
+                AuthRateLimitPolicy.LOGIN_EMAIL,
+                subject,
+            )
+            authService.login(
+                request = request,
+                clientMetadata = metadata,
+            )
+        }
     }
-
 
     @PostMapping("/refresh")
     fun refresh(
@@ -101,16 +113,22 @@ class AuthController(
         request: RefreshTokenRequest,
         httpRequest: HttpServletRequest,
     ): AuthResponse {
+        val metadata = clientMetadata(httpRequest)
 
-        return authService.refresh(
-            request = request,
-            clientMetadata =
-                clientMetadata(
-                    httpRequest
-                ),
-        )
+        return audited(
+            action = AuthAuditActions.REFRESH,
+            metadata = metadata,
+        ) {
+            authRateLimitService.check(
+                AuthRateLimitPolicy.REFRESH_TOKEN,
+                request.refreshToken,
+            )
+            authService.refresh(
+                request = request,
+                clientMetadata = metadata,
+            )
+        }
     }
-
 
     @PostMapping("/logout")
     @ResponseStatus(HttpStatus.NO_CONTENT)
@@ -118,86 +136,126 @@ class AuthController(
         @Valid
         @RequestBody
         request: LogoutRequest,
+        httpRequest: HttpServletRequest,
     ) {
+        val metadata = clientMetadata(httpRequest)
 
-        authService.logout(
-            request
-        )
+        audited(
+            action = AuthAuditActions.LOGOUT,
+            metadata = metadata,
+        ) {
+            authService.logout(request)
+        }
     }
-
 
     @PostMapping("/verify-email")
     fun verifyEmail(
         @RequestBody
         request: VerifyEmailRequest,
+        httpRequest: HttpServletRequest,
     ): MessageResponse {
+        val metadata = clientMetadata(httpRequest)
 
-        emailVerificationService.verify(
-            request
-        )
+        return audited(
+            action = AuthAuditActions.EMAIL_VERIFY,
+            metadata = metadata,
+            subject = request.token,
+        ) {
+            authRateLimitService.check(
+                AuthRateLimitPolicy.VERIFY_EMAIL_TOKEN,
+                request.token,
+            )
+            emailVerificationService.verify(request)
 
-        return MessageResponse(
-            message =
-                "Email verified successfully."
-        )
+            MessageResponse(
+                message = "Email verified successfully.",
+            )
+        }
     }
-
 
     @PostMapping("/resend-verification")
     fun resendVerification(
         @RequestBody
         request: ResendVerificationRequest,
+        httpRequest: HttpServletRequest,
     ): MessageResponse {
+        val metadata = clientMetadata(httpRequest)
+        val subject = normalizeEmail(request.email)
 
-        emailVerificationService.resend(
-            request
-        )
+        return audited(
+            action = AuthAuditActions.EMAIL_RESEND,
+            metadata = metadata,
+            subject = subject,
+        ) {
+            authRateLimitService.check(
+                AuthRateLimitPolicy.RESEND_EMAIL,
+                subject,
+            )
+            emailVerificationService.resend(request)
 
-        return MessageResponse(
-            message =
-                "If the account exists and is not verified, a verification email has been sent."
-        )
+            MessageResponse(
+                message =
+                    "If the account exists and is not verified, a verification email has been sent.",
+            )
+        }
     }
-
 
     @PostMapping("/forgot-password")
     fun forgotPassword(
         @Valid
         @RequestBody
         request: ForgotPasswordRequest,
+        httpRequest: HttpServletRequest,
     ): MessageResponse {
+        val metadata = clientMetadata(httpRequest)
+        val subject = normalizeEmail(request.email)
 
-        passwordResetService.forgotPassword(
-            request.email
-        )
+        return audited(
+            action = AuthAuditActions.PASSWORD_FORGOT,
+            metadata = metadata,
+            subject = subject,
+        ) {
+            authRateLimitService.check(
+                AuthRateLimitPolicy.FORGOT_PASSWORD_EMAIL,
+                subject,
+            )
+            passwordResetService.forgotPassword(request.email)
 
-        return MessageResponse(
-            message =
-                "If the account exists, a password reset email has been sent.",
-        )
+            MessageResponse(
+                message =
+                    "If the account exists, a password reset email has been sent.",
+            )
+        }
     }
-
 
     @PostMapping("/reset-password")
     fun resetPassword(
         @Valid
         @RequestBody
         request: ResetPasswordRequest,
+        httpRequest: HttpServletRequest,
     ): MessageResponse {
+        val metadata = clientMetadata(httpRequest)
 
-        passwordResetService.resetPassword(
-            rawTokenInput =
+        return audited(
+            action = AuthAuditActions.PASSWORD_RESET,
+            metadata = metadata,
+            subject = request.token,
+        ) {
+            authRateLimitService.check(
+                AuthRateLimitPolicy.RESET_PASSWORD_TOKEN,
                 request.token,
-            newPassword =
-                request.newPassword,
-        )
+            )
+            passwordResetService.resetPassword(
+                rawTokenInput = request.token,
+                newPassword = request.newPassword,
+            )
 
-        return MessageResponse(
-            message =
-                "Password reset successfully.",
-        )
+            MessageResponse(
+                message = "Password reset successfully.",
+            )
+        }
     }
-
 
     @PostMapping("/change-password")
     fun changePassword(
@@ -205,37 +263,35 @@ class AuthController(
         @Valid
         @RequestBody
         request: ChangePasswordRequest,
+        httpRequest: HttpServletRequest,
     ): MessageResponse {
+        val userId = currentUserId(authentication)
+        val metadata = clientMetadata(httpRequest)
 
-        changePasswordService.changePassword(
-            userId =
-                currentUserId(
-                    authentication
-                ),
-            currentPassword =
-                request.currentPassword,
-            newPassword =
-                request.newPassword,
-        )
+        return audited(
+            action = AuthAuditActions.PASSWORD_CHANGE,
+            metadata = metadata,
+            actorUserId = userId,
+        ) {
+            changePasswordService.changePassword(
+                userId = userId,
+                currentPassword = request.currentPassword,
+                newPassword = request.newPassword,
+            )
 
-        return MessageResponse(
-            message =
-                "Password changed successfully.",
-        )
+            MessageResponse(
+                message = "Password changed successfully.",
+            )
+        }
     }
-
 
     @GetMapping("/sessions")
     fun sessions(
         authentication: JwtAuthenticationToken,
     ) =
         sessionService.getSessions(
-            userId =
-                currentUserId(
-                    authentication
-                )
+            userId = currentUserId(authentication),
         )
-
 
     @DeleteMapping("/sessions/{sessionId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
@@ -243,33 +299,40 @@ class AuthController(
         authentication: JwtAuthenticationToken,
         @PathVariable
         sessionId: UUID,
+        httpRequest: HttpServletRequest,
     ) {
+        val userId = currentUserId(authentication)
+        val metadata = clientMetadata(httpRequest)
 
-        sessionService.revokeSession(
-            userId =
-                currentUserId(
-                    authentication
-                ),
-            sessionId =
-                sessionId,
-        )
+        audited(
+            action = AuthAuditActions.SESSION_REVOKE,
+            metadata = metadata,
+            actorUserId = userId,
+        ) {
+            sessionService.revokeSession(
+                userId = userId,
+                sessionId = sessionId,
+            )
+        }
     }
-
 
     @PostMapping("/logout-all")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     fun logoutAll(
         authentication: JwtAuthenticationToken,
+        httpRequest: HttpServletRequest,
     ) {
+        val userId = currentUserId(authentication)
+        val metadata = clientMetadata(httpRequest)
 
-        sessionService.logoutAll(
-            userId =
-                currentUserId(
-                    authentication
-                )
-        )
+        audited(
+            action = AuthAuditActions.LOGOUT_ALL,
+            metadata = metadata,
+            actorUserId = userId,
+        ) {
+            sessionService.logoutAll(userId)
+        }
     }
-
 
     @PostMapping("/accept-invite")
     @ResponseStatus(HttpStatus.NO_CONTENT)
@@ -277,16 +340,25 @@ class AuthController(
         @Valid
         @RequestBody
         request: AcceptInviteRequest,
+        httpRequest: HttpServletRequest,
     ) {
+        val metadata = clientMetadata(httpRequest)
 
-        invitationService.acceptInvite(
-            rawTokenInput =
+        audited(
+            action = AuthAuditActions.INVITATION_ACCEPT,
+            metadata = metadata,
+            subject = request.token,
+        ) {
+            authRateLimitService.check(
+                AuthRateLimitPolicy.ACCEPT_INVITE_TOKEN,
                 request.token,
-            password =
-                request.password,
-        )
+            )
+            invitationService.acceptInvite(
+                rawTokenInput = request.token,
+                password = request.password,
+            )
+        }
     }
-
 
     @PostMapping("/google")
     fun googleLogin(
@@ -295,42 +367,86 @@ class AuthController(
         request: GoogleLoginRequest,
         httpRequest: HttpServletRequest,
     ): AuthResponse {
+        val metadata = clientMetadata(httpRequest)
 
-        return googleAuthService.login(
-            rawIdToken =
+        return audited(
+            action = AuthAuditActions.GOOGLE_LOGIN,
+            metadata = metadata,
+        ) {
+            authRateLimitService.check(
+                AuthRateLimitPolicy.GOOGLE_TOKEN,
                 request.idToken,
-            clientMetadata =
-                clientMetadata(
-                    httpRequest
-                ),
-        )
+            )
+            googleAuthService.login(
+                rawIdToken = request.idToken,
+                clientMetadata = metadata,
+            )
+        }
     }
 
+    private fun <T> audited(
+        action: String,
+        metadata: ClientMetadata,
+        actorUserId: UUID? = null,
+        subject: String? = null,
+        block: () -> T,
+    ): T {
+        return try {
+            val result = block()
+
+            authAuditService.success(
+                action = action,
+                metadata = metadata,
+                actorUserId = actorUserId,
+                subject = subject,
+            )
+
+            result
+        } catch (exception: ApiException) {
+            authAuditService.failure(
+                action = action,
+                reasonCode = exception.code,
+                metadata = metadata,
+                actorUserId = actorUserId,
+                subject = subject,
+            )
+
+            throw exception
+        }
+    }
 
     private fun currentUserId(
         authentication: JwtAuthenticationToken,
-    ): UUID {
-
-        return UUID.fromString(
+    ): UUID =
+        UUID.fromString(
             authentication.token.subject
         )
-    }
-
 
     private fun clientMetadata(
         request: HttpServletRequest,
-    ): ClientMetadata {
-
-        return ClientMetadata(
+    ): ClientMetadata =
+        ClientMetadata(
             ipAddress =
                 request.remoteAddr
                     ?.take(64),
             userAgent =
                 request
-                    .getHeader(
-                        "User-Agent"
-                    )
+                    .getHeader("User-Agent")
                     ?.take(512),
+            requestId =
+                request
+                    .getHeader(REQUEST_ID_HEADER)
+                    ?.take(128),
         )
+
+    private fun normalizeEmail(
+        email: String,
+    ): String =
+        email
+            .trim()
+            .lowercase()
+
+    companion object {
+        private const val REQUEST_ID_HEADER = "X-Request-Id"
     }
 }

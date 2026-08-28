@@ -117,7 +117,7 @@ class AuthService(
             email =
                 savedAccount.email,
             status =
-                savedAccount.status.name,
+                DEFAULT_IDENTITY_STATUS,
             emailVerified =
                 savedAccount.emailVerified,
             emailVerificationRequired =
@@ -325,6 +325,9 @@ class AuthService(
 
 
     companion object {
+
+        private const val
+            DEFAULT_IDENTITY_STATUS = "ACTIVE"
 
         private const val
             MAX_FAILED_LOGIN_ATTEMPTS = 5

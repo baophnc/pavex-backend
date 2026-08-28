@@ -48,4 +48,9 @@ if ! grep -q '^OUTBOX_PAYLOAD_ENCRYPTION_KEY=' "$env_file"; then
   printf 'OUTBOX_PAYLOAD_ENCRYPTION_KEY=%s\n' "$outbox_key" >> "$env_file"
 fi
 
+if ! grep -q '^AUTH_SECURITY_KEY_HASH_SECRET=' "$env_file"; then
+  security_hash_key="$(openssl rand -base64 32 | tr -d '\n')"
+  printf 'AUTH_SECURITY_KEY_HASH_SECRET=%s\n' "$security_hash_key" >> "$env_file"
+fi
+
 echo "Local runtime material is ready under .local/ and */.keys/."

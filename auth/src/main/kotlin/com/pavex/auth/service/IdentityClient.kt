@@ -64,7 +64,7 @@ class IdentityClient(
             userId = account.id,
             email = account.email,
             emailVerified = account.emailVerified,
-            status = account.status.name,
+            status = DEFAULT_IDENTITY_STATUS,
             roles = roles,
             displayName = displayName,
             avatarUrl = avatarUrl,
@@ -122,4 +122,8 @@ class IdentityClient(
             .retrieve()
             .body(IdentityAuthContext::class.java)
             ?: throw IdentityServiceUnavailableException()
+
+    companion object {
+        private const val DEFAULT_IDENTITY_STATUS = "ACTIVE"
+    }
 }
