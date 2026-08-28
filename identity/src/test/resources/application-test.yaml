@@ -16,9 +16,11 @@ security:
   jwt:
     issuer: http://localhost:8081
     public-key: classpath:keys/test-public.pem
-
-identity:
-  internal-token: test-internal-token
+  service-jwt:
+    issuer: http://localhost:8082
+    ttl: PT1M
+    private-key: classpath:keys/test-private.pem
+    public-key: classpath:keys/test-public.pem
 
 eureka:
   client:

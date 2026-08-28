@@ -1,7 +1,9 @@
 package com.pavex.auth.config
 
+import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
+import org.springframework.core.annotation.Order
 import org.springframework.core.convert.converter.Converter
 import org.springframework.security.authentication.AbstractAuthenticationToken
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity
@@ -9,31 +11,49 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity
 import org.springframework.security.config.http.SessionCreationPolicy
 import org.springframework.security.core.authority.SimpleGrantedAuthority
 import org.springframework.security.oauth2.jwt.Jwt
+import org.springframework.security.oauth2.jwt.JwtDecoder
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken
 import org.springframework.security.web.SecurityFilterChain
-import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter
 
 @Configuration
 @EnableMethodSecurity
 class SecurityConfig {
 
     @Bean
-    fun securityFilterChain(
+    @Order(1)
+    fun internalSecurityFilterChain(
         http: HttpSecurity,
-        internalServiceTokenFilter: InternalServiceTokenFilter,
-    ): SecurityFilterChain {
-
+        @Qualifier("identityServiceJwtDecoder")
+        identityServiceJwtDecoder: JwtDecoder,
+    ): SecurityFilterChain =
         http
-            .csrf {
-                it.disable()
-            }
-
+            .securityMatcher("/internal/**")
+            .csrf { it.disable() }
             .sessionManagement {
-                it.sessionCreationPolicy(
-                    SessionCreationPolicy.STATELESS
-                )
+                it.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
             }
+            .authorizeHttpRequests {
+                it.anyRequest().hasAuthority(AUTH_INTERNAL_AUTHORITY)
+            }
+            .oauth2ResourceServer { resourceServer ->
+                resourceServer.jwt { jwt ->
+                    jwt.decoder(identityServiceJwtDecoder)
+                }
+            }
+            .build()
 
+    @Bean
+    @Order(2)
+    fun apiSecurityFilterChain(
+        http: HttpSecurity,
+        @Qualifier("userJwtDecoder")
+        userJwtDecoder: JwtDecoder,
+    ): SecurityFilterChain =
+        http
+            .csrf { it.disable() }
+            .sessionManagement {
+                it.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+            }
             .authorizeHttpRequests {
                 it.requestMatchers(
                     "/api/v1/auth/register",
@@ -49,76 +69,42 @@ class SecurityConfig {
                     "/actuator/health",
                     "/actuator/health/**",
                 ).permitAll()
-                    .requestMatchers("/internal/**").permitAll()
-
                     .anyRequest()
                     .authenticated()
             }
-
-            .oauth2ResourceServer {
-                it.jwt { jwt ->
-                    jwt.jwtAuthenticationConverter(
-                        jwtAuthenticationConverter()
-                    )
+            .oauth2ResourceServer { resourceServer ->
+                resourceServer.jwt { jwt ->
+                    jwt.decoder(userJwtDecoder)
+                    jwt.jwtAuthenticationConverter(jwtAuthenticationConverter())
                 }
             }
-
-            .addFilterBefore(
-                internalServiceTokenFilter,
-                UsernamePasswordAuthenticationFilter::class.java,
-            )
-
-        return http.build()
-    }
-
+            .build()
 
     @Bean
-    fun jwtAuthenticationConverter():
-        Converter<Jwt, AbstractAuthenticationToken> {
+    fun jwtAuthenticationConverter(): Converter<Jwt, AbstractAuthenticationToken> =
+        Converter { jwt ->
+            val authorities = mutableListOf<SimpleGrantedAuthority>()
 
-        return Converter { jwt ->
+            jwt.getClaimAsStringList("roles")
+                .orEmpty()
+                .forEach { role ->
+                    authorities += SimpleGrantedAuthority("ROLE_$role")
+                }
 
-            val authorities =
-                mutableListOf<SimpleGrantedAuthority>()
-
-            val roles =
-                jwt.getClaimAsStringList(
-                    "roles"
-                ) ?: emptyList()
-
-            roles.forEach { role ->
-
-                authorities.add(
-                    SimpleGrantedAuthority(
-                        "ROLE_$role"
-                    )
-                )
-            }
-
-            val permissions =
-                jwt.getClaimAsStringList(
-                    "permissions"
-                ) ?: emptyList()
-
-            permissions.forEach {
-                permission ->
-
-                authorities.add(
-                    SimpleGrantedAuthority(
-                        permission
-                    )
-                )
-            }
-
-            val subject = requireNotNull(jwt.subject) {
-                "JWT subject is missing"
-            }
+            jwt.getClaimAsStringList("permissions")
+                .orEmpty()
+                .forEach { permission ->
+                    authorities += SimpleGrantedAuthority(permission)
+                }
 
             JwtAuthenticationToken(
                 jwt,
                 authorities,
-                subject,
+                requireNotNull(jwt.subject) { "JWT subject is missing" },
             )
         }
+
+    companion object {
+        private const val AUTH_INTERNAL_AUTHORITY = "SCOPE_auth.internal"
     }
 }

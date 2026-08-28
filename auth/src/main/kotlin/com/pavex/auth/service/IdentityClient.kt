@@ -2,6 +2,7 @@ package com.pavex.auth.service
 
 import com.pavex.auth.entity.UserAccount
 import com.pavex.auth.exception.IdentityServiceUnavailableException
+import com.pavex.auth.security.service.ServiceJwtIssuer
 import com.pavex.contracts.identity.IdentityAuthContext
 import com.pavex.contracts.identity.ProvisionIdentityRequest
 import com.pavex.contracts.identity.UpdateIdentityEmailVerificationRequest
@@ -20,8 +21,7 @@ class IdentityClient(
     @LoadBalanced builder: RestClient.Builder,
     @Value("\${auth.identity.service-url:http://identity-service}")
     serviceUrl: String,
-    @Value("\${auth.identity.internal-token:}")
-    private val internalToken: String,
+    private val serviceJwtIssuer: ServiceJwtIssuer,
 ) {
 
     private val client = builder
@@ -74,7 +74,9 @@ class IdentityClient(
             client
                 .post()
                 .uri("/internal/v1/identities")
-                .header(INTERNAL_TOKEN_HEADER, internalToken)
+                .headers { headers ->
+                    headers.setBearerAuth(serviceJwtIssuer.issueForIdentity())
+                }
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(request)
                 .retrieve()
@@ -92,7 +94,9 @@ class IdentityClient(
             client
                 .patch()
                 .uri("/internal/v1/identities/{userId}/email-verification", userId)
-                .header(INTERNAL_TOKEN_HEADER, internalToken)
+                .headers { headers ->
+                    headers.setBearerAuth(serviceJwtIssuer.issueForIdentity())
+                }
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(UpdateIdentityEmailVerificationRequest(emailVerified))
                 .retrieve()
@@ -114,13 +118,8 @@ class IdentityClient(
         client
             .get()
             .uri("/internal/v1/identities/{userId}/auth-context", userId)
-            .header(INTERNAL_TOKEN_HEADER, internalToken)
+            .headers { headers -> headers.setBearerAuth(serviceJwtIssuer.issueForIdentity()) }
             .retrieve()
             .body(IdentityAuthContext::class.java)
             ?: throw IdentityServiceUnavailableException()
-
-    companion object {
-        private const val INTERNAL_TOKEN_HEADER =
-            "X-Pavex-Internal-Token"
-    }
 }

@@ -5,7 +5,10 @@ import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.core.io.Resource
 import org.springframework.security.converter.RsaKeyConverters
+import org.springframework.security.oauth2.core.DelegatingOAuth2TokenValidator
+import org.springframework.security.oauth2.core.OAuth2Error
 import org.springframework.security.oauth2.core.OAuth2TokenValidator
+import org.springframework.security.oauth2.core.OAuth2TokenValidatorResult
 import org.springframework.security.oauth2.jwt.Jwt
 import org.springframework.security.oauth2.jwt.JwtDecoder
 import org.springframework.security.oauth2.jwt.JwtEncoder
@@ -29,55 +32,63 @@ class JwtConfig(
 ) {
 
     @Bean
-    fun rsaPrivateKey(): RSAPrivateKey {
-        return privateKeyResource.inputStream.use { inputStream ->
-            requireNotNull(
-                RsaKeyConverters.pkcs8().convert(inputStream)
-            )
+    fun rsaPrivateKey(): RSAPrivateKey =
+        privateKeyResource.inputStream.use { inputStream ->
+            requireNotNull(RsaKeyConverters.pkcs8().convert(inputStream))
         }
-    }
 
     @Bean
-    fun rsaPublicKey(): RSAPublicKey {
-        return publicKeyResource.inputStream.use { inputStream ->
-            requireNotNull(
-                RsaKeyConverters.x509().convert(inputStream)
-            )
+    fun rsaPublicKey(): RSAPublicKey =
+        publicKeyResource.inputStream.use { inputStream ->
+            requireNotNull(RsaKeyConverters.x509().convert(inputStream))
         }
-    }
 
     @Bean
     fun jwtEncoder(
         publicKey: RSAPublicKey,
         privateKey: RSAPrivateKey,
-    ): JwtEncoder {
-        return NimbusJwtEncoder
-            .withKeyPair(
-                publicKey,
-                privateKey,
-            )
+    ): JwtEncoder =
+        NimbusJwtEncoder
+            .withKeyPair(publicKey, privateKey)
             .build()
-    }
 
-    @Bean
-    fun jwtDecoder(
+    @Bean("userJwtDecoder")
+    fun userJwtDecoder(
         publicKey: RSAPublicKey,
     ): JwtDecoder {
-
-        val decoder: NimbusJwtDecoder =
-            NimbusJwtDecoder
-                .withPublicKey(publicKey)
-                .build()
-
-        val validator: OAuth2TokenValidator<Jwt> =
-            JwtValidators.createDefaultWithIssuer(
-                issuer
-            )
+        val decoder = NimbusJwtDecoder
+            .withPublicKey(publicKey)
+            .build()
 
         decoder.setJwtValidator(
-            validator
+            DelegatingOAuth2TokenValidator(
+                JwtValidators.createDefaultWithIssuer(issuer),
+                tokenTypeValidator(USER_TOKEN_TYPE),
+            )
         )
 
         return decoder
+    }
+
+    private fun tokenTypeValidator(
+        expectedType: String,
+    ): OAuth2TokenValidator<Jwt> =
+        OAuth2TokenValidator { jwt ->
+            if (jwt.getClaimAsString(TOKEN_TYPE_CLAIM) == expectedType) {
+                OAuth2TokenValidatorResult.success()
+            } else {
+                OAuth2TokenValidatorResult.failure(
+                    OAuth2Error(
+                        "invalid_token",
+                        "JWT token type is invalid",
+                        null,
+                    )
+                )
+            }
+        }
+
+    companion object {
+        private const val TOKEN_TYPE_CLAIM = "typ"
+        private const val USER_TOKEN_TYPE = "user"
     }
 }

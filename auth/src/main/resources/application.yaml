@@ -72,13 +72,16 @@ security:
     private-key: ${JWT_PRIVATE_KEY:file:./.keys/private.pem}
     public-key: ${JWT_PUBLIC_KEY:file:./.keys/public.pem}
 
+  service-jwt:
+    ttl: ${SERVICE_JWT_TTL:PT1M}
+    identity:
+      issuer: ${IDENTITY_SERVICE_JWT_ISSUER:http://localhost:8082}
+      public-key: ${IDENTITY_SERVICE_JWT_PUBLIC_KEY:file:../identity/.keys/public.pem}
+
 
 auth:
-  internal-token: ${IDENTITY_INTERNAL_TOKEN:}
-
   identity:
     service-url: ${IDENTITY_SERVICE_URL:http://identity-service}
-    internal-token: ${IDENTITY_INTERNAL_TOKEN:}
 
   google:
     client-ids: ${GOOGLE_CLIENT_IDS:${GOOGLE_CLIENT_ID:}}

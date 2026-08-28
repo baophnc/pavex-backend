@@ -31,3 +31,6 @@ Thumbs.db
 *.p12
 *.jks
 **/.keys/
+
+### Test-only crypto fixtures ###
+!**/src/test/resources/keys/*.pem

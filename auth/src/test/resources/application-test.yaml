@@ -1,7 +1,13 @@
 security:
   jwt:
+    issuer: http://localhost:8081
     private-key: classpath:keys/test-private.pem
     public-key: classpath:keys/test-public.pem
+  service-jwt:
+    ttl: PT1M
+    identity:
+      issuer: http://localhost:8082
+      public-key: classpath:keys/test-public.pem
 
 spring:
   datasource:
