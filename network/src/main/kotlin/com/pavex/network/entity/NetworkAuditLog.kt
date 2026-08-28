@@ -9,8 +9,8 @@ import jakarta.persistence.Table
 import java.time.Instant
 import java.util.UUID
 
-enum class NetworkAuditEntityType { REGION, HUB, SERVICE_AREA, COVERAGE, LANE, LANE_SCHEDULE }
-enum class NetworkAuditAction { CREATED, UPDATED, ACTIVATED, DEACTIVATED }
+enum class NetworkAuditEntityType { REGION, HUB, SERVICE_AREA, COVERAGE, LANE, LANE_SCHEDULE, ROUTE_TEMPLATE }
+enum class NetworkAuditAction { CREATED, UPDATED, ACTIVATED, DEACTIVATED, DELETED }
 
 @Entity
 @Table(name = "audit_logs", schema = "network")

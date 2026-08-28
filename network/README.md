@@ -55,3 +55,16 @@ Routing:
 - Eureka service id: `network-service`
 - Default inter-hub transfer buffer: `30` minutes
 - Default recurring-schedule search horizon: `30` days
+
+## Route templates (patch 03)
+
+Route templates replace the old branch-route concept with an explicit operator preference layered on top of the transport graph.
+
+- Templates are created inactive and contain an ordered, contiguous, cycle-free list of hub lanes.
+- Activating a template requires every lane, hub, and at least one current/future schedule per lane to be operational.
+- Active templates are evaluated by ascending priority; the first template that can produce a scheduled journey is used.
+- Routing defaults to `PREFER_TEMPLATE` and falls back to the earliest-arrival graph planner when no template is currently usable.
+- Admins can use `GRAPH_ONLY` or `TEMPLATE_ONLY` on the route-plan endpoint for diagnostics.
+- Updating a template increments its business `revision`; route-plan responses record the template id, code and revision used.
+- `GET /api/v1/admin/network/route-templates/journey` previews the highest-priority currently usable template directly between two hubs.
+- Inactive templates can be deleted; active templates must be deactivated first so audit history and operational intent stay explicit.

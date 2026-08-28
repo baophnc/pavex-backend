@@ -1,6 +1,7 @@
 package com.pavex.network.controller
 
 import com.pavex.network.dto.routing.RoutePlanResponse
+import com.pavex.network.dto.routing.RoutePlanningMode
 import com.pavex.network.dto.routing.ServiceAreaResolutionResponse
 import com.pavex.network.service.NetworkResolverService
 import com.pavex.network.service.NetworkRoutePlanner
@@ -34,6 +35,7 @@ class NetworkRoutingController(
         @RequestParam destinationWardCode: String,
         @RequestParam shipmentWeightKg: BigDecimal,
         @RequestParam(required = false) readyAt: Instant?,
+        @RequestParam(defaultValue = "PREFER_TEMPLATE") mode: RoutePlanningMode,
     ): RoutePlanResponse = planner.plan(
         originProvinceCode,
         originWardCode,
@@ -41,5 +43,6 @@ class NetworkRoutingController(
         destinationWardCode,
         shipmentWeightKg,
         readyAt ?: Instant.now(),
+        mode,
     )
 }

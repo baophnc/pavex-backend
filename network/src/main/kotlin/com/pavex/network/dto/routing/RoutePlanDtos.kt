@@ -7,7 +7,23 @@ import java.time.LocalDate
 import java.time.LocalTime
 import java.util.UUID
 
+enum class RoutePlanningMode {
+    PREFER_TEMPLATE,
+    GRAPH_ONLY,
+    TEMPLATE_ONLY,
+}
+
+enum class RoutePlanSource {
+    LOCAL,
+    ROUTE_TEMPLATE,
+    GRAPH,
+}
+
 data class RoutePlanResponse(
+    val source: RoutePlanSource,
+    val routeTemplateId: UUID? = null,
+    val routeTemplateCode: String? = null,
+    val routeTemplateRevision: Int? = null,
     val originServiceAreaId: UUID,
     val destinationServiceAreaId: UUID,
     val originHubId: UUID,

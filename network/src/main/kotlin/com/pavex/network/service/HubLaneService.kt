@@ -12,6 +12,7 @@ import com.pavex.network.entity.HubStatus
 import com.pavex.network.entity.LaneScheduleStatus
 import com.pavex.network.entity.NetworkAuditAction
 import com.pavex.network.entity.NetworkAuditEntityType
+import com.pavex.network.entity.RouteTemplateStatus
 import com.pavex.network.entity.TransportMode
 import com.pavex.network.exception.ConflictException
 import com.pavex.network.exception.InvalidNetworkRequestException
@@ -19,6 +20,7 @@ import com.pavex.network.exception.NotFoundException
 import com.pavex.network.repository.HubLaneRepository
 import com.pavex.network.repository.HubRepository
 import com.pavex.network.repository.LaneScheduleRepository
+import com.pavex.network.repository.RouteTemplateLegRepository
 import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Sort
 import org.springframework.stereotype.Service
@@ -30,6 +32,7 @@ class HubLaneService(
     private val lanes: HubLaneRepository,
     private val schedules: LaneScheduleRepository,
     private val hubs: HubRepository,
+    private val routeTemplateLegs: RouteTemplateLegRepository,
     private val audit: NetworkAuditService,
 ) {
     @Transactional(readOnly = true)
@@ -152,6 +155,13 @@ class HubLaneService(
                     "Add at least one active current or future schedule before activating the lane.",
                 )
             }
+        } else if (lane.status == HubLaneStatus.ACTIVE &&
+            routeTemplateLegs.existsByLaneIdAndTemplateStatus(id, RouteTemplateStatus.ACTIVE)
+        ) {
+            throw ConflictException(
+                "lane_used_by_active_route_template",
+                "Deactivate route templates using this lane before deactivating the lane.",
+            )
         }
 
         lane.setActive(request.active)

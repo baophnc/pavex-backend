@@ -2,20 +2,30 @@ package com.pavex.network.service
 
 import com.pavex.network.dto.routing.RoutePlanLegResponse
 import com.pavex.network.dto.routing.RoutePlanResponse
+import com.pavex.network.dto.routing.RoutePlanSource
+import com.pavex.network.dto.routing.RoutePlanningMode
+import com.pavex.network.entity.Hub
+import com.pavex.network.entity.HubLane
 import com.pavex.network.entity.HubLaneStatus
 import com.pavex.network.entity.HubStatus
+import com.pavex.network.entity.LaneSchedule
 import com.pavex.network.entity.LaneScheduleStatus
+import com.pavex.network.entity.RouteTemplate
+import com.pavex.network.entity.RouteTemplateStatus
 import com.pavex.network.exception.InvalidNetworkRequestException
 import com.pavex.network.exception.NotFoundException
 import com.pavex.network.repository.HubLaneRepository
 import com.pavex.network.repository.HubRepository
 import com.pavex.network.repository.LaneScheduleRepository
+import com.pavex.network.repository.RouteTemplateLegRepository
+import com.pavex.network.repository.RouteTemplateRepository
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.math.BigDecimal
 import java.time.Duration
 import java.time.Instant
+import java.util.UUID
 
 @Service
 class NetworkRoutePlanner(
@@ -23,6 +33,8 @@ class NetworkRoutePlanner(
     private val hubs: HubRepository,
     private val lanes: HubLaneRepository,
     private val schedules: LaneScheduleRepository,
+    private val templates: RouteTemplateRepository,
+    private val templateLegs: RouteTemplateLegRepository,
     @Value("\${network.routing.transfer-buffer-minutes:30}")
     private val transferBufferMinutes: Int,
     @Value("\${network.routing.schedule-search-days:30}")
@@ -36,6 +48,7 @@ class NetworkRoutePlanner(
         destinationWardCode: String,
         shipmentWeightKg: BigDecimal,
         readyAt: Instant,
+        mode: RoutePlanningMode = RoutePlanningMode.PREFER_TEMPLATE,
     ): RoutePlanResponse {
         if (shipmentWeightKg.signum() <= 0) {
             throw InvalidNetworkRequestException("invalid_shipment_weight", "Shipment weight must be positive.")
@@ -48,6 +61,7 @@ class NetworkRoutePlanner(
         val destination = resolver.resolve(destinationProvinceCode, destinationWardCode)
         if (origin.primaryHubId == destination.primaryHubId) {
             return RoutePlanResponse(
+                source = RoutePlanSource.LOCAL,
                 originServiceAreaId = origin.serviceAreaId,
                 destinationServiceAreaId = destination.serviceAreaId,
                 originHubId = origin.primaryHubId,
@@ -69,10 +83,41 @@ class NetworkRoutePlanner(
             HubLaneStatus.ACTIVE,
             shipmentWeightKg,
         ).filter { it.fromHubId in activeHubs && it.toHubId in activeHubs }
+        val laneIds = eligibleLanes.map { it.id }
+        val activeSchedules = if (laneIds.isEmpty()) {
+            emptyList()
+        } else {
+            schedules.findAllByLaneIdInAndStatus(laneIds, LaneScheduleStatus.ACTIVE)
+        }
+
+        if (mode != RoutePlanningMode.GRAPH_ONLY) {
+            val preferred = tryPreferredTemplate(
+                originHubId = origin.primaryHubId,
+                destinationHubId = destination.primaryHubId,
+                readyAt = readyAt,
+                eligibleLanes = eligibleLanes,
+                activeSchedules = activeSchedules,
+            )
+            if (preferred != null) {
+                return buildPlan(
+                    source = RoutePlanSource.ROUTE_TEMPLATE,
+                    template = preferred.template,
+                    originServiceAreaId = origin.serviceAreaId,
+                    destinationServiceAreaId = destination.serviceAreaId,
+                    originHubId = origin.primaryHubId,
+                    originHubCode = origin.primaryHubCode,
+                    destinationHubId = destination.primaryHubId,
+                    destinationHubCode = destination.primaryHubCode,
+                    shipmentWeightKg = shipmentWeightKg,
+                    readyAt = readyAt,
+                    path = preferred.path,
+                    activeHubs = activeHubs,
+                )
+            }
+            if (mode == RoutePlanningMode.TEMPLATE_ONLY) throw templateRouteNotFound()
+        }
 
         if (eligibleLanes.isEmpty()) throw routeNotFound()
-        val laneIds = eligibleLanes.map { it.id }
-        val activeSchedules = schedules.findAllByLaneIdInAndStatus(laneIds, LaneScheduleStatus.ACTIVE)
         val path = EarliestArrivalPathFinder.find(
             originHubId = origin.primaryHubId,
             destinationHubId = destination.primaryHubId,
@@ -83,6 +128,79 @@ class NetworkRoutePlanner(
             scheduleSearchDays = scheduleSearchDays,
         ) ?: throw routeNotFound()
 
+        return buildPlan(
+            source = RoutePlanSource.GRAPH,
+            template = null,
+            originServiceAreaId = origin.serviceAreaId,
+            destinationServiceAreaId = destination.serviceAreaId,
+            originHubId = origin.primaryHubId,
+            originHubCode = origin.primaryHubCode,
+            destinationHubId = destination.primaryHubId,
+            destinationHubCode = destination.primaryHubCode,
+            shipmentWeightKg = shipmentWeightKg,
+            readyAt = readyAt,
+            path = path,
+            activeHubs = activeHubs,
+        )
+    }
+
+    private fun tryPreferredTemplate(
+        originHubId: UUID,
+        destinationHubId: UUID,
+        readyAt: Instant,
+        eligibleLanes: List<HubLane>,
+        activeSchedules: List<LaneSchedule>,
+    ): PreferredTemplatePlan? {
+        val candidates = templates.findAllByOriginHubIdAndDestinationHubIdAndStatusOrderByPriorityAscCodeAsc(
+            originHubId,
+            destinationHubId,
+            RouteTemplateStatus.ACTIVE,
+        )
+        if (candidates.isEmpty()) return null
+
+        val legsByTemplate = templateLegs
+            .findAllByRouteTemplateIdInOrderByRouteTemplateIdAscSequenceAsc(candidates.map { it.id })
+            .groupBy { it.routeTemplateId }
+        val laneLookup = eligibleLanes.associateBy { it.id }
+
+        candidates.forEach { template ->
+            val legRows = legsByTemplate[template.id].orEmpty().sortedBy { it.sequence }
+            if (legRows.isEmpty()) return@forEach
+            val path = legRows.mapNotNull { laneLookup[it.laneId] }
+            if (path.size != legRows.size || !matchesEndpoints(template, path)) return@forEach
+
+            val planned = RouteTemplateJourneyPlanner.plan(
+                readyAt = readyAt,
+                lanes = path,
+                schedules = activeSchedules,
+                transferBufferMinutes = transferBufferMinutes,
+                scheduleSearchDays = scheduleSearchDays,
+            ) ?: return@forEach
+            return PreferredTemplatePlan(template, planned)
+        }
+        return null
+    }
+
+    private fun matchesEndpoints(template: RouteTemplate, path: List<HubLane>): Boolean {
+        if (path.isEmpty()) return false
+        if (path.first().fromHubId != template.originHubId || path.last().toHubId != template.destinationHubId) return false
+        return path.zipWithNext().all { (left, right) -> left.toHubId == right.fromHubId }
+    }
+
+    private fun buildPlan(
+        source: RoutePlanSource,
+        template: RouteTemplate?,
+        originServiceAreaId: UUID,
+        destinationServiceAreaId: UUID,
+        originHubId: UUID,
+        originHubCode: String,
+        destinationHubId: UUID,
+        destinationHubCode: String,
+        shipmentWeightKg: BigDecimal,
+        readyAt: Instant,
+        path: List<PlannedGraphLeg>,
+        activeHubs: Map<UUID, Hub>,
+    ): RoutePlanResponse {
         val arrivalAt = path.last().arrivalAt
         val allDistancesKnown = path.all { it.lane.distanceKm != null }
         val totalDistance = if (allDistancesKnown) {
@@ -92,12 +210,16 @@ class NetworkRoutePlanner(
         }
 
         return RoutePlanResponse(
-            originServiceAreaId = origin.serviceAreaId,
-            destinationServiceAreaId = destination.serviceAreaId,
-            originHubId = origin.primaryHubId,
-            originHubCode = origin.primaryHubCode,
-            destinationHubId = destination.primaryHubId,
-            destinationHubCode = destination.primaryHubCode,
+            source = source,
+            routeTemplateId = template?.id,
+            routeTemplateCode = template?.code,
+            routeTemplateRevision = template?.revision,
+            originServiceAreaId = originServiceAreaId,
+            destinationServiceAreaId = destinationServiceAreaId,
+            originHubId = originHubId,
+            originHubCode = originHubCode,
+            destinationHubId = destinationHubId,
+            destinationHubCode = destinationHubCode,
             shipmentWeightKg = shipmentWeightKg,
             readyAt = readyAt,
             arrivalAt = arrivalAt,
@@ -130,5 +252,15 @@ class NetworkRoutePlanner(
     private fun routeNotFound() = NotFoundException(
         "route_not_found",
         "No active scheduled transport route can carry this shipment between the resolved hubs.",
+    )
+
+    private fun templateRouteNotFound() = NotFoundException(
+        "route_template_not_available",
+        "No active route template can currently carry this shipment between the resolved hubs.",
+    )
+
+    private data class PreferredTemplatePlan(
+        val template: RouteTemplate,
+        val path: List<PlannedGraphLeg>,
     )
 }
