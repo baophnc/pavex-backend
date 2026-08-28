@@ -33,6 +33,11 @@ export IDENTITY_SERVICE_JWT_PRIVATE_KEY="file:$repo_dir/identity/.keys/private.p
 export IDENTITY_SERVICE_JWT_PUBLIC_KEY="file:$repo_dir/identity/.keys/public.pem"
 export EUREKA_DEFAULT_ZONE="http://localhost:8761/eureka/"
 export EUREKA_REGISTRY_FETCH_INTERVAL_SECONDS="5"
+# Eureka client registration is asynchronous. Keep the local initial
+# replication delay short so freshly started services appear in the registry
+# quickly; production can keep the library default by not setting these envs.
+export EUREKA_INITIAL_INSTANCE_INFO_REPLICATION_INTERVAL_SECONDS="${EUREKA_INITIAL_INSTANCE_INFO_REPLICATION_INTERVAL_SECONDS:-5}"
+export EUREKA_INSTANCE_INFO_REPLICATION_INTERVAL_SECONDS="${EUREKA_INSTANCE_INFO_REPLICATION_INTERVAL_SECONDS:-10}"
 
 cleanup_started_apps() {
   for pid_file in "$local_dir"/pids/*.pid; do

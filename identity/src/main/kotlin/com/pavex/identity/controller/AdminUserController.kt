@@ -1,5 +1,7 @@
 package com.pavex.identity.controller
 
+import io.swagger.v3.oas.annotations.security.SecurityRequirement
+import io.swagger.v3.oas.annotations.tags.Tag
 import com.pavex.identity.dto.admin.UpdateUserProfileRequest
 import com.pavex.identity.dto.admin.UpdateUserStatusRequest
 import com.pavex.identity.dto.admin.UserDetailResponse
@@ -30,6 +32,8 @@ import org.springframework.web.bind.annotation.PostMapping
 import java.net.URI
 @RestController
 @RequestMapping("/api/v1/users")
+@SecurityRequirement(name = "bearerAuth")
+@Tag(name = "Admin Users", description = "Administrative user lifecycle and profile management")
 class AdminUserController(
 
     private val adminUserService:

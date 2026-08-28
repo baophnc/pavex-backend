@@ -1,5 +1,7 @@
 package com.pavex.identity.controller
 
+import io.swagger.v3.oas.annotations.security.SecurityRequirement
+import io.swagger.v3.oas.annotations.tags.Tag
 import com.pavex.identity.dto.role.AssignRoleRequest
 import com.pavex.identity.security.AuthorizationPermissions
 import com.pavex.identity.service.RoleService
@@ -18,6 +20,8 @@ import java.util.UUID
 
 @RestController
 @RequestMapping("/api/v1/users")
+@SecurityRequirement(name = "bearerAuth")
+@Tag(name = "User Roles", description = "Role assignments for users")
 class UserRoleController(
 
     private val roleService:

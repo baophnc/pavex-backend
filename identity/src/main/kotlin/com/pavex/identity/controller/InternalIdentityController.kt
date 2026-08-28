@@ -1,5 +1,6 @@
 package com.pavex.identity.controller
 
+import io.swagger.v3.oas.annotations.Hidden
 import com.pavex.contracts.identity.IdentityAuthContext
 import com.pavex.identity.dto.IdentityProfileResponse
 import com.pavex.contracts.identity.ProvisionIdentityRequest
@@ -15,6 +16,7 @@ import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
 import java.util.UUID
 
+@Hidden
 @RestController
 @RequestMapping("/internal/v1/identities")
 class InternalIdentityController(

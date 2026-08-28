@@ -27,6 +27,8 @@ import com.pavex.auth.service.GoogleAuthService
 import com.pavex.auth.service.InvitationService
 import com.pavex.auth.service.PasswordResetService
 import com.pavex.auth.service.SessionService
+import io.swagger.v3.oas.annotations.security.SecurityRequirement
+import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.validation.Valid
 import org.springframework.http.HttpStatus
@@ -43,6 +45,7 @@ import java.util.UUID
 
 @RestController
 @RequestMapping("/api/v1/auth")
+@Tag(name = "Authentication", description = "Authentication, credentials and session lifecycle")
 class AuthController(
 
     private val authService: AuthService,
@@ -258,6 +261,7 @@ class AuthController(
     }
 
     @PostMapping("/change-password")
+    @SecurityRequirement(name = "bearerAuth")
     fun changePassword(
         authentication: JwtAuthenticationToken,
         @Valid
@@ -286,6 +290,7 @@ class AuthController(
     }
 
     @GetMapping("/sessions")
+    @SecurityRequirement(name = "bearerAuth")
     fun sessions(
         authentication: JwtAuthenticationToken,
     ) =
@@ -294,6 +299,7 @@ class AuthController(
         )
 
     @DeleteMapping("/sessions/{sessionId}")
+    @SecurityRequirement(name = "bearerAuth")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     fun revokeSession(
         authentication: JwtAuthenticationToken,
@@ -317,6 +323,7 @@ class AuthController(
     }
 
     @PostMapping("/logout-all")
+    @SecurityRequirement(name = "bearerAuth")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     fun logoutAll(
         authentication: JwtAuthenticationToken,

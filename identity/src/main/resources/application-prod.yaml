@@ -1,0 +1,12 @@
+# Production must supply service signing/verification material explicitly.
+security:
+  jwt:
+    public-key: ${JWT_PUBLIC_KEY}
+  service-jwt:
+    private-key: ${IDENTITY_SERVICE_JWT_PRIVATE_KEY}
+    public-key: ${IDENTITY_SERVICE_JWT_PUBLIC_KEY}
+
+# API documentation is local/dev by default. Enable explicitly if production docs are intended.
+springdoc:
+  api-docs:
+    enabled: ${SPRINGDOC_API_DOCS_ENABLED:false}

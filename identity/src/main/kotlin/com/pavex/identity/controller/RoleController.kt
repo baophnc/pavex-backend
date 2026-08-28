@@ -1,5 +1,7 @@
 package com.pavex.identity.controller
 
+import io.swagger.v3.oas.annotations.security.SecurityRequirement
+import io.swagger.v3.oas.annotations.tags.Tag
 import com.pavex.identity.dto.role.RoleResponse
 import com.pavex.identity.security.AuthorizationPermissions
 import com.pavex.identity.service.RoleService
@@ -10,6 +12,8 @@ import org.springframework.web.bind.annotation.RestController
 
 @RestController
 @RequestMapping("/api/v1/roles")
+@SecurityRequirement(name = "bearerAuth")
+@Tag(name = "Roles", description = "Role catalog")
 class RoleController(
 
     private val roleService:

@@ -26,3 +26,24 @@ pavex:
     password-reset-url: ${PASSWORD_RESET_URL}
     verification-url: ${EMAIL_VERIFICATION_URL}
     invitation-url: ${INVITATION_URL}
+
+# Never use the checked-in local-development defaults in production.
+security:
+  jwt:
+    private-key: ${JWT_PRIVATE_KEY}
+    public-key: ${JWT_PUBLIC_KEY}
+  service-jwt:
+    identity:
+      public-key: ${IDENTITY_SERVICE_JWT_PUBLIC_KEY}
+
+auth:
+  security:
+    key-hash-secret: ${AUTH_SECURITY_KEY_HASH_SECRET}
+
+  outbox:
+    payload-encryption-key: ${OUTBOX_PAYLOAD_ENCRYPTION_KEY}
+
+# API documentation is local/dev by default. Enable explicitly if production docs are intended.
+springdoc:
+  api-docs:
+    enabled: ${SPRINGDOC_API_DOCS_ENABLED:false}

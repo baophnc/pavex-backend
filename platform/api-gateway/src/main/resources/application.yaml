@@ -53,6 +53,24 @@ spring:
                 max-age: 3600
 
           routes:
+            # Central OpenAPI aggregation. Swagger UI is served by the Gateway,
+            # while each service remains the owner of its generated API spec.
+            - id: auth-openapi
+              order: -1000
+              uri: lb://auth-service
+              predicates:
+                - Path=/openapi/auth
+              filters:
+                - SetPath=/v3/api-docs
+
+            - id: identity-openapi
+              order: -999
+              uri: lb://identity-service
+              predicates:
+                - Path=/openapi/identity
+              filters:
+                - SetPath=/v3/api-docs
+
             # /api/v1/auth/** is mostly owned by Auth, but the current-user
             # profile endpoints are Identity-owned. Give these exact routes a
             # lower order value so they win before the Auth wildcard route.
@@ -130,6 +148,27 @@ spring:
                     redis-rate-limiter.replenishRate: ${GATEWAY_API_REPLENISH_RATE:30}
                     redis-rate-limiter.burstCapacity: ${GATEWAY_API_BURST_CAPACITY:60}
                     redis-rate-limiter.requestedTokens: 1
+
+springdoc:
+  api-docs:
+    enabled: ${SPRINGDOC_API_DOCS_ENABLED:true}
+  swagger-ui:
+    enabled: ${SPRINGDOC_SWAGGER_UI_ENABLED:true}
+    path: /swagger-ui.html
+    disable-swagger-default-url: true
+    urls-primary-name: Auth API
+    urls:
+      - name: Auth API
+        url: /openapi/auth
+      - name: Identity API
+        url: /openapi/identity
+    operations-sorter: method
+    tags-sorter: alpha
+    display-request-duration: true
+    persist-authorization: true
+    try-it-out-enabled: true
+    filter: true
+
 
 server:
   port: ${API_GATEWAY_PORT:8080}

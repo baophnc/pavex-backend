@@ -1,5 +1,7 @@
 package com.pavex.identity.controller
 
+import io.swagger.v3.oas.annotations.security.SecurityRequirement
+import io.swagger.v3.oas.annotations.tags.Tag
 import com.pavex.identity.dto.IdentityProfileResponse
 import com.pavex.identity.dto.UpdateIdentityProfileRequest
 import com.pavex.identity.service.IdentityProfileService
@@ -14,6 +16,8 @@ import java.util.UUID
 
 @RestController
 @RequestMapping("/api/v1/identities")
+@SecurityRequirement(name = "bearerAuth")
+@Tag(name = "Identity", description = "Current user identity profile")
 class IdentityController(
     private val service: IdentityProfileService,
 ) {

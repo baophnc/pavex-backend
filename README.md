@@ -48,3 +48,32 @@ SMOKE_EMAIL='user@example.com' \
 SMOKE_PASSWORD='your-password' \
 ./scripts/smoke-auth-identity.sh
 ```
+
+## Swagger / OpenAPI
+
+The local stack exposes one Swagger UI at the API Gateway:
+
+```text
+http://localhost:8080/swagger-ui.html
+```
+
+Use the selector in the top bar to switch between:
+
+- `Auth API` - login, registration, password, token and session endpoints.
+- `Identity API` - users, profiles, roles and permissions.
+
+The aggregated OpenAPI JSON documents are also available through the Gateway:
+
+- `http://localhost:8080/openapi/auth`
+- `http://localhost:8080/openapi/identity`
+
+For protected operations, click **Authorize** and paste the access token returned by
+`POST /api/v1/auth/login` (paste the token value only; Swagger adds `Bearer`).
+`Try it out` sends public requests through the API Gateway, matching the real client path.
+Internal `/internal/**` service-to-service endpoints are intentionally excluded.
+Set `PAVEX_PUBLIC_BASE_URL` when Swagger should execute requests against a non-local Gateway.
+
+Swagger/OpenAPI is disabled by default with the `prod` profile. If a production
+deployment intentionally exposes documentation, enable `SPRINGDOC_API_DOCS_ENABLED`
+on Auth/Identity and both `SPRINGDOC_API_DOCS_ENABLED` and
+`SPRINGDOC_SWAGGER_UI_ENABLED` on the Gateway.

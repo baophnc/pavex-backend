@@ -47,11 +47,33 @@ docker compose exec -T gateway-redis redis-cli ping | grep -q '^PONG$' \
 docker compose exec -T rabbitmq rabbitmq-diagnostics -q ping >/dev/null \
   && pass "RabbitMQ" || fail "RabbitMQ"
 
-registry="$(curl -fsS --max-time 5 -H 'Accept: application/json' "$EUREKA_URL/eureka/apps")"
+wait_for_eureka_registration() {
+  local app="$1"
+  local wait_seconds="${EUREKA_REGISTRATION_WAIT_SECONDS:-60}"
+  local code
+
+  # A service can be healthy before Eureka's asynchronous first replication
+  # has reached the registry. Poll the per-application endpoint instead of
+  # treating that normal propagation window as a smoke-test failure.
+  for _ in $(seq 1 "$wait_seconds"); do
+    code="$(curl -sS --max-time 5 -o /dev/null -w '%{http_code}' \
+      -H 'Accept: application/json' "$EUREKA_URL/eureka/apps/$app" || true)"
+    if [[ "$code" == "200" ]]; then
+      pass "Eureka registration $app"
+      return 0
+    fi
+    sleep 1
+  done
+
+  echo "Eureka registry snapshot after waiting ${wait_seconds}s:" >&2
+  curl -sS --max-time 5 -H 'Accept: application/json' \
+    "$EUREKA_URL/eureka/apps" >&2 || true
+  echo >&2
+  fail "Eureka registration $app (last HTTP status: ${code:-curl-error})"
+}
+
 for app in AUTH-SERVICE IDENTITY-SERVICE API-GATEWAY; do
-  grep -q "\"name\"[[:space:]]*:[[:space:]]*\"$app\"" <<<"$registry" \
-    && pass "Eureka registration $app" \
-    || fail "Eureka registration $app"
+  wait_for_eureka_registration "$app"
 done
 
 # Public routes: these status codes prove the Gateway resolves each explicit
@@ -66,6 +88,31 @@ expect_status 401 "Gateway users route" \
   "$GATEWAY_URL/api/v1/users"
 expect_status 401 "Gateway roles route" \
   "$GATEWAY_URL/api/v1/roles"
+
+# Central Swagger/OpenAPI aggregation must be reachable through the Gateway.
+curl -fsSL --max-time 10 "$GATEWAY_URL/swagger-ui.html" | grep -qi 'swagger-ui' \
+  && pass "Gateway Swagger UI" \
+  || fail "Gateway Swagger UI"
+
+auth_spec="$(curl -fsS --max-time 10 "$GATEWAY_URL/openapi/auth")" \
+  || fail "Auth OpenAPI spec"
+grep -q '"openapi"' <<<"$auth_spec" \
+  && pass "Auth OpenAPI spec" \
+  || fail "Auth OpenAPI spec"
+if grep -q '/internal/' <<<"$auth_spec"; then
+  fail "Auth OpenAPI exposes internal endpoints"
+fi
+pass "Auth OpenAPI hides internal endpoints"
+
+identity_spec="$(curl -fsS --max-time 10 "$GATEWAY_URL/openapi/identity")" \
+  || fail "Identity OpenAPI spec"
+grep -q '"openapi"' <<<"$identity_spec" \
+  && pass "Identity OpenAPI spec" \
+  || fail "Identity OpenAPI spec"
+if grep -q '/internal/' <<<"$identity_spec"; then
+  fail "Identity OpenAPI exposes internal endpoints"
+fi
+pass "Identity OpenAPI hides internal endpoints"
 
 # Internal endpoints must reject unauthenticated requests and the removed
 # shared-header mechanism.

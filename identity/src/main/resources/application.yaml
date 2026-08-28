@@ -16,17 +16,23 @@ server:
   port: ${IDENTITY_SERVER_PORT:8082}
 
 security:
+  # Local defaults assume the app is started from the repository root (IntelliJ default).
+  # Production overrides key locations in application-prod.yaml.
   # User access tokens and Auth -> Identity service tokens are signed by Auth.
   jwt:
     issuer: ${JWT_ISSUER:http://localhost:8081}
-    public-key: ${JWT_PUBLIC_KEY:file:../auth/.keys/public.pem}
+    public-key: ${JWT_PUBLIC_KEY:file:./auth/.keys/public.pem}
 
   # Identity owns a separate key pair for Identity -> Auth service tokens.
   service-jwt:
     issuer: ${IDENTITY_SERVICE_JWT_ISSUER:http://localhost:8082}
     ttl: ${SERVICE_JWT_TTL:PT1M}
-    private-key: ${IDENTITY_SERVICE_JWT_PRIVATE_KEY:file:./.keys/private.pem}
-    public-key: ${IDENTITY_SERVICE_JWT_PUBLIC_KEY:file:./.keys/public.pem}
+    private-key: ${IDENTITY_SERVICE_JWT_PRIVATE_KEY:file:./identity/.keys/private.pem}
+    public-key: ${IDENTITY_SERVICE_JWT_PUBLIC_KEY:file:./identity/.keys/public.pem}
+
+pavex:
+  openapi:
+    gateway-url: ${PAVEX_PUBLIC_BASE_URL:http://localhost:8080}
 
 eureka:
   client:
@@ -40,6 +46,13 @@ eureka:
       enabled: ${EUREKA_HEALTHCHECK_ENABLED:false}
   instance:
     prefer-ip-address: ${EUREKA_PREFER_IP_ADDRESS:false}
+
+springdoc:
+  api-docs:
+    enabled: ${SPRINGDOC_API_DOCS_ENABLED:true}
+  paths-to-match:
+    - /api/**
+
 
 management:
   health:
