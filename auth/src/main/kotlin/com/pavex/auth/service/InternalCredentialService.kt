@@ -37,6 +37,11 @@ class InternalCredentialService(
             if (!byId.email.equals(email, ignoreCase = true)) {
                 throw CredentialProvisionConflictException()
             }
+            if (!byId.identityProvisioned) {
+                byId.identityProvisioned = true
+                byId.updatedAt = Instant.now()
+                accounts.save(byId)
+            }
             return
         }
 
@@ -57,6 +62,7 @@ class InternalCredentialService(
                 email = email,
                 passwordHash = passwordHash,
                 emailVerified = false,
+                identityProvisioned = true,
                 createdAt = now,
                 updatedAt = now,
             )
@@ -106,6 +112,12 @@ class InternalCredentialService(
 
         if (!existing.email.equals(email, ignoreCase = true)) {
             throw CredentialProvisionConflictException()
+        }
+
+        if (!existing.identityProvisioned) {
+            existing.identityProvisioned = true
+            existing.updatedAt = Instant.now()
+            accounts.save(existing)
         }
     }
 

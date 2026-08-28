@@ -184,6 +184,9 @@ class GoogleAuthService(
             displayName = displayName,
             avatarUrl = avatarUrl,
         )
+        savedAccount.identityProvisioned = true
+        savedAccount.updatedAt = now
+        userAccountRepository.save(savedAccount)
 
         createExternalIdentity(
             account = savedAccount,

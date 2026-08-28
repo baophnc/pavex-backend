@@ -51,6 +51,12 @@ class UserAccount(
     var emailVerified: Boolean = false,
 
     @Column(
+        name = "identity_provisioned",
+        nullable = false,
+    )
+    var identityProvisioned: Boolean = false,
+
+    @Column(
         name = "failed_login_attempts",
         nullable = false,
     )

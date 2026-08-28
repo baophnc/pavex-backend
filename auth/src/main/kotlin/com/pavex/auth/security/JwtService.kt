@@ -3,8 +3,8 @@ package com.pavex.auth.security
 import com.pavex.auth.entity.UserAccount
 import com.pavex.auth.exception.AccountDisabledException
 import com.pavex.auth.exception.AccountSuspendedException
+import com.pavex.auth.exception.IdentityServiceUnavailableException
 import com.pavex.auth.service.IdentityClient
-import com.pavex.auth.service.RoleService
 import com.pavex.contracts.identity.IdentityAuthContext
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.security.oauth2.jose.jws.SignatureAlgorithm
@@ -25,16 +25,6 @@ class JwtService(
     private val identityClient:
         IdentityClient,
 
-    /*
-     * Transitional read-only fallback only.
-     *
-     * Existing users may not have been copied to the Identity DB yet. If
-     * Identity returns 404, read the old Auth RBAC assignment once, provision
-     * Identity, and use Identity for all authorization decisions afterwards.
-     */
-    private val roleService:
-        RoleService,
-
     @Value("\${security.jwt.issuer}")
     private val issuer: String,
 
@@ -48,13 +38,36 @@ class JwtService(
     ): IdentityAuthContext {
         var authorization =
             identityClient.findAuthContext(account.id)
-                ?: bootstrapIdentity(account)
+
+        if (authorization == null) {
+            /*
+             * After the one-time cutover, an existing credential is marked as
+             * already provisioned. A missing Identity row in that state is a
+             * consistency failure and must fail closed instead of silently
+             * recreating a privileged legacy user as CUSTOMER.
+             *
+             * New self-registered credentials start with identityProvisioned
+             * false and are safely provisioned with the default CUSTOMER role
+             * on their first authentication attempt.
+             */
+            if (account.identityProvisioned) {
+                throw IdentityServiceUnavailableException()
+            }
+
+            identityClient.provision(
+                account = account,
+                roles = setOf(DEFAULT_CUSTOMER_ROLE),
+            )
+            account.identityProvisioned = true
+            authorization = identityClient.getAuthContext(account.id)
+        } else if (!account.identityProvisioned) {
+            account.identityProvisioned = true
+        }
 
         /*
-         * During the extraction Auth still owns the verification token and
-         * writes the credential-side mirror. If Identity missed an after-commit
-         * synchronization because it was temporarily unavailable, repair the
-         * state before issuing a new token.
+         * Auth still owns the verification credential flow. If Identity missed
+         * the after-commit synchronization while unavailable, repair it before
+         * issuing a token.
          */
         if (account.emailVerified && !authorization.emailVerified) {
             identityClient.updateEmailVerification(
@@ -76,89 +89,37 @@ class JwtService(
         requireActive(authorization)
 
         val expiresAt =
-            now.plus(
-                accessTokenTtl
-            )
+            now.plus(accessTokenTtl)
 
         val claims =
             JwtClaimsSet
                 .builder()
                 .issuer(issuer)
-                .subject(
-                    account.id.toString()
-                )
+                .subject(account.id.toString())
                 .issuedAt(now)
                 .expiresAt(expiresAt)
-                .claim(
-                    "typ",
-                    USER_TOKEN_TYPE,
-                )
-                .claim(
-                    "email",
-                    account.email,
-                )
-                .claim(
-                    "email_verified",
-                    authorization.emailVerified,
-                )
-                .claim(
-                    "roles",
-                    authorization.roles,
-                )
-                .claim(
-                    "permissions",
-                    authorization.permissions,
-                )
-                .claim(
-                    "authz_version",
-                    authorization.authorizationVersion,
-                )
+                .claim("typ", USER_TOKEN_TYPE)
+                .claim("email", account.email)
+                .claim("email_verified", authorization.emailVerified)
+                .claim("roles", authorization.roles)
+                .claim("permissions", authorization.permissions)
+                .claim("authz_version", authorization.authorizationVersion)
                 .build()
 
         val header =
             JwsHeader
-                .with(
-                    SignatureAlgorithm.RS256
-                )
+                .with(SignatureAlgorithm.RS256)
                 .build()
 
         val jwt =
             jwtEncoder.encode(
-                JwtEncoderParameters.from(
-                    header,
-                    claims,
-                )
+                JwtEncoderParameters.from(header, claims)
             )
 
         return AccessToken(
             token = jwt.tokenValue,
             expiresAt = expiresAt,
-            expiresIn =
-                accessTokenTtl.seconds,
-        )
-    }
-
-    private fun bootstrapIdentity(
-        account: UserAccount,
-    ): IdentityAuthContext {
-        val legacyAuthorization =
-            roleService.getAuthorization(
-                account.id
-            )
-
-        val bootstrapRoles =
-            legacyAuthorization.roles
-                .ifEmpty {
-                    setOf(DEFAULT_CUSTOMER_ROLE)
-                }
-
-        identityClient.provision(
-            account = account,
-            roles = bootstrapRoles,
-        )
-
-        return identityClient.getAuthContext(
-            account.id
+            expiresIn = accessTokenTtl.seconds,
         )
     }
 
