@@ -12,6 +12,20 @@ must not read Auth or Identity tables directly.
 - Swagger UI: `http://localhost:8080/swagger-ui.html`
 - PostgreSQL: `localhost:5435`, database `pavex_partners`
 
+## Service-to-service boundary
+
+Partners owns a dedicated RSA key pair under `partners/.keys/` for local
+development. Calls to Identity use short-lived service JWTs:
+
+- issuer: `http://localhost:8083`
+- subject: `partners-service`
+- audience: `identity-service`
+- token type: `service`
+- scope: `identity.merchant`
+
+The scope is deliberately narrow. Identity accepts it only for merchant
+eligibility and keeps Auth's broader `identity.internal` boundary separate.
+
 ## Patch 01 boundary
 
 This foundation patch provides runtime wiring only:
@@ -25,5 +39,6 @@ This foundation patch provides runtime wiring only:
 - centralized Swagger/OpenAPI aggregation
 
 Business tables and endpoints intentionally start in later patches. Patch 02
-adds Partners -> Identity service authentication and merchant eligibility;
-Patch 03 starts locations and addresses.
+adds Partners -> Identity service authentication and canonical merchant
+eligibility without creating any Partners business tables. Patch 03 starts
+locations and addresses.

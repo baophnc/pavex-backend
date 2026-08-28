@@ -28,6 +28,18 @@ security:
     issuer: ${JWT_ISSUER:http://localhost:8081}
     public-key: ${JWT_PUBLIC_KEY:file:./auth/.keys/public.pem}
 
+  # Partners signs short-lived service tokens with its own key pair. Identity
+  # trusts only the public half and only for the identity.merchant scope.
+  service-jwt:
+    issuer: ${PARTNERS_SERVICE_JWT_ISSUER:http://localhost:8083}
+    ttl: ${SERVICE_JWT_TTL:PT1M}
+    private-key: ${PARTNERS_SERVICE_JWT_PRIVATE_KEY:file:./partners/.keys/private.pem}
+    public-key: ${PARTNERS_SERVICE_JWT_PUBLIC_KEY:file:./partners/.keys/public.pem}
+
+partners:
+  identity:
+    service-url: ${IDENTITY_SERVICE_URL:http://identity-service}
+
 pavex:
   openapi:
     gateway-url: ${PAVEX_PUBLIC_BASE_URL:http://localhost:8080}

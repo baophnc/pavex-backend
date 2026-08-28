@@ -26,6 +26,10 @@ class ServiceJwtConfig(
     private val authPublicKeyResource: Resource,
     @Value("\${security.jwt.issuer}")
     private val authIssuer: String,
+    @Value("\${security.service-jwt.partners.public-key}")
+    private val partnersPublicKeyResource: Resource,
+    @Value("\${security.service-jwt.partners.issuer}")
+    private val partnersIssuer: String,
 ) {
 
     @Bean("serviceJwtEncoder")
@@ -43,8 +47,33 @@ class ServiceJwtConfig(
     }
 
     @Bean("authServiceJwtDecoder")
-    fun authServiceJwtDecoder(): JwtDecoder {
-        val publicKey = authPublicKeyResource.inputStream.use { inputStream ->
+    fun authServiceJwtDecoder(): JwtDecoder =
+        serviceJwtDecoder(
+            publicKeyResource = authPublicKeyResource,
+            issuer = authIssuer,
+            expectedSubject = AUTH_SERVICE,
+            expectedAudience = IDENTITY_SERVICE,
+            expectedScope = IDENTITY_INTERNAL_SCOPE,
+        )
+
+    @Bean("partnersServiceJwtDecoder")
+    fun partnersServiceJwtDecoder(): JwtDecoder =
+        serviceJwtDecoder(
+            publicKeyResource = partnersPublicKeyResource,
+            issuer = partnersIssuer,
+            expectedSubject = PARTNERS_SERVICE,
+            expectedAudience = IDENTITY_SERVICE,
+            expectedScope = IDENTITY_MERCHANT_SCOPE,
+        )
+
+    private fun serviceJwtDecoder(
+        publicKeyResource: Resource,
+        issuer: String,
+        expectedSubject: String,
+        expectedAudience: String,
+        expectedScope: String,
+    ): JwtDecoder {
+        val publicKey = publicKeyResource.inputStream.use { inputStream ->
             requireNotNull(RsaKeyConverters.x509().convert(inputStream))
         }
 
@@ -54,11 +83,11 @@ class ServiceJwtConfig(
 
         decoder.setJwtValidator(
             DelegatingOAuth2TokenValidator(
-                JwtValidators.createDefaultWithIssuer(authIssuer),
+                JwtValidators.createDefaultWithIssuer(issuer),
                 serviceClaimsValidator(
-                    expectedSubject = AUTH_SERVICE,
-                    expectedAudience = IDENTITY_SERVICE,
-                    expectedScope = IDENTITY_INTERNAL_SCOPE,
+                    expectedSubject = expectedSubject,
+                    expectedAudience = expectedAudience,
+                    expectedScope = expectedScope,
                 ),
             )
         )
@@ -102,7 +131,9 @@ class ServiceJwtConfig(
         private const val SCOPE_CLAIM = "scope"
         private const val SERVICE_TOKEN_TYPE = "service"
         private const val AUTH_SERVICE = "auth-service"
+        private const val PARTNERS_SERVICE = "partners-service"
         private const val IDENTITY_SERVICE = "identity-service"
         private const val IDENTITY_INTERNAL_SCOPE = "identity.internal"
+        private const val IDENTITY_MERCHANT_SCOPE = "identity.merchant"
     }
 }

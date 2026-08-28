@@ -1,10 +1,12 @@
 package com.pavex.identity.service
 
 import com.pavex.contracts.identity.IdentityAuthContext
+import com.pavex.contracts.identity.MerchantEligibilityResponse
 import com.pavex.identity.dto.IdentityProfileResponse
 import com.pavex.contracts.identity.ProvisionIdentityRequest
 import com.pavex.identity.dto.UpdateIdentityProfileRequest
 import com.pavex.identity.entity.AccountStatus
+import com.pavex.identity.entity.ProfileStatus
 import com.pavex.identity.entity.UserAccount
 import com.pavex.identity.entity.UserProfile
 import com.pavex.identity.exception.UserNotFoundException
@@ -116,6 +118,32 @@ class IdentityProfileService(
     }
 
     @Transactional(readOnly = true)
+    fun merchantEligibility(userId: UUID): MerchantEligibilityResponse {
+        val account = findAccount(userId)
+        val reasons = linkedSetOf<String>()
+
+        if (account.status != AccountStatus.ACTIVE) {
+            reasons += MERCHANT_ACCOUNT_NOT_ACTIVE
+        }
+        if (!account.emailVerified) {
+            reasons += MERCHANT_EMAIL_NOT_VERIFIED
+        }
+        if (account.profileStatus != ProfileStatus.COMPLETED) {
+            reasons += MERCHANT_PROFILE_NOT_COMPLETED
+        }
+
+        return MerchantEligibilityResponse(
+            userId = account.id,
+            status = account.status.name,
+            active = account.status == AccountStatus.ACTIVE,
+            emailVerified = account.emailVerified,
+            profileStatus = account.profileStatus.name,
+            eligible = reasons.isEmpty(),
+            reasons = reasons,
+        )
+    }
+
+    @Transactional(readOnly = true)
     fun authContext(userId: UUID): IdentityAuthContext {
         val account = findAccount(userId)
         val authorization = roleService.getAuthorization(userId)
@@ -169,4 +197,10 @@ class IdentityProfileService(
 
     private fun normalize(value: String?): String? =
         value?.trim()?.takeIf { it.isNotEmpty() }
+
+    companion object {
+        private const val MERCHANT_ACCOUNT_NOT_ACTIVE = "ACCOUNT_NOT_ACTIVE"
+        private const val MERCHANT_EMAIL_NOT_VERIFIED = "EMAIL_NOT_VERIFIED"
+        private const val MERCHANT_PROFILE_NOT_COMPLETED = "PROFILE_NOT_COMPLETED"
+    }
 }

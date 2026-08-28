@@ -2,6 +2,7 @@ package com.pavex.identity.controller
 
 import io.swagger.v3.oas.annotations.Hidden
 import com.pavex.contracts.identity.IdentityAuthContext
+import com.pavex.contracts.identity.MerchantEligibilityResponse
 import com.pavex.identity.dto.IdentityProfileResponse
 import com.pavex.contracts.identity.ProvisionIdentityRequest
 import com.pavex.contracts.identity.UpdateIdentityEmailVerificationRequest
@@ -28,6 +29,12 @@ class InternalIdentityController(
 
     @GetMapping("/{userId}/auth-context")
     fun authContext(@PathVariable userId: UUID): IdentityAuthContext = service.authContext(userId)
+
+    @GetMapping("/{userId}/merchant-eligibility")
+    fun merchantEligibility(
+        @PathVariable userId: UUID,
+    ): MerchantEligibilityResponse =
+        service.merchantEligibility(userId)
 
     @PatchMapping("/{userId}/email-verification")
     fun updateEmailVerification(
