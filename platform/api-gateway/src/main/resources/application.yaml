@@ -53,8 +53,8 @@ spring:
                 max-age: 3600
 
           routes:
-            - id: identity-auth
-              uri: lb://identity-service
+            - id: auth
+              uri: lb://auth-service
               predicates:
                 - Path=/api/v1/auth/**
               filters:
@@ -66,7 +66,9 @@ spring:
                     redis-rate-limiter.requestedTokens: 1
 
             - id: identity-users
-              uri: lb://identity-service
+              # User administration remains on Auth during the staged
+              # extraction; new profile APIs are owned by Identity below.
+              uri: lb://auth-service
               predicates:
                 - Path=/api/v1/users/**
               filters:
@@ -78,9 +80,21 @@ spring:
                     redis-rate-limiter.requestedTokens: 1
 
             - id: identity-roles
-              uri: lb://identity-service
+              uri: lb://auth-service
               predicates:
                 - Path=/api/v1/roles/**
+              filters:
+                - name: RequestRateLimiter
+                  args:
+                    key-resolver: "#{@clientIpKeyResolver}"
+                    redis-rate-limiter.replenishRate: ${GATEWAY_API_REPLENISH_RATE:30}
+                    redis-rate-limiter.burstCapacity: ${GATEWAY_API_BURST_CAPACITY:60}
+                    redis-rate-limiter.requestedTokens: 1
+
+            - id: identity-profiles
+              uri: lb://identity-service
+              predicates:
+                - Path=/api/v1/identities/**
               filters:
                 - name: RequestRateLimiter
                   args:
@@ -92,7 +106,7 @@ spring:
 server:
   port: ${API_GATEWAY_PORT:8080}
 
-# The gateway itself is a Eureka client. lb://identity-service routes are
+# The gateway itself is a Eureka client. Service routes are
 # resolved through Eureka + Spring Cloud LoadBalancer.
 eureka:
   client:

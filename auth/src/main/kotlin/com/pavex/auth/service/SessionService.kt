@@ -1,0 +1,104 @@
+package com.pavex.auth.service
+
+import com.pavex.auth.dto.auth.SessionResponse
+import com.pavex.auth.exception.ActiveSessionNotFoundException
+import com.pavex.auth.repository.RefreshSessionRepository
+import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Transactional
+import java.time.Instant
+import java.util.UUID
+
+@Service
+class SessionService(
+
+    private val refreshSessionRepository:
+        RefreshSessionRepository,
+
+    private val advisoryLockService:
+        AdvisoryLockService,
+) {
+
+    @Transactional(
+        readOnly = true,
+    )
+    fun getSessions(
+        userId: UUID,
+    ): List<SessionResponse> {
+
+        val now =
+            Instant.now()
+
+        return refreshSessionRepository
+            .findAllByUserIdAndRevokedAtIsNullAndExpiresAtAfterOrderByExpiresAtDesc(
+                userId = userId,
+                expiresAt = now,
+            )
+            .map { session ->
+                SessionResponse(
+                    sessionId =
+                        session.id,
+                    ipAddress =
+                        session.ipAddress,
+                    userAgent =
+                        session.userAgent,
+                    expiresAt =
+                        session.expiresAt,
+                )
+            }
+    }
+
+
+    @Transactional
+    fun revokeSession(
+        userId: UUID,
+        sessionId: UUID,
+    ) {
+
+        advisoryLockService
+            .lockUserSessions(
+                userId
+            )
+
+        val now =
+            Instant.now()
+
+        val session =
+            refreshSessionRepository
+                .findByIdAndUserIdAndRevokedAtIsNullAndExpiresAtAfter(
+                    id = sessionId,
+                    userId = userId,
+                    expiresAt = now,
+                )
+                ?: throw ActiveSessionNotFoundException()
+
+        session.revokedAt =
+            now
+
+        refreshSessionRepository.save(
+            session
+        )
+    }
+
+
+    @Transactional
+    fun logoutAll(
+        userId: UUID,
+    ) {
+
+        advisoryLockService
+            .lockUserSessions(
+                userId
+            )
+
+        val now =
+            Instant.now()
+
+        refreshSessionRepository
+            .revokeAllActiveByUserId(
+                userId =
+                    userId,
+                now =
+                    now,
+            )
+    }
+}

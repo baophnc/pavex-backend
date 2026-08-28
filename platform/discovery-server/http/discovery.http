@@ -5,5 +5,8 @@ GET http://localhost:8761/actuator/health
 GET http://localhost:8761/eureka/apps
 Accept: application/json
 
-### Identity health after identity-service starts
+### Auth health after auth-service starts
 GET http://localhost:8081/actuator/health
+
+### Identity health after identity-service starts
+GET http://localhost:8082/actuator/health

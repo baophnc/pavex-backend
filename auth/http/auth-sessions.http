@@ -1,0 +1,194 @@
+### ==========================================
+### PAVEX Auth - Session Management
+### ==========================================
+
+@baseUrl = http://localhost:8081
+@email = baofuc1205@gmail.com
+@password = 1205@Phuc
+
+
+### ==================================================
+### 1. BOOTSTRAP LOGIN
+### Lấy access token để clear session cũ
+### ==================================================
+
+POST {{baseUrl}}/api/v1/auth/login
+Content-Type: application/json
+User-Agent: Pavex-Bootstrap
+
+{
+  "email": "{{email}}",
+  "password": "{{password}}"
+}
+
+> {%
+    client.global.set(
+        "bootstrapAccessToken",
+        response.body.accessToken
+    );
+%}
+
+
+### ==================================================
+### 2. CLEAR SESSION CŨ
+### ==================================================
+
+POST {{baseUrl}}/api/v1/auth/logout-all
+Authorization: Bearer {{bootstrapAccessToken}}
+
+
+### ==================================================
+### 3. LOGIN DEVICE A
+### ==================================================
+
+POST {{baseUrl}}/api/v1/auth/login
+Content-Type: application/json
+User-Agent: Pavex-Test-Device-A
+
+{
+  "email": "{{email}}",
+  "password": "{{password}}"
+}
+
+> {%
+    client.global.set(
+        "accessTokenA",
+        response.body.accessToken
+    );
+
+    client.global.set(
+        "refreshTokenA",
+        response.body.refreshToken
+    );
+%}
+
+
+### ==================================================
+### 4. LOGIN DEVICE B
+### ==================================================
+
+POST {{baseUrl}}/api/v1/auth/login
+Content-Type: application/json
+User-Agent: Pavex-Test-Device-B
+
+{
+  "email": "{{email}}",
+  "password": "{{password}}"
+}
+
+> {%
+    client.global.set(
+        "accessTokenB",
+        response.body.accessToken
+    );
+
+    client.global.set(
+        "refreshTokenB",
+        response.body.refreshToken
+    );
+%}
+
+
+### ==================================================
+### 5. GET ACTIVE SESSIONS
+### Phải thấy Device A + Device B
+### ==================================================
+
+GET {{baseUrl}}/api/v1/auth/sessions
+Authorization: Bearer {{accessTokenA}}
+
+> {%
+    const sessions = response.body;
+
+    const deviceB =
+        sessions.find(
+            session =>
+                session.userAgent ===
+                "Pavex-Test-Device-B"
+        );
+
+    if (deviceB) {
+        client.global.set(
+            "sessionBId",
+            deviceB.sessionId
+        );
+    }
+%}
+
+
+### ==================================================
+### 6. REVOKE DEVICE B
+### ==================================================
+
+DELETE {{baseUrl}}/api/v1/auth/sessions/{{sessionBId}}
+Authorization: Bearer {{accessTokenA}}
+
+
+### ==================================================
+### 7. REFRESH TOKEN B SAU KHI REVOKE
+### PHẢI 401 invalid_refresh_token
+### ==================================================
+
+POST {{baseUrl}}/api/v1/auth/refresh
+Content-Type: application/json
+
+{
+  "refreshToken": "{{refreshTokenB}}"
+}
+
+
+### ==================================================
+### 8. GET SESSION LẠI
+### Device B không còn
+### ==================================================
+
+GET {{baseUrl}}/api/v1/auth/sessions
+Authorization: Bearer {{accessTokenA}}
+
+
+### ==================================================
+### 9. REVOKE UUID KHÔNG TỒN TẠI
+### PHẢI 404 active_session_not_found
+### ==================================================
+
+DELETE {{baseUrl}}/api/v1/auth/sessions/00000000-0000-0000-0000-000000000001
+Authorization: Bearer {{accessTokenA}}
+
+
+### ==================================================
+### 10. LOGOUT ALL
+### ==================================================
+
+POST {{baseUrl}}/api/v1/auth/logout-all
+Authorization: Bearer {{accessTokenA}}
+
+
+### ==================================================
+### 11. GET SESSION SAU LOGOUT ALL
+### PHẢI []
+### Access JWT A vẫn còn sống nên GET vẫn gọi được
+### ==================================================
+
+GET {{baseUrl}}/api/v1/auth/sessions
+Authorization: Bearer {{accessTokenA}}
+
+
+### ==================================================
+### 12. REFRESH TOKEN A SAU LOGOUT ALL
+### PHẢI 401
+### ==================================================
+
+POST {{baseUrl}}/api/v1/auth/refresh
+Content-Type: application/json
+
+{
+  "refreshToken": "{{refreshTokenA}}"
+}
+
+
+### ==================================================
+### 13. SESSION API KHÔNG JWT
+### PHẢI 401
+### ==================================================
+
+GET {{baseUrl}}/api/v1/auth/sessions

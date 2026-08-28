@@ -3,7 +3,7 @@
 ### Gateway health
 GET {{baseUrl}}/actuator/health
 
-### Login routed through Gateway -> Eureka -> Identity
+### Login routed through Gateway -> Eureka -> Auth
 POST {{baseUrl}}/api/v1/auth/login
 Content-Type: application/json
 X-Request-Id: gateway-login-test
@@ -14,7 +14,7 @@ X-Request-Id: gateway-login-test
 }
 
 ### Unknown route should not be auto-exposed from Eureka
-GET {{baseUrl}}/identity-service/api/v1/auth/login
+GET {{baseUrl}}/auth-service/api/v1/auth/login
 
 ### Gateway request id: invalid client value is replaced
 GET {{baseUrl}}/actuator/health

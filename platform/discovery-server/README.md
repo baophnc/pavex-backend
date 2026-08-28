@@ -12,9 +12,10 @@ From repository root:
 
 Dashboard: `http://localhost:8761`
 
-Then start `identity-service`. It should appear in Eureka as `IDENTITY-SERVICE` with status `UP`.
+Then start `auth-service` and `identity-service`. They should appear in Eureka as
+`AUTH-SERVICE` and `IDENTITY-SERVICE`, both with status `UP`.
 
-Identity can opt out locally with:
+Any service can opt out locally with:
 
 ```bash
 EUREKA_ENABLED=false
