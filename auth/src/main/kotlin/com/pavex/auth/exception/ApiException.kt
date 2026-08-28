@@ -27,6 +27,14 @@ class InvalidCredentialsException :
     )
 
 
+class EmailNotVerifiedException :
+    ApiException(
+        status = HttpStatus.PRECONDITION_REQUIRED,
+        code = "email_not_verified",
+        message = "Email verification is required before login",
+    )
+
+
 class AccountLockedException(
     lockedUntil: Instant,
 ) : ApiException(
