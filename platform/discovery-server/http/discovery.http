@@ -1,0 +1,12 @@
+### Discovery server health
+GET http://localhost:8761/actuator/health
+
+### Eureka registry as JSON
+GET http://localhost:8761/eureka/apps
+Accept: application/json
+
+### Auth health after auth-service starts
+GET http://localhost:8081/actuator/health
+
+### Identity health after identity-service starts
+GET http://localhost:8082/actuator/health

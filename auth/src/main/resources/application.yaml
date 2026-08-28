@@ -1,0 +1,155 @@
+spring:
+  application:
+    name: auth-service
+
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5433/pavex_auth}
+    username: ${DB_USERNAME:pavex}
+    password: ${DB_PASSWORD:pavex}
+
+  jpa:
+    open-in-view: false
+
+    hibernate:
+      ddl-auto: validate
+
+    properties:
+      hibernate:
+        format_sql: true
+
+  flyway:
+    enabled: true
+
+  mail:
+    host: ${MAIL_HOST:localhost}
+    port: ${MAIL_PORT:1025}
+    username: ${MAIL_USERNAME:}
+    password: ${MAIL_PASSWORD:}
+
+    properties:
+      mail:
+        smtp:
+          auth: ${MAIL_SMTP_AUTH:false}
+          starttls:
+            enable: ${MAIL_STARTTLS:false}
+
+  rabbitmq:
+    host: ${RABBITMQ_HOST:localhost}
+    port: ${RABBITMQ_PORT:5672}
+    username: ${RABBITMQ_USERNAME:pavex}
+    password: ${RABBITMQ_PASSWORD:pavex}
+    virtual-host: ${RABBITMQ_VHOST:pavex}
+    connection-timeout: ${RABBITMQ_CONNECTION_TIMEOUT:3s}
+    publisher-confirm-type: correlated
+    publisher-returns: true
+
+    template:
+      mandatory: true
+
+    listener:
+      simple:
+        default-requeue-rejected: false
+        retry:
+          enabled: true
+          initial-interval: 2s
+          multiplier: 2
+          max-interval: 30s
+          max-attempts: 5
+
+
+server:
+  port: 8081
+
+
+security:
+  jwt:
+    issuer: ${JWT_ISSUER:http://localhost:8081}
+
+    access-token-ttl: PT15M
+
+    refresh-token-ttl: P30D
+
+    private-key: ${JWT_PRIVATE_KEY:file:./.keys/private.pem}
+    public-key: ${JWT_PUBLIC_KEY:file:./.keys/public.pem}
+
+  service-jwt:
+    ttl: ${SERVICE_JWT_TTL:PT1M}
+    identity:
+      issuer: ${IDENTITY_SERVICE_JWT_ISSUER:http://localhost:8082}
+      public-key: ${IDENTITY_SERVICE_JWT_PUBLIC_KEY:file:../identity/.keys/public.pem}
+
+
+auth:
+  identity:
+    service-url: ${IDENTITY_SERVICE_URL:http://identity-service}
+
+  google:
+    client-ids: ${GOOGLE_CLIENT_IDS:${GOOGLE_CLIENT_ID:}}
+
+  security:
+    verification-token-ttl: PT24H
+    verification-resend-cooldown: PT2M
+    password-reset-token-ttl: PT1H
+    invitation-token-ttl: PT24H
+    key-hash-secret: ${AUTH_SECURITY_KEY_HASH_SECRET:}
+
+  cleanup:
+    enabled: ${AUTH_CLEANUP_ENABLED:true}
+    token-retention: ${AUTH_TOKEN_RETENTION:P7D}
+    audit-retention: ${AUTH_AUDIT_RETENTION:P90D}
+    cron: ${AUTH_CLEANUP_CRON:0 17 * * * *}
+    zone: ${AUTH_CLEANUP_ZONE:UTC}
+
+  messaging:
+    exchange: ${AUTH_MESSAGING_EXCHANGE:pavex.events}
+    email-consumer-enabled: ${AUTH_EMAIL_CONSUMER_ENABLED:true}
+
+  outbox:
+    publisher-enabled: ${AUTH_OUTBOX_PUBLISHER_ENABLED:true}
+    poll-delay-ms: ${AUTH_OUTBOX_POLL_DELAY_MS:2000}
+    batch-size: ${AUTH_OUTBOX_BATCH_SIZE:10}
+    max-attempts: ${AUTH_OUTBOX_MAX_ATTEMPTS:100}
+    confirm-timeout: ${AUTH_OUTBOX_CONFIRM_TIMEOUT:PT5S}
+    published-retention: ${AUTH_OUTBOX_PUBLISHED_RETENTION:P7D}
+    consumed-retention: ${AUTH_CONSUMED_MESSAGE_RETENTION:P30D}
+    payload-encryption-key: ${OUTBOX_PAYLOAD_ENCRYPTION_KEY:}
+
+
+pavex:
+  email:
+    from: ${MAIL_FROM:no-reply@pavex.local}
+    verification-url: ${EMAIL_VERIFICATION_URL:http://localhost:3000/verify-email}
+    password-reset-url: ${PASSWORD_RESET_URL:http://localhost:3000/reset-password}
+    invitation-url: ${INVITATION_URL:http://localhost:3000/accept-invite}
+
+eureka:
+  client:
+    enabled: ${EUREKA_ENABLED:true}
+    register-with-eureka: ${EUREKA_REGISTER_WITH_EUREKA:true}
+    fetch-registry: ${EUREKA_FETCH_REGISTRY:true}
+    registry-fetch-interval-seconds: ${EUREKA_REGISTRY_FETCH_INTERVAL_SECONDS:30}
+    service-url:
+      defaultZone: ${EUREKA_DEFAULT_ZONE:http://localhost:8761/eureka/}
+    healthcheck:
+      enabled: ${EUREKA_HEALTHCHECK_ENABLED:false}
+
+  instance:
+    prefer-ip-address: ${EUREKA_PREFER_IP_ADDRESS:false}
+
+management:
+  health:
+    # Avoid a feedback loop where the client reports itself DOWN because its
+    # just-registered remote Eureka status has not propagated yet.
+    eureka:
+      enabled: false
+    rabbit:
+      enabled: false
+
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+
+  endpoint:
+    health:
+      show-details: never

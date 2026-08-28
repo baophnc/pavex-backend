@@ -1,0 +1,92 @@
+services:
+  auth-db:
+    image: postgres:18.6-alpine
+
+    environment:
+      POSTGRES_DB: pavex_auth
+      POSTGRES_USER: pavex
+      POSTGRES_PASSWORD: pavex
+
+    ports:
+      - "5433:5432"
+
+    volumes:
+      - auth_postgres_data:/var/lib/postgresql
+
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U pavex -d pavex_auth"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  identity-db:
+    image: postgres:18.6-alpine
+
+    environment:
+      POSTGRES_DB: pavex_identity
+      POSTGRES_USER: pavex
+      POSTGRES_PASSWORD: pavex
+
+    ports:
+      - "5434:5432"
+
+    volumes:
+      # Do not reuse the pre-split identity volume: its Flyway history belongs
+      # to the legacy combined Auth/Identity service.
+      - identity_profile_postgres_data:/var/lib/postgresql
+
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U pavex -d pavex_identity"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  mailpit:
+    image: axllent/mailpit
+
+    ports:
+      - "8025:8025"
+      - "1025:1025"
+
+  gateway-redis:
+    image: redis:8.2-alpine
+
+    ports:
+      - "6379:6379"
+
+    command:
+      - redis-server
+      - --appendonly
+      - "no"
+
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  rabbitmq:
+    image: rabbitmq:4-management-alpine
+
+    environment:
+      RABBITMQ_DEFAULT_USER: pavex
+      RABBITMQ_DEFAULT_PASS: pavex
+      RABBITMQ_DEFAULT_VHOST: pavex
+
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+
+volumes:
+  auth_postgres_data:
+  identity_profile_postgres_data:
+  rabbitmq_data:

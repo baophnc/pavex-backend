@@ -15,6 +15,8 @@ target/
 .env
 .env.*
 !.env.example
+**/prod.env
+.local/
 
 ### OS ###
 .DS_Store
@@ -28,3 +30,7 @@ Thumbs.db
 *.key
 *.p12
 *.jks
+**/.keys/
+
+### Test-only crypto fixtures ###
+!**/src/test/resources/keys/*.pem
