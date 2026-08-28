@@ -29,6 +29,9 @@ security:
 network:
   partners:
     service-url: ${PARTNERS_SERVICE_URL:http://partners-service}
+  routing:
+    transfer-buffer-minutes: ${NETWORK_TRANSFER_BUFFER_MINUTES:30}
+    schedule-search-days: ${NETWORK_SCHEDULE_SEARCH_DAYS:30}
 
 pavex:
   openapi:

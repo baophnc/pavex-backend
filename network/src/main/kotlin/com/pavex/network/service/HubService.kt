@@ -9,6 +9,7 @@ import com.pavex.network.dto.hub.UpdateHubStatusRequest
 import com.pavex.network.dto.toResponse
 import com.pavex.network.entity.Hub
 import com.pavex.network.entity.HubStatus
+import com.pavex.network.entity.HubLaneStatus
 import com.pavex.network.entity.HubType
 import com.pavex.network.entity.NetworkAuditAction
 import com.pavex.network.entity.NetworkAuditEntityType
@@ -16,6 +17,7 @@ import com.pavex.network.entity.ServiceAreaStatus
 import com.pavex.network.exception.ConflictException
 import com.pavex.network.exception.NotFoundException
 import com.pavex.network.repository.HubRepository
+import com.pavex.network.repository.HubLaneRepository
 import com.pavex.network.repository.ServiceAreaRepository
 import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Sort
@@ -26,6 +28,7 @@ import java.util.UUID
 @Service
 class HubService(
     private val hubs: HubRepository,
+    private val lanes: HubLaneRepository,
     private val serviceAreas: ServiceAreaRepository,
     private val locations: LocationCatalogClient,
     private val hierarchy: HubHierarchyService,
@@ -110,6 +113,9 @@ class HubService(
         val hub = find(id)
         if (!request.active && serviceAreas.existsByPrimaryHubIdAndStatus(id, ServiceAreaStatus.ACTIVE)) {
             throw ConflictException("hub_in_use", "Deactivate or reassign active service areas before disabling this hub.")
+        }
+        if (!request.active && lanes.existsByHubIdAndStatus(id, HubLaneStatus.ACTIVE)) {
+            throw ConflictException("hub_has_active_lanes", "Deactivate transport lanes connected to this hub before disabling it.")
         }
         val before = HubResponse.from(hub)
         hub.setActive(request.active)
