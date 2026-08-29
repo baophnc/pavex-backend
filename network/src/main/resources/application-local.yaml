@@ -1,0 +1,4 @@
+network:
+  seed:
+    demo:
+      enabled: true

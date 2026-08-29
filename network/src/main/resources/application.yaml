@@ -34,6 +34,9 @@ network:
     schedule-search-days: ${NETWORK_SCHEDULE_SEARCH_DAYS:30}
   capacity:
     reservation-retries: ${NETWORK_CAPACITY_RESERVATION_RETRIES:8}
+  seed:
+    demo:
+      enabled: ${NETWORK_DEMO_SEED_ENABLED:false}
 
 pavex:
   openapi:

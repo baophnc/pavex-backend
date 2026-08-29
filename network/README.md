@@ -108,3 +108,25 @@ Operational safeguards:
 - A lane cannot be changed/deactivated while it has future reserved capacity.
 - Raising a lane's maximum shipment weight requires every schedule to have at
   least that much departure capacity.
+
+## Local demo geography seed
+
+The local profile can seed a realistic three-region operating geography for UI and routing development without changing production defaults.
+
+```bash
+SPRING_PROFILES_ACTIVE=local ./mvnw -pl network -am spring-boot:run
+```
+
+Alternatively enable only the seed explicitly:
+
+```bash
+NETWORK_DEMO_SEED_ENABLED=true ./mvnw -pl network -am spring-boot:run
+```
+
+The seed is idempotent and preserves active operator-created coverage when a ward is already mapped. It creates three regional gateways, 37 operating service areas with local hubs, and explicit coverage for all 388 commune-level units in the Partners demo scope: Hà Nội (126), Đà Nẵng (94), and Hồ Chí Minh (168). Hub names are plain geographic names; routing identity is carried by hub codes.
+
+After startup, verify the database with:
+
+```bash
+./scripts/smoke-network-demo-geography.sh
+```

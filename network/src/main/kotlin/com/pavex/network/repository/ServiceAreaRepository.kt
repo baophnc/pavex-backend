@@ -11,6 +11,7 @@ import java.util.UUID
 
 interface ServiceAreaRepository : JpaRepository<ServiceArea, UUID> {
     fun existsByCodeIgnoreCase(code: String): Boolean
+    fun findByCodeIgnoreCase(code: String): ServiceArea?
     fun existsByRegionIdAndStatus(regionId: UUID, status: ServiceAreaStatus): Boolean
     fun existsByPrimaryHubIdAndStatus(primaryHubId: UUID, status: ServiceAreaStatus): Boolean
 
