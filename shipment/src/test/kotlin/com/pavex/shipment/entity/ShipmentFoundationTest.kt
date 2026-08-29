@@ -91,6 +91,22 @@ class ShipmentFoundationTest {
         assertEquals(listOf("PAVEX2608290123456789-01", "PAVEX2608290123456789-02"), shipment.parcels.map { it.code })
         assertEquals("shipment.created", shipment.events.single().code)
         assertTrue(shipment.events.single().locationName == "Hội An")
+
+        val reservationId = UUID.randomUUID()
+        shipment.assignReservedRoute(
+            routeRevision = 1,
+            capacityReservationBatchId = reservationId,
+            reservedWeightKg = BigDecimal("3.000"),
+            readyAt = now,
+            estimatedDeliveryAt = now.plusSeconds(7_200),
+            estimatedTransitMinutes = 120,
+            distanceKm = BigDecimal("45.500"),
+            updatedAt = now,
+        )
+
+        assertEquals(ShipmentRoutingStatus.RESERVED, shipment.routingStatus)
+        assertEquals(reservationId, shipment.capacityReservationBatchId)
+        assertEquals(BigDecimal("3.000"), shipment.reservedWeightKg)
     }
 
     private fun parcel(description: String, weight: BigDecimal) = ParcelDraft(

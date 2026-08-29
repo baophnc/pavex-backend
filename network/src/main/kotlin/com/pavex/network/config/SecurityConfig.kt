@@ -21,17 +21,15 @@ import org.springframework.security.web.SecurityFilterChain
 class SecurityConfig {
     @Bean
     @Order(1)
-    fun internalSecurityFilterChain(
+    fun pricingInternalSecurityFilterChain(
         http: HttpSecurity,
         @Qualifier("pricingServiceJwtDecoder") pricingServiceJwtDecoder: JwtDecoder,
     ): SecurityFilterChain =
         http
-            .securityMatcher("/internal/v1/network/**")
+            .securityMatcher("/internal/v1/network/locations/**")
             .csrf { it.disable() }
             .sessionManagement { it.sessionCreationPolicy(SessionCreationPolicy.STATELESS) }
-            .authorizeHttpRequests {
-                it.anyRequest().hasAuthority("SCOPE_network.pricing.resolve")
-            }
+            .authorizeHttpRequests { it.anyRequest().authenticated() }
             .oauth2ResourceServer { resourceServer ->
                 resourceServer.jwt { jwt -> jwt.decoder(pricingServiceJwtDecoder) }
             }
@@ -39,7 +37,23 @@ class SecurityConfig {
 
     @Bean
     @Order(2)
-    fun apiSecurityFilterChain(
+    fun shipmentInternalSecurityFilterChain(
+        http: HttpSecurity,
+        @Qualifier("shipmentServiceJwtDecoder") shipmentServiceJwtDecoder: JwtDecoder,
+    ): SecurityFilterChain =
+        http
+            .securityMatcher("/internal/v1/network/shipments/**")
+            .csrf { it.disable() }
+            .sessionManagement { it.sessionCreationPolicy(SessionCreationPolicy.STATELESS) }
+            .authorizeHttpRequests { it.anyRequest().authenticated() }
+            .oauth2ResourceServer { resourceServer ->
+                resourceServer.jwt { jwt -> jwt.decoder(shipmentServiceJwtDecoder) }
+            }
+            .build()
+
+    @Bean
+    @Order(3)
+    fun securityFilterChain(
         http: HttpSecurity,
         @Qualifier("userJwtDecoder") jwtDecoder: JwtDecoder,
     ): SecurityFilterChain =
@@ -55,6 +69,7 @@ class SecurityConfig {
                 ).permitAll()
                     .requestMatchers(HttpMethod.GET, "/api/v1/network/hubs").permitAll()
                     .requestMatchers("/api/v1/admin/network/**").authenticated()
+                    .requestMatchers("/internal/**").denyAll()
                     .anyRequest().denyAll()
             }
             .oauth2ResourceServer { resourceServer ->

@@ -38,11 +38,11 @@ security:
 
   trusted-services:
     shipment:
-      # Shipment will own this key pair when that service is introduced. The
-      # local default keeps the contract testable without weakening claim,
-      # audience or scope validation.
+      # Local development reuses Auth's RSA key material so every service can
+      # start from the repository root. Production should provide Shipment's
+      # dedicated public key through SHIPMENT_SERVICE_JWT_PUBLIC_KEY.
       issuer: ${SHIPMENT_SERVICE_JWT_ISSUER:http://localhost:8084}
-      public-key: ${SHIPMENT_SERVICE_JWT_PUBLIC_KEY:file:./partners/.keys/public.pem}
+      public-key: ${SHIPMENT_SERVICE_JWT_PUBLIC_KEY:file:./auth/.keys/public.pem}
 
 partners:
   identity:

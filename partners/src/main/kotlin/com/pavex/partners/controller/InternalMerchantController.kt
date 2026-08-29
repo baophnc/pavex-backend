@@ -1,8 +1,9 @@
 package com.pavex.partners.controller
 
-import com.pavex.partners.dto.OrderCapabilityResponse
+import com.pavex.contracts.partners.MerchantOrderCapabilitySnapshot
 import com.pavex.partners.service.MerchantService
 import io.swagger.v3.oas.annotations.Hidden
+import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.RequestMapping
@@ -16,6 +17,17 @@ class InternalMerchantController(
     private val merchants: MerchantService,
 ) {
     @GetMapping("/by-user/{userId}/order-capability")
-    fun orderCapability(@PathVariable userId: UUID): OrderCapabilityResponse =
-        merchants.orderCapability(userId)
+    @PreAuthorize("hasAuthority('SCOPE_partners.orders.evaluate')")
+    fun orderCapability(@PathVariable userId: UUID): MerchantOrderCapabilitySnapshot {
+        val capability = merchants.orderCapability(userId)
+        return MerchantOrderCapabilitySnapshot(
+            merchantId = capability.merchantId,
+            merchantCode = capability.merchantCode,
+            userId = capability.userId,
+            status = capability.status?.name,
+            canCreateOrders = capability.canCreateOrder,
+            defaultPickupAddressId = capability.defaultPickupAddressId,
+            restrictions = capability.restrictions,
+        )
+    }
 }

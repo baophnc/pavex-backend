@@ -150,3 +150,11 @@ Pricing does not import Network domain classes. It calls `POST /internal/v1/netw
 with the shared `platform-contracts` DTO and a short-lived Pricing service JWT. Network validates the
 Pricing issuer, `sub=pricing-service`, `aud=network-service`, `typ=service` and the exact
 `network.pricing.resolve` scope before resolving coverage.
+
+## Shipment capacity reservation
+
+Shipment Patch 02 calls `POST /internal/v1/network/shipments/capacity/reservations` with a short-lived
+Shipment service JWT. Network re-resolves both locations, verifies that service-area/region/hub IDs still
+match the Pricing quote topology, then reserves lane capacity idempotently by shipment ID and route revision.
+The matching release endpoint is used as compensation when Shipment persistence fails. Tokens require
+`sub=shipment-service`, `aud=network-service`, `typ=service` and `scope=network.shipments.reserve`.

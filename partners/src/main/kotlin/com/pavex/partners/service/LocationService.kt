@@ -1,5 +1,6 @@
 package com.pavex.partners.service
 
+import com.pavex.contracts.partners.PartnerLocationSnapshot
 import com.pavex.partners.dto.ProvinceResponse
 import com.pavex.partners.dto.WardResponse
 import com.pavex.partners.exception.ApiException
@@ -38,6 +39,25 @@ class LocationService(
 
     fun isValid(provinceCode: String, wardCode: String): Boolean =
         wards.existsByCodeAndProvinceCode(wardCode, provinceCode)
+
+    @Transactional(readOnly = true)
+    fun resolveForShipment(provinceCode: String, wardCode: String): PartnerLocationSnapshot {
+        val province = provinces.findById(provinceCode.trim()).orElseThrow {
+            ApiException(HttpStatus.NOT_FOUND, "province_not_found", "Province was not found.")
+        }
+        val ward = wards.findById(wardCode.trim()).orElseThrow {
+            ApiException(HttpStatus.NOT_FOUND, "ward_not_found", "Ward was not found.")
+        }
+        if (ward.provinceCode != province.code) {
+            throw ApiException(HttpStatus.BAD_REQUEST, "invalid_location", "Ward does not belong to the selected province.")
+        }
+        return PartnerLocationSnapshot(
+            provinceCode = province.code,
+            provinceName = province.fullName.ifBlank { province.name },
+            wardCode = ward.code,
+            wardName = ward.fullName.ifBlank { ward.name },
+        )
+    }
 
     private fun toResponse(ward: com.pavex.partners.entity.Ward) = WardResponse(
         ward.code,

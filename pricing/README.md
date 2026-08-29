@@ -86,11 +86,11 @@ Patch 03 closes the Pricing backend before Shipment work begins:
 - `GET /api/v1/admin/pricing/quotes/{quoteId}` lets support/admin inspect the same snapshot even after expiry.
 - `GET /internal/v1/pricing/quotes/{quoteId}` is reserved for Shipment and rejects expired quotes.
 
-The Shipment endpoint is disabled until Shipment exists. Later enable it with
-`PRICING_SHIPMENT_INTEGRATION_ENABLED=true` and provide Shipment's RSA public key via
-`SHIPMENT_SERVICE_JWT_PUBLIC_KEY`. The trusted token must use `sub=shipment-service`,
-`aud=pricing-service`, `typ=service` and `scope=pricing.quote.read`. This keeps Pricing runnable today
-without creating or sharing Shipment keys prematurely.
+Shipment Patch 02 enables the internal quote endpoint by default. Production should provide
+Shipment's dedicated RSA public key via `SHIPMENT_SERVICE_JWT_PUBLIC_KEY`; local development falls
+back to the repository Auth key pair. The trusted token must use `sub=shipment-service`,
+`aud=pricing-service`, `typ=service` and `scope=pricing.quote.read`. Set
+`PRICING_SHIPMENT_INTEGRATION_ENABLED=false` only when intentionally running Pricing without Shipment.
 
 Smoke the Patch 03 storage invariants after Pricing starts:
 

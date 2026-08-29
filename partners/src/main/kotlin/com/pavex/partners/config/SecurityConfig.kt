@@ -27,11 +27,11 @@ class SecurityConfig {
         @Qualifier("shipmentServiceJwtDecoder") shipmentServiceJwtDecoder: JwtDecoder,
     ): SecurityFilterChain =
         http
-            .securityMatcher("/internal/v1/merchants/**")
+            .securityMatcher("/internal/v1/**")
             .csrf { it.disable() }
             .sessionManagement { it.sessionCreationPolicy(SessionCreationPolicy.STATELESS) }
             .authorizeHttpRequests {
-                it.anyRequest().hasAuthority("SCOPE_partners.orders.evaluate")
+                it.anyRequest().authenticated()
             }
             .oauth2ResourceServer { resourceServer ->
                 resourceServer.jwt { jwt -> jwt.decoder(shipmentServiceJwtDecoder) }

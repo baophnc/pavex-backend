@@ -2,11 +2,11 @@
 
 Shipment owns the durable shipment aggregate after a customer selects a Pricing quote. The service keeps internal UUIDs for relational integrity while exposing a stable PAVEX shipment code as the human-facing identifier.
 
-## Patch 01 boundary
+## Patch 02 boundary
 
-This checkpoint establishes the service and persistence model only. It intentionally does not create shipments yet; Pricing/Partners/Network integration arrives in Shipment Patch 02.
+Patch 01 established the aggregate and persistence foundation. Patch 02 adds the first end-to-end write path: `POST /api/v1/shipments`. Creation now validates merchant eligibility through Partners, consumes an immutable Pricing quote, resolves canonical location names, reserves Network capacity, persists the shipment/timeline/outbox atomically, and releases Network capacity when local persistence fails.
 
-The foundation contains:
+The service now contains:
 
 - shipment code + parcel code strategy (`PAVEXyyMMddXXXXXXXXXX`, `...-01`),
 - sender/recipient snapshots including province/ward **names** as well as catalog codes,
@@ -16,7 +16,10 @@ The foundation contains:
 - shipment event timeline storage,
 - optimistic locking,
 - quote single-use and creator/idempotency unique constraints,
-- durable shipment outbox storage for later Operations/Billing/Notification consumers.
+- durable shipment outbox storage for later Operations/Billing/Notification consumers,
+- idempotent shipment creation using `Idempotency-Key` and SHA-256 request fingerprints,
+- service-to-service JWT integration with Pricing, Partners and Network,
+- quote single-use enforcement and network-capacity compensation on failed inserts.
 
 ## Human-facing identifiers
 
@@ -34,9 +37,12 @@ UUIDs remain internal transport/database identifiers and should not be rendered 
 ```bash
 docker compose up -d shipment-db
 JWT_PUBLIC_KEY="file:$PWD/auth/.keys/public.pem" \
-EUREKA_ENABLED=false \
+SHIPMENT_SERVICE_JWT_PRIVATE_KEY="file:$PWD/auth/.keys/private.pem" \
+SHIPMENT_SERVICE_JWT_PUBLIC_KEY="file:$PWD/auth/.keys/public.pem" \
 ./mvnw -pl shipment spring-boot:run
 ```
+
+Patch 02 requires Discovery, Partners, Network and Pricing to be running and registered in Eureka.
 
 Service: `http://localhost:8084`
 Database: `jdbc:postgresql://localhost:5438/pavex_shipments`

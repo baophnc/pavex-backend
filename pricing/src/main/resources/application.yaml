@@ -33,13 +33,13 @@ security:
   trusted-services:
     shipment:
       issuer: ${SHIPMENT_SERVICE_JWT_ISSUER:http://localhost:8084}
-      public-key: ${SHIPMENT_SERVICE_JWT_PUBLIC_KEY:file:./shipment/.keys/public.pem}
+      public-key: ${SHIPMENT_SERVICE_JWT_PUBLIC_KEY:file:./auth/.keys/public.pem}
 
 pricing:
   network:
     service-url: ${NETWORK_SERVICE_URL:http://network-service}
   shipment:
-    integration-enabled: ${PRICING_SHIPMENT_INTEGRATION_ENABLED:false}
+    integration-enabled: ${PRICING_SHIPMENT_INTEGRATION_ENABLED:true}
   seed:
     demo:
       enabled: ${PRICING_DEMO_SEED_ENABLED:false}

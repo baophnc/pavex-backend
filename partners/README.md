@@ -34,7 +34,7 @@ Shipment calls the internal order-capability endpoint with its own service JWT:
 - subject: `shipment-service`
 - audience: `partners-service`
 - token type: `service`
-- scope: `partners.orders.evaluate`
+- scopes: `partners.orders.evaluate`, `partners.locations.read`
 
 Production must provide `SHIPMENT_SERVICE_JWT_ISSUER` and
 `SHIPMENT_SERVICE_JWT_PUBLIC_KEY`.
@@ -48,6 +48,8 @@ Production must provide `SHIPMENT_SERVICE_JWT_ISSUER` and
 - Merchant administration: `/api/v1/admin/merchants/**`
 - Shipment capability contract:
   `/internal/v1/merchants/by-user/{userId}/order-capability`
+- Shipment location snapshot contract:
+  `POST /internal/v1/locations/resolve`
 
 Merchant application eligibility is sourced from Identity. A merchant can
 create an order only when the Identity account remains eligible, the merchant

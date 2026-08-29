@@ -185,6 +185,34 @@ class Shipment(
     @OrderBy("occurredAt ASC")
     val events: MutableList<ShipmentEvent> = mutableListOf()
 
+    fun assignReservedRoute(
+        routeRevision: Int,
+        capacityReservationBatchId: UUID?,
+        reservedWeightKg: java.math.BigDecimal,
+        readyAt: Instant,
+        estimatedDeliveryAt: Instant,
+        estimatedTransitMinutes: Int,
+        distanceKm: java.math.BigDecimal?,
+        updatedAt: Instant,
+    ) {
+        require(routeRevision > 0) { "routeRevision must be positive." }
+        require(reservedWeightKg > java.math.BigDecimal.ZERO) { "reservedWeightKg must be positive." }
+        require(!estimatedDeliveryAt.isBefore(readyAt)) { "estimatedDeliveryAt cannot be before readyAt." }
+        require(estimatedTransitMinutes >= 0) { "estimatedTransitMinutes must not be negative." }
+        require(distanceKm == null || distanceKm >= java.math.BigDecimal.ZERO) { "distanceKm must not be negative." }
+        require(routingStatus == ShipmentRoutingStatus.UNPLANNED) { "Shipment route is already assigned." }
+
+        this.routeRevision = routeRevision
+        this.capacityReservationBatchId = capacityReservationBatchId
+        this.reservedWeightKg = reservedWeightKg
+        this.routeReadyAt = readyAt
+        this.estimatedDeliveryAt = estimatedDeliveryAt
+        this.estimatedTransitMinutes = estimatedTransitMinutes
+        this.routeDistanceKm = distanceKm
+        this.routingStatus = ShipmentRoutingStatus.RESERVED
+        this.updatedAt = updatedAt
+    }
+
     companion object {
         fun createFoundation(
             id: UUID,

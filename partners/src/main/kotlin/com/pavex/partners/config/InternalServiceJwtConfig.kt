@@ -33,25 +33,16 @@ class InternalServiceJwtConfig(
                 exactClaim("sub", "shipment-service"),
                 exactClaim("typ", "service"),
                 audience("partners-service"),
-                scope("partners.orders.evaluate"),
             ),
         )
         return decoder
     }
 
     private fun exactClaim(name: String, expected: String): OAuth2TokenValidator<Jwt> =
-        OAuth2TokenValidator { jwt ->
-            result(jwt.getClaimAsString(name) == expected, "Invalid $name claim")
-        }
+        OAuth2TokenValidator { jwt -> result(jwt.getClaimAsString(name) == expected, "Invalid $name claim") }
 
     private fun audience(expected: String): OAuth2TokenValidator<Jwt> =
         OAuth2TokenValidator { jwt -> result(expected in jwt.audience.orEmpty(), "Invalid audience") }
-
-    private fun scope(expected: String): OAuth2TokenValidator<Jwt> =
-        OAuth2TokenValidator { jwt ->
-            val scopes = jwt.getClaimAsString("scope")?.split(' ').orEmpty()
-            result(expected in scopes, "Invalid scope")
-        }
 
     private fun result(valid: Boolean, description: String): OAuth2TokenValidatorResult =
         if (valid) OAuth2TokenValidatorResult.success()

@@ -1,6 +1,7 @@
 package com.pavex.shipment.exception
 
 import org.springframework.http.ResponseEntity
+import org.springframework.http.converter.HttpMessageNotReadableException
 import org.springframework.web.bind.MethodArgumentNotValidException
 import org.springframework.web.bind.annotation.ExceptionHandler
 import org.springframework.web.bind.annotation.RestControllerAdvice
@@ -16,6 +17,10 @@ class GlobalExceptionHandler {
         val message = exception.bindingResult.fieldErrors.firstOrNull()?.defaultMessage ?: "Request validation failed."
         return ResponseEntity.badRequest().body(ApiErrorResponse("validation_failed", message))
     }
+
+    @ExceptionHandler(HttpMessageNotReadableException::class)
+    fun handleUnreadableRequest(exception: HttpMessageNotReadableException): ResponseEntity<ApiErrorResponse> =
+        ResponseEntity.badRequest().body(ApiErrorResponse("invalid_request_body", "Request body is missing or malformed."))
 
     @ExceptionHandler(IllegalArgumentException::class)
     fun handleIllegalArgument(exception: IllegalArgumentException): ResponseEntity<ApiErrorResponse> =

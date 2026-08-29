@@ -1,5 +1,6 @@
 package com.pavex.shipment.config
 
+import com.pavex.common.security.PavexJwtClaims
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
@@ -49,10 +50,10 @@ class SecurityConfig {
     fun jwtAuthenticationConverter(): Converter<Jwt, AbstractAuthenticationToken> =
         Converter { jwt ->
             val authorities = buildList {
-                jwt.getClaimAsStringList("roles").orEmpty().forEach {
+                jwt.getClaimAsStringList(PavexJwtClaims.ROLES).orEmpty().forEach {
                     add(SimpleGrantedAuthority("ROLE_$it"))
                 }
-                jwt.getClaimAsStringList("permissions").orEmpty().forEach {
+                jwt.getClaimAsStringList(PavexJwtClaims.PERMISSIONS).orEmpty().forEach {
                     add(SimpleGrantedAuthority(it))
                 }
             }

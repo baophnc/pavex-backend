@@ -25,6 +25,20 @@ security:
   jwt:
     issuer: ${JWT_ISSUER:http://localhost:8081}
     public-key: ${JWT_PUBLIC_KEY:file:./auth/.keys/public.pem}
+  service-jwt:
+    issuer: ${SHIPMENT_SERVICE_JWT_ISSUER:http://localhost:8084}
+    ttl: ${SERVICE_JWT_TTL:PT1M}
+    private-key: ${SHIPMENT_SERVICE_JWT_PRIVATE_KEY:file:./auth/.keys/private.pem}
+    public-key: ${SHIPMENT_SERVICE_JWT_PUBLIC_KEY:file:./auth/.keys/public.pem}
+
+shipment:
+  integrations:
+    pricing:
+      service-url: ${PRICING_SERVICE_URL:http://pricing-service}
+    partners:
+      service-url: ${PARTNERS_SERVICE_URL:http://partners-service}
+    network:
+      service-url: ${NETWORK_SERVICE_URL:http://network-service}
 
 pavex:
   openapi:
