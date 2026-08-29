@@ -247,6 +247,99 @@ class Shipment(
         updatedAt = releasedAt
     }
 
+    fun transitionParcel(
+        parcelId: UUID,
+        nextStatus: ParcelStatus,
+        eventCode: String,
+        description: String,
+        actorUserId: UUID,
+        hubId: UUID,
+        locationName: String,
+        occurredAt: Instant,
+        recordedAt: Instant,
+    ) {
+        check(lifecycleStatus == ShipmentLifecycleStatus.ACTIVE) { "Shipment lifecycle is already closed." }
+        require(!recordedAt.isBefore(occurredAt)) { "Recorded time cannot precede occurrence time." }
+        val parcel = parcels.singleOrNull { it.id == parcelId }
+            ?: error("Parcel does not belong to this shipment.")
+
+        parcel.transitionTo(
+            nextStatus = nextStatus,
+            occurredAt = occurredAt,
+            actorUserId = actorUserId,
+            hubId = hubId,
+            hubName = locationName,
+        )
+        status = resolveStatus(parcels)
+        updatedAt = recordedAt
+        events += ShipmentEvent(
+            shipment = this,
+            parcelId = parcel.id,
+            status = status,
+            code = requireEventText(eventCode, 100, "eventCode"),
+            description = requireEventText(description, 500, "description"),
+            actorUserId = actorUserId,
+            hubId = hubId,
+            locationName = locationName.trim().takeIf { it.isNotEmpty() }?.also {
+                require(it.length <= 200) { "locationName must not exceed 200 characters." }
+            },
+            occurredAt = occurredAt,
+            recordedAt = recordedAt,
+        )
+    }
+
+    fun recordParcelCheckpoint(
+        parcelId: UUID,
+        description: String,
+        actorUserId: UUID,
+        hubId: UUID,
+        locationName: String,
+        occurredAt: Instant,
+        recordedAt: Instant,
+    ) {
+        check(lifecycleStatus == ShipmentLifecycleStatus.ACTIVE) { "Shipment lifecycle is already closed." }
+        require(!recordedAt.isBefore(occurredAt)) { "Recorded time cannot precede occurrence time." }
+        val parcel = parcels.singleOrNull { it.id == parcelId }
+            ?: error("Parcel does not belong to this shipment.")
+        events += ShipmentEvent(
+            shipment = this,
+            parcelId = parcel.id,
+            status = status,
+            code = "parcel.scanned",
+            description = requireEventText(description, 500, "description"),
+            actorUserId = actorUserId,
+            hubId = hubId,
+            locationName = locationName.trim().takeIf { it.isNotEmpty() }?.also {
+                require(it.length <= 200) { "locationName must not exceed 200 characters." }
+            },
+            occurredAt = occurredAt,
+            recordedAt = recordedAt,
+        )
+        updatedAt = recordedAt
+    }
+
+    private fun resolveStatus(items: List<Parcel>): ShipmentStatus {
+        if (items.all { it.status == ParcelStatus.DELIVERED }) return ShipmentStatus.DELIVERED
+        if (items.any { it.status == ParcelStatus.DELIVERED }) return ShipmentStatus.PARTIALLY_DELIVERED
+        if (items.all { it.status == ParcelStatus.CANCELLED }) return ShipmentStatus.CANCELLED
+        if (items.all { it.status == ParcelStatus.RETURNED }) return ShipmentStatus.RETURNED
+        if (items.any { it.status == ParcelStatus.RETURNING }) return ShipmentStatus.RETURNING
+        if (items.any { it.status == ParcelStatus.DELIVERY_FAILED }) return ShipmentStatus.DELIVERY_FAILED
+        if (items.any { it.status == ParcelStatus.OUT_FOR_DELIVERY }) return ShipmentStatus.OUT_FOR_DELIVERY
+        if (items.any { it.status == ParcelStatus.AT_DESTINATION_HUB }) return ShipmentStatus.AT_DESTINATION_HUB
+        if (items.any { it.status == ParcelStatus.IN_TRANSIT }) return ShipmentStatus.IN_TRANSIT
+        if (items.any { it.status == ParcelStatus.AT_ORIGIN_HUB }) return ShipmentStatus.AT_ORIGIN_HUB
+        return if (items.any { it.status == ParcelStatus.PICKED_UP }) ShipmentStatus.PICKED_UP else ShipmentStatus.AWAITING_PICKUP
+    }
+
+    private fun requireEventText(value: String, maxLength: Int, field: String): String {
+        val normalized = value.trim()
+        require(normalized.isNotEmpty() && normalized.length <= maxLength) {
+            "$field is required and must not exceed $maxLength characters."
+        }
+        return normalized
+    }
+
     companion object {
         fun createFoundation(
             id: UUID,

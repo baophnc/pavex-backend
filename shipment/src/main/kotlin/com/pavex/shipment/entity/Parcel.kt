@@ -87,6 +87,128 @@ class Parcel(
     @Column(name = "updated_at", nullable = false)
     var updatedAt: Instant = Instant.now(),
 ) {
+    fun canTransitionTo(nextStatus: ParcelStatus): Boolean =
+        ALLOWED_TRANSITIONS[status].orEmpty().contains(nextStatus)
+
+    fun transitionTo(
+        nextStatus: ParcelStatus,
+        occurredAt: Instant,
+        actorUserId: UUID? = null,
+        hubId: UUID? = null,
+        hubName: String? = null,
+    ) {
+        check(canTransitionTo(nextStatus)) {
+            "Parcel cannot transition from $status to $nextStatus."
+        }
+
+        status = nextStatus
+        when (nextStatus) {
+            ParcelStatus.AWAITING_PICKUP -> {
+                stage = ParcelStage.AWAITING_PICKUP
+                currentLocationType = ParcelLocationType.SENDER
+                currentHubId = null
+                currentHubName = null
+                currentRouteLegId = null
+                currentAssignmentId = null
+                custodyType = ParcelCustodyType.SENDER
+                custodyReferenceId = null
+            }
+            ParcelStatus.PICKED_UP -> {
+                stage = ParcelStage.PICKED_UP
+                currentLocationType = ParcelLocationType.COURIER
+                currentHubId = null
+                currentHubName = null
+                currentRouteLegId = null
+                currentAssignmentId = null
+                custodyType = ParcelCustodyType.COURIER
+                custodyReferenceId = actorUserId
+            }
+            ParcelStatus.AT_ORIGIN_HUB, ParcelStatus.AT_DESTINATION_HUB -> {
+                val requiredHubId = requireNotNull(hubId) { "$nextStatus requires a hub." }
+                stage = ParcelStage.AT_HUB
+                currentLocationType = ParcelLocationType.HUB
+                currentHubId = requiredHubId
+                currentHubName = hubName
+                currentRouteLegId = null
+                currentAssignmentId = null
+                custodyType = ParcelCustodyType.HUB
+                custodyReferenceId = requiredHubId
+            }
+            ParcelStatus.IN_TRANSIT -> {
+                stage = ParcelStage.IN_TRANSIT
+                currentLocationType = ParcelLocationType.UNKNOWN
+                currentHubId = null
+                currentHubName = null
+                currentRouteLegId = null
+                currentAssignmentId = null
+                custodyType = ParcelCustodyType.LINE_HAUL
+                custodyReferenceId = actorUserId
+            }
+            ParcelStatus.OUT_FOR_DELIVERY -> {
+                stage = ParcelStage.OUT_FOR_DELIVERY
+                currentLocationType = ParcelLocationType.COURIER
+                currentHubId = null
+                currentHubName = null
+                currentRouteLegId = null
+                currentAssignmentId = null
+                custodyType = ParcelCustodyType.COURIER
+                custodyReferenceId = actorUserId
+            }
+            ParcelStatus.DELIVERY_FAILED -> {
+                stage = ParcelStage.DELIVERY_EXCEPTION
+                currentLocationType = ParcelLocationType.COURIER
+                currentHubId = null
+                currentHubName = null
+                currentRouteLegId = null
+                custodyType = ParcelCustodyType.COURIER
+                custodyReferenceId = actorUserId ?: custodyReferenceId
+            }
+            ParcelStatus.DELIVERED -> {
+                stage = ParcelStage.DELIVERED
+                currentLocationType = ParcelLocationType.RECIPIENT
+                currentHubId = null
+                currentHubName = null
+                currentRouteLegId = null
+                currentAssignmentId = null
+                custodyType = ParcelCustodyType.RECIPIENT
+                custodyReferenceId = null
+            }
+            ParcelStatus.RETURNING -> {
+                stage = ParcelStage.RETURNING
+                flowDirection = ParcelFlowDirection.RETURN
+                currentLocationType = ParcelLocationType.UNKNOWN
+                currentHubId = null
+                currentHubName = null
+                currentRouteLegId = null
+                currentAssignmentId = null
+                custodyType = ParcelCustodyType.LINE_HAUL
+                custodyReferenceId = actorUserId
+            }
+            ParcelStatus.RETURNED -> {
+                stage = ParcelStage.RETURNED
+                flowDirection = ParcelFlowDirection.RETURN
+                currentLocationType = ParcelLocationType.SENDER
+                currentHubId = null
+                currentHubName = null
+                currentRouteLegId = null
+                currentAssignmentId = null
+                custodyType = ParcelCustodyType.SENDER
+                custodyReferenceId = null
+            }
+            ParcelStatus.CANCELLED -> {
+                stage = ParcelStage.CANCELLED
+                currentLocationType = ParcelLocationType.SENDER
+                currentHubId = null
+                currentHubName = null
+                currentRouteLegId = null
+                currentAssignmentId = null
+                custodyType = ParcelCustodyType.SENDER
+                custodyReferenceId = null
+            }
+        }
+        updatedAt = occurredAt
+    }
+
     fun cancel(cancelledAt: Instant) {
         require(status == ParcelStatus.AWAITING_PICKUP) { "Parcel can only be cancelled before pickup." }
         status = ParcelStatus.CANCELLED
@@ -95,6 +217,17 @@ class Parcel(
     }
 
     companion object {
+        private val ALLOWED_TRANSITIONS: Map<ParcelStatus, Set<ParcelStatus>> = mapOf(
+            ParcelStatus.AWAITING_PICKUP to setOf(ParcelStatus.PICKED_UP, ParcelStatus.CANCELLED),
+            ParcelStatus.PICKED_UP to setOf(ParcelStatus.AT_ORIGIN_HUB),
+            ParcelStatus.AT_ORIGIN_HUB to setOf(ParcelStatus.IN_TRANSIT),
+            ParcelStatus.IN_TRANSIT to setOf(ParcelStatus.AT_DESTINATION_HUB, ParcelStatus.RETURNING),
+            ParcelStatus.AT_DESTINATION_HUB to setOf(ParcelStatus.OUT_FOR_DELIVERY, ParcelStatus.RETURNING),
+            ParcelStatus.OUT_FOR_DELIVERY to setOf(ParcelStatus.DELIVERED, ParcelStatus.DELIVERY_FAILED),
+            ParcelStatus.DELIVERY_FAILED to setOf(ParcelStatus.OUT_FOR_DELIVERY, ParcelStatus.RETURNING),
+            ParcelStatus.RETURNING to setOf(ParcelStatus.RETURNED),
+        )
+
         fun create(
             shipment: Shipment,
             code: String,

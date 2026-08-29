@@ -4,11 +4,17 @@ import com.pavex.contracts.network.NetworkCoverageTier
 import com.pavex.contracts.network.ReleaseShipmentNetworkRequest
 import com.pavex.contracts.network.ReserveShipmentNetworkRequest
 import com.pavex.contracts.network.ShipmentNetworkPointSnapshot
+import com.pavex.contracts.network.ShipmentOperationalHubSnapshot
 import com.pavex.contracts.network.ShipmentNetworkReservationSnapshot
 import com.pavex.network.dto.capacity.ReserveLaneCapacityRequest
 import com.pavex.network.dto.routing.RoutePlanningMode
 import com.pavex.network.exception.ConflictException
+import com.pavex.network.entity.HubStatus
+import com.pavex.network.entity.LaneCapacityReservationStatus
+import com.pavex.network.exception.NotFoundException
 import com.pavex.network.repository.HubLaneRepository
+import com.pavex.network.repository.HubRepository
+import com.pavex.network.repository.LaneCapacityReservationRepository
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.math.BigDecimal
@@ -19,6 +25,8 @@ class ShipmentNetworkReservationService(
     private val resolver: NetworkResolverService,
     private val capacity: NetworkCapacityService,
     private val lanes: HubLaneRepository,
+    private val hubs: HubRepository,
+    private val reservations: LaneCapacityReservationRepository,
 ) {
     @Transactional
     fun reserve(request: ReserveShipmentNetworkRequest): ShipmentNetworkReservationSnapshot {
@@ -99,6 +107,38 @@ class ShipmentNetworkReservationService(
             routeRevision = routeRevision,
             actorUserId = request.actorUserId,
             reason = request.reason,
+        )
+    }
+
+    @Transactional(readOnly = true)
+    fun resolveOperationalHub(
+        shipmentId: UUID,
+        routeRevision: Int,
+        hubId: UUID,
+    ): ShipmentOperationalHubSnapshot {
+        require(shipmentId != UUID(0, 0)) { "shipmentId is required." }
+        require(routeRevision > 0) { "routeRevision must be positive." }
+        require(hubId != UUID(0, 0)) { "hubId is required." }
+
+        val hub = hubs.findById(hubId).orElseThrow {
+            NotFoundException("hub_not_found", "Hub was not found.")
+        }
+        val routeReservations = reservations.findAllByShipmentIdAndRouteRevisionOrderByLegSequenceAsc(
+            shipmentId,
+            routeRevision,
+        ).filter { it.status != LaneCapacityReservationStatus.RELEASED }
+        val routeLanes = if (routeReservations.isEmpty()) {
+            emptyList()
+        } else {
+            lanes.findAllById(routeReservations.map { it.laneId }.distinct())
+        }
+
+        return ShipmentOperationalHubSnapshot(
+            hubId = hub.id,
+            hubCode = hub.code,
+            hubName = hub.name,
+            active = hub.status == HubStatus.ACTIVE,
+            onReservedRoute = routeLanes.any { lane -> lane.fromHubId == hub.id || lane.toHubId == hub.id },
         )
     }
 

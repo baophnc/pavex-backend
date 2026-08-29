@@ -49,3 +49,11 @@ data class ReleaseShipmentNetworkRequest(
     val actorUserId: UUID,
     val reason: String? = null,
 )
+
+data class ShipmentOperationalHubSnapshot(
+    val hubId: UUID,
+    val hubCode: String,
+    val hubName: String,
+    val active: Boolean,
+    val onReservedRoute: Boolean,
+)

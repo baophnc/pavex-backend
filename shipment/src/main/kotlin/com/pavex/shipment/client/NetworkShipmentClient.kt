@@ -3,6 +3,7 @@ package com.pavex.shipment.client
 import com.pavex.contracts.network.ReleaseShipmentNetworkRequest
 import com.pavex.contracts.network.ReserveShipmentNetworkRequest
 import com.pavex.contracts.network.ShipmentNetworkReservationSnapshot
+import com.pavex.contracts.network.ShipmentOperationalHubSnapshot
 import com.pavex.shipment.exception.InvalidShipmentRequestException
 import com.pavex.shipment.exception.ShipmentUnavailableException
 import com.pavex.shipment.exception.UnprocessableShipmentException
@@ -78,6 +79,36 @@ class NetworkShipmentClient(
                 "Network capacity release is temporarily unavailable. Retry the cancellation request.",
             )
         }
+    }
+
+    fun resolveOperationalHub(
+        shipmentId: UUID,
+        routeRevision: Int,
+        hubId: UUID,
+    ): ShipmentOperationalHubSnapshot {
+        val response = try {
+            client.get()
+                .uri(
+                    "/internal/v1/network/shipments/routes/{shipmentId}/revisions/{routeRevision}/hubs/{hubId}",
+                    shipmentId,
+                    routeRevision,
+                    hubId,
+                )
+                .header(HttpHeaders.AUTHORIZATION, "Bearer ${serviceJwtIssuer.issueForNetwork()}")
+                .retrieve()
+                .body(ShipmentOperationalHubSnapshot::class.java)
+        } catch (_: HttpClientErrorException.NotFound) {
+            throw InvalidShipmentRequestException("hub_not_found", "The scan hub does not exist in Network.")
+        } catch (_: HttpClientErrorException.BadRequest) {
+            throw InvalidShipmentRequestException("invalid_scan_hub", "The scan hub request is invalid.")
+        } catch (_: HttpClientErrorException.Unauthorized) {
+            throw unavailable("network_authentication_failed", "Shipment could not authenticate with Network.")
+        } catch (_: HttpClientErrorException.Forbidden) {
+            throw unavailable("network_authorization_failed", "Shipment is not authorized to resolve Network hubs.")
+        } catch (_: RestClientException) {
+            throw unavailable("network_unavailable", "Network hub validation is temporarily unavailable. Please try again.")
+        }
+        return response ?: throw unavailable("network_invalid_response", "Network returned an empty hub response.")
     }
 
     fun releaseBestEffort(shipmentId: UUID, routeRevision: Int, actorUserId: UUID, reason: String) {

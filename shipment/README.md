@@ -2,9 +2,9 @@
 
 Shipment owns the durable shipment aggregate after a customer selects a Pricing quote. The service keeps internal UUIDs for relational integrity while exposing a stable PAVEX shipment code as the human-facing identifier.
 
-## Patch 03 boundary
+## Patch 04 boundary
 
-Patch 01 established the aggregate and persistence foundation. Patch 02 added the first end-to-end write path: `POST /api/v1/shipments`. Patch 03 completes the first customer-facing lifecycle slice with owned shipment queries, pre-pickup cancellation, and public shipment/parcel tracking.
+Patch 01 established the aggregate and persistence foundation. Patch 02 added the first end-to-end write path: `POST /api/v1/shipments`. Patch 03 added owned shipment queries, pre-pickup cancellation, and public tracking. Patch 04 adds the first operational movement slice: authenticated parcel scans backed by Network hub/route validation and parcel/shipment status transitions.
 
 Patch 03 adds:
 
@@ -15,6 +15,19 @@ Patch 03 adds:
 - customer-visible timeline filtering,
 - cancellation outbox emission and retry-safe Network capacity release,
 - public API contracts that keep internal UUIDs out of normal UI responses.
+
+Patch 04 adds:
+
+- `POST /api/v1/parcel-scans` with `scans.create`,
+- active-hub validation through Shipment -> Network service JWT,
+- reserved-route membership validation for in-transit/return scans,
+- the v1 parcel status transition graph from the original Shipments module,
+- automatic aggregate `ShipmentStatus` recalculation including partial delivery,
+- customer-visible shipment timeline events for accepted scans,
+- a `shipment.parcel-scanned` outbox event for downstream consumers,
+- optimistic-lock conflict handling for concurrent scanner activity.
+
+The original C# scan handler also checks Operations hub assignments. The current Kotlin repository has no Operations service/module in the Maven reactor, so Patch 04 intentionally stops at `scans.create` authorization plus Network hub/route validation instead of inventing an unavailable cross-service contract.
 
 The service now contains:
 

@@ -256,7 +256,7 @@ spring:
             - id: shipment-api
               uri: lb://shipment-service
               predicates:
-                - Path=/api/v1/shipments/**,/api/v1/tracking/**,/api/v1/admin/shipments/**
+                - Path=/api/v1/shipments/**,/api/v1/tracking/**,/api/v1/parcel-scans/**,/api/v1/admin/shipments/**
               filters:
                 - name: RequestRateLimiter
                   args:
