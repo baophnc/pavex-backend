@@ -34,6 +34,9 @@ export NETWORK_DB_PASSWORD="pavex"
 export PRICING_DB_URL="jdbc:postgresql://localhost:5437/pavex_pricing"
 export PRICING_DB_USERNAME="pavex"
 export PRICING_DB_PASSWORD="pavex"
+export SHIPMENT_DB_URL="jdbc:postgresql://localhost:5438/pavex_shipments"
+export SHIPMENT_DB_USERNAME="pavex"
+export SHIPMENT_DB_PASSWORD="pavex"
 export NETWORK_DEMO_SEED_ENABLED="${NETWORK_DEMO_SEED_ENABLED:-true}"
 export PRICING_DEMO_SEED_ENABLED="${PRICING_DEMO_SEED_ENABLED:-true}"
 export JWT_ISSUER="http://localhost:8081"
@@ -184,6 +187,7 @@ start_app auth-service auth/target/auth-service-0.0.1-SNAPSHOT.jar http://localh
 start_app partners-service partners/target/partners-service-0.0.1-SNAPSHOT.jar http://localhost:8083/actuator/health
 start_app network-service network/target/network-service-0.0.1-SNAPSHOT.jar http://localhost:8085/actuator/health
 start_app pricing-service pricing/target/pricing-service-0.0.1-SNAPSHOT.jar http://localhost:8086/actuator/health
+start_app shipment-service shipment/target/shipment-service-0.0.1-SNAPSHOT.jar http://localhost:8084/actuator/health
 start_app api-gateway platform/api-gateway/target/api-gateway-0.0.1-SNAPSHOT.jar http://localhost:8080/actuator/health
 
 trap - ERR

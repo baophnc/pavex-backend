@@ -48,6 +48,7 @@
         <module>partners</module>
         <module>network</module>
         <module>pricing</module>
+        <module>shipment</module>
         <module>platform/discovery-server</module>
         <module>platform/api-gateway</module>
     </modules>
