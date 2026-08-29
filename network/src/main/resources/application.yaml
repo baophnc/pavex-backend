@@ -25,6 +25,10 @@ security:
   jwt:
     issuer: ${JWT_ISSUER:http://localhost:8081}
     public-key: ${JWT_PUBLIC_KEY:file:./auth/.keys/public.pem}
+  trusted-services:
+    pricing:
+      issuer: ${PRICING_SERVICE_JWT_ISSUER:http://localhost:8086}
+      public-key: ${PRICING_SERVICE_JWT_PUBLIC_KEY:file:./pricing/.keys/public.pem}
 
 network:
   partners:

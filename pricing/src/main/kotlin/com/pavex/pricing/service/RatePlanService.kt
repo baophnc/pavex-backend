@@ -31,7 +31,10 @@ class RatePlanService(
     fun get(id: UUID): RatePlanResponse = RatePlanResponse.from(find(id))
 
     @Transactional(readOnly = true)
-    fun current(at: Instant): RatePlanResponse {
+    fun current(at: Instant): RatePlanResponse = RatePlanResponse.from(currentEntity(at))
+
+    @Transactional(readOnly = true)
+    fun currentEntity(at: Instant): RatePlan {
         val matches = ratePlans.findActiveAt(RatePlanStatus.ACTIVE, at)
         if (matches.isEmpty()) {
             throw NotFoundException("active_rate_plan_not_found", "No active rate plan covers the requested time.")
@@ -39,7 +42,7 @@ class RatePlanService(
         if (matches.size > 1) {
             throw ConflictException("multiple_active_rate_plans", "More than one active rate plan covers the requested time.")
         }
-        return RatePlanResponse.from(matches.single())
+        return matches.single()
     }
 
     @Transactional

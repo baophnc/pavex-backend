@@ -3,6 +3,7 @@ package com.pavex.network.config
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
+import org.springframework.core.annotation.Order
 import org.springframework.core.convert.converter.Converter
 import org.springframework.http.HttpMethod
 import org.springframework.security.authentication.AbstractAuthenticationToken
@@ -19,7 +20,26 @@ import org.springframework.security.web.SecurityFilterChain
 @EnableMethodSecurity
 class SecurityConfig {
     @Bean
-    fun securityFilterChain(
+    @Order(1)
+    fun internalSecurityFilterChain(
+        http: HttpSecurity,
+        @Qualifier("pricingServiceJwtDecoder") pricingServiceJwtDecoder: JwtDecoder,
+    ): SecurityFilterChain =
+        http
+            .securityMatcher("/internal/v1/network/**")
+            .csrf { it.disable() }
+            .sessionManagement { it.sessionCreationPolicy(SessionCreationPolicy.STATELESS) }
+            .authorizeHttpRequests {
+                it.anyRequest().hasAuthority("SCOPE_network.pricing.resolve")
+            }
+            .oauth2ResourceServer { resourceServer ->
+                resourceServer.jwt { jwt -> jwt.decoder(pricingServiceJwtDecoder) }
+            }
+            .build()
+
+    @Bean
+    @Order(2)
+    fun apiSecurityFilterChain(
         http: HttpSecurity,
         @Qualifier("userJwtDecoder") jwtDecoder: JwtDecoder,
     ): SecurityFilterChain =

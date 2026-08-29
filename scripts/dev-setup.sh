@@ -7,6 +7,7 @@ local_dir="$repo_dir/.local"
 auth_key_dir="$repo_dir/auth/.keys"
 identity_key_dir="$repo_dir/identity/.keys"
 partners_key_dir="$repo_dir/partners/.keys"
+pricing_key_dir="$repo_dir/pricing/.keys"
 env_file="$local_dir/dev.env"
 
 command -v openssl >/dev/null 2>&1 || {
@@ -14,7 +15,7 @@ command -v openssl >/dev/null 2>&1 || {
   exit 1
 }
 
-mkdir -p "$local_dir/logs" "$local_dir/pids" "$auth_key_dir" "$identity_key_dir" "$partners_key_dir"
+mkdir -p "$local_dir/logs" "$local_dir/pids" "$auth_key_dir" "$identity_key_dir" "$partners_key_dir" "$pricing_key_dir"
 
 ensure_rsa_key_pair() {
   key_dir="$1"
@@ -43,6 +44,9 @@ ensure_rsa_key_pair "$identity_key_dir"
 
 # Partners owns another key pair for narrowly scoped Partners -> Identity JWTs.
 ensure_rsa_key_pair "$partners_key_dir"
+
+# Pricing signs narrowly scoped Pricing -> Network coverage-resolution JWTs.
+ensure_rsa_key_pair "$pricing_key_dir"
 
 touch "$env_file"
 chmod 600 "$env_file"

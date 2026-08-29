@@ -1,9 +1,9 @@
 # Pavex Pricing Service
 
-Pricing owns versioned rate plans and rate rules. It does not own Network topology,
+Pricing owns versioned rate plans and public shipping quotes. It does not own Network topology,
 Shipment routing, capacity reservations, invoicing or payment collection.
 
-Patch 01 establishes only the rate catalog foundation:
+## Patch 01 foundation
 
 - PostgreSQL schema `pricing` in database `pavex_pricing`.
 - `RatePlan` lifecycle model (`DRAFT`, `ACTIVE`, `RETIRED`).
@@ -14,33 +14,61 @@ Patch 01 establishes only the rate catalog foundation:
 - Weight/dimension/rate math uses `BigDecimal`-backed numeric columns.
 - Local-only demo catalog when `pricing.seed.demo.enabled=true`.
 
-The demo values are development data, not a production tariff. Patch 02 will add
-Network location resolution and the public quote engine. Patch 03 will add the
-activation/retirement workflow, Shipment-facing quote contract, audit and
-hardening.
+## Patch 02 quote engine
 
-## Local run
+`POST /api/v1/pricing/quotes` is public and keeps compatibility with the existing customer portal.
+A request may send the legacy top-level parcel fields or a `parcels` array; a non-empty array wins.
+The response still exposes `Local|Regional|National` and `Standard|Express`, while Pricing stores the
+clearer internal `SAME_SERVICE_AREA|SAME_REGION|CROSS_REGION` model.
 
-Start the database:
+Quote creation:
+
+1. Selects the one active `RatePlan` for the current time.
+2. Validates 1-20 parcels, COD, declared value and configured weight/dimension limits.
+3. Resolves both locations through Network over an authenticated internal service call.
+4. Computes actual, volumetric and chargeable weight. Chargeable weight rounds each parcel up to 0.5 kg.
+5. Calculates Standard and Express options from the active rate rules.
+6. Applies remote/island, COD and insurance charges, then rounds the final VND total up to 1,000 dong.
+7. Persists one normalized quote request, its parcels once, and two quote options.
+
+Pricing deliberately does not ask Network for a route or live capacity during quoting. Route planning
+and capacity reservation remain Shipment concerns so public quote availability does not flap with a
+single departure's capacity.
+
+### Internal Network contract
+
+`platform-contracts` now carries the narrow location-resolution wire contract. Pricing signs a
+short-lived RSA service JWT with:
+
+- `sub=pricing-service`
+- `aud=network-service`
+- `scope=network.pricing.resolve`
+
+Network trusts only Pricing's public key on `/internal/v1/network/**`. Run `./scripts/dev-setup.sh`
+after applying Patch 02 so `pricing/.keys/private.pem` and `pricing/.keys/public.pem` exist locally.
+Never commit these keys.
+
+The demo values are development data, not a production tariff. Patch 03 will add the complete
+activation/retirement workflow, Shipment-facing quote contract, audit and production hardening.
+
+## Local stack
+
+The easiest way to exercise quote creation is the full local stack because Network also validates
+locations against Partners:
 
 ```bash
-docker compose up -d pricing-db
+./scripts/dev-up.sh
 ```
 
-Run the service from the repository root so the default JWT key path resolves:
+Then run:
 
 ```bash
-SPRING_PROFILES_ACTIVE=local ./mvnw -pl pricing spring-boot:run
-```
-
-If Maven changes the working directory on your machine, use an absolute key path:
-
-```bash
-SPRING_PROFILES_ACTIVE=local \
-JWT_PUBLIC_KEY="file:$PWD/auth/.keys/public.pem" \
-./mvnw -pl pricing spring-boot:run
+./scripts/smoke-pricing-foundation.sh
+./scripts/smoke-pricing-quotes.sh
 ```
 
 Service: `http://localhost:8086`
+
+Gateway API: `http://localhost:8080/api/v1/pricing/quotes`
 
 Gateway OpenAPI: `http://localhost:8080/openapi/pricing`

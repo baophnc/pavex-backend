@@ -45,6 +45,9 @@ export IDENTITY_SERVICE_JWT_PUBLIC_KEY="file:$repo_dir/identity/.keys/public.pem
 export PARTNERS_SERVICE_JWT_ISSUER="http://localhost:8083"
 export PARTNERS_SERVICE_JWT_PRIVATE_KEY="file:$repo_dir/partners/.keys/private.pem"
 export PARTNERS_SERVICE_JWT_PUBLIC_KEY="file:$repo_dir/partners/.keys/public.pem"
+export PRICING_SERVICE_JWT_ISSUER="http://localhost:8086"
+export PRICING_SERVICE_JWT_PRIVATE_KEY="file:$repo_dir/pricing/.keys/private.pem"
+export PRICING_SERVICE_JWT_PUBLIC_KEY="file:$repo_dir/pricing/.keys/public.pem"
 export EUREKA_DEFAULT_ZONE="http://localhost:8761/eureka/"
 export EUREKA_REGISTRY_FETCH_INTERVAL_SECONDS="5"
 # Eureka client registration is asynchronous. Keep the local initial

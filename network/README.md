@@ -143,3 +143,10 @@ With `network.seed.demo.enabled=true`, the geography seed is followed by an oper
 The seed intentionally leaves capacity reservations empty. Reservations should be created by Shipment integration or the capacity API so the Capacity UI reflects real reservation lifecycle behavior.
 
 Run `./scripts/smoke-network-demo-transport.sh` after starting the local profile to verify the seeded graph, schedules and route templates.
+
+## Pricing location resolution
+
+Pricing does not import Network domain classes. It calls `POST /internal/v1/network/locations/resolve`
+with the shared `platform-contracts` DTO and a short-lived Pricing service JWT. Network validates the
+Pricing issuer, `sub=pricing-service`, `aud=network-service`, `typ=service` and the exact
+`network.pricing.resolve` scope before resolving coverage.

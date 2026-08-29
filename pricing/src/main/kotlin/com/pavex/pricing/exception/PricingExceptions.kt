@@ -17,4 +17,10 @@ class ConflictException(code: String, message: String) :
 class InvalidPricingRequestException(code: String, message: String) :
     PricingApiException(HttpStatus.BAD_REQUEST, code, message)
 
+class UnprocessablePricingRequestException(code: String, message: String) :
+    PricingApiException(HttpStatus.UNPROCESSABLE_ENTITY, code, message)
+
+class PricingUnavailableException(code: String, message: String) :
+    PricingApiException(HttpStatus.SERVICE_UNAVAILABLE, code, message)
+
 data class ApiErrorResponse(val code: String, val message: String)

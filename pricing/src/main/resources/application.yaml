@@ -25,8 +25,15 @@ security:
   jwt:
     issuer: ${JWT_ISSUER:http://localhost:8081}
     public-key: ${JWT_PUBLIC_KEY:file:./auth/.keys/public.pem}
+  service-jwt:
+    issuer: ${PRICING_SERVICE_JWT_ISSUER:http://localhost:8086}
+    ttl: ${SERVICE_JWT_TTL:PT1M}
+    private-key: ${PRICING_SERVICE_JWT_PRIVATE_KEY:file:./pricing/.keys/private.pem}
+    public-key: ${PRICING_SERVICE_JWT_PUBLIC_KEY:file:./pricing/.keys/public.pem}
 
 pricing:
+  network:
+    service-url: ${NETWORK_SERVICE_URL:http://network-service}
   seed:
     demo:
       enabled: ${PRICING_DEMO_SEED_ENABLED:false}
