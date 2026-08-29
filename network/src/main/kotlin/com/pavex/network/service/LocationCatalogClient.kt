@@ -2,8 +2,8 @@ package com.pavex.network.service
 
 import com.pavex.network.exception.InvalidNetworkRequestException
 import com.pavex.network.exception.LocationCatalogUnavailableException
+import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.beans.factory.annotation.Value
-import org.springframework.cloud.client.loadbalancer.LoadBalanced
 import org.springframework.stereotype.Component
 import org.springframework.web.client.HttpClientErrorException
 import org.springframework.web.client.RestClient
@@ -11,8 +11,11 @@ import org.springframework.web.client.RestClientException
 
 @Component
 class LocationCatalogClient(
-    @LoadBalanced builder: RestClient.Builder,
-    @Value("\${network.partners.service-url:http://partners-service}") serviceUrl: String,
+    @Qualifier("networkLoadBalancedRestClientBuilder")
+    builder: RestClient.Builder,
+
+    @Value("\${network.partners.service-url:http://partners-service}")
+    serviceUrl: String,
 ) {
     private val client = builder.baseUrl(serviceUrl).build()
 

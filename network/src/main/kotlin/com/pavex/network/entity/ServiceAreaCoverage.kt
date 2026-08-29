@@ -44,9 +44,7 @@ class ServiceAreaCoverage(
         this.tier = tier
         updatedAt = Instant.now()
     }
-
-    fun setActive(active: Boolean) {
+    fun changeActiveStatus(active: Boolean) {
         isActive = active
-        updatedAt = Instant.now()
     }
 }

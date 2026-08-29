@@ -70,3 +70,34 @@ The service currently owns:
 Staff/employees, multiple owners, branches, bank accounts, wallets,
 commissions, billing, contracts, business document upload and merchant API keys
 remain outside this MVP.
+
+## Network demo location scope
+
+The canonical location catalog is seeded by Flyway `V3` for all current
+Vietnamese province-level and commune-level administrative units. Network demo
+seeds do **not** create a second copy of that data. They reference the Partners
+catalog by `provinceCode` and `wardCode`.
+
+The demo topology is intentionally based on three municipality codes that
+represent the North, Central and South operational regions:
+
+| Province code | Municipality | Commune-level units | Breakdown |
+| --- | --- | ---: | --- |
+| `01` | Hà Nội | 126 | 51 phường, 75 xã |
+| `48` | Đà Nẵng | 94 | 23 phường, 70 xã, 1 đặc khu |
+| `79` | Hồ Chí Minh | 168 | 113 phường, 54 xã, 1 đặc khu |
+| | **Total** | **388** | |
+
+There is deliberately no canonical district entity in this boundary. The
+post-2025 catalog used by Partners is province/municipality → commune-level
+unit (`Phường`, `Xã`, `Đặc khu`). Historical district names can be presentation
+or reference metadata later, but Network routing and coverage must not depend
+on them.
+
+Flyway `V5__verify_network_demo_location_catalog.sql` fails fast when this
+388-unit contract is incomplete or inconsistent. After Partners is running,
+verify both the public API and PostgreSQL catalog with:
+
+```bash
+./scripts/smoke-partners-location-catalog.sh
+```

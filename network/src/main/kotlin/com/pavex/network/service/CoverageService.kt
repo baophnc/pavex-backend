@@ -76,7 +76,7 @@ class CoverageService(
             validate(coverage.serviceAreaId, coverage.provinceCode, coverage.wardCode, id, true)
         }
         val before = CoverageResponse.from(coverage)
-        coverage.setActive(request.active)
+        coverage.changeActiveStatus(request.active)
         val saved = coverages.save(coverage)
         audit.record(
             NetworkAuditEntityType.COVERAGE,
