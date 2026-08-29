@@ -36,6 +36,7 @@ class SecurityConfig {
                     .requestMatchers("/api/v1/tracking/**").permitAll()
                     .requestMatchers("/api/v1/shipments/**").authenticated()
                     .requestMatchers("/api/v1/parcel-scans/**").authenticated()
+                    .requestMatchers("/api/v1/deliveries/**").authenticated()
                     .requestMatchers("/api/v1/admin/shipments/**").authenticated()
                     .requestMatchers("/internal/**").denyAll()
                     .anyRequest().denyAll()

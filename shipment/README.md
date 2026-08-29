@@ -75,3 +75,12 @@ Smoke database foundation after the application has run Flyway:
 ```bash
 ./scripts/smoke-shipment-foundation.sh
 ```
+
+## Patch 05 - delivery attempts and proof
+
+- `POST /api/v1/deliveries/attempts` requires `deliveries.complete-own`.
+- The caller must be the courier currently holding the parcel (`custody_type=COURIER` and `custody_reference_id` equals the JWT subject), which provides real ownership enforcement while the Kotlin reactor still has no Operations service.
+- Successful delivery requires a proof method (`OTP`, `SIGNATURE`, or `PHOTO`), recipient name, and evidence reference.
+- Failed attempts require a failure reason and keep the parcel eligible for a later `OUT_FOR_DELIVERY` retry or return flow.
+- Attempts are durable, numbered per parcel, idempotent per parcel/key, and emit `shipment.delivery-attempt-recorded` through the Shipment outbox.
+- Terminal `DELIVERED`/`RETURNED` shipment states now close the shipment lifecycle and consume the reserved route locally. The original C# solution performs that closure through Operations integration; this local completion is the Kotlin fallback until Operations exists in the Maven reactor.

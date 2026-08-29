@@ -286,6 +286,28 @@ class Shipment(
             occurredAt = occurredAt,
             recordedAt = recordedAt,
         )
+        completeIfTerminal(actorUserId, recordedAt)
+    }
+
+    private fun completeIfTerminal(actorUserId: UUID, completedAt: Instant) {
+        if (status != ShipmentStatus.DELIVERED && status != ShipmentStatus.RETURNED) return
+        if (lifecycleStatus != ShipmentLifecycleStatus.ACTIVE) return
+
+        lifecycleStatus = ShipmentLifecycleStatus.COMPLETED
+        this.completedAt = completedAt
+        if (routingStatus != ShipmentRoutingStatus.RELEASED) {
+            routingStatus = ShipmentRoutingStatus.CONSUMED
+        }
+        updatedAt = completedAt
+        events += ShipmentEvent(
+            shipment = this,
+            status = status,
+            code = "shipment.completed",
+            description = "Shipment lifecycle completed.",
+            actorUserId = actorUserId,
+            occurredAt = completedAt,
+            recordedAt = completedAt,
+        )
     }
 
     fun recordParcelCheckpoint(
