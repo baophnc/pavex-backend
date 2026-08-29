@@ -1,8 +1,10 @@
 package com.pavex.pricing.config
 
 import org.springframework.beans.factory.annotation.Qualifier
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
+import org.springframework.core.annotation.Order
 import org.springframework.core.convert.converter.Converter
 import org.springframework.http.HttpMethod
 import org.springframework.security.authentication.AbstractAuthenticationToken
@@ -19,6 +21,24 @@ import org.springframework.security.web.SecurityFilterChain
 @EnableMethodSecurity
 class SecurityConfig {
     @Bean
+    @Order(1)
+    @ConditionalOnProperty(prefix = "pricing.shipment", name = ["integration-enabled"], havingValue = "true")
+    fun shipmentInternalSecurityFilterChain(
+        http: HttpSecurity,
+        @Qualifier("shipmentServiceJwtDecoder") jwtDecoder: JwtDecoder,
+    ): SecurityFilterChain =
+        http
+            .securityMatcher("/internal/v1/pricing/**")
+            .csrf { it.disable() }
+            .sessionManagement { it.sessionCreationPolicy(SessionCreationPolicy.STATELESS) }
+            .authorizeHttpRequests { it.anyRequest().authenticated() }
+            .oauth2ResourceServer { resourceServer ->
+                resourceServer.jwt { jwt -> jwt.decoder(jwtDecoder) }
+            }
+            .build()
+
+    @Bean
+    @Order(2)
     fun securityFilterChain(
         http: HttpSecurity,
         @Qualifier("userJwtDecoder") jwtDecoder: JwtDecoder,
@@ -35,6 +55,7 @@ class SecurityConfig {
                 ).permitAll()
                     .requestMatchers(HttpMethod.POST, "/api/v1/pricing/quotes").permitAll()
                     .requestMatchers("/api/v1/admin/pricing/**").authenticated()
+                    .requestMatchers("/internal/**").denyAll()
                     .anyRequest().denyAll()
             }
             .oauth2ResourceServer { resourceServer ->

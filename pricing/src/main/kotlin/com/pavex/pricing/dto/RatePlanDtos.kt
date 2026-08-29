@@ -216,3 +216,17 @@ data class RatePlanResponse(
         }
     }
 }
+
+data class CreateRatePlanRevisionRequest(
+    @field:Size(max = 200)
+    val name: String? = null,
+    val effectiveFrom: Instant? = null,
+    val effectiveTo: Instant? = null,
+    @field:Size(max = 500)
+    val reason: String? = null,
+)
+
+data class RatePlanLifecycleRequest(
+    @field:Size(max = 500)
+    val reason: String? = null,
+)

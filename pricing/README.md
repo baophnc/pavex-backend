@@ -48,7 +48,7 @@ Network trusts only Pricing's public key on `/internal/v1/network/**`. Run `./sc
 after applying Patch 02 so `pricing/.keys/private.pem` and `pricing/.keys/public.pem` exist locally.
 Never commit these keys.
 
-The demo values are development data, not a production tariff. Patch 03 will add the complete
+The demo values are development data, not a production tariff. Patch 03 adds the complete
 activation/retirement workflow, Shipment-facing quote contract, audit and production hardening.
 
 ## Local stack
@@ -72,3 +72,28 @@ Service: `http://localhost:8086`
 Gateway API: `http://localhost:8080/api/v1/pricing/quotes`
 
 Gateway OpenAPI: `http://localhost:8080/openapi/pricing`
+
+## Patch 03 lifecycle, audit and Shipment contract
+
+Patch 03 closes the Pricing backend before Shipment work begins:
+
+- Draft plans can be cloned into the next revision without changing active history.
+- Activation requires all six Standard/Express x pricing-zone rules and rejects overlapping active windows.
+- Active plans can be retired; active/retired plans remain immutable.
+- Every admin create/update/rule/lifecycle/delete mutation is written to `pricing.audit_logs` with actor, before/after JSON and optional reason.
+- `GET /api/v1/admin/pricing/audit` exposes paged audit history for Management.
+- `PricingQuoteSnapshot` in `platform-contracts` is the immutable Shipment-facing quote contract, including resolved locations, parcel metrics, price breakdown, service level and expiry.
+- `GET /api/v1/admin/pricing/quotes/{quoteId}` lets support/admin inspect the same snapshot even after expiry.
+- `GET /internal/v1/pricing/quotes/{quoteId}` is reserved for Shipment and rejects expired quotes.
+
+The Shipment endpoint is disabled until Shipment exists. Later enable it with
+`PRICING_SHIPMENT_INTEGRATION_ENABLED=true` and provide Shipment's RSA public key via
+`SHIPMENT_SERVICE_JWT_PUBLIC_KEY`. The trusted token must use `sub=shipment-service`,
+`aud=pricing-service`, `typ=service` and `scope=pricing.quote.read`. This keeps Pricing runnable today
+without creating or sharing Shipment keys prematurely.
+
+Smoke the Patch 03 storage invariants after Pricing starts:
+
+```bash
+./scripts/smoke-pricing-hardening.sh
+```

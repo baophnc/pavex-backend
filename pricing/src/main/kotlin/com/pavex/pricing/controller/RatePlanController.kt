@@ -1,6 +1,8 @@
 package com.pavex.pricing.controller
 
 import com.pavex.pricing.dto.CreateRatePlanRequest
+import com.pavex.pricing.dto.CreateRatePlanRevisionRequest
+import com.pavex.pricing.dto.RatePlanLifecycleRequest
 import com.pavex.pricing.dto.RatePlanResponse
 import com.pavex.pricing.dto.UpdateRatePlanRequest
 import com.pavex.pricing.dto.UpsertRateRuleRequest
@@ -49,14 +51,24 @@ class RatePlanController(
     fun create(
         @Valid @RequestBody request: CreateRatePlanRequest,
         @AuthenticationPrincipal jwt: Jwt,
-    ): RatePlanResponse = service.create(request, UUID.fromString(jwt.subject))
+    ): RatePlanResponse = service.create(request, actor(jwt))
+
+    @PostMapping("/{id}/revisions")
+    @ResponseStatus(HttpStatus.CREATED)
+    @PreAuthorize("hasAuthority('pricing.manage')")
+    fun createRevision(
+        @PathVariable id: UUID,
+        @Valid @RequestBody request: CreateRatePlanRevisionRequest,
+        @AuthenticationPrincipal jwt: Jwt,
+    ): RatePlanResponse = service.createRevision(id, request, actor(jwt))
 
     @PutMapping("/{id}")
     @PreAuthorize("hasAuthority('pricing.manage')")
     fun update(
         @PathVariable id: UUID,
         @Valid @RequestBody request: UpdateRatePlanRequest,
-    ): RatePlanResponse = service.update(id, request)
+        @AuthenticationPrincipal jwt: Jwt,
+    ): RatePlanResponse = service.update(id, request, actor(jwt))
 
     @PutMapping("/{id}/rules/{serviceLevel}/{pricingZone}")
     @PreAuthorize("hasAuthority('pricing.manage')")
@@ -65,7 +77,8 @@ class RatePlanController(
         @PathVariable serviceLevel: ServiceLevel,
         @PathVariable pricingZone: PricingZone,
         @Valid @RequestBody request: UpsertRateRuleRequest,
-    ): RatePlanResponse = service.upsertRule(id, serviceLevel, pricingZone, request)
+        @AuthenticationPrincipal jwt: Jwt,
+    ): RatePlanResponse = service.upsertRule(id, serviceLevel, pricingZone, request, actor(jwt))
 
     @DeleteMapping("/{id}/rules/{serviceLevel}/{pricingZone}")
     @PreAuthorize("hasAuthority('pricing.manage')")
@@ -73,10 +86,37 @@ class RatePlanController(
         @PathVariable id: UUID,
         @PathVariable serviceLevel: ServiceLevel,
         @PathVariable pricingZone: PricingZone,
-    ): RatePlanResponse = service.deleteRule(id, serviceLevel, pricingZone)
+        @AuthenticationPrincipal jwt: Jwt,
+    ): RatePlanResponse = service.deleteRule(id, serviceLevel, pricingZone, actor(jwt))
+
+    @PostMapping("/{id}/activate")
+    @PreAuthorize("hasAuthority('pricing.manage')")
+    fun activate(
+        @PathVariable id: UUID,
+        @Valid @RequestBody(required = false) request: RatePlanLifecycleRequest?,
+        @AuthenticationPrincipal jwt: Jwt,
+    ): RatePlanResponse = service.activate(id, actor(jwt), request?.reason)
+
+    @PostMapping("/{id}/retire")
+    @PreAuthorize("hasAuthority('pricing.manage')")
+    fun retire(
+        @PathVariable id: UUID,
+        @Valid @RequestBody(required = false) request: RatePlanLifecycleRequest?,
+        @AuthenticationPrincipal jwt: Jwt,
+    ): RatePlanResponse = service.retire(id, actor(jwt), request?.reason)
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @PreAuthorize("hasAuthority('pricing.manage')")
-    fun deleteDraft(@PathVariable id: UUID) = service.deleteDraft(id)
+    fun deleteDraft(
+        @PathVariable id: UUID,
+        @RequestParam(required = false) reason: String?,
+        @AuthenticationPrincipal jwt: Jwt,
+    ) = service.deleteDraft(id, actor(jwt), reason)
+
+    private fun actor(jwt: Jwt): UUID = try {
+        UUID.fromString(jwt.subject)
+    } catch (_: IllegalArgumentException) {
+        throw IllegalArgumentException("User JWT subject must be a UUID.")
+    }
 }

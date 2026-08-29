@@ -17,3 +17,7 @@ It is a plain Kotlin/JVM library, not a deployable service.
 `com.pavex.contracts.network.NetworkLocationResolution*` is the deliberately narrow internal wire
 contract used by Pricing to ask Network which service area, region, primary hub and coverage tier own
 a province/ward pair. It does not expose Network JPA entities, route topology or capacity data.
+
+## Pricing quote contract
+
+`com.pavex.contracts.pricing.PricingQuoteSnapshot` is the immutable cross-service snapshot consumed by Shipment. It intentionally carries quote, location, parcel and fee snapshots only; Pricing entities and repositories remain private to `pricing-service`.

@@ -180,6 +180,40 @@ class RatePlan(
         return removed
     }
 
+    fun activate(actorUserId: UUID, now: Instant) {
+        requireDraft()
+        if (effectiveFrom == null) effectiveFrom = now
+        if (effectiveTo != null && !effectiveTo!!.isAfter(requireNotNull(effectiveFrom))) {
+            throw ConflictException(
+                "invalid_effective_window",
+                "Effective-to must be later than effective-from before a rate plan can be activated.",
+            )
+        }
+        status = RatePlanStatus.ACTIVE
+        activatedBy = actorUserId
+        activatedAt = now
+        retiredBy = null
+        retiredAt = null
+        updatedAt = now
+    }
+
+    fun retire(actorUserId: UUID, now: Instant) {
+        if (status != RatePlanStatus.ACTIVE) {
+            throw ConflictException(
+                "rate_plan_not_active",
+                "Only an active rate plan can be retired.",
+            )
+        }
+        status = RatePlanStatus.RETIRED
+        val start = effectiveFrom
+        if (start != null && start.isBefore(now) && (effectiveTo == null || effectiveTo!!.isAfter(now))) {
+            effectiveTo = now
+        }
+        retiredBy = actorUserId
+        retiredAt = now
+        updatedAt = now
+    }
+
     fun requireDraft() {
         if (status != RatePlanStatus.DRAFT) {
             throw ConflictException(

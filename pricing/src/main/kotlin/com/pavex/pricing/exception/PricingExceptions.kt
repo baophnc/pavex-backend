@@ -23,4 +23,7 @@ class UnprocessablePricingRequestException(code: String, message: String) :
 class PricingUnavailableException(code: String, message: String) :
     PricingApiException(HttpStatus.SERVICE_UNAVAILABLE, code, message)
 
+class QuoteExpiredException(code: String, message: String) :
+    PricingApiException(HttpStatus.GONE, code, message)
+
 data class ApiErrorResponse(val code: String, val message: String)
