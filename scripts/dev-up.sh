@@ -28,6 +28,14 @@ export IDENTITY_DB_PASSWORD="pavex"
 export PARTNERS_DB_URL="jdbc:postgresql://localhost:5435/pavex_partners"
 export PARTNERS_DB_USERNAME="pavex"
 export PARTNERS_DB_PASSWORD="pavex"
+export NETWORK_DB_URL="jdbc:postgresql://localhost:5436/pavex_network"
+export NETWORK_DB_USERNAME="pavex"
+export NETWORK_DB_PASSWORD="pavex"
+export PRICING_DB_URL="jdbc:postgresql://localhost:5437/pavex_pricing"
+export PRICING_DB_USERNAME="pavex"
+export PRICING_DB_PASSWORD="pavex"
+export NETWORK_DEMO_SEED_ENABLED="${NETWORK_DEMO_SEED_ENABLED:-true}"
+export PRICING_DEMO_SEED_ENABLED="${PRICING_DEMO_SEED_ENABLED:-true}"
 export JWT_ISSUER="http://localhost:8081"
 export JWT_PRIVATE_KEY="file:$repo_dir/auth/.keys/private.pem"
 export JWT_PUBLIC_KEY="file:$repo_dir/auth/.keys/public.pem"
@@ -171,6 +179,8 @@ preflight_auth_identity_cutover
 
 start_app auth-service auth/target/auth-service-0.0.1-SNAPSHOT.jar http://localhost:8081/actuator/health
 start_app partners-service partners/target/partners-service-0.0.1-SNAPSHOT.jar http://localhost:8083/actuator/health
+start_app network-service network/target/network-service-0.0.1-SNAPSHOT.jar http://localhost:8085/actuator/health
+start_app pricing-service pricing/target/pricing-service-0.0.1-SNAPSHOT.jar http://localhost:8086/actuator/health
 start_app api-gateway platform/api-gateway/target/api-gateway-0.0.1-SNAPSHOT.jar http://localhost:8080/actuator/health
 
 trap - ERR

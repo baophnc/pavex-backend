@@ -1,0 +1,4 @@
+pricing:
+  seed:
+    demo:
+      enabled: true

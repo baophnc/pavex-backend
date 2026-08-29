@@ -10,7 +10,7 @@ Requirements: Java 21, Docker Desktop, `curl`, and OpenSSL.
 
 The command generates local-only JWT/outbox secrets, starts PostgreSQL, Redis,
 RabbitMQ and Mailpit, builds the reactor, then starts Eureka, Identity, Auth,
-Partners and the API Gateway. Runtime logs are written to `.local/logs/`.
+Partners, Network, Pricing and the API Gateway. Runtime logs are written to `.local/logs/`.
 
 For an existing pre-split Auth database, `dev-up.sh` intentionally starts
 Identity first and stops before Auth if the one-time RBAC cutover is still
@@ -23,6 +23,8 @@ Endpoints:
 - Auth: `http://localhost:8081`
 - Identity: `http://localhost:8082`
 - Partners: `http://localhost:8083`
+- Network: `http://localhost:8085`
+- Pricing: `http://localhost:8086`
 - Eureka: `http://localhost:8761`
 - Mailpit: `http://localhost:8025`
 - RabbitMQ management: `http://localhost:15672` (`pavex` / `pavex`)
@@ -62,13 +64,17 @@ Use the selector in the top bar to switch between:
 
 - `Auth API` - login, registration, password, token and session endpoints.
 - `Identity API` - users, profiles, roles and permissions.
-- `Partners API` - merchant, address and location APIs (foundation in Patch 01).
+- `Partners API` - merchant, address and location APIs.
+- `Network API` - logistics geography, topology, routing and capacity APIs.
+- `Pricing API` - versioned rate-plan catalog APIs (quote engine arrives in Pricing Patch 02).
 
 The aggregated OpenAPI JSON documents are also available through the Gateway:
 
 - `http://localhost:8080/openapi/auth`
 - `http://localhost:8080/openapi/identity`
 - `http://localhost:8080/openapi/partners`
+- `http://localhost:8080/openapi/network`
+- `http://localhost:8080/openapi/pricing`
 
 For protected operations, click **Authorize** and paste the access token returned by
 `POST /api/v1/auth/login` (paste the token value only; Swagger adds `Bearer`).
@@ -78,5 +84,5 @@ Set `PAVEX_PUBLIC_BASE_URL` when Swagger should execute requests against a non-l
 
 Swagger/OpenAPI is disabled by default with the `prod` profile. If a production
 deployment intentionally exposes documentation, enable `SPRINGDOC_API_DOCS_ENABLED`
-on Auth/Identity/Partners and both `SPRINGDOC_API_DOCS_ENABLED` and
+on Auth/Identity/Partners/Network/Pricing and both `SPRINGDOC_API_DOCS_ENABLED` and
 `SPRINGDOC_SWAGGER_UI_ENABLED` on the Gateway.

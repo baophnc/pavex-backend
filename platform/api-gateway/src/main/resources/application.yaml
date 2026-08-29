@@ -87,6 +87,14 @@ spring:
               filters:
                 - SetPath=/v3/api-docs
 
+            - id: pricing-openapi
+              order: -996
+              uri: lb://pricing-service
+              predicates:
+                - Path=/openapi/pricing
+              filters:
+                - SetPath=/v3/api-docs
+
             # /api/v1/auth/** is mostly owned by Auth, but the current-user
             # profile endpoints are Identity-owned. Give these exact routes a
             # lower order value so they win before the Auth wildcard route.
@@ -225,6 +233,18 @@ spring:
                     redis-rate-limiter.burstCapacity: ${GATEWAY_API_BURST_CAPACITY:60}
                     redis-rate-limiter.requestedTokens: 1
 
+            - id: pricing-api
+              uri: lb://pricing-service
+              predicates:
+                - Path=/api/v1/pricing/**,/api/v1/admin/pricing/**
+              filters:
+                - name: RequestRateLimiter
+                  args:
+                    key-resolver: "#{@clientIpKeyResolver}"
+                    redis-rate-limiter.replenishRate: ${GATEWAY_PRICING_REPLENISH_RATE:20}
+                    redis-rate-limiter.burstCapacity: ${GATEWAY_PRICING_BURST_CAPACITY:40}
+                    redis-rate-limiter.requestedTokens: 1
+
 springdoc:
   api-docs:
     enabled: ${SPRINGDOC_API_DOCS_ENABLED:true}
@@ -242,6 +262,8 @@ springdoc:
         url: /openapi/partners
       - name: Network API
         url: /openapi/network
+      - name: Pricing API
+        url: /openapi/pricing
     operations-sorter: method
     tags-sorter: alpha
     display-request-duration: true
