@@ -13,6 +13,7 @@ import java.util.UUID
 
 interface HubLaneRepository : JpaRepository<HubLane, UUID> {
     fun existsByCodeIgnoreCase(code: String): Boolean
+    fun findByCodeIgnoreCase(code: String): HubLane?
 
     @Query(
         """

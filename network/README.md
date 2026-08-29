@@ -130,3 +130,16 @@ After startup, verify the database with:
 ```bash
 ./scripts/smoke-network-demo-geography.sh
 ```
+
+## Demo transport operations seed
+
+With `network.seed.demo.enabled=true`, the geography seed is followed by an operational transport seed. It creates a deterministic, restart-safe demo network for the 37 local operating areas created by the geography seed:
+
+- 74 two-way feeder ROAD lanes between every local hub and its regional gateway;
+- 12 inter-gateway trunk lanes: AIR and ROAD in both directions for Hà Nội, Đà Nẵng and Hồ Chí Minh;
+- 252 active recurring schedules with per-departure capacity;
+- 18 active route templates: EXPRESS, STANDARD and ECONOMY for every ordered metro pair.
+
+The seed intentionally leaves capacity reservations empty. Reservations should be created by Shipment integration or the capacity API so the Capacity UI reflects real reservation lifecycle behavior.
+
+Run `./scripts/smoke-network-demo-transport.sh` after starting the local profile to verify the seeded graph, schedules and route templates.

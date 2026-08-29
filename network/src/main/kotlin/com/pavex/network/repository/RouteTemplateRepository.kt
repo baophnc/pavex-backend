@@ -11,6 +11,7 @@ import java.util.UUID
 
 interface RouteTemplateRepository : JpaRepository<RouteTemplate, UUID> {
     fun existsByCodeIgnoreCase(code: String): Boolean
+    fun findByCodeIgnoreCase(code: String): RouteTemplate?
 
     fun findAllByOriginHubIdAndDestinationHubIdAndStatusOrderByPriorityAscCodeAsc(
         originHubId: UUID,
