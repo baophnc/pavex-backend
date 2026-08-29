@@ -87,6 +87,13 @@ class Parcel(
     @Column(name = "updated_at", nullable = false)
     var updatedAt: Instant = Instant.now(),
 ) {
+    fun cancel(cancelledAt: Instant) {
+        require(status == ParcelStatus.AWAITING_PICKUP) { "Parcel can only be cancelled before pickup." }
+        status = ParcelStatus.CANCELLED
+        stage = ParcelStage.CANCELLED
+        updatedAt = cancelledAt
+    }
+
     companion object {
         fun create(
             shipment: Shipment,

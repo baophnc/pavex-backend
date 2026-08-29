@@ -2,9 +2,19 @@
 
 Shipment owns the durable shipment aggregate after a customer selects a Pricing quote. The service keeps internal UUIDs for relational integrity while exposing a stable PAVEX shipment code as the human-facing identifier.
 
-## Patch 02 boundary
+## Patch 03 boundary
 
-Patch 01 established the aggregate and persistence foundation. Patch 02 adds the first end-to-end write path: `POST /api/v1/shipments`. Creation now validates merchant eligibility through Partners, consumes an immutable Pricing quote, resolves canonical location names, reserves Network capacity, persists the shipment/timeline/outbox atomically, and releases Network capacity when local persistence fails.
+Patch 01 established the aggregate and persistence foundation. Patch 02 added the first end-to-end write path: `POST /api/v1/shipments`. Patch 03 completes the first customer-facing lifecycle slice with owned shipment queries, pre-pickup cancellation, and public shipment/parcel tracking.
+
+Patch 03 adds:
+
+- `GET /api/v1/shipments` with status filtering and opaque keyset cursor pagination,
+- `GET /api/v1/shipments/{trackingCode}` scoped to the authenticated creator,
+- `POST /api/v1/shipments/{trackingCode}/cancel` with `shipments.cancel-own`,
+- `GET /api/v1/tracking/{code}` for public shipment or parcel-code tracking,
+- customer-visible timeline filtering,
+- cancellation outbox emission and retry-safe Network capacity release,
+- public API contracts that keep internal UUIDs out of normal UI responses.
 
 The service now contains:
 

@@ -213,6 +213,40 @@ class Shipment(
         this.updatedAt = updatedAt
     }
 
+    fun cancel(reason: String, actorUserId: UUID, cancelledAt: Instant) {
+        require(lifecycleStatus == ShipmentLifecycleStatus.ACTIVE) { "Shipment lifecycle is already closed." }
+        require(parcels.all { it.status == ParcelStatus.AWAITING_PICKUP }) {
+            "A shipment can only be cancelled before pickup."
+        }
+        val normalizedReason = reason.trim()
+        require(normalizedReason.isNotEmpty() && normalizedReason.length <= 500) {
+            "Cancellation reason is required and must not exceed 500 characters."
+        }
+
+        parcels.forEach { it.cancel(cancelledAt) }
+        status = ShipmentStatus.CANCELLED
+        lifecycleStatus = ShipmentLifecycleStatus.CANCELLED
+        cancellationReason = normalizedReason
+        this.cancelledAt = cancelledAt
+        updatedAt = cancelledAt
+        events += ShipmentEvent(
+            shipment = this,
+            status = ShipmentStatus.CANCELLED,
+            code = "shipment.cancelled",
+            description = normalizedReason,
+            actorUserId = actorUserId,
+            locationName = sender.wardName,
+            occurredAt = cancelledAt,
+            recordedAt = cancelledAt,
+        )
+    }
+
+    fun markRouteReleased(releasedAt: Instant) {
+        if (routingStatus == ShipmentRoutingStatus.RELEASED) return
+        routingStatus = ShipmentRoutingStatus.RELEASED
+        updatedAt = releasedAt
+    }
+
     companion object {
         fun createFoundation(
             id: UUID,

@@ -33,6 +33,7 @@ class SecurityConfig {
                     "/actuator/health",
                     "/actuator/health/**",
                 ).permitAll()
+                    .requestMatchers("/api/v1/tracking/**").permitAll()
                     .requestMatchers("/api/v1/shipments/**").authenticated()
                     .requestMatchers("/api/v1/admin/shipments/**").authenticated()
                     .requestMatchers("/internal/**").denyAll()

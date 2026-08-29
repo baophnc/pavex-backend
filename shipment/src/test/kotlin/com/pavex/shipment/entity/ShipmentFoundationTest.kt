@@ -109,6 +109,60 @@ class ShipmentFoundationTest {
         assertEquals(BigDecimal("3.000"), shipment.reservedWeightKg)
     }
 
+    @Test
+    fun `shipment can only be cancelled before pickup`() {
+        val now = Instant.parse("2026-08-29T03:00:00Z")
+        val actor = UUID.randomUUID()
+        val shipment = Shipment.createFoundation(
+            id = UUID.randomUUID(),
+            trackingCode = "PAVEX2608290123456789",
+            merchantId = UUID.randomUUID(),
+            createdByUserId = actor,
+            idempotencyKey = "shipment-cancel-001",
+            requestFingerprint = "B".repeat(64),
+            merchantReference = null,
+            sender = ShipmentAddressSnapshot.create("A", "0901234567", "A", "48", "Đà Nẵng", "20410", "Hội An"),
+            recipient = ShipmentAddressSnapshot.create("B", "0912345678", "B", "79", "Hồ Chí Minh", "26740", "Sài Gòn"),
+            shippingFeePayer = ShippingFeePayer.SENDER,
+            price = ShipmentPriceSnapshot(
+                quoteId = UUID.randomUUID(),
+                quoteRequestId = UUID.randomUUID(),
+                ratePlanId = UUID.randomUUID(),
+                rateCode = "RATE",
+                rateRevision = 1,
+                rateVersion = "RATE-r1",
+                currency = "VND",
+                serviceLevel = ShipmentServiceLevel.STANDARD,
+                pricingZone = ShipmentPricingZone.CROSS_REGION,
+                baseFee = 10_000,
+                additionalWeightFee = 0,
+                areaSurcharge = 0,
+                codFee = 0,
+                insuranceFee = 0,
+                shippingFee = 10_000,
+                codAmount = 0,
+                declaredValue = 0,
+                estimatedMinDays = 1,
+                estimatedMaxDays = 2,
+                quoteExpiresAt = now.plusSeconds(1800),
+            ),
+            origin = ShipmentNetworkPointSnapshot(UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(), "ORI", "Origin", ShipmentCoverageTier.STANDARD),
+            destination = ShipmentNetworkPointSnapshot(UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(), "DST", "Destination", ShipmentCoverageTier.STANDARD),
+            parcelDrafts = listOf(parcel("Box", BigDecimal("1.000"))),
+            note = null,
+            createdAt = now,
+        )
+
+        shipment.cancel("Customer changed plan", actor, now.plusSeconds(60))
+
+        assertEquals(ShipmentStatus.CANCELLED, shipment.status)
+        assertEquals(ShipmentLifecycleStatus.CANCELLED, shipment.lifecycleStatus)
+        assertEquals(ParcelStatus.CANCELLED, shipment.parcels.single().status)
+        assertEquals(ParcelStage.CANCELLED, shipment.parcels.single().stage)
+        assertEquals("shipment.cancelled", shipment.events.last().code)
+        assertEquals("Customer changed plan", shipment.cancellationReason)
+    }
+
     private fun parcel(description: String, weight: BigDecimal) = ParcelDraft(
         description = description,
         quantity = 1,

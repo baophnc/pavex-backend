@@ -51,6 +51,35 @@ class NetworkShipmentClient(
         return response ?: throw unavailable("network_invalid_response", "Network returned an empty reservation response.")
     }
 
+    fun release(shipmentId: UUID, routeRevision: Int, actorUserId: UUID, reason: String) {
+        try {
+            client.post()
+                .uri(
+                    "/internal/v1/network/shipments/capacity/reservations/{shipmentId}/revisions/{routeRevision}/release",
+                    shipmentId,
+                    routeRevision,
+                )
+                .header(HttpHeaders.AUTHORIZATION, "Bearer ${serviceJwtIssuer.issueForNetwork()}")
+                .body(ReleaseShipmentNetworkRequest(actorUserId, reason))
+                .retrieve()
+                .toBodilessEntity()
+        } catch (_: HttpClientErrorException.Unauthorized) {
+            throw unavailable("network_authentication_failed", "Shipment could not authenticate with Network.")
+        } catch (_: HttpClientErrorException.Forbidden) {
+            throw unavailable("network_authorization_failed", "Shipment is not authorized to release network capacity.")
+        } catch (_: HttpClientErrorException.NotFound) {
+            throw unavailable(
+                "network_reservation_missing",
+                "The shipment capacity reservation could not be found in Network.",
+            )
+        } catch (_: RestClientException) {
+            throw unavailable(
+                "network_unavailable",
+                "Network capacity release is temporarily unavailable. Retry the cancellation request.",
+            )
+        }
+    }
+
     fun releaseBestEffort(shipmentId: UUID, routeRevision: Int, actorUserId: UUID, reason: String) {
         try {
             client.post()
