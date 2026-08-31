@@ -1,6 +1,7 @@
 package com.pavex.operations.service
 
 import com.pavex.operations.repository.HubMembershipRepository
+import com.pavex.operations.repository.OperationalAssignmentRepository
 import com.pavex.operations.repository.WorkforceMemberRepository
 import org.springframework.security.access.AccessDeniedException
 import org.springframework.security.core.Authentication
@@ -18,6 +19,7 @@ data class AssignmentAccessScope(
 class AssignmentAccessScopeService(
     private val members: WorkforceMemberRepository,
     private val memberships: HubMembershipRepository,
+    private val assignments: OperationalAssignmentRepository,
 ) {
     fun resolve(authentication: Authentication): AssignmentAccessScope {
         val authorities = authentication.authorities.map { it.authority }.toSet()
@@ -30,6 +32,12 @@ class AssignmentAccessScopeService(
             ?: return AssignmentAccessScope(false, emptySet())
         val hubIds = memberships.findAllByWorkforceMemberIdAndIsActiveTrue(member.id).map { it.hubId }.toSet()
         return AssignmentAccessScope(false, hubIds)
+    }
+
+    fun canAccessAssignment(scope: AssignmentAccessScope, assignmentId: UUID): Boolean {
+        val result = assignments.findById(assignmentId)
+        if (result.isEmpty) return false
+        return scope.canAccessHub(result.get().hubId)
     }
 
     companion object {

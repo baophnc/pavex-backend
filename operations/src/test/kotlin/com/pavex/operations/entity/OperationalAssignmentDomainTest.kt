@@ -25,8 +25,10 @@ class OperationalAssignmentDomainTest {
             now = now,
         )
 
-        assignment.assign(memberId, null, now.plusSeconds(1))
+        val assignmentActor = UUID.randomUUID()
+        assignment.assign(memberId, assignmentActor, now.plusSeconds(1))
         assertEquals(OperationalAssignmentStatus.ASSIGNED, assignment.status)
+        assertEquals(assignmentActor, assignment.lastActorUserId)
         assignment.accept(memberId, now.plusSeconds(2))
         assignment.start(memberId, now.plusSeconds(3))
         assignment.complete(memberId, "Delivered to operations handoff.", now.plusSeconds(4))

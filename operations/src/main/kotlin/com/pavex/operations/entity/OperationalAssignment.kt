@@ -70,6 +70,8 @@ class OperationalAssignment(
     var cancelledAt: Instant? = null,
     @Column(name = "resolution_note", length = 500)
     var resolutionNote: String? = null,
+    @Column(name = "last_actor_user_id")
+    var lastActorUserId: UUID? = null,
     @Column(name = "created_at", nullable = false)
     var createdAt: Instant = Instant.now(),
     @Column(name = "updated_at", nullable = false)
@@ -83,6 +85,7 @@ class OperationalAssignment(
         if (status == OperationalAssignmentStatus.ASSIGNED && assigneeWorkforceMemberId == memberId) return false
         assigneeWorkforceMemberId = memberId
         assignedByUserId = actorUserId
+        lastActorUserId = actorUserId
         assignedAt = now
         acceptedAt = null
         startedAt = null

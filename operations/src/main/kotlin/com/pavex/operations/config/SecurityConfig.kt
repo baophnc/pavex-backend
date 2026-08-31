@@ -51,6 +51,8 @@ class SecurityConfig {
                     "/actuator/health",
                     "/actuator/health/**",
                 ).permitAll()
+                    .requestMatchers("/actuator/info", "/actuator/metrics", "/actuator/metrics/**")
+                    .hasAuthority("operations.assignments.manage")
                     .requestMatchers("/api/v1/operations/**").authenticated()
                     .requestMatchers("/api/v1/admin/operations/**").authenticated()
                     .requestMatchers("/internal/**").denyAll()

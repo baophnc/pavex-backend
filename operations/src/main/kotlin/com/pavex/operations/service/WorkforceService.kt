@@ -175,7 +175,10 @@ class WorkforceService(
             }
             activeAssignments
                 .filter { it.status == OperationalAssignmentStatus.ASSIGNED || it.status == OperationalAssignmentStatus.ACCEPTED }
-                .forEach { it.requeue(now) }
+                .forEach { assignment ->
+                    assignment.lastActorUserId = actorUserId
+                    assignment.requeue(now)
+                }
 
             val rosterRows = shiftAssignments.findAllByWorkforceMemberIdAndStatusIn(
                 member.id,
@@ -342,7 +345,10 @@ class WorkforceService(
         }
 
         val now = Instant.now()
-        hubAssignments.forEach { it.requeue(now) }
+        hubAssignments.forEach { assignment ->
+            assignment.lastActorUserId = actorUserId
+            assignment.requeue(now)
+        }
         val rosterRows = shiftAssignments.findAllByWorkforceMemberIdAndStatusIn(
             member.id,
             listOf(WorkforceShiftAssignmentStatus.SCHEDULED, WorkforceShiftAssignmentStatus.CHECKED_IN),

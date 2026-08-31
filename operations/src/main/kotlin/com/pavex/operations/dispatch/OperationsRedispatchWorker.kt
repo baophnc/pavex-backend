@@ -13,6 +13,7 @@ import org.springframework.stereotype.Component
 class OperationsRedispatchWorker(
     private val assignments: OperationalAssignmentRepository,
     private val service: OperationalAssignmentService,
+    private val telemetry: OperationsTelemetry,
     @Value("\${operations.redispatch.enabled:true}") private val enabled: Boolean,
     @Value("\${operations.redispatch.batch-size:25}") private val batchSize: Int,
 ) {
@@ -30,8 +31,10 @@ class OperationsRedispatchWorker(
                     log.debug("Assignment {} changed or could not be redispatched in this cycle.", id, exception)
                 }
             }
+            val deferred = ids.size - assigned
+            telemetry.recordRedispatch(assigned, deferred)
             if (ids.isNotEmpty()) {
-                log.info("Operations redispatch batch: considered={}, assigned={}, deferred={}", ids.size, assigned, ids.size - assigned)
+                log.info("Operations redispatch batch: considered={}, assigned={}, deferred={}", ids.size, assigned, deferred)
             }
         } catch (exception: Exception) {
             log.error("Operations redispatch cycle failed.", exception)

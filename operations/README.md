@@ -116,3 +116,21 @@ The database trigger records every assignment insert/status/assignee transition,
 The outbox dispatcher publishes `operations.assignment.*` events to the durable `pavex.events` topic exchange with RabbitMQ publisher confirms. Multiple Operations instances safely claim different rows with `FOR UPDATE SKIP LOCKED`. Failed messages use exponential retry and are dead-lettered in the Operations database after the configured maximum attempts; Patch 07 exposes the admin inspection/retry/discard APIs.
 
 The redispatch worker periodically considers `PENDING` and `REJECTED` assignments. It uses PostgreSQL advisory transaction locks for the assignment and workforce pool, excludes members who already rejected that assignment, and reuses the same shift/availability/capacity/Identity eligibility rules as initial planning.
+
+
+## Patch 07 — admin, hardening and test closure
+
+Patch 07 closes the Operations backend with production-facing administration and observability:
+
+- assignment event history: `GET /api/v1/admin/operations/assignments/{id}/events`;
+- scoped dispatch-event search: `GET /api/v1/admin/operations/dispatch-events`;
+- global outbox summary and active dead-letter inspection;
+- dead-letter retry/discard actions guarded by `operations.assignments.manage`;
+- pessimistic row locking for concurrent dead-letter mutations;
+- Micrometer counters for outbox processing/failures/dead-letter/manual actions and redispatch outcomes;
+- audit actor propagation for admin cancellations, workforce-triggered requeues and shipment-driven completion;
+- indexes for event/dead-letter administration queries;
+- `/actuator/metrics/**` is exposed only to callers with `operations.assignments.manage`;
+- expanded domain, access-scope, event-query and outbox administration tests.
+
+With Patch 07 applied, Operations owns workforce, shifts, assignments, Shipment execution integration and durable dispatch reliability. Further Operations changes should be normal feature work rather than migration-foundation patches.

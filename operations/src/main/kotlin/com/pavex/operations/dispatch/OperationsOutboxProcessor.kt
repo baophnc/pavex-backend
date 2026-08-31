@@ -12,6 +12,7 @@ import kotlin.math.pow
 class OperationsOutboxProcessor(
     private val store: OperationsOutboxStore,
     private val publisher: RabbitOperationsEventPublisher,
+    private val telemetry: OperationsTelemetry,
     @Value("\${operations.outbox.batch-size:50}") private val batchSize: Int,
     @Value("\${operations.outbox.lock-duration:PT30S}") private val lockDuration: Duration,
     @Value("\${operations.outbox.base-retry-delay:PT5S}") private val baseRetryDelay: Duration,
@@ -64,7 +65,7 @@ class OperationsOutboxProcessor(
                 }
             }
         }
-        return OperationsOutboxBatchResult(claimed.size, processed, failed, deadLettered)
+        return OperationsOutboxBatchResult(claimed.size, processed, failed, deadLettered).also(telemetry::recordOutboxBatch)
     }
 
     private fun retryDelay(attempt: Int): Duration {

@@ -174,12 +174,14 @@ class OperationalAssignmentService(
 
     @Transactional
     fun cancel(
+        actorUserId: UUID,
         scope: AssignmentAccessScope,
         assignmentId: UUID,
         reason: String,
     ): OperationalAssignmentResponse {
         val assignment = findAssignment(assignmentId)
         ensureScope(scope, assignment.hubId)
+        assignment.lastActorUserId = actorUserId
         return mutate(assignment) { assignment.cancel(reason, Instant.now()) }
     }
 
@@ -189,7 +191,10 @@ class OperationalAssignmentService(
         val now = Instant.now()
         assignments.findAllByShipmentIdOrderBySequenceAsc(shipmentId)
             .filter { it.status !in TERMINAL_STATUSES }
-            .forEach { assignment -> assignment.cancel(reason, now) }
+            .forEach { assignment ->
+                assignment.lastActorUserId = null
+                assignment.cancel(reason, now)
+            }
     }
 
     @Transactional(readOnly = true)
@@ -250,6 +255,7 @@ class OperationalAssignmentService(
         val assignee = assignment.assigneeWorkforceMemberId
             ?: throw OperationsConflictException("assignment_not_assigned", "The operational assignment does not have an assignee.")
         val now = Instant.now()
+        assignment.lastActorUserId = request.actorUserId
         return mutate(assignment) {
             if (assignment.status == OperationalAssignmentStatus.ACCEPTED) {
                 assignment.start(assignee, now)
@@ -314,6 +320,7 @@ class OperationalAssignmentService(
             throw OperationsNotFoundException("assignment_not_found", "Assignment was not found.")
         }
         ensureExecutionAccess(member, assignment)
+        assignment.lastActorUserId = userId
         return mutate(assignment) { mutation(assignment, member) }
     }
 

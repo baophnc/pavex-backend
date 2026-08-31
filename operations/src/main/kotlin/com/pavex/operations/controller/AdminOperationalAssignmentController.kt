@@ -51,6 +51,7 @@ class AdminOperationalAssignmentController(
         @PathVariable id: UUID,
         @RequestBody request: CancelOperationalAssignmentRequest,
     ): OperationalAssignmentResponse = service.cancel(
+        actor(authentication),
         accessScopes.resolve(authentication),
         id,
         request.reason,
