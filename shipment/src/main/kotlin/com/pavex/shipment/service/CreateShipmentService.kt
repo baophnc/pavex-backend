@@ -7,6 +7,7 @@ import com.pavex.contracts.pricing.PricingQuoteServiceLevel
 import com.pavex.contracts.pricing.PricingQuoteSnapshot
 import com.pavex.contracts.pricing.PricingQuoteZone
 import com.pavex.shipment.client.NetworkShipmentClient
+import com.pavex.shipment.client.OperationsShipmentClient
 import com.pavex.shipment.client.PartnerShipmentClient
 import com.pavex.shipment.client.PricingQuoteClient
 import com.pavex.shipment.dto.CreateShipmentRequest
@@ -41,6 +42,7 @@ class CreateShipmentService(
     private val partners: PartnerShipmentClient,
     private val pricing: PricingQuoteClient,
     private val network: NetworkShipmentClient,
+    private val operations: OperationsShipmentClient,
     private val writer: ShipmentCreationWriter,
     private val trackingCodes: ShipmentCodeGenerator,
     private val objectMapper: ObjectMapper,
@@ -103,6 +105,7 @@ class CreateShipmentService(
         repeat(MAXIMUM_INSERT_ATTEMPTS) { attemptIndex ->
             val shipmentId = UUID.randomUUID()
             var reservation: ShipmentNetworkReservationSnapshot? = null
+            var operationsPlanned = false
             try {
                 reservation = network.reserve(
                     ReserveShipmentNetworkRequest(
@@ -124,6 +127,8 @@ class CreateShipmentService(
                     ),
                 )
                 validateReservation(quote, shipmentId, shipmentWeightKg, reservation)
+                operations.plan(shipmentId, reservation)
+                operationsPlanned = true
 
                 val shipment = Shipment.createFoundation(
                     id = shipmentId,
@@ -156,7 +161,7 @@ class CreateShipmentService(
 
                 return CreateShipmentResult(writer.persist(shipment), replayed = false)
             } catch (exception: DataIntegrityViolationException) {
-                compensateIfNeeded(reservation, shipmentId, actorUserId, "Shipment persistence failed.")
+                compensateIfNeeded(reservation, operationsPlanned, shipmentId, actorUserId, "Shipment persistence failed.")
 
                 writer.findExisting(actorUserId, idempotencyKey)?.let {
                     return replayOrConflict(it, fingerprint)
@@ -171,7 +176,7 @@ class CreateShipmentService(
                     )
                 }
             } catch (exception: RuntimeException) {
-                compensateIfNeeded(reservation, shipmentId, actorUserId, "Shipment creation aborted.")
+                compensateIfNeeded(reservation, operationsPlanned, shipmentId, actorUserId, "Shipment creation aborted.")
                 throw exception
             }
         }
@@ -181,10 +186,14 @@ class CreateShipmentService(
 
     private fun compensateIfNeeded(
         reservation: ShipmentNetworkReservationSnapshot?,
+        operationsPlanned: Boolean,
         shipmentId: UUID,
         actorUserId: UUID,
         reason: String,
     ) {
+        if (operationsPlanned) {
+            operations.cancelBestEffort(shipmentId, reason)
+        }
         if (reservation?.batchId != null) {
             network.releaseBestEffort(shipmentId, reservation.routeRevision, actorUserId, reason)
         }

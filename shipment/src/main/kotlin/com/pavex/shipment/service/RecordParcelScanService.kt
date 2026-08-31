@@ -24,6 +24,7 @@ class RecordParcelScanService(
     private val reader: ParcelScanTargetReader,
     private val writer: ParcelScanWriter,
     private val network: NetworkShipmentClient,
+    private val operationsGuard: ShipmentOperationsScanGuard,
 ) {
     fun record(actorUserId: UUID, request: RecordParcelScanRequest): ShipmentDetailResponse {
         if (actorUserId == UUID(0, 0) || request.hubId == UUID(0, 0)) {
@@ -62,6 +63,7 @@ class RecordParcelScanService(
                 "This hub is not valid for the requested parcel status.",
             )
         }
+        val operationsContext = operationsGuard.validate(actorUserId, target, hub, request)
 
         val description = request.description?.trim()?.takeIf { it.isNotEmpty() }
             ?: defaultDescription(request.nextStatus, hub.hubName)
@@ -75,7 +77,7 @@ class RecordParcelScanService(
         val receivedAt = Instant.now().let { received ->
             if (received.isBefore(occurredAt)) occurredAt else received
         }
-        return writer.apply(
+        val response = writer.apply(
             actorUserId = actorUserId,
             parcelCode = parcelCode,
             hub = hub,
@@ -83,7 +85,11 @@ class RecordParcelScanService(
             description = description,
             occurredAt = occurredAt,
             receivedAt = receivedAt,
+            assignmentId = request.assignmentId,
+            routeLegId = request.routeLegId,
         )
+        operationsGuard.afterPersist(actorUserId, target, request, operationsContext, response)
+        return response
     }
 
     private fun defaultDescription(status: ParcelStatus?, hubName: String): String =
@@ -130,6 +136,8 @@ class ParcelScanWriter(
         description: String,
         occurredAt: Instant,
         receivedAt: Instant,
+        assignmentId: UUID?,
+        routeLegId: UUID?,
     ): ShipmentDetailResponse {
         val parcel = parcels.findByCodeIgnoreCase(parcelCode)
             ?: throw ShipmentNotFoundException("parcel_not_found", "Parcel was not found.")
@@ -159,6 +167,8 @@ class ParcelScanWriter(
                     locationName = hub.hubName,
                     occurredAt = occurredAt,
                     recordedAt = receivedAt,
+                    routeLegId = routeLegId,
+                    assignmentId = assignmentId,
                 )
             } else {
                 val targetStatus = requireNotNull(nextStatus)
@@ -172,6 +182,8 @@ class ParcelScanWriter(
                     locationName = hub.hubName,
                     occurredAt = occurredAt,
                     recordedAt = receivedAt,
+                    routeLegId = routeLegId,
+                    assignmentId = assignmentId,
                 )
             }
             shipments.saveAndFlush(shipment)

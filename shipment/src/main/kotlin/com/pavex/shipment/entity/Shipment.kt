@@ -257,6 +257,8 @@ class Shipment(
         locationName: String,
         occurredAt: Instant,
         recordedAt: Instant,
+        routeLegId: UUID? = null,
+        assignmentId: UUID? = null,
     ) {
         check(lifecycleStatus == ShipmentLifecycleStatus.ACTIVE) { "Shipment lifecycle is already closed." }
         require(!recordedAt.isBefore(occurredAt)) { "Recorded time cannot precede occurrence time." }
@@ -269,6 +271,8 @@ class Shipment(
             actorUserId = actorUserId,
             hubId = hubId,
             hubName = locationName,
+            routeLegId = routeLegId,
+            assignmentId = assignmentId,
         )
         status = resolveStatus(parcels)
         updatedAt = recordedAt
@@ -318,11 +322,16 @@ class Shipment(
         locationName: String,
         occurredAt: Instant,
         recordedAt: Instant,
+        routeLegId: UUID? = null,
+        assignmentId: UUID? = null,
     ) {
         check(lifecycleStatus == ShipmentLifecycleStatus.ACTIVE) { "Shipment lifecycle is already closed." }
         require(!recordedAt.isBefore(occurredAt)) { "Recorded time cannot precede occurrence time." }
         val parcel = parcels.singleOrNull { it.id == parcelId }
             ?: error("Parcel does not belong to this shipment.")
+        if (routeLegId != null) parcel.currentRouteLegId = routeLegId
+        if (assignmentId != null) parcel.currentAssignmentId = assignmentId
+        parcel.updatedAt = recordedAt
         events += ShipmentEvent(
             shipment = this,
             parcelId = parcel.id,

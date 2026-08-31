@@ -4,6 +4,7 @@ import com.pavex.common.security.PavexJwtClaims
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
+import org.springframework.core.annotation.Order
 import org.springframework.core.convert.converter.Converter
 import org.springframework.security.authentication.AbstractAuthenticationToken
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity
@@ -19,6 +20,23 @@ import org.springframework.security.web.SecurityFilterChain
 @EnableMethodSecurity
 class SecurityConfig {
     @Bean
+    @Order(1)
+    fun shipmentInternalSecurityFilterChain(
+        http: HttpSecurity,
+        @Qualifier("shipmentServiceJwtDecoder") shipmentServiceJwtDecoder: JwtDecoder,
+    ): SecurityFilterChain =
+        http
+            .securityMatcher("/internal/v1/operations/shipments/**")
+            .csrf { it.disable() }
+            .sessionManagement { it.sessionCreationPolicy(SessionCreationPolicy.STATELESS) }
+            .authorizeHttpRequests { it.anyRequest().authenticated() }
+            .oauth2ResourceServer { resourceServer ->
+                resourceServer.jwt { jwt -> jwt.decoder(shipmentServiceJwtDecoder) }
+            }
+            .build()
+
+    @Bean
+    @Order(2)
     fun securityFilterChain(
         http: HttpSecurity,
         @Qualifier("operationsUserJwtDecoder") jwtDecoder: JwtDecoder,

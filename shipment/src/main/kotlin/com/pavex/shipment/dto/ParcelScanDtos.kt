@@ -12,6 +12,8 @@ data class RecordParcelScanRequest(
     val parcelCode: String,
     val hubId: UUID,
     val nextStatus: ParcelStatus? = null,
+    val assignmentId: UUID? = null,
+    val routeLegId: UUID? = null,
     @field:Size(max = 500)
     val description: String? = null,
     val occurredAt: Instant? = null,

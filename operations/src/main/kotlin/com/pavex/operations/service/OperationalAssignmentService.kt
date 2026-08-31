@@ -1,5 +1,7 @@
 package com.pavex.operations.service
 
+import com.pavex.contracts.operations.ShipmentAssignmentAccessRequest
+import com.pavex.contracts.operations.ShipmentAssignmentCompletionRequest
 import com.pavex.operations.client.IdentityWorkforceClient
 import com.pavex.operations.dto.MyAvailabilityResponse
 import com.pavex.operations.dto.OperationalAssignmentResponse
@@ -154,6 +156,75 @@ class OperationalAssignmentService(
             .forEach { assignment -> assignment.cancel(reason, now) }
     }
 
+    @Transactional(readOnly = true)
+    fun authorizeFromShipment(
+        shipmentId: UUID,
+        assignmentId: UUID,
+        request: ShipmentAssignmentAccessRequest,
+    ): OperationalAssignmentResponse {
+        val member = activeMember(request.actorUserId)
+            ?: throw OperationsNotFoundException("assignment_not_found", "An owned operational assignment was not found.")
+        val assignment = findAssignment(assignmentId)
+        validateShipmentAssignmentReference(shipmentId, assignment, request.expectedType.name, request.hubId, request.routeLegId)
+        if (assignment.assigneeWorkforceMemberId != member.id) {
+            throw OperationsNotFoundException("assignment_not_found", "An owned operational assignment was not found.")
+        }
+        ensureExecutionAccess(member, assignment)
+        if (assignment.status !in setOf(OperationalAssignmentStatus.IN_PROGRESS, OperationalAssignmentStatus.COMPLETED)) {
+            throw OperationsConflictException(
+                "assignment_not_in_progress",
+                "The operational assignment must be in progress before Shipment can execute this action.",
+            )
+        }
+        return OperationalAssignmentResponse.from(assignment)
+    }
+
+    @Transactional(readOnly = true)
+    fun findRouteLegAssignment(shipmentId: UUID, routeLegId: UUID): OperationalAssignmentResponse? {
+        if (shipmentId == ZERO_UUID || routeLegId == ZERO_UUID) return null
+        return assignments.findByShipmentIdAndRouteLegIdAndType(
+            shipmentId,
+            routeLegId,
+            OperationalAssignmentType.LINE_HAUL,
+        )?.let(OperationalAssignmentResponse::from)
+    }
+
+    @Transactional(readOnly = true)
+    fun findTypeAssignment(
+        shipmentId: UUID,
+        type: OperationalAssignmentType,
+        hubId: UUID,
+    ): OperationalAssignmentResponse? {
+        if (shipmentId == ZERO_UUID || hubId == ZERO_UUID) return null
+        return assignments.findByShipmentIdAndTypeAndHubId(shipmentId, type, hubId)
+            ?.let(OperationalAssignmentResponse::from)
+    }
+
+    @Transactional
+    fun completeFromShipment(
+        shipmentId: UUID,
+        assignmentId: UUID,
+        request: ShipmentAssignmentCompletionRequest,
+    ): OperationalAssignmentResponse {
+        val assignment = findAssignment(assignmentId)
+        validateShipmentAssignmentReference(shipmentId, assignment, request.expectedType.name, request.hubId, request.routeLegId)
+        if (assignment.status == OperationalAssignmentStatus.COMPLETED) {
+            return OperationalAssignmentResponse.from(assignment)
+        }
+        val assignee = assignment.assigneeWorkforceMemberId
+            ?: throw OperationsConflictException("assignment_not_assigned", "The operational assignment does not have an assignee.")
+        val now = Instant.now()
+        return mutate(assignment) {
+            if (assignment.status == OperationalAssignmentStatus.ACCEPTED) {
+                assignment.start(assignee, now)
+            }
+            if (assignment.status != OperationalAssignmentStatus.IN_PROGRESS) {
+                throw IllegalStateException("The assignment must be accepted or in progress before shipment-driven completion.")
+            }
+            assignment.complete(assignee, request.note, now)
+        }
+    }
+
     @Transactional
     fun accept(userId: UUID, assignmentId: UUID): OperationalAssignmentResponse =
         mutateOwned(userId, assignmentId) { assignment, member -> assignment.accept(member.id, Instant.now()) }
@@ -169,6 +240,31 @@ class OperationalAssignmentService(
     @Transactional
     fun complete(userId: UUID, assignmentId: UUID, note: String?): OperationalAssignmentResponse =
         mutateOwned(userId, assignmentId) { assignment, member -> assignment.complete(member.id, note, Instant.now()) }
+
+    private fun validateShipmentAssignmentReference(
+        shipmentId: UUID,
+        assignment: OperationalAssignment,
+        expectedTypeName: String,
+        hubId: UUID,
+        routeLegId: UUID?,
+    ) {
+        val expectedType = try {
+            OperationalAssignmentType.valueOf(expectedTypeName)
+        } catch (_: IllegalArgumentException) {
+            throw InvalidOperationsRequestException("assignment_type_invalid", "Assignment type is invalid.")
+        }
+        val mismatch = assignment.shipmentId != shipmentId ||
+            assignment.type != expectedType ||
+            assignment.hubId != hubId ||
+            (routeLegId != null && assignment.routeLegId != routeLegId) ||
+            (expectedType == OperationalAssignmentType.LINE_HAUL && routeLegId == null)
+        if (mismatch) {
+            throw OperationsConflictException(
+                "assignment_mismatch",
+                "The operational assignment does not match this shipment, action, hub or route leg.",
+            )
+        }
+    }
 
     private fun mutateOwned(
         userId: UUID,

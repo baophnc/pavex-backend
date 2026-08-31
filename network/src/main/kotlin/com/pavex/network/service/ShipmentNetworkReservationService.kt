@@ -6,6 +6,7 @@ import com.pavex.contracts.network.ReserveShipmentNetworkRequest
 import com.pavex.contracts.network.ShipmentNetworkPointSnapshot
 import com.pavex.contracts.network.ShipmentOperationalHubSnapshot
 import com.pavex.contracts.network.ShipmentNetworkReservationSnapshot
+import com.pavex.contracts.network.ShipmentNetworkRouteLegSnapshot
 import com.pavex.network.dto.capacity.ReserveLaneCapacityRequest
 import com.pavex.network.dto.routing.RoutePlanningMode
 import com.pavex.network.exception.ConflictException
@@ -93,6 +94,18 @@ class ShipmentNetworkReservationService(
                 hubName = destination.primaryHubName,
                 coverageTier = NetworkCoverageTier.valueOf(destination.coverageTier.name),
             ),
+            routeLegs = reservation.legs.sortedBy { it.sequence }.map { leg ->
+                val lane = reservedLanes[leg.laneId] ?: throw ConflictException(
+                    "network_route_changed",
+                    "A reserved route lane is no longer available.",
+                )
+                ShipmentNetworkRouteLegSnapshot(
+                    routeLegId = leg.reservationId,
+                    sequence = leg.sequence,
+                    fromHubId = lane.fromHubId,
+                    toHubId = lane.toHubId,
+                )
+            },
         )
     }
 

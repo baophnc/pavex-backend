@@ -27,7 +27,7 @@ Patch 04 adds:
 - a `shipment.parcel-scanned` outbox event for downstream consumers,
 - optimistic-lock conflict handling for concurrent scanner activity.
 
-The original C# scan handler also checks Operations hub assignments. The current Kotlin repository has no Operations service/module in the Maven reactor, so Patch 04 intentionally stops at `scans.create` authorization plus Network hub/route validation instead of inventing an unavailable cross-service contract.
+Operations Patch 05 closes the original scan-authorization gap: Shipment now asks Operations for live hub capability and assignment ownership/readiness before operational parcel movements. Warehouse scans require an active Operations hub membership; pickup, line-haul and last-mile movements require the matching in-progress assignment.
 
 The service now contains:
 
@@ -41,7 +41,7 @@ The service now contains:
 - quote single-use and creator/idempotency unique constraints,
 - durable shipment outbox storage for later Operations/Billing/Notification consumers,
 - idempotent shipment creation using `Idempotency-Key` and SHA-256 request fingerprints,
-- service-to-service JWT integration with Pricing, Partners and Network,
+- service-to-service JWT integration with Pricing, Partners, Network and Operations,
 - quote single-use enforcement and network-capacity compensation on failed inserts.
 
 ## Human-facing identifiers
@@ -78,12 +78,12 @@ Smoke database foundation after the application has run Flyway:
 
 ## Patch 05 - delivery attempts and proof
 
-- `POST /api/v1/deliveries/attempts` requires `deliveries.complete-own`.
-- The caller must be the courier currently holding the parcel (`custody_type=COURIER` and `custody_reference_id` equals the JWT subject), which provides real ownership enforcement while the Kotlin reactor still has no Operations service.
+- `POST /api/v1/deliveries/attempts` requires `deliveries.complete-own` and an `assignmentId`.
+- The caller must both own an in-progress Operations `LAST_MILE_DELIVERY` assignment and currently hold the parcel (`custody_type=COURIER`, `custody_reference_id` equals the JWT subject).
 - Successful delivery requires a proof method (`OTP`, `SIGNATURE`, or `PHOTO`), recipient name, and evidence reference.
 - Failed attempts require a failure reason and keep the parcel eligible for a later `OUT_FOR_DELIVERY` retry or return flow.
 - Attempts are durable, numbered per parcel, idempotent per parcel/key, and emit `shipment.delivery-attempt-recorded` through the Shipment outbox.
-- Terminal `DELIVERED`/`RETURNED` shipment states now close the shipment lifecycle and consume the reserved route locally. The original C# solution performs that closure through Operations integration; this local completion is the Kotlin fallback until Operations exists in the Maven reactor.
+- Terminal `DELIVERED`/`RETURNED` shipment states close the shipment lifecycle locally, while Operations Patch 05 completes the owned last-mile assignment when all parcels are delivered.
 
 ## Admin shipment query contract
 
@@ -93,3 +93,9 @@ Management Portal uses read-only admin endpoints guarded by `shipments.admin.rea
 - `GET /api/v1/admin/shipments/{trackingCode}` returns internal ownership/routing identifiers, the customer detail snapshot, the complete event stream, and delivery attempts.
 
 The admin list returns `totalCount` in addition to cursor pagination so dashboards can render operational counters without using merchant-owned APIs.
+
+## Operations Patch 05 integration
+
+Shipment creation now requires Operations in addition to Partners, Pricing and Network. Network returns the exact reserved route legs, Shipment sends those legs to Operations, and Operations creates pickup/origin-handling/line-haul/destination-handling/last-mile assignments idempotently.
+
+`POST /api/v1/parcel-scans` accepts optional `assignmentId` and `routeLegId`. They become mandatory for assignment-driven transitions such as pickup, line-haul departure and last-mile dispatch. `DELIVERED`/`DELIVERY_FAILED` can no longer be forged through the generic scan endpoint; use the delivery-attempt API so proof and last-mile ownership are enforced.

@@ -7,8 +7,10 @@ import jakarta.validation.constraints.NotBlank
 import jakarta.validation.constraints.Size
 import java.math.BigDecimal
 import java.time.Instant
+import java.util.UUID
 
 data class RecordDeliveryAttemptRequest(
+    val assignmentId: UUID,
     @field:NotBlank
     @field:Size(max = 40)
     val parcelCode: String,

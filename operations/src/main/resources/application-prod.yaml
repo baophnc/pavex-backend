@@ -4,6 +4,10 @@ security:
   service-jwt:
     private-key: ${OPERATIONS_SERVICE_JWT_PRIVATE_KEY}
     public-key: ${OPERATIONS_SERVICE_JWT_PUBLIC_KEY}
+  trusted-services:
+    shipment:
+      issuer: ${SHIPMENT_SERVICE_JWT_ISSUER}
+      public-key: ${SHIPMENT_SERVICE_JWT_PUBLIC_KEY}
 
 springdoc:
   api-docs:

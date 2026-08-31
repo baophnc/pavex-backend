@@ -1,5 +1,7 @@
 package com.pavex.shipment.service
 
+import com.pavex.contracts.operations.OperationsAssignmentType
+import com.pavex.shipment.client.OperationsShipmentClient
 import com.pavex.shipment.dto.DeliveryAttemptRecordedResponse
 import com.pavex.shipment.dto.DeliveryAttemptResponse
 import com.pavex.shipment.dto.RecordDeliveryAttemptRequest
@@ -27,6 +29,150 @@ import java.util.UUID
 
 @Service
 class RecordDeliveryAttemptService(
+    private val reader: DeliveryAttemptReader,
+    private val writer: DeliveryAttemptWriter,
+    private val operations: OperationsShipmentClient,
+    private val objectMapper: ObjectMapper,
+) {
+    fun record(actorUserId: UUID, request: RecordDeliveryAttemptRequest): DeliveryAttemptRecordResult {
+        requireActor(actorUserId)
+        if (request.assignmentId == ZERO_UUID) {
+            throw InvalidShipmentRequestException("invalid_delivery_assignment", "An operational last-mile assignment is required.")
+        }
+        val parcelCode = request.parcelCode.trim().uppercase()
+        val key = request.idempotencyKey.trim()
+        val target = reader.read(parcelCode, key)
+        val now = Instant.now()
+        val occurredAt = request.occurredAt ?: target.existing?.occurredAt ?: now
+        validateOccurredAt(now, occurredAt)
+        val fingerprint = fingerprint(request, occurredAt)
+
+        target.existing?.let { existing ->
+            if (existing.actorUserId != actorUserId) {
+                throw ShipmentForbiddenException("delivery_attempt_not_owned", "This delivery attempt belongs to another courier.")
+            }
+            if (existing.requestFingerprint != fingerprint) {
+                throw ShipmentConflictException("idempotency_conflict", "The idempotency key was already used with another payload.")
+            }
+            if (existing.allParcelsDelivered) {
+                completeLastMile(target.shipmentId, request.assignmentId, actorUserId, target.destinationHubId)
+            }
+            return DeliveryAttemptRecordResult(existing.response, replayed = true)
+        }
+
+        validateTarget(actorUserId, target)
+        operations.authorizeAssignment(
+            shipmentId = target.shipmentId,
+            assignmentId = request.assignmentId,
+            actorUserId = actorUserId,
+            expectedType = OperationsAssignmentType.LAST_MILE_DELIVERY,
+            hubId = target.destinationHubId,
+        )
+
+        val result = writer.record(actorUserId, request, occurredAt, fingerprint)
+        if (result.allParcelsDelivered) {
+            completeLastMile(target.shipmentId, request.assignmentId, actorUserId, target.destinationHubId)
+        }
+        return DeliveryAttemptRecordResult(result.response, replayed = result.replayed)
+    }
+
+    private fun completeLastMile(shipmentId: UUID, assignmentId: UUID, actorUserId: UUID, destinationHubId: UUID) {
+        operations.completeAssignment(
+            shipmentId = shipmentId,
+            assignmentId = assignmentId,
+            actorUserId = actorUserId,
+            expectedType = OperationsAssignmentType.LAST_MILE_DELIVERY,
+            hubId = destinationHubId,
+            note = "All parcels were delivered with proof.",
+        )
+    }
+
+    private fun validateTarget(actorUserId: UUID, target: DeliveryAttemptTarget) {
+        if (target.lifecycleStatus != ShipmentLifecycleStatus.ACTIVE) {
+            throw ShipmentConflictException("shipment_lifecycle_closed", "Shipment lifecycle is already closed.")
+        }
+        if (target.parcelStatus != ParcelStatus.OUT_FOR_DELIVERY) {
+            throw ShipmentConflictException("parcel_not_out_for_delivery", "Parcel must be out for delivery before recording an attempt.")
+        }
+        if (target.custodyType != ParcelCustodyType.COURIER || target.custodyReferenceId != actorUserId) {
+            throw ShipmentForbiddenException("delivery_custody_mismatch", "Only the courier currently holding this parcel may record a delivery attempt.")
+        }
+    }
+
+    private fun validateOccurredAt(now: Instant, occurredAt: Instant) {
+        if (occurredAt.isAfter(now.plus(Duration.ofMinutes(5))) || occurredAt.isBefore(now.minus(Duration.ofDays(7)))) {
+            throw InvalidShipmentRequestException(
+                "invalid_attempt_time",
+                "Attempt time must be within the last 7 days and no more than 5 minutes in the future.",
+            )
+        }
+    }
+
+    private fun fingerprint(request: RecordDeliveryAttemptRequest, occurredAt: Instant): String {
+        val payload = objectMapper.writeValueAsString(
+            linkedMapOf(
+                "assignmentId" to request.assignmentId,
+                "parcelCode" to request.parcelCode.trim().uppercase(),
+                "outcome" to request.outcome,
+                "failureReason" to request.failureReason,
+                "proofMethod" to request.proofMethod,
+                "recipientName" to request.recipientName?.trim(),
+                "evidenceReference" to request.evidenceReference?.trim(),
+                "note" to request.note?.trim(),
+                "latitude" to request.latitude,
+                "longitude" to request.longitude,
+                "occurredAt" to occurredAt,
+            ),
+        )
+        return HexFormat.of().withUpperCase().formatHex(MessageDigest.getInstance("SHA-256").digest(payload.toByteArray()))
+    }
+
+    private fun requireActor(actorUserId: UUID) {
+        if (actorUserId == ZERO_UUID) {
+            throw InvalidShipmentRequestException("invalid_delivery_attempt", "Actor is required.")
+        }
+    }
+
+    companion object {
+        private val ZERO_UUID = UUID(0, 0)
+    }
+}
+
+@Service
+class DeliveryAttemptReader(
+    private val parcels: ParcelRepository,
+    private val attempts: DeliveryAttemptRepository,
+) {
+    @Transactional(readOnly = true)
+    fun read(parcelCode: String, key: String): DeliveryAttemptTarget {
+        val parcel = parcels.findByCodeIgnoreCase(parcelCode)
+            ?: throw ShipmentNotFoundException("parcel_not_found", "Parcel was not found.")
+        val shipment = parcel.shipment
+        shipment.parcels.size
+        shipment.events.size
+        val existing = attempts.findByParcelIdAndIdempotencyKey(parcel.id, key)?.let { attempt ->
+            ExistingDeliveryAttempt(
+                actorUserId = attempt.actorUserId,
+                requestFingerprint = attempt.requestFingerprint,
+                occurredAt = attempt.occurredAt,
+                response = DeliveryAttemptMapper.response(attempt, shipment),
+                allParcelsDelivered = shipment.parcels.all { it.status == ParcelStatus.DELIVERED },
+            )
+        }
+        return DeliveryAttemptTarget(
+            shipmentId = shipment.id,
+            destinationHubId = shipment.destinationHubId,
+            lifecycleStatus = shipment.lifecycleStatus,
+            parcelStatus = parcel.status,
+            custodyType = parcel.custodyType,
+            custodyReferenceId = parcel.custodyReferenceId,
+            existing = existing,
+        )
+    }
+}
+
+@Service
+class DeliveryAttemptWriter(
     private val parcels: ParcelRepository,
     private val attempts: DeliveryAttemptRepository,
     private val shipments: ShipmentRepository,
@@ -34,8 +180,12 @@ class RecordDeliveryAttemptService(
     private val objectMapper: ObjectMapper,
 ) {
     @Transactional
-    fun record(actorUserId: UUID, request: RecordDeliveryAttemptRequest): DeliveryAttemptRecordResult {
-        requireActor(actorUserId)
+    fun record(
+        actorUserId: UUID,
+        request: RecordDeliveryAttemptRequest,
+        occurredAt: Instant,
+        fingerprint: String,
+    ): DeliveryAttemptWriteResult {
         val parcelCode = request.parcelCode.trim().uppercase()
         val key = request.idempotencyKey.trim()
         val parcel = parcels.findByCodeIgnoreCase(parcelCode)
@@ -44,16 +194,15 @@ class RecordDeliveryAttemptService(
         shipment.parcels.size
         shipment.events.size
 
-        val existing = attempts.findByParcelIdAndIdempotencyKey(parcel.id, key)
-        if (existing != null) {
-            if (existing.actorUserId != actorUserId) {
-                throw ShipmentForbiddenException("delivery_attempt_not_owned", "This delivery attempt belongs to another courier.")
-            }
-            val replayOccurredAt = request.occurredAt ?: existing.occurredAt
-            if (existing.requestFingerprint != fingerprint(request, replayOccurredAt)) {
+        attempts.findByParcelIdAndIdempotencyKey(parcel.id, key)?.let { existing ->
+            if (existing.actorUserId != actorUserId || existing.requestFingerprint != fingerprint) {
                 throw ShipmentConflictException("idempotency_conflict", "The idempotency key was already used with another payload.")
             }
-            return DeliveryAttemptRecordResult(response(existing, shipment), replayed = true)
+            return DeliveryAttemptWriteResult(
+                DeliveryAttemptMapper.response(existing, shipment),
+                replayed = true,
+                allParcelsDelivered = shipment.parcels.all { it.status == ParcelStatus.DELIVERED },
+            )
         }
 
         if (shipment.lifecycleStatus != ShipmentLifecycleStatus.ACTIVE) {
@@ -66,15 +215,7 @@ class RecordDeliveryAttemptService(
             throw ShipmentForbiddenException("delivery_custody_mismatch", "Only the courier currently holding this parcel may record a delivery attempt.")
         }
 
-        val now = Instant.now()
-        val occurredAt = request.occurredAt ?: now
-        if (occurredAt.isAfter(now.plus(Duration.ofMinutes(5))) || occurredAt.isBefore(now.minus(Duration.ofDays(7)))) {
-            throw InvalidShipmentRequestException(
-                "invalid_attempt_time",
-                "Attempt time must be within the last 7 days and no more than 5 minutes in the future.",
-            )
-        }
-        val recordedAt = if (now.isBefore(occurredAt)) occurredAt else now
+        val recordedAt = Instant.now().let { if (it.isBefore(occurredAt)) occurredAt else it }
         val attempt = try {
             DeliveryAttempt.create(
                 shipment = shipment,
@@ -82,7 +223,7 @@ class RecordDeliveryAttemptService(
                 actorUserId = actorUserId,
                 attemptNumber = attempts.countByParcelId(parcel.id).toInt() + 1,
                 idempotencyKey = key,
-                requestFingerprint = fingerprint(request, occurredAt),
+                requestFingerprint = fingerprint,
                 outcome = request.outcome,
                 failureReason = request.failureReason,
                 proofMethod = request.proofMethod,
@@ -110,6 +251,7 @@ class RecordDeliveryAttemptService(
                 locationName = shipment.recipient.wardName,
                 occurredAt = occurredAt,
                 recordedAt = recordedAt,
+                assignmentId = request.assignmentId,
             )
             attempts.save(attempt)
             shipments.saveAndFlush(shipment)
@@ -129,6 +271,7 @@ class RecordDeliveryAttemptService(
                     "trackingCode" to shipment.trackingCode,
                     "parcelId" to parcel.id,
                     "parcelCode" to parcel.code,
+                    "assignmentId" to request.assignmentId,
                     "attemptNumber" to attempt.attemptNumber,
                     "outcome" to attempt.outcome,
                     "failureReason" to attempt.failureReason,
@@ -139,10 +282,16 @@ class RecordDeliveryAttemptService(
             ),
             occurredAt = occurredAt,
         )
-        return DeliveryAttemptRecordResult(response(attempt, shipment), replayed = false)
+        return DeliveryAttemptWriteResult(
+            DeliveryAttemptMapper.response(attempt, shipment),
+            replayed = false,
+            allParcelsDelivered = shipment.parcels.all { it.status == ParcelStatus.DELIVERED },
+        )
     }
+}
 
-    private fun response(attempt: DeliveryAttempt, shipment: com.pavex.shipment.entity.Shipment) =
+private object DeliveryAttemptMapper {
+    fun response(attempt: DeliveryAttempt, shipment: com.pavex.shipment.entity.Shipment) =
         DeliveryAttemptRecordedResponse(
             attempt = DeliveryAttemptResponse(
                 parcelCode = attempt.parcel.code,
@@ -159,31 +308,31 @@ class RecordDeliveryAttemptService(
             ),
             shipment = ShipmentResponseMapper.detail(shipment),
         )
-
-    private fun fingerprint(request: RecordDeliveryAttemptRequest, occurredAt: Instant): String {
-        val payload = objectMapper.writeValueAsString(
-            linkedMapOf(
-                "parcelCode" to request.parcelCode.trim().uppercase(),
-                "outcome" to request.outcome,
-                "failureReason" to request.failureReason,
-                "proofMethod" to request.proofMethod,
-                "recipientName" to request.recipientName?.trim(),
-                "evidenceReference" to request.evidenceReference?.trim(),
-                "note" to request.note?.trim(),
-                "latitude" to request.latitude,
-                "longitude" to request.longitude,
-                "occurredAt" to occurredAt,
-            ),
-        )
-        return HexFormat.of().withUpperCase().formatHex(MessageDigest.getInstance("SHA-256").digest(payload.toByteArray()))
-    }
-
-    private fun requireActor(actorUserId: UUID) {
-        if (actorUserId == UUID(0, 0)) {
-            throw InvalidShipmentRequestException("invalid_delivery_attempt", "Actor is required.")
-        }
-    }
 }
+
+data class DeliveryAttemptTarget(
+    val shipmentId: UUID,
+    val destinationHubId: UUID,
+    val lifecycleStatus: ShipmentLifecycleStatus,
+    val parcelStatus: ParcelStatus,
+    val custodyType: ParcelCustodyType,
+    val custodyReferenceId: UUID?,
+    val existing: ExistingDeliveryAttempt?,
+)
+
+data class ExistingDeliveryAttempt(
+    val actorUserId: UUID,
+    val requestFingerprint: String,
+    val occurredAt: Instant,
+    val response: DeliveryAttemptRecordedResponse,
+    val allParcelsDelivered: Boolean,
+)
+
+data class DeliveryAttemptWriteResult(
+    val response: DeliveryAttemptRecordedResponse,
+    val replayed: Boolean,
+    val allParcelsDelivered: Boolean,
+)
 
 data class DeliveryAttemptRecordResult(
     val response: DeliveryAttemptRecordedResponse,

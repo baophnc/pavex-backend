@@ -96,6 +96,8 @@ class Parcel(
         actorUserId: UUID? = null,
         hubId: UUID? = null,
         hubName: String? = null,
+        routeLegId: UUID? = null,
+        assignmentId: UUID? = null,
     ) {
         check(canTransitionTo(nextStatus)) {
             "Parcel cannot transition from $status to $nextStatus."
@@ -119,7 +121,7 @@ class Parcel(
                 currentHubId = null
                 currentHubName = null
                 currentRouteLegId = null
-                currentAssignmentId = null
+                currentAssignmentId = assignmentId
                 custodyType = ParcelCustodyType.COURIER
                 custodyReferenceId = actorUserId
             }
@@ -129,8 +131,8 @@ class Parcel(
                 currentLocationType = ParcelLocationType.HUB
                 currentHubId = requiredHubId
                 currentHubName = hubName
-                currentRouteLegId = null
-                currentAssignmentId = null
+                currentRouteLegId = routeLegId
+                currentAssignmentId = assignmentId
                 custodyType = ParcelCustodyType.HUB
                 custodyReferenceId = requiredHubId
             }
@@ -139,8 +141,8 @@ class Parcel(
                 currentLocationType = ParcelLocationType.UNKNOWN
                 currentHubId = null
                 currentHubName = null
-                currentRouteLegId = null
-                currentAssignmentId = null
+                currentRouteLegId = routeLegId
+                currentAssignmentId = assignmentId
                 custodyType = ParcelCustodyType.LINE_HAUL
                 custodyReferenceId = actorUserId
             }
@@ -150,7 +152,7 @@ class Parcel(
                 currentHubId = null
                 currentHubName = null
                 currentRouteLegId = null
-                currentAssignmentId = null
+                currentAssignmentId = assignmentId
                 custodyType = ParcelCustodyType.COURIER
                 custodyReferenceId = actorUserId
             }

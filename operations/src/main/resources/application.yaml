@@ -30,6 +30,10 @@ security:
     ttl: ${OPERATIONS_SERVICE_JWT_TTL:PT1M}
     private-key: ${OPERATIONS_SERVICE_JWT_PRIVATE_KEY:file:./auth/.keys/private.pem}
     public-key: ${OPERATIONS_SERVICE_JWT_PUBLIC_KEY:file:./auth/.keys/public.pem}
+  trusted-services:
+    shipment:
+      issuer: ${SHIPMENT_SERVICE_JWT_ISSUER:http://localhost:8084}
+      public-key: ${SHIPMENT_SERVICE_JWT_PUBLIC_KEY:file:./auth/.keys/public.pem}
 
 operations:
   integrations:

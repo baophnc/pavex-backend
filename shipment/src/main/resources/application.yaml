@@ -39,6 +39,8 @@ shipment:
       service-url: ${PARTNERS_SERVICE_URL:http://partners-service}
     network:
       service-url: ${NETWORK_SERVICE_URL:http://network-service}
+    operations:
+      service-url: ${OPERATIONS_SERVICE_URL:http://operations-service}
 
 pavex:
   openapi:

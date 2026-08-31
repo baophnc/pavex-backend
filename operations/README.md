@@ -89,3 +89,17 @@ Patch 04 adds the dispatchable work aggregate and worker execution queue:
 
 Shipment does not call the planner over HTTP yet. Patch 05 introduces the authenticated Shipment -> Operations
 contract and removes Shipment-side fallback authorization/planning behavior.
+
+## Patch 05 — Shipment integration
+
+Patch 05 turns the Patch 04 planner into a real microservice boundary:
+
+- Shipment authenticates with `sub=shipment-service`, `aud=operations-service`, `typ=service`, scope `operations.shipments.execute`;
+- Network reservation snapshots expose their reserved route legs so Shipment can create the exact Operations assignment plan without reading Network storage;
+- shipment creation plans Operations work before persistence and compensates both the assignment plan and Network reservation when creation aborts;
+- shipment cancellation cancels Operations work before releasing Network capacity;
+- parcel scans ask Operations for live hub capability and assignment ownership/readiness;
+- pickup, hub handling and arriving line-haul assignments are completed from confirmed Shipment movement;
+- delivery attempts require an in-progress owned last-mile assignment and complete it when all parcels are delivered.
+
+Operations remains the owner of workforce/assignment state. Shipment never reads the Operations database. Patch 06 adds durable assignment events/outbox/redispatch so cross-service convergence no longer depends only on synchronous retries.

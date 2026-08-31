@@ -1,6 +1,7 @@
 package com.pavex.shipment.service
 
 import com.pavex.shipment.client.NetworkShipmentClient
+import com.pavex.shipment.client.OperationsShipmentClient
 import com.pavex.shipment.dto.ShipmentDetailResponse
 import com.pavex.shipment.entity.Shipment
 import com.pavex.shipment.entity.ShipmentLifecycleStatus
@@ -19,6 +20,7 @@ import java.util.UUID
 class CancelShipmentService(
     private val store: ShipmentCancellationStore,
     private val network: NetworkShipmentClient,
+    private val operations: OperationsShipmentClient,
 ) {
     fun cancel(actorUserId: UUID, rawTrackingCode: String, reason: String): ShipmentDetailResponse {
         val trackingCode = ShipmentCodeNormalizer.normalizeOrNull(rawTrackingCode)
@@ -26,6 +28,7 @@ class CancelShipmentService(
             ?: throw notFound()
 
         val state = store.cancelLocally(actorUserId, trackingCode, reason)
+        operations.cancel(state.shipmentId, "Shipment cancelled: ${state.cancellationReason}")
         if (state.routeRevision > 0 && state.routingStatus != ShipmentRoutingStatus.RELEASED) {
             if (state.capacityReservationBatchId != null) {
                 network.release(

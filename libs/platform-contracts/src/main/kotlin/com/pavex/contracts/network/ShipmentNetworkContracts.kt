@@ -31,6 +31,13 @@ data class ShipmentNetworkPointSnapshot(
     val coverageTier: NetworkCoverageTier,
 )
 
+data class ShipmentNetworkRouteLegSnapshot(
+    val routeLegId: UUID,
+    val sequence: Int,
+    val fromHubId: UUID,
+    val toHubId: UUID,
+)
+
 data class ShipmentNetworkReservationSnapshot(
     val shipmentId: UUID,
     val routeRevision: Int,
@@ -43,6 +50,7 @@ data class ShipmentNetworkReservationSnapshot(
     val status: String,
     val origin: ShipmentNetworkPointSnapshot,
     val destination: ShipmentNetworkPointSnapshot,
+    val routeLegs: List<ShipmentNetworkRouteLegSnapshot> = emptyList(),
 )
 
 data class ReleaseShipmentNetworkRequest(

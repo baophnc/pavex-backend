@@ -41,6 +41,12 @@ class ServiceJwtIssuer(
         now = now,
     )
 
+    fun issueForOperations(now: Instant = Instant.now()): String = issue(
+        audience = OPERATIONS_SERVICE,
+        scopes = listOf(OPERATIONS_SHIPMENT_SCOPE),
+        now = now,
+    )
+
     private fun issue(audience: String, scopes: List<String>, now: Instant): String {
         val claims = JwtClaimsSet.builder()
             .issuer(issuer)
@@ -65,9 +71,11 @@ class ServiceJwtIssuer(
         private const val PRICING_SERVICE = "pricing-service"
         private const val PARTNERS_SERVICE = "partners-service"
         private const val NETWORK_SERVICE = "network-service"
+        private const val OPERATIONS_SERVICE = "operations-service"
         private const val PRICING_QUOTE_READ_SCOPE = "pricing.quote.read"
         private const val PARTNERS_ORDER_SCOPE = "partners.orders.evaluate"
         private const val PARTNERS_LOCATION_SCOPE = "partners.locations.read"
         private const val NETWORK_SHIPMENT_RESERVE_SCOPE = "network.shipments.reserve"
+        private const val OPERATIONS_SHIPMENT_SCOPE = "operations.shipments.execute"
     }
 }
