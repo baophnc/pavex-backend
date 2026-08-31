@@ -14,6 +14,10 @@ interface WorkforceShiftAssignmentRepository : JpaRepository<WorkforceShiftAssig
         workforceMemberId: UUID,
         statuses: Collection<WorkforceShiftAssignmentStatus>,
     ): List<WorkforceShiftAssignment>
+    fun findAllByWorkforceMemberIdInAndStatusIn(
+        workforceMemberIds: Collection<UUID>,
+        statuses: Collection<WorkforceShiftAssignmentStatus>,
+    ): List<WorkforceShiftAssignment>
     fun findAllByShiftIdAndStatusIn(
         shiftId: UUID,
         statuses: Collection<WorkforceShiftAssignmentStatus>,

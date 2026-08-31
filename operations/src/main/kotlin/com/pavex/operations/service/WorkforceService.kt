@@ -16,6 +16,8 @@ import com.pavex.operations.dto.WorkforceHubMembershipResponse
 import com.pavex.operations.dto.WorkforceIdentityResponse
 import com.pavex.operations.dto.WorkforceMemberResponse
 import com.pavex.operations.entity.HubMembership
+import com.pavex.operations.entity.OperationalAssignmentStatus
+import com.pavex.operations.entity.WorkShiftStatus
 import com.pavex.operations.entity.WorkforceAuditAction
 import com.pavex.operations.entity.WorkforceAuditLog
 import com.pavex.operations.entity.WorkforceAvailability
@@ -23,13 +25,17 @@ import com.pavex.operations.entity.WorkforceAvailabilityStatus
 import com.pavex.operations.entity.WorkforceMember
 import com.pavex.operations.entity.WorkforceMemberKind
 import com.pavex.operations.entity.WorkforceMemberStatus
+import com.pavex.operations.entity.WorkforceShiftAssignmentStatus
 import com.pavex.operations.exception.InvalidOperationsRequestException
 import com.pavex.operations.exception.OperationsConflictException
 import com.pavex.operations.exception.OperationsNotFoundException
 import com.pavex.operations.repository.HubMembershipRepository
+import com.pavex.operations.repository.OperationalAssignmentRepository
+import com.pavex.operations.repository.WorkShiftRepository
 import com.pavex.operations.repository.WorkforceAuditLogRepository
 import com.pavex.operations.repository.WorkforceAvailabilityRepository
 import com.pavex.operations.repository.WorkforceMemberRepository
+import com.pavex.operations.repository.WorkforceShiftAssignmentRepository
 import org.springframework.dao.DataIntegrityViolationException
 import org.springframework.orm.ObjectOptimisticLockingFailureException
 import org.springframework.security.access.AccessDeniedException
@@ -44,6 +50,9 @@ class WorkforceService(
     private val memberships: HubMembershipRepository,
     private val availabilities: WorkforceAvailabilityRepository,
     private val audits: WorkforceAuditLogRepository,
+    private val assignments: OperationalAssignmentRepository,
+    private val shiftAssignments: WorkforceShiftAssignmentRepository,
+    private val shifts: WorkShiftRepository,
     private val identity: IdentityWorkforceClient,
     private val network: NetworkHubClient,
 ) {
@@ -152,13 +161,39 @@ class WorkforceService(
         val previous = member.status
         if (previous == request.status) return get(scope, memberId)
         val now = Instant.now()
+
+        if (request.status != WorkforceMemberStatus.ACTIVE) {
+            val activeAssignments = assignments.findAllByAssigneeWorkforceMemberIdAndStatusIn(
+                member.id,
+                OperationalAssignmentService.ACTIVE_STATUSES,
+            )
+            if (activeAssignments.any { it.status == OperationalAssignmentStatus.IN_PROGRESS }) {
+                throw OperationsConflictException(
+                    "member_has_in_progress_assignments",
+                    "Complete or hand over in-progress assignments before suspending or offboarding this member.",
+                )
+            }
+            activeAssignments
+                .filter { it.status == OperationalAssignmentStatus.ASSIGNED || it.status == OperationalAssignmentStatus.ACCEPTED }
+                .forEach { it.requeue(now) }
+
+            val rosterRows = shiftAssignments.findAllByWorkforceMemberIdAndStatusIn(
+                member.id,
+                listOf(WorkforceShiftAssignmentStatus.SCHEDULED, WorkforceShiftAssignmentStatus.CHECKED_IN),
+            )
+            val shiftById = shifts.findAllByIdIn(rosterRows.map { it.shiftId }.distinct()).associateBy { it.id }
+            rosterRows.filter { row ->
+                val shift = shiftById[row.shiftId]
+                shift != null && shift.status == WorkShiftStatus.SCHEDULED && shift.endsAt > now
+            }.forEach { row -> row.cancel(actorUserId, request.reason, now) }
+        }
+
         try {
             member.changeStatus(request.status, now)
             if (request.status != WorkforceMemberStatus.ACTIVE) {
-                val availability = availabilities.findById(member.id)
-                if (availability.isPresent) {
-                    availability.get().setStatus(WorkforceAvailabilityStatus.OFF_DUTY, now)
-                    availabilities.save(availability.get())
+                availabilities.findById(member.id).ifPresent { availability ->
+                    availability.setStatus(WorkforceAvailabilityStatus.OFF_DUTY, now)
+                    availabilities.save(availability)
                 }
             }
             if (request.status == WorkforceMemberStatus.OFFBOARDED) {
@@ -178,6 +213,8 @@ class WorkforceService(
                     )
                 }
             }
+            assignments.flush()
+            shiftAssignments.flush()
             members.saveAndFlush(member)
             audit(member.id, null, actorUserId, WorkforceAuditAction.STATUS_CHANGED, previous.name, request.status.name, request.reason, now)
         } catch (exception: IllegalStateException) {
@@ -291,10 +328,44 @@ class WorkforceService(
         val membership = memberships.findByWorkforceMemberIdAndHubId(member.id, hubId)
             ?: return get(scope, member.id)
         if (!membership.isActive) return get(scope, member.id)
-        val previousState = membershipState(membership)
+
+        val hubAssignments = assignments.findAllByAssigneeWorkforceMemberIdAndHubIdAndStatusIn(
+            member.id,
+            hubId,
+            OperationalAssignmentService.ACTIVE_STATUSES,
+        )
+        if (hubAssignments.any { it.status == OperationalAssignmentStatus.IN_PROGRESS }) {
+            throw OperationsConflictException(
+                "member_has_in_progress_hub_assignments",
+                "Complete or hand over in-progress assignments at this hub before removing the member from it.",
+            )
+        }
+
         val now = Instant.now()
+        hubAssignments.forEach { it.requeue(now) }
+        val rosterRows = shiftAssignments.findAllByWorkforceMemberIdAndStatusIn(
+            member.id,
+            listOf(WorkforceShiftAssignmentStatus.SCHEDULED, WorkforceShiftAssignmentStatus.CHECKED_IN),
+        )
+        val shiftById = shifts.findAllByIdIn(rosterRows.map { it.shiftId }.distinct()).associateBy { it.id }
+        val relevantRoster = rosterRows.filter { row ->
+            val shift = shiftById[row.shiftId]
+            shift != null && shift.hubId == hubId && shift.status == WorkShiftStatus.SCHEDULED && shift.endsAt > now
+        }
+        val hadCheckedInShift = relevantRoster.any { it.status == WorkforceShiftAssignmentStatus.CHECKED_IN }
+        relevantRoster.forEach { it.cancel(actorUserId, reason, now) }
+        if (hadCheckedInShift) {
+            availabilities.findById(member.id).ifPresent { availability ->
+                availability.setStatus(WorkforceAvailabilityStatus.OFF_DUTY, now)
+                availabilities.save(availability)
+            }
+        }
+
+        val previousState = membershipState(membership)
         membership.deactivate(now)
         memberships.saveAndFlush(membership)
+        assignments.flush()
+        shiftAssignments.flush()
         member.updatedAt = now
         members.save(member)
         audit(member.id, hubId, actorUserId, WorkforceAuditAction.HUB_UNASSIGNED, previousState, "Inactive", reason, now)
@@ -339,6 +410,10 @@ class WorkforceService(
         }
         val identityByUser = identityByUserInput ?: identity.snapshots(pageMembers.map { it.userId }).associateBy { it.userId }
         val availabilityByMember = availabilities.findAllByWorkforceMemberIdIn(memberIds).associateBy { it.workforceMemberId }
+        val activeAssignmentsByMember = assignments.findAllByAssigneeWorkforceMemberIdInAndStatusIn(
+            memberIds,
+            OperationalAssignmentService.ACTIVE_STATUSES,
+        ).groupingBy { requireNotNull(it.assigneeWorkforceMemberId) }.eachCount()
         val hubIds = visibleMemberships.values.flatten().map { it.hubId }.distinct()
         val hubById = network.snapshots(hubIds).associateBy { it.hubId }
 
@@ -354,11 +429,12 @@ class WorkforceService(
                 identity = identitySnapshot?.let(WorkforceIdentityResponse::from),
                 identityAccessValid = identitySnapshot?.let { isIdentityCompatible(member.kind, it) } == true,
                 availability = availability?.let {
+                    val activeAssignments = activeAssignmentsByMember.getOrDefault(member.id, 0)
                     WorkforceAvailabilityResponse(
                         status = it.status,
                         maxConcurrentAssignments = it.maxConcurrentAssignments,
-                        activeAssignments = 0,
-                        remainingCapacity = it.maxConcurrentAssignments,
+                        activeAssignments = activeAssignments,
+                        remainingCapacity = (it.maxConcurrentAssignments - activeAssignments).coerceAtLeast(0),
                         updatedAt = it.updatedAt,
                     )
                 },

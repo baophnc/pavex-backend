@@ -71,3 +71,21 @@ Patch 03 ports the shift/attendance boundary from the original Operations module
 - optimistic-lock and database constraints for shift/roster correctness
 
 Operational assignments remain Patch 04 scope.
+
+## Patch 04 — Operational assignment core
+
+Patch 04 adds the dispatchable work aggregate and worker execution queue:
+
+- idempotent shipment assignment planning at the application layer;
+- pickup, origin handling, line-haul, destination handling and last-mile work types;
+- fair candidate selection by active load / configured capacity;
+- candidate eligibility requires ACTIVE workforce, active hub membership, AVAILABLE state,
+  an active checked-in shift at the assignment hub, and compatible live Identity roles;
+- admin assignment search/manual assign/cancel with global or hub-scoped access;
+- worker queue with accept/reject/start/complete and self availability;
+- suspending/offboarding a member requeues assigned/accepted work and blocks when work is in progress;
+- removing a hub membership follows the same handover invariant;
+- workforce responses now report actual active assignment load and remaining capacity.
+
+Shipment does not call the planner over HTTP yet. Patch 05 introduces the authenticated Shipment -> Operations
+contract and removes Shipment-side fallback authorization/planning behavior.
