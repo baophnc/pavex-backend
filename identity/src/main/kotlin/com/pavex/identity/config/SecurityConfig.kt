@@ -19,12 +19,6 @@ import org.springframework.security.web.SecurityFilterChain
 @Configuration
 @EnableMethodSecurity
 class SecurityConfig {
-
-    /**
-     * Partners receives the narrowest Identity permission possible. It may read
-     * merchant-application eligibility and synchronize only the MERCHANT role;
-     * its service token cannot use broader Auth-owned /internal endpoints.
-     */
     @Bean
     @Order(1)
     fun partnersMerchantSecurityFilterChain(
@@ -38,21 +32,32 @@ class SecurityConfig {
                 "/internal/v1/identities/*/merchant-role",
             )
             .csrf { it.disable() }
-            .sessionManagement {
-                it.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-            }
-            .authorizeHttpRequests {
-                it.anyRequest().hasAuthority(IDENTITY_MERCHANT_AUTHORITY)
-            }
+            .sessionManagement { it.sessionCreationPolicy(SessionCreationPolicy.STATELESS) }
+            .authorizeHttpRequests { it.anyRequest().hasAuthority(IDENTITY_MERCHANT_AUTHORITY) }
             .oauth2ResourceServer { resourceServer ->
-                resourceServer.jwt { jwt ->
-                    jwt.decoder(partnersServiceJwtDecoder)
-                }
+                resourceServer.jwt { jwt -> jwt.decoder(partnersServiceJwtDecoder) }
             }
             .build()
 
     @Bean
     @Order(2)
+    fun operationsWorkforceSecurityFilterChain(
+        http: HttpSecurity,
+        @Qualifier("operationsServiceJwtDecoder")
+        operationsServiceJwtDecoder: JwtDecoder,
+    ): SecurityFilterChain =
+        http
+            .securityMatcher("/internal/v1/operations/**")
+            .csrf { it.disable() }
+            .sessionManagement { it.sessionCreationPolicy(SessionCreationPolicy.STATELESS) }
+            .authorizeHttpRequests { it.anyRequest().hasAuthority(IDENTITY_WORKFORCE_READ_AUTHORITY) }
+            .oauth2ResourceServer { resourceServer ->
+                resourceServer.jwt { jwt -> jwt.decoder(operationsServiceJwtDecoder) }
+            }
+            .build()
+
+    @Bean
+    @Order(3)
     fun internalSecurityFilterChain(
         http: HttpSecurity,
         @Qualifier("authServiceJwtDecoder")
@@ -61,21 +66,15 @@ class SecurityConfig {
         http
             .securityMatcher("/internal/**")
             .csrf { it.disable() }
-            .sessionManagement {
-                it.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-            }
-            .authorizeHttpRequests {
-                it.anyRequest().hasAuthority(IDENTITY_INTERNAL_AUTHORITY)
-            }
+            .sessionManagement { it.sessionCreationPolicy(SessionCreationPolicy.STATELESS) }
+            .authorizeHttpRequests { it.anyRequest().hasAuthority(IDENTITY_INTERNAL_AUTHORITY) }
             .oauth2ResourceServer { resourceServer ->
-                resourceServer.jwt { jwt ->
-                    jwt.decoder(authServiceJwtDecoder)
-                }
+                resourceServer.jwt { jwt -> jwt.decoder(authServiceJwtDecoder) }
             }
             .build()
 
     @Bean
-    @Order(3)
+    @Order(4)
     fun apiSecurityFilterChain(
         http: HttpSecurity,
         @Qualifier("userJwtDecoder")
@@ -83,9 +82,7 @@ class SecurityConfig {
     ): SecurityFilterChain =
         http
             .csrf { it.disable() }
-            .sessionManagement {
-                it.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-            }
+            .sessionManagement { it.sessionCreationPolicy(SessionCreationPolicy.STATELESS) }
             .authorizeHttpRequests {
                 it.requestMatchers(
                     "/v3/api-docs",
@@ -112,19 +109,12 @@ class SecurityConfig {
     fun jwtAuthenticationConverter(): Converter<Jwt, AbstractAuthenticationToken> =
         Converter { jwt ->
             val authorities = mutableListOf<SimpleGrantedAuthority>()
-
-            jwt.getClaimAsStringList("roles")
-                .orEmpty()
-                .forEach { role ->
-                    authorities += SimpleGrantedAuthority("ROLE_$role")
-                }
-
-            jwt.getClaimAsStringList("permissions")
-                .orEmpty()
-                .forEach { permission ->
-                    authorities += SimpleGrantedAuthority(permission)
-                }
-
+            jwt.getClaimAsStringList("roles").orEmpty().forEach { role ->
+                authorities += SimpleGrantedAuthority("ROLE_$role")
+            }
+            jwt.getClaimAsStringList("permissions").orEmpty().forEach { permission ->
+                authorities += SimpleGrantedAuthority(permission)
+            }
             JwtAuthenticationToken(
                 jwt,
                 authorities,
@@ -135,5 +125,6 @@ class SecurityConfig {
     companion object {
         private const val IDENTITY_INTERNAL_AUTHORITY = "SCOPE_identity.internal"
         private const val IDENTITY_MERCHANT_AUTHORITY = "SCOPE_identity.merchant"
+        private const val IDENTITY_WORKFORCE_READ_AUTHORITY = "SCOPE_identity.workforce.read"
     }
 }

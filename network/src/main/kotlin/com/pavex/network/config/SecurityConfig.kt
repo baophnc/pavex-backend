@@ -53,6 +53,22 @@ class SecurityConfig {
 
     @Bean
     @Order(3)
+    fun operationsInternalSecurityFilterChain(
+        http: HttpSecurity,
+        @Qualifier("operationsServiceJwtDecoder") operationsServiceJwtDecoder: JwtDecoder,
+    ): SecurityFilterChain =
+        http
+            .securityMatcher("/internal/v1/network/operations/**")
+            .csrf { it.disable() }
+            .sessionManagement { it.sessionCreationPolicy(SessionCreationPolicy.STATELESS) }
+            .authorizeHttpRequests { it.anyRequest().authenticated() }
+            .oauth2ResourceServer { resourceServer ->
+                resourceServer.jwt { jwt -> jwt.decoder(operationsServiceJwtDecoder) }
+            }
+            .build()
+
+    @Bean
+    @Order(4)
     fun securityFilterChain(
         http: HttpSecurity,
         @Qualifier("userJwtDecoder") jwtDecoder: JwtDecoder,

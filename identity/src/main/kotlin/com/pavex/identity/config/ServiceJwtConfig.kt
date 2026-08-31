@@ -30,6 +30,10 @@ class ServiceJwtConfig(
     private val partnersPublicKeyResource: Resource,
     @Value("\${security.service-jwt.partners.issuer}")
     private val partnersIssuer: String,
+    @Value("\${security.service-jwt.operations.public-key}")
+    private val operationsPublicKeyResource: Resource,
+    @Value("\${security.service-jwt.operations.issuer}")
+    private val operationsIssuer: String,
 ) {
 
     @Bean("serviceJwtEncoder")
@@ -66,6 +70,16 @@ class ServiceJwtConfig(
             expectedScope = IDENTITY_MERCHANT_SCOPE,
         )
 
+    @Bean("operationsServiceJwtDecoder")
+    fun operationsServiceJwtDecoder(): JwtDecoder =
+        serviceJwtDecoder(
+            publicKeyResource = operationsPublicKeyResource,
+            issuer = operationsIssuer,
+            expectedSubject = OPERATIONS_SERVICE,
+            expectedAudience = IDENTITY_SERVICE,
+            expectedScope = IDENTITY_WORKFORCE_READ_SCOPE,
+        )
+
     private fun serviceJwtDecoder(
         publicKeyResource: Resource,
         issuer: String,
@@ -89,7 +103,7 @@ class ServiceJwtConfig(
                     expectedAudience = expectedAudience,
                     expectedScope = expectedScope,
                 ),
-            )
+            ),
         )
 
         return decoder
@@ -121,7 +135,7 @@ class ServiceJwtConfig(
                         "invalid_token",
                         "Service JWT claims are invalid",
                         null,
-                    )
+                    ),
                 )
             }
         }
@@ -132,8 +146,10 @@ class ServiceJwtConfig(
         private const val SERVICE_TOKEN_TYPE = "service"
         private const val AUTH_SERVICE = "auth-service"
         private const val PARTNERS_SERVICE = "partners-service"
+        private const val OPERATIONS_SERVICE = "operations-service"
         private const val IDENTITY_SERVICE = "identity-service"
         private const val IDENTITY_INTERNAL_SCOPE = "identity.internal"
         private const val IDENTITY_MERCHANT_SCOPE = "identity.merchant"
+        private const val IDENTITY_WORKFORCE_READ_SCOPE = "identity.workforce.read"
     }
 }

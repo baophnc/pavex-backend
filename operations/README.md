@@ -39,3 +39,19 @@ Run the service from IntelliJ or Maven:
 ```
 
 The API Gateway exposes only `/api/v1/operations/**` and `/api/v1/admin/operations/**` to this service. Method-level business authorization is added with the business endpoints in later patches.
+
+## Patch 02 - Workforce
+
+Patch 02 adds the operational workforce aggregate while preserving database-per-service boundaries:
+
+- workforce member lifecycle (`ACTIVE`, `SUSPENDED`, `OFFBOARDED`)
+- workforce kinds (`COURIER`, `WAREHOUSE_OPERATOR`, `DISPATCHER`, `LINE_HAUL_DRIVER`)
+- active/history-preserving hub memberships with one primary hub
+- availability/capacity foundation used by later shift/assignment patches
+- immutable workforce audit records
+- admin workforce search/detail/create/status/capacity/hub/audit APIs
+- hub-scoped access for `operations.hub.manage`
+- service-JWT Identity snapshots (`identity.workforce.read`)
+- service-JWT Network hub snapshots (`network.operations.read`)
+
+Operations never joins or reads Identity/Network databases. Identity owns user/role truth and Network owns hub truth. Patch 03 connects work shifts to availability; Patch 04 adds live assignment workload, so Patch 02 intentionally reports `activeAssignments = 0`.

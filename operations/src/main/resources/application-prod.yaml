@@ -1,6 +1,9 @@
 security:
   jwt:
     public-key: ${JWT_PUBLIC_KEY}
+  service-jwt:
+    private-key: ${OPERATIONS_SERVICE_JWT_PRIVATE_KEY}
+    public-key: ${OPERATIONS_SERVICE_JWT_PUBLIC_KEY}
 
 springdoc:
   api-docs:

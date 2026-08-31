@@ -32,6 +32,9 @@ security:
     partners:
       issuer: ${PARTNERS_SERVICE_JWT_ISSUER:http://localhost:8083}
       public-key: ${PARTNERS_SERVICE_JWT_PUBLIC_KEY:file:./partners/.keys/public.pem}
+    operations:
+      issuer: ${OPERATIONS_SERVICE_JWT_ISSUER:http://localhost:8087}
+      public-key: ${OPERATIONS_SERVICE_JWT_PUBLIC_KEY:file:./auth/.keys/public.pem}
 
 pavex:
   bootstrap-admin:

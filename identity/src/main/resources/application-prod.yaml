@@ -7,6 +7,8 @@ security:
     public-key: ${IDENTITY_SERVICE_JWT_PUBLIC_KEY}
     partners:
       public-key: ${PARTNERS_SERVICE_JWT_PUBLIC_KEY}
+    operations:
+      public-key: ${OPERATIONS_SERVICE_JWT_PUBLIC_KEY}
 
 # API documentation is local/dev by default. Enable explicitly if production docs are intended.
 springdoc:
