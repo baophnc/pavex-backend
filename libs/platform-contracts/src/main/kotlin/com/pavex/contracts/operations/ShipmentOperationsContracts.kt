@@ -85,3 +85,8 @@ data class ShipmentAssignmentCompletionRequest(
     val routeLegId: UUID? = null,
     val note: String? = null,
 )
+
+data class ShipmentCaseAdminScopeSnapshot(
+    val userId: UUID,
+    val hubIds: Set<UUID> = emptySet(),
+)

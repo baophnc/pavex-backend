@@ -7,6 +7,7 @@ import com.pavex.contracts.operations.OperationsAssignmentType
 import com.pavex.contracts.operations.PlanShipmentOperationsRequest
 import com.pavex.contracts.operations.ShipmentAssignmentAccessRequest
 import com.pavex.contracts.operations.ShipmentAssignmentCompletionRequest
+import com.pavex.contracts.operations.ShipmentCaseAdminScopeSnapshot
 import com.pavex.contracts.operations.ShipmentOperationsAssignmentSnapshot
 import com.pavex.contracts.operations.ShipmentOperationsPlanResponse
 import com.pavex.operations.dto.OperationalAssignmentResponse
@@ -14,6 +15,7 @@ import com.pavex.operations.dto.ShipmentAssignmentPlan
 import com.pavex.operations.dto.ShipmentAssignmentRouteLeg
 import com.pavex.operations.entity.OperationalAssignmentType
 import com.pavex.operations.service.OperationalAssignmentService
+import com.pavex.operations.service.ShipmentCaseAdminScopeService
 import com.pavex.operations.service.ShipmentOperationsAccessService
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.GetMapping
@@ -29,6 +31,7 @@ import java.util.UUID
 class InternalShipmentOperationsController(
     private val assignments: OperationalAssignmentService,
     private val access: ShipmentOperationsAccessService,
+    private val caseAdminScope: ShipmentCaseAdminScopeService,
 ) {
     @PostMapping("/{shipmentId}/plan")
     fun plan(
@@ -57,6 +60,10 @@ class InternalShipmentOperationsController(
         assignments.cancelShipment(shipmentId, request.reason)
         return ResponseEntity.noContent().build()
     }
+
+    @GetMapping("/case-admin-scope/{userId}")
+    fun caseAdminScope(@PathVariable userId: UUID): ShipmentCaseAdminScopeSnapshot =
+        caseAdminScope.scope(userId)
 
     @PostMapping("/access/check")
     fun checkAccess(@RequestBody request: OperationsAccessCheckRequest): OperationsAccessCheckResponse =

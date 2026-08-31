@@ -65,3 +65,10 @@ data class ShipmentOperationalHubSnapshot(
     val active: Boolean,
     val onReservedRoute: Boolean,
 )
+
+data class ShipmentHubSnapshot(
+    val hubId: UUID,
+    val hubCode: String,
+    val hubName: String,
+    val active: Boolean,
+)

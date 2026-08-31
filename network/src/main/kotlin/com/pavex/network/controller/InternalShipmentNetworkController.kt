@@ -2,6 +2,7 @@ package com.pavex.network.controller
 
 import com.pavex.contracts.network.ReleaseShipmentNetworkRequest
 import com.pavex.contracts.network.ReserveShipmentNetworkRequest
+import com.pavex.contracts.network.ShipmentHubSnapshot
 import com.pavex.contracts.network.ShipmentNetworkReservationSnapshot
 import com.pavex.contracts.network.ShipmentOperationalHubSnapshot
 import com.pavex.network.service.ShipmentNetworkReservationService
@@ -30,6 +31,9 @@ class InternalShipmentNetworkController(
     ) {
         reservations.release(shipmentId, routeRevision, request)
     }
+
+    @GetMapping("/hubs/{hubId}")
+    fun hub(@PathVariable hubId: UUID): ShipmentHubSnapshot = reservations.resolveHub(hubId)
 
     @GetMapping("/routes/{shipmentId}/revisions/{routeRevision}/hubs/{hubId}")
     fun operationalHub(

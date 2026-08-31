@@ -4,6 +4,7 @@ import com.pavex.contracts.network.NetworkCoverageTier
 import com.pavex.contracts.network.ReleaseShipmentNetworkRequest
 import com.pavex.contracts.network.ReserveShipmentNetworkRequest
 import com.pavex.contracts.network.ShipmentNetworkPointSnapshot
+import com.pavex.contracts.network.ShipmentHubSnapshot
 import com.pavex.contracts.network.ShipmentOperationalHubSnapshot
 import com.pavex.contracts.network.ShipmentNetworkReservationSnapshot
 import com.pavex.contracts.network.ShipmentNetworkRouteLegSnapshot
@@ -120,6 +121,20 @@ class ShipmentNetworkReservationService(
             routeRevision = routeRevision,
             actorUserId = request.actorUserId,
             reason = request.reason,
+        )
+    }
+
+    @Transactional(readOnly = true)
+    fun resolveHub(hubId: UUID): ShipmentHubSnapshot {
+        require(hubId != UUID(0, 0)) { "hubId is required." }
+        val hub = hubs.findById(hubId).orElseThrow {
+            NotFoundException("hub_not_found", "Hub was not found.")
+        }
+        return ShipmentHubSnapshot(
+            hubId = hub.id,
+            hubCode = hub.code,
+            hubName = hub.name,
+            active = hub.status == HubStatus.ACTIVE,
         )
     }
 

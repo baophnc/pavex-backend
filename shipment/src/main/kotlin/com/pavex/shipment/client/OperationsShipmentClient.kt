@@ -7,6 +7,7 @@ import com.pavex.contracts.operations.OperationsCapability
 import com.pavex.contracts.operations.PlanShipmentOperationsRequest
 import com.pavex.contracts.operations.ShipmentAssignmentAccessRequest
 import com.pavex.contracts.operations.ShipmentAssignmentCompletionRequest
+import com.pavex.contracts.operations.ShipmentCaseAdminScopeSnapshot
 import com.pavex.contracts.operations.ShipmentOperationsAssignmentSnapshot
 import com.pavex.contracts.operations.ShipmentOperationsPlanResponse
 import com.pavex.contracts.operations.ShipmentOperationsRouteLeg
@@ -87,6 +88,22 @@ class OperationsShipmentClient(
         } catch (exception: RuntimeException) {
             logger.error("Failed to compensate Operations assignment plan for shipment {}", shipmentId, exception)
         }
+    }
+
+    fun caseAdminScope(userId: UUID): ShipmentCaseAdminScopeSnapshot {
+        val response = try {
+            client.get()
+                .uri("/internal/v1/operations/shipments/case-admin-scope/{userId}", userId)
+                .serviceAuthHeaders()
+                .retrieve()
+                .body(ShipmentCaseAdminScopeSnapshot::class.java)
+        } catch (exception: RestClientException) {
+            throw unavailable(exception)
+        }
+        return response ?: throw ShipmentUnavailableException(
+            "operations_invalid_response",
+            "Operations returned an empty case-admin scope response.",
+        )
     }
 
     fun canOperateAtHub(userId: UUID, hubId: UUID, capability: OperationsCapability): Boolean {
