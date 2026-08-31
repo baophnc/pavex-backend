@@ -11,7 +11,9 @@ interface UserRoleRepository :
 
     fun findAllByUserId(
         userId: UUID,
-    ): List<UserRole>fun findByUserIdAndRoleId(
+    ): List<UserRole>
+
+    fun findByUserIdAndRoleId(
         userId: UUID,
         roleId: UUID,
     ): UserRole?
@@ -23,6 +25,8 @@ interface UserRoleRepository :
         userId: UUID,
         roleId: UUID,
     ): Boolean
+
+    fun existsByRoleId(roleId: UUID): Boolean
 
     @Query(
         value = """

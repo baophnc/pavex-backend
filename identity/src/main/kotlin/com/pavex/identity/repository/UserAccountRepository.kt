@@ -5,6 +5,7 @@ import org.springframework.data.jpa.repository.JpaRepository
 import java.util.UUID
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
+import org.springframework.data.jpa.repository.Modifying
 import org.springframework.data.jpa.repository.Query
 import org.springframework.data.repository.query.Param
 interface UserAccountRepository : JpaRepository<UserAccount, UUID> {
@@ -12,6 +13,28 @@ interface UserAccountRepository : JpaRepository<UserAccount, UUID> {
     fun findByEmail(email: String): UserAccount?
 
     fun existsByEmail(email: String): Boolean
+
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Query(
+        value = """
+        UPDATE identity.user_account u
+        SET authorization_version = authorization_version + 1,
+            updated_at = :updatedAt,
+            version = version + 1
+        WHERE EXISTS (
+            SELECT 1
+            FROM identity.user_role ur
+            WHERE ur.user_id = u.id
+              AND ur.role_id = :roleId
+        )
+        """,
+        nativeQuery = true,
+    )
+    fun bumpAuthorizationVersionForRole(
+        @Param("roleId") roleId: UUID,
+        @Param("updatedAt") updatedAt: java.time.Instant,
+    ): Int
+
     @Query(
         value = """
         SELECT u.*

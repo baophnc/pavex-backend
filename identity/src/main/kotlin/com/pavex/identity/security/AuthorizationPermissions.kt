@@ -6,6 +6,7 @@ object AuthorizationPermissions {
         const val READ_USERS = "identity.users.read"
         const val MANAGE_USER_PROFILE = "identity.users.manage-profile"
         const val READ_ROLES = "identity.roles.read"
+        const val MANAGE_ROLES = "identity.roles.manage"
         const val CREATE_USERS = "identity.users.create"
         const val INVITE_USERS = "identity.users.invite"
         const val ASSIGN_ROLE = "identity.roles.assign"

@@ -75,10 +75,6 @@ class SecurityConfig {
     @Bean
     fun jwtAuthenticationConverter(): Converter<Jwt, AbstractAuthenticationToken> =
         Converter { jwt ->
-            println("JWT SUBJECT = ${jwt.subject}")
-            println("JWT ROLES = ${jwt.getClaimAsStringList("roles")}")
-            println("JWT PERMISSIONS = ${jwt.getClaimAsStringList("permissions")}")
-
             val authorities = mutableListOf<SimpleGrantedAuthority>()
 
             jwt.getClaimAsStringList("roles")
@@ -93,7 +89,6 @@ class SecurityConfig {
                     authorities += SimpleGrantedAuthority(permission)
                 }
 
-            println("AUTHORITIES = $authorities")
 
             JwtAuthenticationToken(
                 jwt,

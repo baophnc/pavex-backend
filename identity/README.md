@@ -8,6 +8,7 @@ Public ownership:
 
 - `/api/v1/users/**`
 - `/api/v1/roles/**`
+- `/api/v1/permissions/**` (read-only capability catalog)
 - `/api/v1/identities/**`
 - `/api/v1/auth/me` and `/api/v1/auth/me/profile`
 
@@ -23,3 +24,16 @@ claims with scope `auth.internal`.
 
 Service discovery is provided by Eureka; Eureka locates services but does not
 authenticate callers.
+
+## RBAC management policy
+
+`ADMIN` receives `identity.roles.manage`. That permission can create, rename,
+update the permission matrix of, and delete **custom** roles. System roles are
+read-only and cannot be edited or deleted through the API. Permission rows are
+backend-owned capabilities: the management API can list them and assign them to
+custom roles, but it cannot create, rename, or delete permissions.
+
+Changing a custom role's permission matrix increments `authorization_version`
+for users currently assigned that role so newly issued auth contexts/tokens
+reflect the change. Existing access tokens still follow the normal short access
+token TTL.
