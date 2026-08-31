@@ -41,6 +41,19 @@ shipment:
       service-url: ${NETWORK_SERVICE_URL:http://network-service}
     operations:
       service-url: ${OPERATIONS_SERVICE_URL:http://operations-service}
+  control-tower:
+    sent-not-arrived-after: ${SHIPMENT_CONTROL_SENT_NOT_ARRIVED_AFTER:PT4H}
+    missing-arrival-scan-grace: ${SHIPMENT_CONTROL_MISSING_ARRIVAL_GRACE:PT20M}
+    arrived-not-out-for-delivery-after: ${SHIPMENT_CONTROL_ARRIVED_NOT_OFD_AFTER:PT2H}
+    shipment-stuck-after: ${SHIPMENT_CONTROL_STUCK_AFTER:PT12H}
+    critical-overdue-after: ${SHIPMENT_CONTROL_CRITICAL_OVERDUE_AFTER:PT4H}
+    route-deviation-lookback: ${SHIPMENT_CONTROL_ROUTE_DEVIATION_LOOKBACK:PT24H}
+    delivery-proof-lookback: ${SHIPMENT_CONTROL_DELIVERY_PROOF_LOOKBACK:P2D}
+    low-case-sla: ${SHIPMENT_CONTROL_LOW_CASE_SLA:PT24H}
+    medium-case-sla: ${SHIPMENT_CONTROL_MEDIUM_CASE_SLA:PT8H}
+    high-case-sla: ${SHIPMENT_CONTROL_HIGH_CASE_SLA:PT2H}
+    critical-case-sla: ${SHIPMENT_CONTROL_CRITICAL_CASE_SLA:PT30M}
+    require-signature-on-delivery: ${SHIPMENT_CONTROL_REQUIRE_SIGNATURE:false}
 
 pavex:
   openapi:

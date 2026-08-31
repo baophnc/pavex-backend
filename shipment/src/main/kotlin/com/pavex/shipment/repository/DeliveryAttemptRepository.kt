@@ -2,6 +2,7 @@ package com.pavex.shipment.repository
 
 import com.pavex.shipment.entity.DeliveryAttempt
 import org.springframework.data.jpa.repository.JpaRepository
+import java.time.Instant
 import java.util.UUID
 
 interface DeliveryAttemptRepository : JpaRepository<DeliveryAttempt, UUID> {
@@ -9,4 +10,5 @@ interface DeliveryAttemptRepository : JpaRepository<DeliveryAttempt, UUID> {
     fun countByParcelId(parcelId: UUID): Long
     fun findAllByParcelIdOrderByAttemptNumberAsc(parcelId: UUID): List<DeliveryAttempt>
     fun findAllByShipment_IdOrderByOccurredAtAscCreatedAtAsc(shipmentId: UUID): List<DeliveryAttempt>
+    fun findAllByShipment_IdInAndCreatedAtGreaterThanEqual(shipmentIds: Collection<UUID>, createdAt: Instant): List<DeliveryAttempt>
 }

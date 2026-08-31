@@ -7,6 +7,7 @@ import com.pavex.shipment.dto.ShipmentDetailResponse
 import com.pavex.shipment.entity.ParcelStatus
 import com.pavex.shipment.entity.ShipmentLifecycleStatus
 import com.pavex.shipment.exception.InvalidShipmentRequestException
+import com.pavex.shipment.exception.ShipmentApiException
 import com.pavex.shipment.exception.ShipmentConflictException
 import com.pavex.shipment.exception.ShipmentNotFoundException
 import com.pavex.shipment.repository.ParcelRepository
@@ -25,6 +26,7 @@ class RecordParcelScanService(
     private val writer: ParcelScanWriter,
     private val network: NetworkShipmentClient,
     private val operationsGuard: ShipmentOperationsScanGuard,
+    private val controlSignals: ShipmentControlSignalService,
 ) {
     fun record(actorUserId: UUID, request: RecordParcelScanRequest): ShipmentDetailResponse {
         if (actorUserId == UUID(0, 0) || request.hubId == UUID(0, 0)) {
@@ -46,6 +48,7 @@ class RecordParcelScanService(
         }
 
         val target = reader.read(parcelCode)
+        try {
         if (target.lifecycleStatus != ShipmentLifecycleStatus.ACTIVE) {
             throw ShipmentConflictException("shipment_lifecycle_closed", "Shipment lifecycle is already closed.")
         }
@@ -90,6 +93,10 @@ class RecordParcelScanService(
         )
         operationsGuard.afterPersist(actorUserId, target, request, operationsContext, response)
         return response
+        } catch (exception: ShipmentApiException) {
+            runCatching { controlSignals.recordRejectedMovement(actorUserId, target, request, exception) }
+            throw exception
+        }
     }
 
     private fun defaultDescription(status: ParcelStatus?, hubName: String): String =
@@ -110,6 +117,8 @@ class ParcelScanTargetReader(
         val shipment = parcel.shipment
         return ParcelScanTarget(
             shipmentId = shipment.id,
+            parcelId = parcel.id,
+            parcelCode = parcel.code,
             routeRevision = shipment.routeRevision,
             originHubId = shipment.originHubId,
             destinationHubId = shipment.destinationHubId,
@@ -232,6 +241,8 @@ class ParcelScanWriter(
 
 data class ParcelScanTarget(
     val shipmentId: UUID,
+    val parcelId: UUID,
+    val parcelCode: String,
     val routeRevision: Int,
     val originHubId: UUID,
     val destinationHubId: UUID,
