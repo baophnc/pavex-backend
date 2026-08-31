@@ -19,8 +19,8 @@ import com.pavex.shipment.entity.ShipmentCaseStatus
 import com.pavex.shipment.entity.ShipmentControlSignal
 import com.pavex.shipment.entity.ShipmentLifecycleStatus
 import com.pavex.shipment.repository.DeliveryAttemptRepository
-import com.pavex.shipment.repository.ShipmentCaseRepository
 import com.pavex.shipment.repository.ShipmentControlSignalRepository
+import com.pavex.shipment.repository.ShipmentRepository
 import com.pavex.shipment.repository.ShipmentControlTowerReadRepository
 import org.springframework.security.core.Authentication
 import org.springframework.stereotype.Service
@@ -34,7 +34,7 @@ import java.util.UUID
 class ShipmentControlTowerService(
     private val shipmentReads: ShipmentControlTowerReadRepository,
     private val attempts: DeliveryAttemptRepository,
-    private val cases: ShipmentCaseRepository,
+    private val shipments: ShipmentRepository,
     private val signals: ShipmentControlSignalRepository,
     private val access: ShipmentControlTowerAccessService,
     private val properties: ShipmentControlTowerProperties,
@@ -112,7 +112,7 @@ class ShipmentControlTowerService(
             addMovementAlerts(alerts, shipment, now)
             addDeliveryProofAlerts(alerts, shipment, attemptsByShipment[shipment.id].orEmpty(), now)
             addRouteDeviationAlerts(alerts, shipment, signalsByShipment[shipment.id].orEmpty())
-            if (!shipment.isOnHold && alerts.none { it.shipmentId == shipment.id }) addStuckAlert(alerts, shipment, now)
+            if (!isShipmentOnHold(shipment) && alerts.none { it.shipmentId == shipment.id }) addStuckAlert(alerts, shipment, now)
         }
         addCaseAlerts(alerts, scope, requestedHubId, now)
         return alerts.asSequence()
@@ -171,18 +171,18 @@ class ShipmentControlTowerService(
     }
 
     private fun addCaseAlerts(alerts: MutableList<ShipmentControlAlertResponse>, scope: ShipmentControlTowerScope, requestedHubId: UUID?, now: Instant) {
-        val spec = Specification<ShipmentCase> { root, _, cb ->
-            val predicates = mutableListOf(
-                cb.not(root.get<ShipmentCaseStatus>("status").`in`(ShipmentCaseStatus.RESOLVED, ShipmentCaseStatus.CLOSED)),
-            )
-            if (!scope.global) predicates += root.get<UUID>("hubId").`in`(scope.hubIds)
-            if (requestedHubId != null) predicates += cb.equal(root.get<UUID>("hubId"), requestedHubId)
-            cb.and(*predicates.toTypedArray())
+        val allowedHubs = when {
+            requestedHubId != null -> setOf(requestedHubId)
+            scope.global -> emptySet()
+            else -> scope.hubIds
         }
-        cases.findAll(spec).forEach { item ->
+        shipmentReads.findActiveCases(allowedHubs).forEach { item ->
             val dueAt = item.createdAt.plus(caseSla(item.severity))
             if (!now.isAfter(dueAt)) return@forEach
-            val tracking = item.shipmentId?.let { id -> shipments.findById(id).orElse(null)?.trackingCode }
+            val tracking = item.shipmentId?.let { id ->
+                val found = shipments.findById(id)
+                if (found.isPresent) found.get().trackingCode else null
+            }
             alerts += ShipmentControlAlertResponse(
                 key = "CASE_OVERDUE:${item.id}",
                 type = ShipmentControlAlertType.CASE_OVERDUE,
@@ -239,6 +239,15 @@ class ShipmentControlTowerService(
         ShipmentCaseSeverity.MEDIUM -> properties.mediumCaseSla
         ShipmentCaseSeverity.HIGH -> properties.highCaseSla
         ShipmentCaseSeverity.CRITICAL -> properties.criticalCaseSla
+    }
+
+    private fun isShipmentOnHold(shipment: Shipment): Boolean {
+        if (shipment.lifecycleStatus != ShipmentLifecycleStatus.ACTIVE) return false
+        val latest = shipment.events
+            .asSequence()
+            .filter { it.code == "shipment.hold.placed" || it.code == "shipment.hold.released" }
+            .maxByOrNull { it.occurredAt }
+        return latest?.code == "shipment.hold.placed"
     }
 
     private fun isFinal(parcel: Parcel): Boolean = parcel.stage in setOf(ParcelStage.DELIVERED, ParcelStage.RETURNED, ParcelStage.CANCELLED)
