@@ -1,0 +1,7 @@
+security:
+  jwt:
+    public-key: ${JWT_PUBLIC_KEY}
+
+springdoc:
+  api-docs:
+    enabled: ${SPRINGDOC_API_DOCS_ENABLED:false}

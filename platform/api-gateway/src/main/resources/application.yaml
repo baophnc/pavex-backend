@@ -103,6 +103,14 @@ spring:
               filters:
                 - SetPath=/v3/api-docs
 
+            - id: operations-openapi
+              order: -994
+              uri: lb://operations-service
+              predicates:
+                - Path=/openapi/operations
+              filters:
+                - SetPath=/v3/api-docs
+
             # /api/v1/auth/** is mostly owned by Auth, but the current-user
             # profile endpoints are Identity-owned. Give these exact routes a
             # lower order value so they win before the Auth wildcard route.
@@ -277,6 +285,18 @@ spring:
                     redis-rate-limiter.burstCapacity: ${GATEWAY_SHIPMENT_BURST_CAPACITY:60}
                     redis-rate-limiter.requestedTokens: 1
 
+            - id: operations-api
+              uri: lb://operations-service
+              predicates:
+                - Path=/api/v1/operations/**,/api/v1/admin/operations/**
+              filters:
+                - name: RequestRateLimiter
+                  args:
+                    key-resolver: "#{@clientIpKeyResolver}"
+                    redis-rate-limiter.replenishRate: ${GATEWAY_OPERATIONS_REPLENISH_RATE:30}
+                    redis-rate-limiter.burstCapacity: ${GATEWAY_OPERATIONS_BURST_CAPACITY:60}
+                    redis-rate-limiter.requestedTokens: 1
+
 springdoc:
   api-docs:
     enabled: ${SPRINGDOC_API_DOCS_ENABLED:true}
@@ -298,6 +318,8 @@ springdoc:
         url: /openapi/pricing
       - name: Shipment API
         url: /openapi/shipments
+      - name: Operations API
+        url: /openapi/operations
     operations-sorter: method
     tags-sorter: alpha
     display-request-duration: true
