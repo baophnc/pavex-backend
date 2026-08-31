@@ -1,5 +1,6 @@
 package com.pavex.network.service
 
+import com.pavex.common.api.OneBasedPagination
 import com.pavex.network.dto.PageResponse
 import com.pavex.network.dto.coverage.CoverageResponse
 import com.pavex.network.dto.coverage.CreateCoverageRequest
@@ -33,12 +34,15 @@ class CoverageService(
         activeOnly: Boolean,
         page: Int,
         pageSize: Int,
-    ): PageResponse<CoverageResponse> = coverages.search(
-        serviceAreaId,
-        provinceCode?.trim().orEmpty(),
-        activeOnly,
-        PageRequest.of((page.coerceAtLeast(1) - 1), pageSize.coerceIn(1, 100)),
-    ).toResponse(CoverageResponse::from)
+    ): PageResponse<CoverageResponse> {
+        val pagination = OneBasedPagination.normalize(page, pageSize)
+        return coverages.search(
+            serviceAreaId,
+            provinceCode?.trim().orEmpty(),
+            activeOnly,
+            PageRequest.of(pagination.zeroBasedPage, pagination.pageSize),
+        ).toResponse(CoverageResponse::from)
+    }
 
     @Transactional(readOnly = true)
     fun get(id: UUID): CoverageResponse = CoverageResponse.from(find(id))

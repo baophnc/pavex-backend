@@ -1,5 +1,6 @@
 package com.pavex.pricing.service
 
+import com.pavex.common.api.OneBasedPagination
 import com.pavex.pricing.entity.PricingAuditAction
 import com.pavex.pricing.entity.PricingAuditEntityType
 import com.pavex.pricing.entity.PricingAuditLog
@@ -50,10 +51,12 @@ class PricingAuditService(
         actorUserId: UUID?,
         page: Int,
         pageSize: Int,
-    ) = auditLogs.search(
-        entityType,
-        entityId,
-        actorUserId,
-        PageRequest.of((page.coerceAtLeast(1) - 1), pageSize.coerceIn(1, 100)),
-    )
+    ) = OneBasedPagination.normalize(page, pageSize).run {
+        auditLogs.search(
+            entityType,
+            entityId,
+            actorUserId,
+            PageRequest.of(zeroBasedPage, pageSize),
+        )
+    }
 }

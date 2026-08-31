@@ -6,7 +6,7 @@ import com.pavex.identity.dto.admin.UpdateUserProfileRequest
 import com.pavex.identity.dto.admin.UpdateUserStatusRequest
 import com.pavex.identity.dto.admin.UserDetailResponse
 import com.pavex.identity.dto.admin.UserListItemResponse
-import com.pavex.identity.dto.common.PageResponse
+import com.pavex.common.api.PageResponse
 import com.pavex.identity.entity.AccountStatus
 import com.pavex.identity.entity.ProfileStatus
 import com.pavex.identity.security.AuthorizationPermissions

@@ -23,5 +23,3 @@ class LocationCatalogUnavailableException :
         "location_catalog_unavailable",
         "Location catalog is temporarily unavailable.",
     )
-
-data class ApiErrorResponse(val code: String, val message: String)

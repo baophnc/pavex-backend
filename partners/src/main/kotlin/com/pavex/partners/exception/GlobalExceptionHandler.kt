@@ -1,5 +1,6 @@
 package com.pavex.partners.exception
 
+import com.pavex.common.api.ApiErrorResponse
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.MethodArgumentNotValidException

@@ -1,5 +1,6 @@
 package com.pavex.network.service
 
+import com.pavex.common.api.OneBasedPagination
 import com.pavex.network.dto.PageResponse
 import com.pavex.network.dto.routing.CreateRouteTemplateRequest
 import com.pavex.network.dto.routing.RouteTemplateJourneyResponse
@@ -58,14 +59,15 @@ class RouteTemplateService(
         page: Int,
         pageSize: Int,
     ): PageResponse<RouteTemplateResponse> {
+        val pagination = OneBasedPagination.normalize(page, pageSize)
         val result = templates.searchAdmin(
             status,
             originHubId,
             destinationHubId,
             search?.trim().orEmpty(),
             PageRequest.of(
-                page.coerceAtLeast(1) - 1,
-                pageSize.coerceIn(1, 100),
+                pagination.zeroBasedPage,
+                pagination.pageSize,
                 Sort.by(Sort.Order.asc("priority"), Sort.Order.asc("code")),
             ),
         )

@@ -7,8 +7,3 @@ class ApiException(
     val code: String,
     override val message: String,
 ) : RuntimeException(message)
-
-data class ApiErrorResponse(
-    val code: String,
-    val message: String,
-)

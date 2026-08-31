@@ -8,4 +8,5 @@ interface DeliveryAttemptRepository : JpaRepository<DeliveryAttempt, UUID> {
     fun findByParcelIdAndIdempotencyKey(parcelId: UUID, idempotencyKey: String): DeliveryAttempt?
     fun countByParcelId(parcelId: UUID): Long
     fun findAllByParcelIdOrderByAttemptNumberAsc(parcelId: UUID): List<DeliveryAttempt>
+    fun findAllByShipment_IdOrderByOccurredAtAscCreatedAtAsc(shipmentId: UUID): List<DeliveryAttempt>
 }

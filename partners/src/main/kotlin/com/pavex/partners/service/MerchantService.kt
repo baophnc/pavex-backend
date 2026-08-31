@@ -1,5 +1,6 @@
 package com.pavex.partners.service
 
+import com.pavex.common.api.OneBasedPagination
 import com.pavex.partners.dto.AdminMerchantResponse
 import com.pavex.partners.dto.ChangeMerchantStatusRequest
 import com.pavex.partners.dto.MerchantListResponse
@@ -143,21 +144,20 @@ class MerchantService(
 
     @Transactional(readOnly = true)
     fun listAdmin(page: Int, pageSize: Int, status: MerchantStatus?, search: String?): MerchantListResponse {
-        val safePage = page.coerceAtLeast(1)
-        val safeSize = pageSize.coerceIn(1, 100)
+        val pagination = OneBasedPagination.normalize(page, pageSize)
         val result = merchants.search(
             status,
             normalize(search).orEmpty(),
             PageRequest.of(
-                safePage - 1,
-                safeSize,
+                pagination.zeroBasedPage,
+                pagination.pageSize,
                 Sort.by(Sort.Direction.DESC, "createdAt"),
             ),
         )
         return MerchantListResponse(
             result.content.map { it.toResponse() },
-            safePage,
-            safeSize,
+            pagination.page,
+            pagination.pageSize,
             result.totalElements,
             result.totalPages,
         )

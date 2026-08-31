@@ -5,7 +5,8 @@ import com.pavex.identity.dto.admin.CreateUserResponse
 import com.pavex.identity.dto.admin.UpdateUserProfileRequest
 import com.pavex.identity.dto.admin.UserDetailResponse
 import com.pavex.identity.dto.admin.UserListItemResponse
-import com.pavex.identity.dto.common.PageResponse
+import com.pavex.common.api.PageResponse
+import com.pavex.common.api.OneBasedPagination
 import com.pavex.identity.entity.AccountStatus
 import com.pavex.identity.entity.Gender
 import com.pavex.identity.entity.ProfileStatus
@@ -97,14 +98,13 @@ class AdminUserService(
         status: AccountStatus?,
         profileStatus: ProfileStatus?,
     ): PageResponse<UserListItemResponse> {
-        val page = pageInput.coerceAtLeast(1)
-        val pageSize = pageSizeInput.coerceIn(1, 100)
+        val pagination = OneBasedPagination.normalize(pageInput, pageSizeInput)
         val result = accounts.searchAdminUsers(
             normalize(searchInput),
             normalize(roleInput)?.uppercase(),
             status?.name,
             profileStatus?.name,
-            PageRequest.of(page - 1, pageSize),
+            PageRequest.of(pagination.zeroBasedPage, pagination.pageSize),
         )
         val ids = result.content.map { it.id }
         val profilesByUser = profiles.findAllByUserIdIn(ids).associateBy { it.userId }
@@ -113,8 +113,8 @@ class AdminUserService(
             items = result.content.map { account ->
                 toListItem(account, profilesByUser[account.id], rolesByUser[account.id].orEmpty())
             },
-            page = page,
-            pageSize = pageSize,
+            page = pagination.page,
+            pageSize = pagination.pageSize,
             totalCount = result.totalElements,
         )
     }

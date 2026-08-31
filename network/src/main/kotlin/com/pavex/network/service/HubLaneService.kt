@@ -1,5 +1,6 @@
 package com.pavex.network.service
 
+import com.pavex.common.api.OneBasedPagination
 import com.pavex.network.dto.PageResponse
 import com.pavex.network.dto.lane.CreateHubLaneRequest
 import com.pavex.network.dto.lane.HubLaneResponse
@@ -49,6 +50,7 @@ class HubLaneService(
         page: Int,
         pageSize: Int,
     ): PageResponse<HubLaneResponse> {
+        val pagination = OneBasedPagination.normalize(page, pageSize)
         val result = lanes.searchAdmin(
             status,
             transportMode,
@@ -56,8 +58,8 @@ class HubLaneService(
             toHubId,
             search?.trim().orEmpty(),
             PageRequest.of(
-                page.coerceAtLeast(1) - 1,
-                pageSize.coerceIn(1, 100),
+                pagination.zeroBasedPage,
+                pagination.pageSize,
                 Sort.by(Sort.Direction.ASC, "code"),
             ),
         )

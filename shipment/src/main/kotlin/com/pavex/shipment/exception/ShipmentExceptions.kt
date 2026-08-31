@@ -28,5 +28,3 @@ class UnprocessableShipmentException(code: String, message: String) :
 
 class ShipmentUnavailableException(code: String, message: String) :
     ShipmentApiException(HttpStatus.SERVICE_UNAVAILABLE, code, message)
-
-data class ApiErrorResponse(val code: String, val message: String)

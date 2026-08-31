@@ -1,5 +1,6 @@
 package com.pavex.network.service
 
+import com.pavex.common.api.OneBasedPagination
 import com.pavex.network.dto.PageResponse
 import com.pavex.network.dto.hub.CreateHubRequest
 import com.pavex.network.dto.hub.HubResponse
@@ -42,22 +43,27 @@ class HubService(
         search: String?,
         page: Int,
         pageSize: Int,
-    ): PageResponse<HubResponse> = hubs.searchAdmin(
-        status,
-        type,
-        provinceCode?.trim().orEmpty(),
-        search?.trim().orEmpty(),
-        PageRequest.of((page.coerceAtLeast(1) - 1), pageSize.coerceIn(1, 100), Sort.by(Sort.Direction.ASC, "code")),
-    ).toResponse(HubResponse::from)
+    ): PageResponse<HubResponse> {
+        val pagination = OneBasedPagination.normalize(page, pageSize)
+        return hubs.searchAdmin(
+            status,
+            type,
+            provinceCode?.trim().orEmpty(),
+            search?.trim().orEmpty(),
+            PageRequest.of(pagination.zeroBasedPage, pagination.pageSize, Sort.by(Sort.Direction.ASC, "code")),
+        ).toResponse(HubResponse::from)
+    }
 
     @Transactional(readOnly = true)
-    fun listPublic(provinceCode: String?, search: String?, page: Int, pageSize: Int): PageResponse<PublicHubResponse> =
-        hubs.searchPublic(
+    fun listPublic(provinceCode: String?, search: String?, page: Int, pageSize: Int): PageResponse<PublicHubResponse> {
+        val pagination = OneBasedPagination.normalize(page, pageSize)
+        return hubs.searchPublic(
             HubStatus.ACTIVE,
             provinceCode?.trim().orEmpty(),
             search?.trim().orEmpty(),
-            PageRequest.of((page.coerceAtLeast(1) - 1), pageSize.coerceIn(1, 100), Sort.by(Sort.Direction.ASC, "name")),
+            PageRequest.of(pagination.zeroBasedPage, pagination.pageSize, Sort.by(Sort.Direction.ASC, "name")),
         ).toResponse(PublicHubResponse::from)
+    }
 
     @Transactional(readOnly = true)
     fun get(id: UUID): HubResponse = HubResponse.from(find(id))

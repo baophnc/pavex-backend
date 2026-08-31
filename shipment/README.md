@@ -84,3 +84,12 @@ Smoke database foundation after the application has run Flyway:
 - Failed attempts require a failure reason and keep the parcel eligible for a later `OUT_FOR_DELIVERY` retry or return flow.
 - Attempts are durable, numbered per parcel, idempotent per parcel/key, and emit `shipment.delivery-attempt-recorded` through the Shipment outbox.
 - Terminal `DELIVERED`/`RETURNED` shipment states now close the shipment lifecycle and consume the reserved route locally. The original C# solution performs that closure through Operations integration; this local completion is the Kotlin fallback until Operations exists in the Maven reactor.
+
+## Admin shipment query contract
+
+Management Portal uses read-only admin endpoints guarded by `shipments.admin.read`:
+
+- `GET /api/v1/admin/shipments` supports `status`, `lifecycleStatus`, `merchantId`, `q`, `cursor`, and `limit`.
+- `GET /api/v1/admin/shipments/{trackingCode}` returns internal ownership/routing identifiers, the customer detail snapshot, the complete event stream, and delivery attempts.
+
+The admin list returns `totalCount` in addition to cursor pagination so dashboards can render operational counters without using merchant-owned APIs.

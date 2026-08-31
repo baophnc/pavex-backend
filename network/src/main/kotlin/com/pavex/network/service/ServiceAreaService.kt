@@ -1,5 +1,6 @@
 package com.pavex.network.service
 
+import com.pavex.common.api.OneBasedPagination
 import com.pavex.network.dto.PageResponse
 import com.pavex.network.dto.servicearea.CreateServiceAreaRequest
 import com.pavex.network.dto.servicearea.ServiceAreaResponse
@@ -30,13 +31,15 @@ class ServiceAreaService(
     private val audit: NetworkAuditService,
 ) {
     @Transactional(readOnly = true)
-    fun list(status: ServiceAreaStatus?, regionId: UUID?, search: String?, page: Int, pageSize: Int): PageResponse<ServiceAreaResponse> =
-        serviceAreas.search(
+    fun list(status: ServiceAreaStatus?, regionId: UUID?, search: String?, page: Int, pageSize: Int): PageResponse<ServiceAreaResponse> {
+        val pagination = OneBasedPagination.normalize(page, pageSize)
+        return serviceAreas.search(
             status,
             regionId,
             search?.trim().orEmpty(),
-            PageRequest.of((page.coerceAtLeast(1) - 1), pageSize.coerceIn(1, 100), Sort.by(Sort.Direction.ASC, "code")),
+            PageRequest.of(pagination.zeroBasedPage, pagination.pageSize, Sort.by(Sort.Direction.ASC, "code")),
         ).toResponse(ServiceAreaResponse::from)
+    }
 
     @Transactional(readOnly = true)
     fun get(id: UUID): ServiceAreaResponse = ServiceAreaResponse.from(find(id))

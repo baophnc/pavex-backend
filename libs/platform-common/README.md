@@ -20,3 +20,10 @@ It is **not** a Spring Boot application and must not contain controllers, servic
 - Spring configuration and business services.
 
 A type belongs here only when at least two modules need the exact same technical meaning.
+
+## Current shared primitives
+
+- `PageResponse<T>` for compatible page-shaped APIs.
+- `OneBasedPagination` for the common API `page` / `pageSize` normalization rule.
+- `ApiErrorResponse` for services using the `{code, message}` error envelope.
+- `PavexHeaders`, `PavexJwtClaims`, and `PavexTokenTypes` for shared protocol names.

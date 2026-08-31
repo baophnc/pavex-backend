@@ -25,5 +25,3 @@ class PricingUnavailableException(code: String, message: String) :
 
 class QuoteExpiredException(code: String, message: String) :
     PricingApiException(HttpStatus.GONE, code, message)
-
-data class ApiErrorResponse(val code: String, val message: String)

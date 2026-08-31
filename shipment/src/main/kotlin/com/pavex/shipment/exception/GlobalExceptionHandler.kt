@@ -1,5 +1,6 @@
 package com.pavex.shipment.exception
 
+import com.pavex.common.api.ApiErrorResponse
 import org.springframework.http.ResponseEntity
 import org.springframework.http.converter.HttpMessageNotReadableException
 import org.springframework.web.bind.MethodArgumentNotValidException

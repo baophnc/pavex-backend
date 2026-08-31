@@ -1,5 +1,6 @@
 package com.pavex.network.service
 
+import com.pavex.common.api.OneBasedPagination
 import tools.jackson.databind.ObjectMapper
 import com.pavex.network.entity.NetworkAuditAction
 import com.pavex.network.entity.NetworkAuditEntityType
@@ -49,10 +50,12 @@ class NetworkAuditService(
         actorUserId: UUID?,
         page: Int,
         pageSize: Int,
-    ) = auditLogs.search(
-        entityType,
-        entityId,
-        actorUserId,
-        PageRequest.of((page.coerceAtLeast(1) - 1), pageSize.coerceIn(1, 100)),
-    )
+    ) = OneBasedPagination.normalize(page, pageSize).run {
+        auditLogs.search(
+            entityType,
+            entityId,
+            actorUserId,
+            PageRequest.of(zeroBasedPage, pageSize),
+        )
+    }
 }
