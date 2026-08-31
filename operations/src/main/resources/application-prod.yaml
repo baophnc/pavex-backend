@@ -12,3 +12,12 @@ security:
 springdoc:
   api-docs:
     enabled: ${SPRINGDOC_API_DOCS_ENABLED:false}
+
+
+spring:
+  rabbitmq:
+    host: ${RABBITMQ_HOST}
+    port: ${RABBITMQ_PORT:5672}
+    username: ${RABBITMQ_USERNAME}
+    password: ${RABBITMQ_PASSWORD}
+    virtual-host: ${RABBITMQ_VHOST:pavex}

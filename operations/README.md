@@ -103,3 +103,16 @@ Patch 05 turns the Patch 04 planner into a real microservice boundary:
 - delivery attempts require an in-progress owned last-mile assignment and complete it when all parcels are delivered.
 
 Operations remains the owner of workforce/assignment state. Shipment never reads the Operations database. Patch 06 adds durable assignment events/outbox/redispatch so cross-service convergence no longer depends only on synchronous retries.
+
+## Patch 06 — dispatch reliability
+
+Assignment state changes are now captured transactionally by PostgreSQL into two durable stores:
+
+- `operations.operational_assignment_event_logs` is the immutable assignment history.
+- `operations.outbox_messages` is the integration-event delivery queue.
+
+The database trigger records every assignment insert/status/assignee transition, including requeues caused by workforce or shift changes, so application code cannot accidentally mutate an assignment without creating history and an outbox message in the same transaction.
+
+The outbox dispatcher publishes `operations.assignment.*` events to the durable `pavex.events` topic exchange with RabbitMQ publisher confirms. Multiple Operations instances safely claim different rows with `FOR UPDATE SKIP LOCKED`. Failed messages use exponential retry and are dead-lettered in the Operations database after the configured maximum attempts; Patch 07 exposes the admin inspection/retry/discard APIs.
+
+The redispatch worker periodically considers `PENDING` and `REJECTED` assignments. It uses PostgreSQL advisory transaction locks for the assignment and workforce pool, excludes members who already rejected that assignment, and reuses the same shift/availability/capacity/Identity eligibility rules as initial planning.

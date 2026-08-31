@@ -19,6 +19,7 @@ import com.pavex.operations.exception.InvalidOperationsRequestException
 import com.pavex.operations.exception.OperationsConflictException
 import com.pavex.operations.exception.OperationsNotFoundException
 import com.pavex.operations.repository.HubMembershipRepository
+import com.pavex.operations.repository.OperationalAssignmentEventLogRepository
 import com.pavex.operations.repository.OperationalAssignmentRepository
 import com.pavex.operations.repository.WorkShiftRepository
 import com.pavex.operations.repository.WorkforceAvailabilityRepository
@@ -34,6 +35,7 @@ import java.util.UUID
 @Service
 class OperationalAssignmentService(
     private val assignments: OperationalAssignmentRepository,
+    private val assignmentEvents: OperationalAssignmentEventLogRepository,
     private val members: WorkforceMemberRepository,
     private val memberships: HubMembershipRepository,
     private val availabilities: WorkforceAvailabilityRepository,
@@ -75,6 +77,40 @@ class OperationalAssignmentService(
         return assignments.saveAllAndFlush(created)
             .sortedBy { it.sequence }
             .map(OperationalAssignmentResponse::from)
+    }
+
+    @Transactional
+    fun redispatch(assignmentId: UUID): Boolean {
+        locks.assignment(assignmentId.toString().replace("-", ""))
+        val assignmentResult = assignments.findById(assignmentId)
+        if (assignmentResult.isEmpty) return false
+        val assignment = assignmentResult.get()
+        if (assignment.status !in REDISPATCHABLE_STATUSES) return false
+
+        locks.pool("${assignment.hubId}:${assignment.requiredKind}")
+        val rejectedMembers = assignmentEvents
+            .findAllByAssignmentIdAndEventTypeAndWorkforceMemberIdIsNotNull(
+                assignment.id,
+                com.pavex.operations.entity.OperationalAssignmentEventType.REJECTED,
+            )
+            .mapNotNull { it.workforceMemberId }
+            .toSet()
+        val now = Instant.now()
+        val memberId = selectCandidate(
+            assignment.hubId,
+            assignment.requiredKind,
+            emptyMap(),
+            now,
+            rejectedMembers,
+        ) ?: return false
+
+        return try {
+            assignment.assign(memberId, null, now)
+            assignments.saveAndFlush(assignment)
+            true
+        } catch (_: ObjectOptimisticLockingFailureException) {
+            false
+        }
     }
 
     @Transactional(readOnly = true)
@@ -298,8 +334,10 @@ class OperationalAssignmentService(
         kind: WorkforceMemberKind,
         plannedLoads: Map<UUID, Int>,
         now: Instant,
+        excludedMemberIds: Set<UUID> = emptySet(),
     ): UUID? {
         val candidates = eligibleBaseCandidates(hubId, kind, now)
+            .filterNot { it.member.id in excludedMemberIds }
         if (candidates.isEmpty()) return null
         val candidateIds = candidates.map { it.member.id }
         val activeLoads = assignments.findAllByAssigneeWorkforceMemberIdInAndStatusIn(candidateIds, ACTIVE_STATUSES)
@@ -483,6 +521,10 @@ class OperationalAssignmentService(
             OperationalAssignmentStatus.IN_PROGRESS,
         )
         val TERMINAL_STATUSES = setOf(OperationalAssignmentStatus.COMPLETED, OperationalAssignmentStatus.CANCELLED)
+        private val REDISPATCHABLE_STATUSES = setOf(
+            OperationalAssignmentStatus.PENDING,
+            OperationalAssignmentStatus.REJECTED,
+        )
         private const val MAX_ADMIN_RESULTS = 500
     }
 }

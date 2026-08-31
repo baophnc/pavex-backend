@@ -9,6 +9,8 @@ class AssignmentLockService(
 ) {
     fun shipment(shipmentId: String) = lock("operations:assignment:shipment:$shipmentId")
 
+    fun assignment(assignmentId: String) = lock("operations:assignment:$assignmentId")
+
     fun pool(hubAndKind: String) = lock("operations:assignment:pool:$hubAndKind")
 
     private fun lock(key: String) {
