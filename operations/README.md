@@ -16,7 +16,7 @@ This patch intentionally establishes the runtime boundary only:
 - centralized Swagger/OpenAPI aggregation
 - production profile that requires an external JWT public key
 
-Workforce tables/endpoints arrive in Operations Patch 02. Shifts, assignments, Shipment integration and durable dispatch are intentionally not implemented in this foundation patch.
+Patch 02 adds workforce management. Patch 03 adds work shifts and roster attendance. Assignment planning, Shipment integration and durable dispatch remain intentionally deferred to later patches.
 
 ## Local endpoints
 
@@ -55,3 +55,19 @@ Patch 02 adds the operational workforce aggregate while preserving database-per-
 - service-JWT Network hub snapshots (`network.operations.read`)
 
 Operations never joins or reads Identity/Network databases. Identity owns user/role truth and Network owns hub truth. Patch 03 connects work shifts to availability; Patch 04 adds live assignment workload, so Patch 02 intentionally reports `activeAssignments = 0`.
+
+
+## Patch 03 — Work shifts
+
+Patch 03 ports the shift/attendance boundary from the original Operations module:
+
+- admin search/detail/create/update/cancel shift APIs
+- roster assignment/removal and no-show marking
+- worker `shifts/mine`, check-in and check-out APIs
+- 30-minute early check-in window
+- overlap prevention for active roster assignments
+- active Identity role + active hub membership revalidation before assignment/check-in
+- automatic workforce availability transitions (`AVAILABLE` on check-in, `OFF_DUTY` on check-out/cancel/absence)
+- optimistic-lock and database constraints for shift/roster correctness
+
+Operational assignments remain Patch 04 scope.
