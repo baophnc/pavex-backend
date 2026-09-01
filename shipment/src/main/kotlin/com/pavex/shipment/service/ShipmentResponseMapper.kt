@@ -175,6 +175,7 @@ object ShipmentResponseMapper {
 
     private fun parcels(shipment: Shipment) = shipment.parcels.sortedBy { it.sequence }.map { parcel ->
         ParcelResponse(
+            id = parcel.id,
             code = parcel.code,
             sequence = parcel.sequence,
             description = parcel.description,

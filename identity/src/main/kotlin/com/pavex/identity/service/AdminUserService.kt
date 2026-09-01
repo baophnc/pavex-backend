@@ -42,6 +42,26 @@ class AdminUserService(
 ) {
     @Transactional
     fun createUser(actorUserId: UUID, request: CreateUserRequest): CreateUserResponse {
+        val requestedRole = request.roleCode.trim().uppercase()
+        if (requestedRole in RoleService.WORKFORCE_MANAGED_ROLES) {
+            throw ResponseStatusException(
+                HttpStatus.CONFLICT,
+                "Operational workforce roles must be provisioned from Operations > Workforce so Identity profile and workforce state stay consistent.",
+            )
+        }
+        return createUserInternal(actorUserId, request)
+    }
+
+    @Transactional
+    fun createWorkforceUser(actorUserId: UUID, request: CreateUserRequest): CreateUserResponse {
+        val requestedRole = request.roleCode.trim().uppercase()
+        if (requestedRole !in RoleService.WORKFORCE_MANAGED_ROLES) {
+            throw ResponseStatusException(HttpStatus.FORBIDDEN, "Role is not managed by workforce onboarding")
+        }
+        return createUserInternal(actorUserId, request)
+    }
+
+    private fun createUserInternal(actorUserId: UUID, request: CreateUserRequest): CreateUserResponse {
         val email = request.email.trim().lowercase()
         if (accounts.existsByEmail(email)) {
             throw ResponseStatusException(HttpStatus.CONFLICT, "Email already exists")
@@ -240,4 +260,5 @@ class AdminUserService(
         val uri = runCatching { URI(value.trim()) }.getOrElse { throw InvalidUserProfileException() }
         if (!uri.isAbsolute || uri.scheme.lowercase() !in setOf("http", "https")) throw InvalidUserProfileException()
     }
+
 }

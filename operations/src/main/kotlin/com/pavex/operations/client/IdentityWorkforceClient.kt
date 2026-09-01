@@ -1,5 +1,6 @@
 package com.pavex.operations.client
 
+import com.pavex.contracts.operations.ProvisionWorkforceIdentityRequest
 import com.pavex.contracts.operations.WorkforceIdentitySnapshot
 import com.pavex.contracts.operations.WorkforceIdentitySnapshotRequest
 import com.pavex.operations.exception.OperationsUnavailableException
@@ -28,6 +29,27 @@ class IdentityWorkforceClient(
             .chunked(BATCH_SIZE)
             .flatMap { chunk -> fetch(chunk, search) }
             .toList()
+
+    fun provision(request: ProvisionWorkforceIdentityRequest): WorkforceIdentitySnapshot = try {
+        client.post()
+            .uri("/internal/v1/operations/identities/provision")
+            .header(HttpHeaders.AUTHORIZATION, "Bearer ${serviceJwtIssuer.issueForIdentity()}")
+            .body(request)
+            .retrieve()
+            .body(WorkforceIdentitySnapshot::class.java)
+            ?: throw unavailable("identity_invalid_response", "Identity returned an empty workforce provision response.")
+    } catch (_: HttpClientErrorException.Unauthorized) {
+        throw unavailable("identity_authentication_failed", "Operations could not authenticate with Identity.")
+    } catch (_: HttpClientErrorException.Forbidden) {
+        throw unavailable("identity_authorization_failed", "Operations is not authorized to provision workforce Identity accounts.")
+    } catch (exception: HttpClientErrorException) {
+        throw OperationsUnavailableException(
+            "identity_workforce_provision_failed",
+            exception.responseBodyAsString.takeIf { it.isNotBlank() } ?: "Identity rejected workforce provisioning.",
+        )
+    } catch (_: RestClientException) {
+        throw unavailable("identity_unavailable", "Identity workforce provisioning is temporarily unavailable.")
+    }
 
     private fun fetch(userIds: List<UUID>, search: String?): List<WorkforceIdentitySnapshot> = try {
         client.post()

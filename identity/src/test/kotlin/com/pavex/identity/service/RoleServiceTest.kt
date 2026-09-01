@@ -8,6 +8,7 @@ import com.pavex.identity.entity.Role
 import com.pavex.identity.entity.RolePermission
 import com.pavex.identity.exception.RoleInUseException
 import com.pavex.identity.exception.SystemRoleProtectedException
+import com.pavex.identity.exception.WorkforceRoleManagedByOperationsException
 import com.pavex.identity.repository.PermissionRepository
 import com.pavex.identity.repository.RolePermissionRepository
 import com.pavex.identity.repository.RoleRepository
@@ -108,6 +109,24 @@ class RoleServiceTest {
         assertEquals(role.id, bumpedRoleId)
         assertEquals(listOf(newPermission.id), savedMappings.map { it.permissionId })
         assertEquals(listOf(newPermission.code), result.permissions.map { it.code })
+    }
+
+    @Test
+    fun `workforce roles cannot be assigned directly from identity`() {
+        val service = service(role = null)
+
+        assertThrows(WorkforceRoleManagedByOperationsException::class.java) {
+            service.assignRole(UUID.randomUUID(), UUID.randomUUID(), "DRIVER")
+        }
+    }
+
+    @Test
+    fun `workforce roles cannot be removed directly from identity`() {
+        val service = service(role = null)
+
+        assertThrows(WorkforceRoleManagedByOperationsException::class.java) {
+            service.removeRole(UUID.randomUUID(), UUID.randomUUID(), "HUB_MANAGER")
+        }
     }
 
     @Test

@@ -37,7 +37,7 @@ class SecurityConfig {
                     .requestMatchers("/api/v1/shipments/**").authenticated()
                     .requestMatchers("/api/v1/parcel-scans/**").authenticated()
                     .requestMatchers("/api/v1/deliveries/**").authenticated()
-                    .requestMatchers("/api/v1/admin/shipments/**", "/api/v1/admin/shipment-cases/**", "/api/v1/admin/control-tower/**").authenticated()
+                    .requestMatchers("/api/v1/admin/shipments/**", "/api/v1/admin/shipment-cases/**", "/api/v1/admin/control-tower/**", "/api/v1/admin/shipment-exceptions/**").authenticated()
                     .requestMatchers("/internal/**").denyAll()
                     .anyRequest().denyAll()
             }

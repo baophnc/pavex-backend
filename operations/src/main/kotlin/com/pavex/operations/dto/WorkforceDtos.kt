@@ -142,3 +142,20 @@ data class WorkforceAuditResponse(
     val reason: String?,
     val occurredAt: Instant,
 )
+
+enum class WorkforceOnboardingGender { MALE, FEMALE, OTHER }
+enum class DispatcherAccessLevel { HUB, GLOBAL }
+
+data class OnboardWorkforceMemberRequest(
+    val email: String,
+    val firstName: String,
+    val lastName: String,
+    val displayName: String? = null,
+    val gender: WorkforceOnboardingGender,
+    val dateOfBirth: LocalDate,
+    val avatarUrl: String? = null,
+    val kind: WorkforceMemberKind,
+    val dispatcherAccessLevel: DispatcherAccessLevel? = null,
+    val hubId: UUID? = null,
+    val maxConcurrentAssignments: Int? = null,
+)

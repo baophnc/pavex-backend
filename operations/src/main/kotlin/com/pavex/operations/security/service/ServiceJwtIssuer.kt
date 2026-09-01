@@ -24,7 +24,7 @@ class ServiceJwtIssuer(
     private val ttl: Duration,
 ) {
     fun issueForIdentity(now: Instant = Instant.now()): String =
-        issue(IDENTITY_SERVICE, IDENTITY_WORKFORCE_READ_SCOPE, now)
+        issue(IDENTITY_SERVICE, "$IDENTITY_WORKFORCE_READ_SCOPE $IDENTITY_WORKFORCE_PROVISION_SCOPE", now)
 
     fun issueForNetwork(now: Instant = Instant.now()): String =
         issue(NETWORK_SERVICE, NETWORK_OPERATIONS_READ_SCOPE, now)
@@ -53,6 +53,7 @@ class ServiceJwtIssuer(
         private const val IDENTITY_SERVICE = "identity-service"
         private const val NETWORK_SERVICE = "network-service"
         private const val IDENTITY_WORKFORCE_READ_SCOPE = "identity.workforce.read"
+        private const val IDENTITY_WORKFORCE_PROVISION_SCOPE = "identity.workforce.provision"
         private const val NETWORK_OPERATIONS_READ_SCOPE = "network.operations.read"
     }
 }

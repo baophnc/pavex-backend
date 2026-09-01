@@ -22,6 +22,12 @@ class RoleInUseException : ApiException(
     message = "Role is assigned to one or more users and cannot be deleted.",
 )
 
+class WorkforceRoleManagedByOperationsException : ApiException(
+    status = HttpStatus.CONFLICT,
+    code = "workforce_role_managed_by_operations",
+    message = "Operational workforce roles are managed by Operations > Workforce and cannot be assigned or removed directly in Identity.",
+)
+
 class UnknownPermissionException(
     permissionCodes: Collection<String>,
 ) : ApiException(

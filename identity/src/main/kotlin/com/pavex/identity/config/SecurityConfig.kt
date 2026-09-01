@@ -50,7 +50,11 @@ class SecurityConfig {
             .securityMatcher("/internal/v1/operations/**")
             .csrf { it.disable() }
             .sessionManagement { it.sessionCreationPolicy(SessionCreationPolicy.STATELESS) }
-            .authorizeHttpRequests { it.anyRequest().hasAuthority(IDENTITY_WORKFORCE_READ_AUTHORITY) }
+            .authorizeHttpRequests {
+                it.requestMatchers("/internal/v1/operations/identities/snapshots").hasAuthority(IDENTITY_WORKFORCE_READ_AUTHORITY)
+                    .requestMatchers("/internal/v1/operations/identities/provision").hasAuthority(IDENTITY_WORKFORCE_PROVISION_AUTHORITY)
+                    .anyRequest().denyAll()
+            }
             .oauth2ResourceServer { resourceServer ->
                 resourceServer.jwt { jwt -> jwt.decoder(operationsServiceJwtDecoder) }
             }
@@ -126,5 +130,6 @@ class SecurityConfig {
         private const val IDENTITY_INTERNAL_AUTHORITY = "SCOPE_identity.internal"
         private const val IDENTITY_MERCHANT_AUTHORITY = "SCOPE_identity.merchant"
         private const val IDENTITY_WORKFORCE_READ_AUTHORITY = "SCOPE_identity.workforce.read"
+        private const val IDENTITY_WORKFORCE_PROVISION_AUTHORITY = "SCOPE_identity.workforce.provision"
     }
 }

@@ -3,6 +3,7 @@ package com.pavex.operations.controller
 import com.pavex.common.api.PageResponse
 import com.pavex.operations.dto.AssignWorkforceHubRequest
 import com.pavex.operations.dto.CreateWorkforceMemberRequest
+import com.pavex.operations.dto.OnboardWorkforceMemberRequest
 import com.pavex.operations.dto.SetWorkforceCapacityRequest
 import com.pavex.operations.dto.SetWorkforceStatusRequest
 import com.pavex.operations.dto.WorkforceAuditResponse
@@ -10,6 +11,7 @@ import com.pavex.operations.dto.WorkforceMemberResponse
 import com.pavex.operations.entity.WorkforceMemberKind
 import com.pavex.operations.entity.WorkforceMemberStatus
 import com.pavex.operations.service.WorkforceAccessScopeService
+import com.pavex.operations.service.WorkforceOnboardingService
 import com.pavex.operations.service.WorkforceService
 import org.springframework.http.HttpStatus
 import org.springframework.security.access.prepost.PreAuthorize
@@ -31,6 +33,7 @@ import java.util.UUID
 @PreAuthorize("hasAnyAuthority('operations.workforce.manage','operations.hub.manage')")
 class AdminWorkforceController(
     private val service: WorkforceService,
+    private val onboarding: WorkforceOnboardingService,
     private val accessScopes: WorkforceAccessScopeService,
 ) {
     @GetMapping
@@ -50,6 +53,14 @@ class AdminWorkforceController(
         authentication: Authentication,
         @PathVariable id: UUID,
     ): WorkforceMemberResponse = service.get(accessScopes.resolve(authentication), id)
+
+    @PostMapping("/onboard")
+    @PreAuthorize("hasAuthority('operations.workforce.manage')")
+    @ResponseStatus(HttpStatus.CREATED)
+    fun onboard(
+        authentication: Authentication,
+        @RequestBody request: OnboardWorkforceMemberRequest,
+    ): WorkforceMemberResponse = onboarding.onboard(actor(authentication), accessScopes.resolve(authentication), request)
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)

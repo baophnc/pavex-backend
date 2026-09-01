@@ -25,3 +25,15 @@ data class WorkforceIdentitySnapshot(
     val createdAt: Instant,
     val updatedAt: Instant,
 )
+
+data class ProvisionWorkforceIdentityRequest(
+    val actorUserId: UUID,
+    val email: String,
+    val roleCode: String,
+    val firstName: String,
+    val lastName: String,
+    val displayName: String? = null,
+    val gender: String,
+    val dateOfBirth: LocalDate,
+    val avatarUrl: String? = null,
+)

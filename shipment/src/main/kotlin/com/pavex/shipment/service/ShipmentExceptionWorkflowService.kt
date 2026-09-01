@@ -96,6 +96,12 @@ class ShipmentExceptionWorkflowService(
         val shipment = load(shipmentId)
         val request = requests.findByIdAndShipmentId(requestId, shipmentId)
             ?: throw ShipmentNotFoundException("exception_request_not_found", "Shipment exception request was not found.")
+        if (request.requestedByUserId == actor) {
+            throw ShipmentConflictException(
+                "exception_self_approval_not_allowed",
+                "The requester cannot approve or reject their own shipment exception request; a second authorized approver is required.",
+            )
+        }
         val now = Instant.now()
 
         try {
@@ -249,6 +255,12 @@ class ShipmentExceptionWorkflowService(
         val shipment = load(shipmentId)
         val adjustment = adjustments.findByIdAndShipmentId(adjustmentId, shipmentId)
             ?: throw ShipmentNotFoundException("weight_adjustment_not_found", "Weight adjustment was not found.")
+        if (adjustment.actorUserId == actor) {
+            throw ShipmentConflictException(
+                "weight_self_review_not_allowed",
+                "The user who recorded the weight adjustment cannot complete its review; a second authorized approver is required.",
+            )
+        }
         val totalWeight = shipment.parcels.fold(BigDecimal.ZERO) { total, parcel -> total + parcel.chargeableWeightKg }
         if (shipment.routeRevision > 0 && shipment.reservedWeightKg > BigDecimal.ZERO && totalWeight > shipment.reservedWeightKg) {
             throw ShipmentConflictException(

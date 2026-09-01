@@ -21,6 +21,7 @@ import com.pavex.identity.exception.RoleNotFoundException
 import com.pavex.identity.exception.SystemRoleProtectedException
 import com.pavex.identity.exception.UnknownPermissionException
 import com.pavex.identity.exception.UserNotFoundException
+import com.pavex.identity.exception.WorkforceRoleManagedByOperationsException
 import com.pavex.identity.repository.PermissionRepository
 import com.pavex.identity.repository.RolePermissionRepository
 import com.pavex.identity.repository.RoleRepository
@@ -283,6 +284,7 @@ class RoleService(
         rawRoleCode: String,
     ) {
         val roleCode = normalizeRoleCode(rawRoleCode)
+        if (roleCode in WORKFORCE_MANAGED_ROLES) throw WorkforceRoleManagedByOperationsException()
         val user = userAccountRepository
             .findById(targetUserId)
             .orElseThrow { UserNotFoundException() }
@@ -317,6 +319,7 @@ class RoleService(
         rawRoleCode: String,
     ) {
         val roleCode = normalizeRoleCode(rawRoleCode)
+        if (roleCode in WORKFORCE_MANAGED_ROLES) throw WorkforceRoleManagedByOperationsException()
         if (roleCode == ADMIN_ROLE && actorUserId == targetUserId) {
             throw CannotRemoveOwnAdminRoleException()
         }
@@ -448,6 +451,7 @@ class RoleService(
         const val CUSTOMER_ROLE = "CUSTOMER"
         const val ADMIN_ROLE = "ADMIN"
         const val MERCHANT_ROLE = "MERCHANT"
+        val WORKFORCE_MANAGED_ROLES = setOf("DRIVER", "WAREHOUSE_STAFF", "HUB_MANAGER", "OPERATIONS_MANAGER")
 
         private val ROLE_CODE_REGEX = Regex("^[A-Z][A-Z0-9_]{2,63}$")
     }

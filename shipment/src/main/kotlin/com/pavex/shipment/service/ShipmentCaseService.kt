@@ -12,6 +12,7 @@ import com.pavex.shipment.entity.ShipmentCase
 import com.pavex.shipment.entity.ShipmentCaseSeverity
 import com.pavex.shipment.entity.ShipmentCaseStatus
 import com.pavex.shipment.entity.ShipmentCaseType
+import com.pavex.shipment.entity.Shipment
 import com.pavex.shipment.exception.ShipmentConflictException
 import com.pavex.shipment.exception.ShipmentForbiddenException
 import com.pavex.shipment.exception.ShipmentNotFoundException
@@ -65,7 +66,7 @@ class ShipmentCaseService(
         }
         cases.saveAndFlush(item)
         publishLatest(item)
-        return response(item)
+        return response(item, shipment)
     }
 
     @Transactional
@@ -85,7 +86,7 @@ class ShipmentCaseService(
         }
         cases.saveAndFlush(item)
         publishLatest(item)
-        return response(item)
+        return response(item, null)
     }
 
     @Transactional(readOnly = true)
@@ -113,8 +114,9 @@ class ShipmentCaseService(
                 Sort.by(Sort.Order.desc("updatedAt"), Sort.Order.desc("id")),
             ),
         )
+        val linkedShipments = shipments.findAllById(result.content.mapNotNull { it.shipmentId }.distinct()).associateBy { it.id }
         return PageResponse(
-            items = result.content.map(::summary),
+            items = result.content.map { summary(it, it.shipmentId?.let(linkedShipments::get)) },
             page = pagination.page,
             pageSize = pagination.pageSize,
             totalCount = result.totalElements,
@@ -160,7 +162,7 @@ class ShipmentCaseService(
         val scope = access.resolve(authentication)
         val item = cases.findDetailedById(caseId) ?: throw notFound()
         if (!scope.canAccessHub(item.hubId)) forbidden()
-        return response(item)
+        return responseWithShipment(item)
     }
 
     @Transactional
@@ -193,7 +195,7 @@ class ShipmentCaseService(
             throw UnprocessableShipmentException("case_parcel_not_found", "Parcel does not belong to the shipment.")
         }
         mutateLoaded(item) { now -> item.linkToShipment(shipmentId, parcelId, actor(authentication), note, now) }
-        return response(item)
+        return response(item, shipment)
     }
 
     @Transactional
@@ -213,7 +215,7 @@ class ShipmentCaseService(
         val item = cases.findForUpdateById(caseId) ?: throw notFound()
         if (!scope.canAccessHub(item.hubId)) forbidden()
         mutateLoaded(item) { now -> action(item, now) }
-        return response(item)
+        return responseWithShipment(item)
     }
 
     private fun mutateLoaded(item: ShipmentCase, action: (Instant) -> Unit) {
@@ -300,7 +302,12 @@ class ShipmentCaseService(
     private fun <T> fieldNotIn(field: String, values: Set<T>): Specification<ShipmentCase> =
         Specification { root, _, cb -> cb.not(root.get<T>(field).`in`(values)) }
 
-    private fun response(item: ShipmentCase) = ShipmentCaseResponse(
+    private fun responseWithShipment(item: ShipmentCase): ShipmentCaseResponse {
+        val shipment = item.shipmentId?.let { shipments.findById(it).orElse(null) }
+        return response(item, shipment)
+    }
+
+    private fun response(item: ShipmentCase, shipment: Shipment?) = ShipmentCaseResponse(
         id = item.id,
         caseNumber = item.caseNumber,
         type = item.type,
@@ -308,7 +315,9 @@ class ShipmentCaseService(
         severity = item.severity,
         hubId = item.hubId,
         shipmentId = item.shipmentId,
+        trackingCode = shipment?.trackingCode,
         parcelId = item.parcelId,
+        parcelCode = item.parcelId?.let { parcelId -> shipment?.parcels?.firstOrNull { it.id == parcelId }?.code },
         externalBarcode = item.externalBarcode,
         title = item.title,
         description = item.description,
@@ -325,10 +334,22 @@ class ShipmentCaseService(
         },
     )
 
-    private fun summary(item: ShipmentCase) = ShipmentCaseSummaryResponse(
-        item.id, item.caseNumber, item.type, item.status, item.severity, item.hubId,
-        item.shipmentId, item.parcelId, item.externalBarcode, item.title, item.assignedToUserId,
-        item.createdAt, item.updatedAt,
+    private fun summary(item: ShipmentCase, shipment: Shipment?) = ShipmentCaseSummaryResponse(
+        id = item.id,
+        caseNumber = item.caseNumber,
+        type = item.type,
+        status = item.status,
+        severity = item.severity,
+        hubId = item.hubId,
+        shipmentId = item.shipmentId,
+        trackingCode = shipment?.trackingCode,
+        parcelId = item.parcelId,
+        parcelCode = item.parcelId?.let { parcelId -> shipment?.parcels?.firstOrNull { it.id == parcelId }?.code },
+        externalBarcode = item.externalBarcode,
+        title = item.title,
+        assignedToUserId = item.assignedToUserId,
+        createdAt = item.createdAt,
+        updatedAt = item.updatedAt,
     )
 
     private fun actor(authentication: Authentication): UUID = runCatching { UUID.fromString(authentication.name) }

@@ -113,6 +113,7 @@ data class ShipmentRoutingResponse(
 )
 
 data class ParcelResponse(
+    val id: UUID,
     val code: String,
     val sequence: Int,
     val description: String,
