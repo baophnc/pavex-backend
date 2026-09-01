@@ -218,6 +218,25 @@ class Parcel(
         updatedAt = cancelledAt
     }
 
+    fun prepareReturn(updatedAt: Instant) {
+        check(stage !in setOf(ParcelStage.DELIVERED, ParcelStage.RETURNED, ParcelStage.CANCELLED)) {
+            "Finalized parcels cannot enter the return flow."
+        }
+        flowDirection = ParcelFlowDirection.RETURN
+        this.updatedAt = updatedAt
+    }
+
+    fun cancelRecovered(cancelledAt: Instant) {
+        check(stage in setOf(ParcelStage.AWAITING_PICKUP, ParcelStage.AT_HUB, ParcelStage.RETURNED)) {
+            "A recovered cancellation can only finish while the parcel is at a hub, awaiting pickup, or already returned."
+        }
+        status = ParcelStatus.CANCELLED
+        stage = ParcelStage.CANCELLED
+        currentRouteLegId = null
+        currentAssignmentId = null
+        updatedAt = cancelledAt
+    }
+
     companion object {
         private val ALLOWED_TRANSITIONS: Map<ParcelStatus, Set<ParcelStatus>> = mapOf(
             ParcelStatus.AWAITING_PICKUP to setOf(ParcelStatus.PICKED_UP, ParcelStatus.CANCELLED),

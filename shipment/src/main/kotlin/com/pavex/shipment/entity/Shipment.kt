@@ -170,6 +170,18 @@ class Shipment(
     var cancellationReason: String? = null,
     @Column(name = "cancelled_at")
     var cancelledAt: Instant? = null,
+    @Column(name = "is_on_hold", nullable = false)
+    var isOnHold: Boolean = false,
+    @Column(name = "hold_reason", length = 1000)
+    var holdReason: String? = null,
+    @Column(name = "hold_actor_user_id")
+    var holdActorUserId: UUID? = null,
+    @Column(name = "hold_hub_id")
+    var holdHubId: UUID? = null,
+    @Column(name = "held_at")
+    var heldAt: Instant? = null,
+    @Column(name = "has_pending_weight_review", nullable = false)
+    var hasPendingWeightReview: Boolean = false,
     @Version
     var version: Long = 0,
     @Column(name = "created_at", nullable = false)
@@ -245,6 +257,108 @@ class Shipment(
         if (routingStatus == ShipmentRoutingStatus.RELEASED) return
         routingStatus = ShipmentRoutingStatus.RELEASED
         updatedAt = releasedAt
+    }
+
+    fun placeHold(reason: String, actorUserId: UUID, hubId: UUID?, now: Instant) {
+        check(lifecycleStatus == ShipmentLifecycleStatus.ACTIVE) { "Only active shipments can be placed on hold." }
+        check(!isOnHold) { "Shipment is already on hold." }
+        val normalized = requireEventText(reason, 1000, "reason")
+        isOnHold = true
+        holdReason = normalized
+        holdActorUserId = actorUserId
+        holdHubId = hubId
+        heldAt = now
+        updatedAt = now
+        recordAdministrativeEvent("shipment.hold.placed", normalized, actorUserId, hubId, now)
+    }
+
+    fun releaseHold(reason: String, actorUserId: UUID, hubId: UUID?, now: Instant) {
+        check(isOnHold) { "Shipment is not on hold." }
+        check(!hasPendingWeightReview) { "Weight review must be completed before the shipment hold can be released." }
+        val normalized = requireEventText(reason, 1000, "reason")
+        isOnHold = false
+        holdReason = null
+        holdActorUserId = null
+        holdHubId = null
+        heldAt = null
+        updatedAt = now
+        recordAdministrativeEvent("shipment.hold.released", normalized, actorUserId, hubId, now)
+    }
+
+    fun recordAdministrativeEvent(
+        code: String,
+        description: String,
+        actorUserId: UUID,
+        hubId: UUID?,
+        now: Instant,
+        dataJson: String? = null,
+    ) {
+        events += ShipmentEvent(
+            shipment = this,
+            status = status,
+            code = requireEventText(code, 100, "code"),
+            description = requireEventText(description, 500, "description"),
+            actorUserId = actorUserId,
+            hubId = hubId,
+            locationName = when (hubId) {
+                originHubId -> originHubName
+                destinationHubId -> destinationHubName
+                else -> null
+            },
+            dataJson = dataJson,
+            occurredAt = now,
+            recordedAt = now,
+        )
+        updatedAt = now
+    }
+
+    fun adjustParcelWeight(parcelId: UUID, actualWeightKg: java.math.BigDecimal, now: Instant): Pair<java.math.BigDecimal, java.math.BigDecimal> {
+        check(lifecycleStatus == ShipmentLifecycleStatus.ACTIVE) { "Only active shipments can be reweighed." }
+        check(!hasPendingWeightReview) { "Complete the pending weight review first." }
+        require(actualWeightKg > java.math.BigDecimal.ZERO) { "actualWeightKg must be positive." }
+        val parcel = parcels.singleOrNull { it.id == parcelId } ?: error("Parcel does not belong to this shipment.")
+        val oldActual = parcel.actualWeightKg
+        val oldChargeable = parcel.chargeableWeightKg
+        parcel.actualWeightKg = actualWeightKg
+        parcel.chargeableWeightKg = maxOf(actualWeightKg, parcel.volumetricWeightKg)
+        parcel.updatedAt = now
+        hasPendingWeightReview = true
+        updatedAt = now
+        return oldActual to oldChargeable
+    }
+
+    fun completeWeightReview(now: Instant) {
+        check(hasPendingWeightReview) { "Shipment has no pending weight review." }
+        hasPendingWeightReview = false
+        updatedAt = now
+    }
+
+    fun prepareReturn(reason: String, actorUserId: UUID, now: Instant, dataJson: String? = null) {
+        check(lifecycleStatus == ShipmentLifecycleStatus.ACTIVE) { "Only active shipments can enter the return flow." }
+        val returnable = parcels.filter { it.stage !in setOf(ParcelStage.DELIVERED, ParcelStage.RETURNED, ParcelStage.CANCELLED) }
+        check(returnable.isNotEmpty()) { "Shipment has no parcels eligible for return." }
+        returnable.forEach { it.prepareReturn(now) }
+        recordAdministrativeEvent("shipment.return.approved", requireEventText(reason, 500, "reason"), actorUserId, null, now, dataJson)
+    }
+
+    fun cancelRecovered(reason: String, actorUserId: UUID, now: Instant, dataJson: String? = null) {
+        check(lifecycleStatus == ShipmentLifecycleStatus.ACTIVE) { "Shipment lifecycle is already closed." }
+        check(parcels.all { it.stage in setOf(ParcelStage.AWAITING_PICKUP, ParcelStage.AT_HUB, ParcelStage.RETURNED) }) {
+            "Cancellation cannot complete until every parcel is recovered at a hub, awaiting pickup, or already returned."
+        }
+        val normalized = requireEventText(reason, 500, "reason")
+        parcels.forEach { it.cancelRecovered(now) }
+        status = ShipmentStatus.CANCELLED
+        lifecycleStatus = ShipmentLifecycleStatus.CANCELLED
+        cancellationReason = normalized
+        cancelledAt = now
+        isOnHold = false
+        holdReason = null
+        holdActorUserId = null
+        holdHubId = null
+        heldAt = null
+        updatedAt = now
+        recordAdministrativeEvent("shipment.cancellation.completed", normalized, actorUserId, null, now, dataJson)
     }
 
     fun transitionParcel(
