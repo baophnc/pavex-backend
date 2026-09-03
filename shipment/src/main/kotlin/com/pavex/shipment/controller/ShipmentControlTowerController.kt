@@ -6,6 +6,7 @@ import com.pavex.shipment.dto.ShipmentControlAlertSeverity
 import com.pavex.shipment.dto.ShipmentControlAlertType
 import com.pavex.shipment.dto.ShipmentControlTowerSummaryResponse
 import com.pavex.shipment.service.ShipmentControlTowerService
+import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.security.core.Authentication
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.RequestMapping
@@ -15,6 +16,7 @@ import java.util.UUID
 
 @RestController
 @RequestMapping("/api/v1/admin/control-tower")
+@PreAuthorize("hasAuthority('shipments.control-tower.read')")
 class ShipmentControlTowerController(
     private val service: ShipmentControlTowerService,
 ) {

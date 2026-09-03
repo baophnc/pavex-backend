@@ -52,7 +52,7 @@ class ShipmentCaseService(
         title: String,
         description: String,
     ): ShipmentCaseResponse {
-        val scope = access.resolve(authentication)
+        val scope = access.resolveManage(authentication)
         requireHub(scope, hubId)
         val shipment = shipments.findById(shipmentId).orElseThrow {
             UnprocessableShipmentException("case_shipment_not_found", "Shipment was not found.")
@@ -78,7 +78,7 @@ class ShipmentCaseService(
         description: String,
         externalBarcode: String?,
     ): ShipmentCaseResponse {
-        val scope = access.resolve(authentication)
+        val scope = access.resolveManage(authentication)
         requireHub(scope, hubId)
         val now = clock.instant()
         val item = domain {
@@ -102,7 +102,7 @@ class ShipmentCaseService(
         page: Int,
         pageSize: Int,
     ): PageResponse<ShipmentCaseSummaryResponse> {
-        val scope = access.resolve(authentication)
+        val scope = access.resolveRead(authentication)
         if (hubId != null && !scope.canAccessHub(hubId)) forbidden()
         val pagination = OneBasedPagination.normalize(page, pageSize)
         val spec = specification(scope, type, status, severity, hubId, assignedToUserId, shipmentId, search)
@@ -125,7 +125,7 @@ class ShipmentCaseService(
 
     @Transactional(readOnly = true)
     fun monitoringSummary(authentication: Authentication, hubId: UUID?): ShipmentCaseMonitoringSummary {
-        val scope = access.resolve(authentication)
+        val scope = access.resolveRead(authentication)
         if (hubId != null && !scope.canAccessHub(hubId)) forbidden()
         val now = clock.instant()
         val today = now.atZone(ZoneOffset.UTC).toLocalDate().atStartOfDay(ZoneOffset.UTC).toInstant()
@@ -159,7 +159,7 @@ class ShipmentCaseService(
 
     @Transactional(readOnly = true)
     fun get(authentication: Authentication, caseId: UUID): ShipmentCaseResponse {
-        val scope = access.resolve(authentication)
+        val scope = access.resolveRead(authentication)
         val item = cases.findDetailedById(caseId) ?: throw notFound()
         if (!scope.canAccessHub(item.hubId)) forbidden()
         return responseWithShipment(item)
@@ -185,7 +185,7 @@ class ShipmentCaseService(
         parcelId: UUID?,
         note: String?,
     ): ShipmentCaseResponse {
-        val scope = access.resolve(authentication)
+        val scope = access.resolveManage(authentication)
         val item = cases.findForUpdateById(caseId) ?: throw notFound()
         if (!scope.canAccessHub(item.hubId)) forbidden()
         val shipment = shipments.findById(shipmentId).orElseThrow {
@@ -211,7 +211,7 @@ class ShipmentCaseService(
         caseId: UUID,
         action: (ShipmentCase, Instant) -> Unit,
     ): ShipmentCaseResponse {
-        val scope = access.resolve(authentication)
+        val scope = access.resolveManage(authentication)
         val item = cases.findForUpdateById(caseId) ?: throw notFound()
         if (!scope.canAccessHub(item.hubId)) forbidden()
         mutateLoaded(item) { now -> action(item, now) }

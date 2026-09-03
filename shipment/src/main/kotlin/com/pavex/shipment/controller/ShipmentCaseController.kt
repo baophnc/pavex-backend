@@ -32,7 +32,7 @@ import java.util.UUID
 
 @RestController
 @RequestMapping("/api/v1/admin/shipment-cases")
-@PreAuthorize("hasAnyAuthority('shipments.cases.manage','operations.hub.manage')")
+@PreAuthorize("hasAnyAuthority('shipments.cases.read','shipments.cases.manage')")
 class ShipmentCaseController(
     private val service: ShipmentCaseService,
 ) {
@@ -63,6 +63,7 @@ class ShipmentCaseController(
         ResponseEntity.ok(service.get(authentication, caseId))
 
     @PostMapping("/problem-parcels")
+    @PreAuthorize("hasAuthority('shipments.cases.manage')")
     fun createProblem(
         authentication: Authentication,
         @Valid @RequestBody request: CreateProblemParcelCaseRequest,
@@ -80,6 +81,7 @@ class ShipmentCaseController(
     }
 
     @PostMapping("/unidentified-parcels")
+    @PreAuthorize("hasAuthority('shipments.cases.manage')")
     fun createUnidentified(
         authentication: Authentication,
         @Valid @RequestBody request: CreateUnidentifiedParcelCaseRequest,
@@ -98,6 +100,7 @@ class ShipmentCaseController(
     }
 
     @PostMapping("/{caseId}/assign")
+    @PreAuthorize("hasAuthority('shipments.cases.manage')")
     fun assign(
         authentication: Authentication,
         @PathVariable caseId: UUID,
@@ -105,6 +108,7 @@ class ShipmentCaseController(
     ) = ResponseEntity.ok(service.assign(authentication, caseId, request.assignedToUserId, request.note))
 
     @PostMapping("/{caseId}/investigate")
+    @PreAuthorize("hasAuthority('shipments.cases.manage')")
     fun investigate(
         authentication: Authentication,
         @PathVariable caseId: UUID,
@@ -112,6 +116,7 @@ class ShipmentCaseController(
     ) = ResponseEntity.ok(service.investigate(authentication, caseId, request.note))
 
     @PostMapping("/{caseId}/notes")
+    @PreAuthorize("hasAuthority('shipments.cases.manage')")
     fun addNote(
         authentication: Authentication,
         @PathVariable caseId: UUID,
@@ -119,6 +124,7 @@ class ShipmentCaseController(
     ) = ResponseEntity.ok(service.addNote(authentication, caseId, request.note))
 
     @PostMapping("/{caseId}/link")
+    @PreAuthorize("hasAuthority('shipments.cases.manage')")
     fun link(
         authentication: Authentication,
         @PathVariable caseId: UUID,
@@ -126,6 +132,7 @@ class ShipmentCaseController(
     ) = ResponseEntity.ok(service.link(authentication, caseId, request.shipmentId, request.parcelId, request.note))
 
     @PostMapping("/{caseId}/resolve")
+    @PreAuthorize("hasAuthority('shipments.cases.manage')")
     fun resolve(
         authentication: Authentication,
         @PathVariable caseId: UUID,
@@ -133,6 +140,7 @@ class ShipmentCaseController(
     ) = ResponseEntity.ok(service.resolve(authentication, caseId, request.resolution))
 
     @PostMapping("/{caseId}/close")
+    @PreAuthorize("hasAuthority('shipments.cases.manage')")
     fun close(
         authentication: Authentication,
         @PathVariable caseId: UUID,

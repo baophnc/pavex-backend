@@ -18,11 +18,13 @@ data class ShipmentHoldRequest(
 
 data class ShipmentExceptionRequestBody(
     @field:NotBlank @field:Size(max = 1000) val reason: String,
+    val hubId: UUID? = null,
 )
 
 data class ShipmentForwardRequestBody(
     @field:NotBlank @field:Size(max = 1000) val reason: String,
     @field:Valid @field:NotNull val recipient: ForwardRecipientRequest,
+    val hubId: UUID? = null,
 )
 
 data class ForwardRecipientRequest(
@@ -66,6 +68,7 @@ data class ShipmentExceptionRequestResponse(
     val kind: ShipmentExceptionRequestKind,
     val status: ShipmentExceptionRequestStatus,
     val reason: String,
+    val hubId: UUID?,
     val requestedByUserId: UUID,
     val requestedAt: Instant,
     val reviewedByUserId: UUID?,

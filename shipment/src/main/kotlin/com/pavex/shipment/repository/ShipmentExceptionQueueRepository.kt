@@ -1,5 +1,6 @@
 package com.pavex.shipment.repository
 
+import com.pavex.common.security.HubAccessScope
 import com.pavex.shipment.dto.ShipmentExceptionQueueItemResponse
 import com.pavex.shipment.dto.ShipmentExceptionQueueKind
 import com.pavex.shipment.dto.ShipmentExceptionQueueStatus
@@ -22,12 +23,14 @@ class ShipmentExceptionQueueRepository(
         kind: ShipmentExceptionQueueKind?,
         status: ShipmentExceptionQueueStatus?,
         search: String?,
+        scope: HubAccessScope,
         page: Int,
         pageSize: Int,
     ): ShipmentExceptionQueueSlice {
         val normalizedSearch = search?.trim()?.takeIf { it.isNotEmpty() }
         val where = buildString {
             append(" WHERE 1 = 1")
+            if (!scope.isGlobal) append(hubPredicate(scope.hubIds))
             if (kind != null) append(" AND queue.kind = :kind")
             if (status != null) append(" AND queue.status = :status")
             else append(" AND queue.status IN ('PENDING_APPROVAL', 'APPROVED', 'PROCESSING', 'PENDING_REVIEW')")
@@ -37,14 +40,14 @@ class ShipmentExceptionQueueRepository(
         }
 
         val countQuery = entityManager.createNativeQuery("SELECT COUNT(*) FROM ($BASE_QUERY) queue$where")
-        bind(countQuery, kind, status, normalizedSearch)
+        bind(countQuery, kind, status, normalizedSearch, scope)
         val total = (countQuery.singleResult as Number).toLong()
         if (total == 0L) return ShipmentExceptionQueueSlice(emptyList(), 0)
 
         val query = entityManager.createNativeQuery(
             "SELECT * FROM ($BASE_QUERY) queue$where ORDER BY queue.requested_at DESC, queue.id DESC LIMIT :limit OFFSET :offset",
         )
-        bind(query, kind, status, normalizedSearch)
+        bind(query, kind, status, normalizedSearch, scope)
         query.setParameter("limit", pageSize)
         query.setParameter("offset", (page - 1) * pageSize)
 
@@ -53,8 +56,21 @@ class ShipmentExceptionQueueRepository(
         return ShipmentExceptionQueueSlice(rows.map(::mapRow), total)
     }
 
-    fun summary(): ShipmentExceptionQueueSummaryResponse {
-        val row = entityManager.createNativeQuery(SUMMARY_QUERY).singleResult as Array<*>
+    fun summary(scope: HubAccessScope): ShipmentExceptionQueueSummaryResponse {
+        val where = if (scope.isGlobal) "" else " WHERE 1 = 1${hubPredicate(scope.hubIds)}"
+        val sql = """
+            SELECT
+                COALESCE(SUM(CASE WHEN queue.status = 'PENDING_APPROVAL' THEN 1 ELSE 0 END), 0),
+                COALESCE(SUM(CASE WHEN queue.status IN ('APPROVED', 'PROCESSING') THEN 1 ELSE 0 END), 0),
+                COALESCE(SUM(CASE WHEN queue.kind = 'WEIGHT_REVIEW' AND queue.status = 'PENDING_REVIEW' THEN 1 ELSE 0 END), 0),
+                COALESCE(SUM(CASE WHEN queue.kind = 'CANCELLATION' AND queue.status = 'PENDING_APPROVAL' THEN 1 ELSE 0 END), 0),
+                COALESCE(SUM(CASE WHEN queue.kind = 'RETURN' AND queue.status = 'PENDING_APPROVAL' THEN 1 ELSE 0 END), 0),
+                COALESCE(SUM(CASE WHEN queue.kind = 'FORWARD' AND queue.status = 'PENDING_APPROVAL' THEN 1 ELSE 0 END), 0)
+            FROM ($BASE_QUERY) queue$where
+        """.trimIndent()
+        val query = entityManager.createNativeQuery(sql)
+        bindScope(query, scope)
+        val row = query.singleResult as Array<*>
         return ShipmentExceptionQueueSummaryResponse(
             pendingApproval = number(row[0]),
             approvedOrProcessing = number(row[1]),
@@ -70,10 +86,22 @@ class ShipmentExceptionQueueRepository(
         kind: ShipmentExceptionQueueKind?,
         status: ShipmentExceptionQueueStatus?,
         search: String?,
+        scope: HubAccessScope,
     ) {
         if (kind != null) query.setParameter("kind", kind.name)
         if (status != null) query.setParameter("status", status.name)
         if (search != null) query.setParameter("search", "%${search.lowercase()}%")
+        bindScope(query, scope)
+    }
+
+    private fun hubPredicate(hubIds: Set<UUID>): String {
+        if (hubIds.isEmpty()) return " AND 1 = 0"
+        return hubIds.indices.joinToString(prefix = " AND queue.hub_id IN (", postfix = ")") { ":hub$it" }
+    }
+
+    private fun bindScope(query: jakarta.persistence.Query, scope: HubAccessScope) {
+        if (scope.isGlobal) return
+        scope.hubIds.toList().forEachIndexed { index, hubId -> query.setParameter("hub$index", hubId) }
     }
 
     private fun mapRow(row: Array<Any?>): ShipmentExceptionQueueItemResponse = ShipmentExceptionQueueItemResponse(
@@ -128,7 +156,7 @@ class ShipmentExceptionQueueRepository(
                 request.reviewed_at AS reviewed_at,
                 NULL::uuid AS parcel_id,
                 NULL::varchar AS parcel_code,
-                shipment.hold_hub_id AS hub_id,
+                request.hub_id AS hub_id,
                 shipment.status AS shipment_status,
                 shipment.lifecycle_status AS lifecycle_status,
                 shipment.origin_hub_code AS origin_hub_code,
@@ -169,15 +197,7 @@ class ShipmentExceptionQueueRepository(
             JOIN shipments.parcels parcel ON parcel.id = adjustment.parcel_id
         """.trimIndent()
 
-        private val SUMMARY_QUERY = """
-            SELECT
-                (SELECT COUNT(*) FROM shipments.shipment_exception_requests WHERE status = 'PENDING_APPROVAL') AS pending_approval,
-                (SELECT COUNT(*) FROM shipments.shipment_exception_requests WHERE status IN ('APPROVED', 'PROCESSING')) AS approved_or_processing,
-                (SELECT COUNT(*) FROM shipments.shipment_weight_adjustments WHERE review_completed = FALSE) AS pending_weight_review,
-                (SELECT COUNT(*) FROM shipments.shipment_exception_requests WHERE kind = 'CANCELLATION' AND status = 'PENDING_APPROVAL') AS cancellation_pending,
-                (SELECT COUNT(*) FROM shipments.shipment_exception_requests WHERE kind = 'RETURN' AND status = 'PENDING_APPROVAL') AS return_pending,
-                (SELECT COUNT(*) FROM shipments.shipment_exception_requests WHERE kind = 'FORWARD' AND status = 'PENDING_APPROVAL') AS forward_pending
-        """.trimIndent()
+
     }
 }
 

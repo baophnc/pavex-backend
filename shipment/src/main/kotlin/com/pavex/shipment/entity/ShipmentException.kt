@@ -28,6 +28,8 @@ class ShipmentExceptionRequest(
     var status: ShipmentExceptionRequestStatus = ShipmentExceptionRequestStatus.PENDING_APPROVAL,
     @Column(nullable = false, length = 1000)
     var reason: String = "",
+    @Column(name = "hub_id")
+    var hubId: UUID? = null,
     @Column(name = "requested_by_user_id", nullable = false)
     var requestedByUserId: UUID = UUID.randomUUID(),
     @Column(name = "requested_at", nullable = false)
@@ -92,6 +94,7 @@ class ShipmentExceptionRequest(
             reason: String,
             actorUserId: UUID,
             now: Instant,
+            hubId: UUID? = null,
             forwardRecipient: ForwardRecipientSnapshot? = null,
         ): ShipmentExceptionRequest {
             val normalizedReason = requireText(reason, 1000, "reason")
@@ -100,6 +103,7 @@ class ShipmentExceptionRequest(
                 shipmentId = shipmentId,
                 kind = kind,
                 reason = normalizedReason,
+                hubId = hubId,
                 requestedByUserId = actorUserId,
                 requestedAt = now,
                 updatedAt = now,

@@ -72,16 +72,19 @@ class ShipmentExceptionWorkflowService(
     }
 
     @Transactional
-    fun requestReturn(shipmentId: UUID, actor: UUID, reason: String) = request(shipmentId, actor, ShipmentExceptionRequestKind.RETURN, reason, null)
+    fun requestReturn(shipmentId: UUID, actor: UUID, reason: String, hubId: UUID? = null) =
+        request(shipmentId, actor, ShipmentExceptionRequestKind.RETURN, reason, hubId, null)
     @Transactional
-    fun requestCancellation(shipmentId: UUID, actor: UUID, reason: String) = request(shipmentId, actor, ShipmentExceptionRequestKind.CANCELLATION, reason, null)
+    fun requestCancellation(shipmentId: UUID, actor: UUID, reason: String, hubId: UUID? = null) =
+        request(shipmentId, actor, ShipmentExceptionRequestKind.CANCELLATION, reason, hubId, null)
 
     @Transactional
-    fun requestForward(shipmentId: UUID, actor: UUID, reason: String, recipient: ForwardRecipientRequest) = request(
+    fun requestForward(shipmentId: UUID, actor: UUID, reason: String, recipient: ForwardRecipientRequest, hubId: UUID? = null) = request(
         shipmentId,
         actor,
         ShipmentExceptionRequestKind.FORWARD,
         reason,
+        hubId,
         ForwardRecipientSnapshot(
             requireText(recipient.contactName, 120, "contactName"),
             requireText(recipient.contactPhone, 20, "contactPhone"),
@@ -308,6 +311,7 @@ class ShipmentExceptionWorkflowService(
         actor: UUID,
         kind: ShipmentExceptionRequestKind,
         reason: String,
+        hubId: UUID?,
         recipient: ForwardRecipientSnapshot?,
     ): ShipmentExceptionStateResponse {
         val shipment = load(shipmentId)
@@ -323,9 +327,9 @@ class ShipmentExceptionWorkflowService(
             throw ShipmentConflictException("conflicting_exception_request", "Another return, forward, or cancellation workflow is already active for this shipment.")
         }
         val now = Instant.now()
-        val request = ShipmentExceptionRequest.create(shipmentId, kind, reason, actor, now, recipient)
+        val request = ShipmentExceptionRequest.create(shipmentId, kind, reason, actor, now, hubId, recipient)
         requests.save(request)
-        shipment.recordAdministrativeEvent("${prefix(kind)}.requested", request.reason, actor, null, now, payload(request))
+        shipment.recordAdministrativeEvent("${prefix(kind)}.requested", request.reason, actor, hubId, now, payload(request))
         shipments.saveAndFlush(shipment)
         publish(shipment, "${prefix(kind)}.requested", actor, now, requestResponse(request))
         return state(shipment)
@@ -372,6 +376,7 @@ class ShipmentExceptionWorkflowService(
         kind = request.kind,
         status = request.status,
         reason = request.reason,
+        hubId = request.hubId,
         requestedByUserId = request.requestedByUserId,
         requestedAt = request.requestedAt,
         reviewedByUserId = request.reviewedByUserId,

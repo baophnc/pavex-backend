@@ -19,37 +19,32 @@ class ShipmentControlTowerAccessServiceTest {
     private val service = ShipmentControlTowerAccessService(operations)
 
     @Test
-    fun `control tower permission grants global scope`() {
-        val auth = authentication(setOf("shipments.control-tower.read"))
+    fun `operations manager control tower permission grants global scope`() {
+        val auth = authentication(setOf("ROLE_OPERATIONS_MANAGER", "shipments.control-tower.read"))
         val scope = service.resolve(auth)
         assertTrue(scope.global)
         verifyNoInteractions(operations)
     }
 
     @Test
-    fun `hub manager receives operations-backed hub scope`() {
+    fun `hub manager control tower read receives operations-backed hub scope`() {
         val userId = UUID.randomUUID()
         val hubId = UUID.randomUUID()
         `when`(operations.caseAdminScope(userId)).thenReturn(ShipmentCaseAdminScopeSnapshot(userId, setOf(hubId)))
-        val auth = authentication(setOf("ROLE_HUB_MANAGER", "operations.hub.manage"), userId)
+        val auth = authentication(
+            setOf("ROLE_HUB_MANAGER", "operations.hub.manage", "shipments.control-tower.read"),
+            userId,
+        )
         val scope = service.resolve(auth)
         assertEquals(setOf(hubId), scope.hubIds)
         assertTrue(scope.canAccessHub(hubId))
     }
 
     @Test
-    fun `unprivileged user is rejected`() {
-        assertThrows<AccessDeniedException> { service.resolve(authentication(emptySet())) }
-    }
-
-    @Test
-    fun `malformed user subject is rejected before operations lookup`() {
-        val auth = UsernamePasswordAuthenticationToken(
-            "not-a-uuid",
-            "n/a",
-            listOf(SimpleGrantedAuthority("operations.hub.manage"), SimpleGrantedAuthority("ROLE_HUB_MANAGER")),
-        )
-        assertThrows<AccessDeniedException> { service.resolve(auth) }
+    fun `hub manager without control tower capability is rejected before lookup`() {
+        assertThrows<AccessDeniedException> {
+            service.resolve(authentication(setOf("ROLE_HUB_MANAGER", "operations.hub.manage")))
+        }
         verifyNoInteractions(operations)
     }
 

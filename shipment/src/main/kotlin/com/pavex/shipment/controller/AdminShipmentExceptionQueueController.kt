@@ -8,6 +8,7 @@ import com.pavex.shipment.dto.ShipmentExceptionQueueSummaryResponse
 import com.pavex.shipment.service.ShipmentExceptionQueueService
 import org.springframework.http.ResponseEntity
 import org.springframework.security.access.prepost.PreAuthorize
+import org.springframework.security.core.Authentication
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
@@ -19,18 +20,20 @@ class AdminShipmentExceptionQueueController(
     private val queue: ShipmentExceptionQueueService,
 ) {
     @GetMapping
-    @PreAuthorize("hasAuthority('shipments.exceptions.manage')")
+    @PreAuthorize("hasAnyAuthority('shipments.exceptions.read','shipments.exceptions.manage')")
     fun list(
+        authentication: Authentication,
         @RequestParam(required = false) kind: ShipmentExceptionQueueKind?,
         @RequestParam(required = false) status: ShipmentExceptionQueueStatus?,
         @RequestParam(name = "q", required = false) search: String?,
         @RequestParam(defaultValue = "1") page: Int,
         @RequestParam(defaultValue = "20") pageSize: Int,
     ): ResponseEntity<PageResponse<ShipmentExceptionQueueItemResponse>> = ResponseEntity.ok(
-        queue.search(kind, status, search, page, pageSize),
+        queue.search(kind, status, search, authentication, page, pageSize),
     )
 
     @GetMapping("/summary")
-    @PreAuthorize("hasAuthority('shipments.exceptions.manage')")
-    fun summary(): ResponseEntity<ShipmentExceptionQueueSummaryResponse> = ResponseEntity.ok(queue.summary())
+    @PreAuthorize("hasAnyAuthority('shipments.exceptions.read','shipments.exceptions.manage')")
+    fun summary(authentication: Authentication): ResponseEntity<ShipmentExceptionQueueSummaryResponse> =
+        ResponseEntity.ok(queue.summary(authentication))
 }

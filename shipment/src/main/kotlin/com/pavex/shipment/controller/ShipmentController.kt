@@ -53,7 +53,7 @@ class ShipmentController(
     }
 
     @GetMapping
-    @PreAuthorize("hasAuthority('shipments.read')")
+    @PreAuthorize("hasAuthority('shipments.read-own')")
     fun list(
         @AuthenticationPrincipal jwt: Jwt,
         @RequestParam(required = false) status: String?,
@@ -64,7 +64,7 @@ class ShipmentController(
     )
 
     @GetMapping("/{trackingCode}")
-    @PreAuthorize("hasAuthority('shipments.read')")
+    @PreAuthorize("hasAuthority('shipments.read-own')")
     fun get(
         @AuthenticationPrincipal jwt: Jwt,
         @PathVariable trackingCode: String,
