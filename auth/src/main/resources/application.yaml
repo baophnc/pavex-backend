@@ -71,14 +71,14 @@ security:
 
     refresh-token-ttl: P30D
 
-    private-key: ${JWT_PRIVATE_KEY:file:./auth/.keys/private.pem}
-    public-key: ${JWT_PUBLIC_KEY:file:./auth/.keys/public.pem}
+    private-key: ${JWT_PRIVATE_KEY:file:./.local/keys/auth/private.pem}
+    public-key: ${JWT_PUBLIC_KEY:file:./.local/keys/auth/public.pem}
 
   service-jwt:
     ttl: ${SERVICE_JWT_TTL:PT1M}
     identity:
       issuer: ${IDENTITY_SERVICE_JWT_ISSUER:http://localhost:8082}
-      public-key: ${IDENTITY_SERVICE_JWT_PUBLIC_KEY:file:./identity/.keys/public.pem}
+      public-key: ${IDENTITY_SERVICE_JWT_PUBLIC_KEY:file:./.local/keys/identity/public.pem}
 
 
 auth:

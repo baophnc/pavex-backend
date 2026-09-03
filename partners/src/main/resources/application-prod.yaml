@@ -1,8 +1,15 @@
-# Production must supply Auth's public verification key explicitly.
+spring:
+  datasource:
+    url: ${PARTNERS_DB_URL}
+    username: ${PARTNERS_DB_USERNAME}
+    password: ${PARTNERS_DB_PASSWORD}
+
 security:
   jwt:
+    issuer: ${JWT_ISSUER}
     public-key: ${JWT_PUBLIC_KEY}
   service-jwt:
+    issuer: ${PARTNERS_SERVICE_JWT_ISSUER}
     private-key: ${PARTNERS_SERVICE_JWT_PRIVATE_KEY}
     public-key: ${PARTNERS_SERVICE_JWT_PUBLIC_KEY}
   trusted-services:

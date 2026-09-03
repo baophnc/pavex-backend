@@ -1,6 +1,21 @@
+spring:
+  datasource:
+    url: ${PRICING_DB_URL}
+    username: ${PRICING_DB_USERNAME}
+    password: ${PRICING_DB_PASSWORD}
+
 security:
   jwt:
+    issuer: ${JWT_ISSUER}
     public-key: ${JWT_PUBLIC_KEY}
+  service-jwt:
+    issuer: ${PRICING_SERVICE_JWT_ISSUER}
+    private-key: ${PRICING_SERVICE_JWT_PRIVATE_KEY}
+    public-key: ${PRICING_SERVICE_JWT_PUBLIC_KEY}
+  trusted-services:
+    shipment:
+      issuer: ${SHIPMENT_SERVICE_JWT_ISSUER}
+      public-key: ${SHIPMENT_SERVICE_JWT_PUBLIC_KEY}
 
 springdoc:
   api-docs:

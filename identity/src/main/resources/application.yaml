@@ -21,20 +21,20 @@ security:
   # User access tokens and Auth -> Identity service tokens are signed by Auth.
   jwt:
     issuer: ${JWT_ISSUER:http://localhost:8081}
-    public-key: ${JWT_PUBLIC_KEY:file:./auth/.keys/public.pem}
+    public-key: ${JWT_PUBLIC_KEY:file:./.local/keys/auth/public.pem}
 
   # Identity owns a separate key pair for Identity -> Auth service tokens.
   service-jwt:
     issuer: ${IDENTITY_SERVICE_JWT_ISSUER:http://localhost:8082}
     ttl: ${SERVICE_JWT_TTL:PT1M}
-    private-key: ${IDENTITY_SERVICE_JWT_PRIVATE_KEY:file:./identity/.keys/private.pem}
-    public-key: ${IDENTITY_SERVICE_JWT_PUBLIC_KEY:file:./identity/.keys/public.pem}
+    private-key: ${IDENTITY_SERVICE_JWT_PRIVATE_KEY:file:./.local/keys/identity/private.pem}
+    public-key: ${IDENTITY_SERVICE_JWT_PUBLIC_KEY:file:./.local/keys/identity/public.pem}
     partners:
       issuer: ${PARTNERS_SERVICE_JWT_ISSUER:http://localhost:8083}
-      public-key: ${PARTNERS_SERVICE_JWT_PUBLIC_KEY:file:./partners/.keys/public.pem}
+      public-key: ${PARTNERS_SERVICE_JWT_PUBLIC_KEY:file:./.local/keys/partners/public.pem}
     operations:
       issuer: ${OPERATIONS_SERVICE_JWT_ISSUER:http://localhost:8087}
-      public-key: ${OPERATIONS_SERVICE_JWT_PUBLIC_KEY:file:./auth/.keys/public.pem}
+      public-key: ${OPERATIONS_SERVICE_JWT_PUBLIC_KEY:file:./.local/keys/operations/public.pem}
 
 pavex:
   bootstrap-admin:

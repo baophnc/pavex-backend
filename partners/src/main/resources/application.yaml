@@ -26,23 +26,22 @@ security:
   # those tokens locally and never calls Auth on the request hot path.
   jwt:
     issuer: ${JWT_ISSUER:http://localhost:8081}
-    public-key: ${JWT_PUBLIC_KEY:file:./auth/.keys/public.pem}
+    public-key: ${JWT_PUBLIC_KEY:file:./.local/keys/auth/public.pem}
 
   # Partners signs short-lived service tokens with its own key pair. Identity
   # trusts only the public half and only for the identity.merchant scope.
   service-jwt:
     issuer: ${PARTNERS_SERVICE_JWT_ISSUER:http://localhost:8083}
     ttl: ${SERVICE_JWT_TTL:PT1M}
-    private-key: ${PARTNERS_SERVICE_JWT_PRIVATE_KEY:file:./partners/.keys/private.pem}
-    public-key: ${PARTNERS_SERVICE_JWT_PUBLIC_KEY:file:./partners/.keys/public.pem}
+    private-key: ${PARTNERS_SERVICE_JWT_PRIVATE_KEY:file:./.local/keys/partners/private.pem}
+    public-key: ${PARTNERS_SERVICE_JWT_PUBLIC_KEY:file:./.local/keys/partners/public.pem}
 
   trusted-services:
     shipment:
-      # Local development reuses Auth's RSA key material so every service can
-      # start from the repository root. Production should provide Shipment's
-      # dedicated public key through SHIPMENT_SERVICE_JWT_PUBLIC_KEY.
+      # Local development trusts Shipment's dedicated generated key. Production
+      # must provide Shipment's public key through SHIPMENT_SERVICE_JWT_PUBLIC_KEY.
       issuer: ${SHIPMENT_SERVICE_JWT_ISSUER:http://localhost:8084}
-      public-key: ${SHIPMENT_SERVICE_JWT_PUBLIC_KEY:file:./auth/.keys/public.pem}
+      public-key: ${SHIPMENT_SERVICE_JWT_PUBLIC_KEY:file:./.local/keys/shipment/public.pem}
 
 partners:
   identity:

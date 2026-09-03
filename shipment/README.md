@@ -58,12 +58,13 @@ UUIDs remain internal transport/database identifiers and should not be rendered 
 ## Local runtime
 
 ```bash
+bash scripts/security-bootstrap-local.sh
 docker compose up -d shipment-db
-JWT_PUBLIC_KEY="file:$PWD/auth/.keys/public.pem" \
-SHIPMENT_SERVICE_JWT_PRIVATE_KEY="file:$PWD/auth/.keys/private.pem" \
-SHIPMENT_SERVICE_JWT_PUBLIC_KEY="file:$PWD/auth/.keys/public.pem" \
 ./mvnw -pl shipment spring-boot:run
 ```
+
+Local defaults verify user tokens with `.local/keys/auth/public.pem` and sign Shipment
+service tokens with the separate `.local/keys/shipment/` keypair.
 
 Patch 02 requires Discovery, Partners, Network and Pricing to be running and registered in Eureka.
 

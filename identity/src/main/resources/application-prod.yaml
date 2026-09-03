@@ -1,16 +1,28 @@
-# Production must supply service signing/verification material explicitly.
+spring:
+  datasource:
+    url: ${IDENTITY_DB_URL}
+    username: ${IDENTITY_DB_USERNAME}
+    password: ${IDENTITY_DB_PASSWORD}
+
 security:
   jwt:
+    issuer: ${JWT_ISSUER}
     public-key: ${JWT_PUBLIC_KEY}
   service-jwt:
+    issuer: ${IDENTITY_SERVICE_JWT_ISSUER}
     private-key: ${IDENTITY_SERVICE_JWT_PRIVATE_KEY}
     public-key: ${IDENTITY_SERVICE_JWT_PUBLIC_KEY}
     partners:
+      issuer: ${PARTNERS_SERVICE_JWT_ISSUER}
       public-key: ${PARTNERS_SERVICE_JWT_PUBLIC_KEY}
     operations:
+      issuer: ${OPERATIONS_SERVICE_JWT_ISSUER}
       public-key: ${OPERATIONS_SERVICE_JWT_PUBLIC_KEY}
 
-# API documentation is local/dev by default. Enable explicitly if production docs are intended.
+pavex:
+  bootstrap-admin:
+    enabled: false
+
 springdoc:
   api-docs:
     enabled: ${SPRINGDOC_API_DOCS_ENABLED:false}

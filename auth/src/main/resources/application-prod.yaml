@@ -1,49 +1,59 @@
 spring:
+  datasource:
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+
+  rabbitmq:
+    host: ${RABBITMQ_HOST}
+    port: ${RABBITMQ_PORT:5672}
+    username: ${RABBITMQ_USERNAME}
+    password: ${RABBITMQ_PASSWORD}
+    virtual-host: ${RABBITMQ_VHOST:pavex}
+
   mail:
     host: smtp.gmail.com
     port: 587
-
     username: ${GMAIL_SMTP_USERNAME}
     password: ${GMAIL_SMTP_APP_PASSWORD}
-
     properties:
       mail:
         smtp:
           auth: true
-
           starttls:
             enable: true
             required: true
-
         connectiontimeout: 5000
         timeout: 5000
         writetimeout: 5000
 
-
 pavex:
+  # Bootstrap accounts are never created from the production profile.
+  bootstrap-admin:
+    enabled: false
   email:
     from: ${GMAIL_SMTP_FROM_EMAIL}
     password-reset-url: ${PASSWORD_RESET_URL}
     verification-url: ${EMAIL_VERIFICATION_URL}
     invitation-url: ${INVITATION_URL}
 
-# Never use the checked-in local-development defaults in production.
+# Never use local-development key defaults in production.
 security:
   jwt:
+    issuer: ${JWT_ISSUER}
     private-key: ${JWT_PRIVATE_KEY}
     public-key: ${JWT_PUBLIC_KEY}
   service-jwt:
     identity:
+      issuer: ${IDENTITY_SERVICE_JWT_ISSUER}
       public-key: ${IDENTITY_SERVICE_JWT_PUBLIC_KEY}
 
 auth:
   security:
     key-hash-secret: ${AUTH_SECURITY_KEY_HASH_SECRET}
-
   outbox:
     payload-encryption-key: ${OUTBOX_PAYLOAD_ENCRYPTION_KEY}
 
-# API documentation is local/dev by default. Enable explicitly if production docs are intended.
 springdoc:
   api-docs:
     enabled: ${SPRINGDOC_API_DOCS_ENABLED:false}
