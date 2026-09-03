@@ -1,42 +1,28 @@
 package com.pavex.operations.service
 
-import com.pavex.operations.repository.HubMembershipRepository
-import com.pavex.operations.repository.WorkforceMemberRepository
+import com.pavex.common.security.HubAccessScope
+import com.pavex.operations.security.requirePavexActor
 import org.springframework.security.access.AccessDeniedException
 import org.springframework.security.core.Authentication
 import org.springframework.stereotype.Service
-import java.util.UUID
 
-data class WorkforceAccessScope(
-    val isGlobal: Boolean,
-    val hubIds: Set<UUID>,
-) {
-    fun canAccessHub(hubId: UUID): Boolean = isGlobal || hubId in hubIds
-}
+typealias WorkforceAccessScope = HubAccessScope
 
 @Service
 class WorkforceAccessScopeService(
-    private val members: WorkforceMemberRepository,
-    private val memberships: HubMembershipRepository,
+    private val hubScopes: WorkforceHubScopeResolver,
 ) {
     fun resolve(authentication: Authentication): WorkforceAccessScope {
-        val authorities = authentication.authorities.map { it.authority }.toSet()
-        if (WORKFORCE_MANAGE in authorities) {
-            return WorkforceAccessScope(isGlobal = true, hubIds = emptySet())
+        val actor = authentication.requirePavexActor()
+        if (actor.hasAuthority(WORKFORCE_MANAGE)) return HubAccessScope.global(actor.userId)
+        if (!actor.hasAnyAuthority(WORKFORCE_READ, HUB_MANAGE)) {
+            throw AccessDeniedException("Workforce access is not allowed")
         }
-        if (HUB_MANAGE !in authorities) throw AccessDeniedException("Workforce access is not allowed")
-
-        val actorUserId = runCatching { UUID.fromString(authentication.name) }
-            .getOrElse { throw AccessDeniedException("Authenticated user id is invalid") }
-        val member = members.findByUserId(actorUserId)
-            ?: return WorkforceAccessScope(isGlobal = false, hubIds = emptySet())
-        val hubIds = memberships.findAllByWorkforceMemberIdAndIsActiveTrue(member.id)
-            .map { it.hubId }
-            .toSet()
-        return WorkforceAccessScope(isGlobal = false, hubIds = hubIds)
+        return hubScopes.resolve(actor.userId)
     }
 
     companion object {
+        const val WORKFORCE_READ = "operations.workforce.read"
         const val WORKFORCE_MANAGE = "operations.workforce.manage"
         const val HUB_MANAGE = "operations.hub.manage"
     }

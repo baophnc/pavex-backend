@@ -5,6 +5,7 @@ import com.pavex.operations.entity.OperationalAssignment
 import com.pavex.operations.entity.OperationalAssignmentType
 import com.pavex.operations.entity.WorkforceMember
 import com.pavex.operations.entity.WorkforceMemberKind
+import com.pavex.operations.entity.WorkforceMemberStatus
 import com.pavex.operations.repository.HubMembershipRepository
 import com.pavex.operations.repository.OperationalAssignmentRepository
 import com.pavex.operations.repository.WorkforceMemberRepository
@@ -23,7 +24,8 @@ class AssignmentAccessScopeServiceTest {
     private val members = mock(WorkforceMemberRepository::class.java)
     private val memberships = mock(HubMembershipRepository::class.java)
     private val assignments = mock(OperationalAssignmentRepository::class.java)
-    private val service = AssignmentAccessScopeService(members, memberships, assignments)
+    private val hubScopes = WorkforceHubScopeResolver(members, memberships)
+    private val service = AssignmentAccessScopeService(hubScopes, assignments)
 
     @Test
     fun `global assignment manager receives global scope`() {
@@ -51,6 +53,19 @@ class AssignmentAccessScopeServiceTest {
         assertFalse(scope.isGlobal)
         assertTrue(service.canAccessAssignment(scope, ownedAssignment.id))
         assertFalse(service.canAccessAssignment(scope, foreignAssignment.id))
+    }
+
+    @Test
+    fun `suspended workforce member receives empty assigned hub scope`() {
+        val userId = UUID.randomUUID()
+        val member = WorkforceMember.create(userId, WorkforceMemberKind.DISPATCHER, Instant.now())
+        member.status = WorkforceMemberStatus.SUSPENDED
+        `when`(members.findByUserId(userId)).thenReturn(member)
+
+        val scope = service.resolve(auth("operations.hub.manage", userId))
+
+        assertFalse(scope.isGlobal)
+        assertTrue(scope.hubIds.isEmpty())
     }
 
     private fun auth(authority: String, userId: UUID = UUID.randomUUID()) =

@@ -42,6 +42,17 @@ class ShipmentControlTowerAccessServiceTest {
         assertThrows<AccessDeniedException> { service.resolve(authentication(emptySet())) }
     }
 
+    @Test
+    fun `malformed user subject is rejected before operations lookup`() {
+        val auth = UsernamePasswordAuthenticationToken(
+            "not-a-uuid",
+            "n/a",
+            listOf(SimpleGrantedAuthority("operations.hub.manage"), SimpleGrantedAuthority("ROLE_HUB_MANAGER")),
+        )
+        assertThrows<AccessDeniedException> { service.resolve(auth) }
+        verifyNoInteractions(operations)
+    }
+
     private fun authentication(authorities: Set<String>, userId: UUID = UUID.randomUUID()) =
         UsernamePasswordAuthenticationToken(
             userId.toString(),
