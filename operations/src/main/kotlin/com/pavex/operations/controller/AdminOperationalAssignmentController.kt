@@ -4,8 +4,10 @@ import com.pavex.operations.dto.AssignOperationalWorkRequest
 import com.pavex.operations.dto.CancelOperationalAssignmentRequest
 import com.pavex.operations.dto.OperationalAssignmentResponse
 import com.pavex.operations.entity.OperationalAssignmentStatus
+import com.pavex.operations.security.requirePavexActor
 import com.pavex.operations.service.AssignmentAccessScopeService
 import com.pavex.operations.service.OperationalAssignmentService
+import jakarta.validation.Valid
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.security.core.Authentication
 import org.springframework.web.bind.annotation.GetMapping
@@ -37,7 +39,7 @@ class AdminOperationalAssignmentController(
     fun assign(
         authentication: Authentication,
         @PathVariable id: UUID,
-        @RequestBody request: AssignOperationalWorkRequest,
+        @Valid @RequestBody request: AssignOperationalWorkRequest,
     ): OperationalAssignmentResponse = service.assign(
         actor(authentication),
         accessScopes.resolve(authentication),
@@ -49,7 +51,7 @@ class AdminOperationalAssignmentController(
     fun cancel(
         authentication: Authentication,
         @PathVariable id: UUID,
-        @RequestBody request: CancelOperationalAssignmentRequest,
+        @Valid @RequestBody request: CancelOperationalAssignmentRequest,
     ): OperationalAssignmentResponse = service.cancel(
         actor(authentication),
         accessScopes.resolve(authentication),
@@ -57,5 +59,5 @@ class AdminOperationalAssignmentController(
         request.reason,
     )
 
-    private fun actor(authentication: Authentication): UUID = UUID.fromString(authentication.name)
+    private fun actor(authentication: Authentication): UUID = authentication.requirePavexActor().userId
 }

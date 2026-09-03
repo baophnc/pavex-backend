@@ -63,7 +63,7 @@ class RoleController(
     @PutMapping("/{roleId}/permissions")
     fun replacePermissions(
         @PathVariable roleId: UUID,
-        @RequestBody request: ReplaceRolePermissionsRequest,
+        @Valid @RequestBody request: ReplaceRolePermissionsRequest,
     ): RoleResponse =
         roleService.replacePermissions(roleId, request)
 

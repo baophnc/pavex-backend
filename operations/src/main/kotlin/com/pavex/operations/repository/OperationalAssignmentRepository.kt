@@ -21,7 +21,6 @@ interface OperationalAssignmentRepository : JpaRepository<OperationalAssignment,
         type: OperationalAssignmentType,
         hubId: UUID,
     ): OperationalAssignment?
-    fun findAllByOrderByPriorityDescCreatedAtAsc(): List<OperationalAssignment>
     fun findAllByAssigneeWorkforceMemberIdAndStatusInOrderByPriorityDescCreatedAtAsc(
         assigneeWorkforceMemberId: UUID,
         statuses: Collection<OperationalAssignmentStatus>,
@@ -39,10 +38,29 @@ interface OperationalAssignmentRepository : JpaRepository<OperationalAssignment,
         assigneeWorkforceMemberIds: Collection<UUID>,
         statuses: Collection<OperationalAssignmentStatus>,
     ): List<OperationalAssignment>
+
+    @Query(
+        """
+        select a
+        from OperationalAssignment a
+        where (:globalAccess = true or a.hubId in :allowedHubIds)
+          and (:shipmentId is null or a.shipmentId = :shipmentId)
+          and (:hubId is null or a.hubId = :hubId)
+          and (:status is null or a.status = :status)
+        """,
+    )
+    fun searchVisible(
+        @Param("globalAccess") globalAccess: Boolean,
+        @Param("allowedHubIds") allowedHubIds: Collection<UUID>,
+        @Param("shipmentId") shipmentId: UUID?,
+        @Param("hubId") hubId: UUID?,
+        @Param("status") status: OperationalAssignmentStatus?,
+        pageable: Pageable,
+    ): List<OperationalAssignment>
+
     @Query("select a.id from OperationalAssignment a where a.status in :statuses order by a.priority desc, a.createdAt asc, a.id asc")
     fun findDispatchableIds(
         @Param("statuses") statuses: Collection<OperationalAssignmentStatus>,
         pageable: Pageable,
     ): List<UUID>
-
 }

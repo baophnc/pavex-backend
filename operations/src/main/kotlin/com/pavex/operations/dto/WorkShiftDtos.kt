@@ -3,27 +3,29 @@ package com.pavex.operations.dto
 import com.pavex.operations.entity.WorkShiftStatus
 import com.pavex.operations.entity.WorkforceMemberKind
 import com.pavex.operations.entity.WorkforceShiftAssignmentStatus
+import jakarta.validation.constraints.NotBlank
+import jakarta.validation.constraints.Size
 import java.time.Instant
 import java.util.UUID
 
 data class CreateWorkShiftRequest(
     val hubId: UUID,
-    val name: String,
+    @field:NotBlank @field:Size(max = 100) val name: String,
     val startsAt: Instant,
     val endsAt: Instant,
 )
 
 data class UpdateWorkShiftRequest(
-    val name: String,
+    @field:NotBlank @field:Size(max = 100) val name: String,
     val startsAt: Instant,
     val endsAt: Instant,
 )
 
-data class CancelWorkShiftRequest(val reason: String)
+data class CancelWorkShiftRequest(@field:NotBlank @field:Size(max = 500) val reason: String)
 
 data class AssignWorkforceShiftRequest(val workforceMemberId: UUID)
 
-data class MarkShiftAbsentRequest(val note: String? = null)
+data class MarkShiftAbsentRequest(@field:Size(max = 500) val note: String? = null)
 
 data class WorkShiftResponse(
     val id: UUID,

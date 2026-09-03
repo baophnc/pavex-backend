@@ -1,28 +1,33 @@
 package com.pavex.pricing.dto
 
+import jakarta.validation.Valid
+import jakarta.validation.constraints.NotBlank
+import jakarta.validation.constraints.Positive
+import jakarta.validation.constraints.PositiveOrZero
+import jakarta.validation.constraints.Size
 import java.math.BigDecimal
 import java.time.Instant
 import java.util.UUID
 
 data class CreatePricingQuoteRequest(
-    val originProvinceCode: String,
-    val originWardCode: String,
-    val destinationProvinceCode: String,
-    val destinationWardCode: String,
-    val weightKg: BigDecimal? = null,
-    val lengthCm: BigDecimal? = null,
-    val widthCm: BigDecimal? = null,
-    val heightCm: BigDecimal? = null,
-    val codAmount: Long = 0,
-    val declaredValue: Long = 0,
-    val parcels: List<CreatePricingParcelRequest>? = null,
+    @field:NotBlank @field:Size(max = 20) val originProvinceCode: String,
+    @field:NotBlank @field:Size(max = 20) val originWardCode: String,
+    @field:NotBlank @field:Size(max = 20) val destinationProvinceCode: String,
+    @field:NotBlank @field:Size(max = 20) val destinationWardCode: String,
+    @field:Positive val weightKg: BigDecimal? = null,
+    @field:Positive val lengthCm: BigDecimal? = null,
+    @field:Positive val widthCm: BigDecimal? = null,
+    @field:Positive val heightCm: BigDecimal? = null,
+    @field:PositiveOrZero val codAmount: Long = 0,
+    @field:PositiveOrZero val declaredValue: Long = 0,
+    @field:Valid @field:Size(max = 100) val parcels: List<CreatePricingParcelRequest>? = null,
 )
 
 data class CreatePricingParcelRequest(
-    val weightKg: BigDecimal,
-    val lengthCm: BigDecimal,
-    val widthCm: BigDecimal,
-    val heightCm: BigDecimal,
+    @field:Positive val weightKg: BigDecimal,
+    @field:Positive val lengthCm: BigDecimal,
+    @field:Positive val widthCm: BigDecimal,
+    @field:Positive val heightCm: BigDecimal,
 )
 
 data class PricingQuoteResponse(

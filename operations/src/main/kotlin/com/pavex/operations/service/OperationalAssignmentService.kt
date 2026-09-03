@@ -25,10 +25,13 @@ import com.pavex.operations.repository.WorkShiftRepository
 import com.pavex.operations.repository.WorkforceAvailabilityRepository
 import com.pavex.operations.repository.WorkforceMemberRepository
 import com.pavex.operations.repository.WorkforceShiftAssignmentRepository
+import org.springframework.data.domain.PageRequest
+import org.springframework.data.domain.Sort
 import org.springframework.orm.ObjectOptimisticLockingFailureException
 import org.springframework.security.access.AccessDeniedException
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
+import java.time.Clock
 import java.time.Instant
 import java.util.UUID
 
@@ -43,6 +46,7 @@ class OperationalAssignmentService(
     private val shifts: WorkShiftRepository,
     private val identity: IdentityWorkforceClient,
     private val locks: AssignmentLockService,
+    private val clock: Clock,
 ) {
     @Transactional
     fun plan(plan: ShipmentAssignmentPlan): List<OperationalAssignmentResponse> {
@@ -55,7 +59,7 @@ class OperationalAssignmentService(
         val drafts = buildDrafts(plan)
         drafts.map { "${it.hubId}:${it.requiredKind}" }.distinct().sorted().forEach(locks::pool)
         val plannedLoads = mutableMapOf<UUID, Int>()
-        val now = Instant.now()
+        val now = Instant.now(clock)
         val created = drafts.map { draft ->
             val assignment = OperationalAssignment.create(
                 shipmentId = plan.shipmentId,
@@ -95,7 +99,7 @@ class OperationalAssignmentService(
             )
             .mapNotNull { it.workforceMemberId }
             .toSet()
-        val now = Instant.now()
+        val now = Instant.now(clock)
         val memberId = selectCandidate(
             assignment.hubId,
             assignment.requiredKind,
@@ -121,15 +125,24 @@ class OperationalAssignmentService(
         status: OperationalAssignmentStatus?,
     ): List<OperationalAssignmentResponse> {
         if (hubId != null && !scope.canAccessHub(hubId)) throw AccessDeniedException("Hub is outside the allowed scope")
-        return assignments.findAllByOrderByPriorityDescCreatedAtAsc()
-            .asSequence()
-            .filter { scope.isGlobal || it.hubId in scope.hubIds }
-            .filter { shipmentId == null || it.shipmentId == shipmentId }
-            .filter { hubId == null || it.hubId == hubId }
-            .filter { status == null || it.status == status }
-            .take(MAX_ADMIN_RESULTS)
-            .map(OperationalAssignmentResponse::from)
-            .toList()
+        if (!scope.isGlobal && scope.hubIds.isEmpty()) return emptyList()
+        val pageable = PageRequest.of(
+            0,
+            MAX_ADMIN_RESULTS,
+            Sort.by(
+                Sort.Order.desc("priority"),
+                Sort.Order.asc("createdAt"),
+                Sort.Order.asc("id"),
+            ),
+        )
+        return assignments.searchVisible(
+            globalAccess = scope.isGlobal,
+            allowedHubIds = scope.hubIds.ifEmpty { setOf(QUERY_SENTINEL_UUID) },
+            shipmentId = shipmentId,
+            hubId = hubId,
+            status = status,
+            pageable = pageable,
+        ).map(OperationalAssignmentResponse::from)
     }
 
     @Transactional(readOnly = true)
@@ -148,7 +161,7 @@ class OperationalAssignmentService(
         val availability = availabilities.findById(member.id).orElseThrow {
             OperationsConflictException("workforce_availability_not_found", "Workforce availability is not configured for this member.")
         }
-        availability.setStatus(status, Instant.now())
+        availability.setStatus(status, Instant.now(clock))
         availabilities.saveAndFlush(availability)
         return availabilityResponse(member.id, availability.status, availability.maxConcurrentAssignments, availability.updatedAt)
     }
@@ -163,13 +176,13 @@ class OperationalAssignmentService(
         val assignment = findAssignment(assignmentId)
         ensureScope(scope, assignment.hubId)
         locks.pool("${assignment.hubId}:${assignment.requiredKind}")
-        if (!isEligible(memberId, assignment, Instant.now())) {
+        if (!isEligible(memberId, assignment, Instant.now(clock))) {
             throw InvalidOperationsRequestException(
                 "assignee_not_eligible",
                 "The member is unavailable, at capacity, not checked in, or lacks the required hub/workforce/Identity access.",
             )
         }
-        return mutate(assignment) { assignment.assign(memberId, actorUserId, Instant.now()) }
+        return mutate(assignment) { assignment.assign(memberId, actorUserId, Instant.now(clock)) }
     }
 
     @Transactional
@@ -182,13 +195,13 @@ class OperationalAssignmentService(
         val assignment = findAssignment(assignmentId)
         ensureScope(scope, assignment.hubId)
         assignment.lastActorUserId = actorUserId
-        return mutate(assignment) { assignment.cancel(reason, Instant.now()) }
+        return mutate(assignment) { assignment.cancel(reason, Instant.now(clock)) }
     }
 
     @Transactional
     fun cancelShipment(shipmentId: UUID, reason: String) {
         require(shipmentId != ZERO_UUID) { "Shipment is required." }
-        val now = Instant.now()
+        val now = Instant.now(clock)
         assignments.findAllByShipmentIdOrderBySequenceAsc(shipmentId)
             .filter { it.status !in TERMINAL_STATUSES }
             .forEach { assignment ->
@@ -254,7 +267,7 @@ class OperationalAssignmentService(
         }
         val assignee = assignment.assigneeWorkforceMemberId
             ?: throw OperationsConflictException("assignment_not_assigned", "The operational assignment does not have an assignee.")
-        val now = Instant.now()
+        val now = Instant.now(clock)
         assignment.lastActorUserId = request.actorUserId
         return mutate(assignment) {
             if (assignment.status == OperationalAssignmentStatus.ACCEPTED) {
@@ -269,19 +282,19 @@ class OperationalAssignmentService(
 
     @Transactional
     fun accept(userId: UUID, assignmentId: UUID): OperationalAssignmentResponse =
-        mutateOwned(userId, assignmentId) { assignment, member -> assignment.accept(member.id, Instant.now()) }
+        mutateOwned(userId, assignmentId) { assignment, member -> assignment.accept(member.id, Instant.now(clock)) }
 
     @Transactional
     fun reject(userId: UUID, assignmentId: UUID, reason: String): OperationalAssignmentResponse =
-        mutateOwned(userId, assignmentId) { assignment, member -> assignment.reject(member.id, reason, Instant.now()) }
+        mutateOwned(userId, assignmentId) { assignment, member -> assignment.reject(member.id, reason, Instant.now(clock)) }
 
     @Transactional
     fun start(userId: UUID, assignmentId: UUID): OperationalAssignmentResponse =
-        mutateOwned(userId, assignmentId) { assignment, member -> assignment.start(member.id, Instant.now()) }
+        mutateOwned(userId, assignmentId) { assignment, member -> assignment.start(member.id, Instant.now(clock)) }
 
     @Transactional
     fun complete(userId: UUID, assignmentId: UUID, note: String?): OperationalAssignmentResponse =
-        mutateOwned(userId, assignmentId) { assignment, member -> assignment.complete(member.id, note, Instant.now()) }
+        mutateOwned(userId, assignmentId) { assignment, member -> assignment.complete(member.id, note, Instant.now(clock)) }
 
     private fun validateShipmentAssignmentReference(
         shipmentId: UUID,
@@ -522,6 +535,7 @@ class OperationalAssignmentService(
 
     companion object {
         private val ZERO_UUID = UUID(0, 0)
+        private val QUERY_SENTINEL_UUID = UUID(0, 1)
         val ACTIVE_STATUSES = listOf(
             OperationalAssignmentStatus.ASSIGNED,
             OperationalAssignmentStatus.ACCEPTED,

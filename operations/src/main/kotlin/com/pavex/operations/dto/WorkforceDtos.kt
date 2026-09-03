@@ -6,6 +6,12 @@ import com.pavex.operations.entity.WorkforceAuditAction
 import com.pavex.operations.entity.WorkforceAvailabilityStatus
 import com.pavex.operations.entity.WorkforceMemberKind
 import com.pavex.operations.entity.WorkforceMemberStatus
+import jakarta.validation.constraints.Email
+import jakarta.validation.constraints.Max
+import jakarta.validation.constraints.Min
+import jakarta.validation.constraints.NotBlank
+import jakarta.validation.constraints.Past
+import jakarta.validation.constraints.Size
 import java.time.Instant
 import java.time.LocalDate
 import java.util.UUID
@@ -17,18 +23,18 @@ data class CreateWorkforceMemberRequest(
 
 data class SetWorkforceStatusRequest(
     val status: WorkforceMemberStatus,
-    val reason: String? = null,
+    @field:Size(max = 500) val reason: String? = null,
 )
 
 data class SetWorkforceCapacityRequest(
-    val maxConcurrentAssignments: Int,
-    val reason: String? = null,
+    @field:Min(1) @field:Max(100) val maxConcurrentAssignments: Int,
+    @field:Size(max = 500) val reason: String? = null,
 )
 
 data class AssignWorkforceHubRequest(
     val hubId: UUID,
     val isPrimary: Boolean = false,
-    val reason: String? = null,
+    @field:Size(max = 500) val reason: String? = null,
 )
 
 data class WorkforceMemberResponse(
@@ -147,15 +153,15 @@ enum class WorkforceOnboardingGender { MALE, FEMALE, OTHER }
 enum class DispatcherAccessLevel { HUB, GLOBAL }
 
 data class OnboardWorkforceMemberRequest(
-    val email: String,
-    val firstName: String,
-    val lastName: String,
-    val displayName: String? = null,
+    @field:NotBlank @field:Email @field:Size(max = 320) val email: String,
+    @field:NotBlank @field:Size(max = 100) val firstName: String,
+    @field:NotBlank @field:Size(max = 100) val lastName: String,
+    @field:Size(max = 150) val displayName: String? = null,
     val gender: WorkforceOnboardingGender,
-    val dateOfBirth: LocalDate,
-    val avatarUrl: String? = null,
+    @field:Past val dateOfBirth: LocalDate,
+    @field:Size(max = 2048) val avatarUrl: String? = null,
     val kind: WorkforceMemberKind,
     val dispatcherAccessLevel: DispatcherAccessLevel? = null,
     val hubId: UUID? = null,
-    val maxConcurrentAssignments: Int? = null,
+    @field:Min(1) @field:Max(100) val maxConcurrentAssignments: Int? = null,
 )

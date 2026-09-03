@@ -28,10 +28,13 @@ import com.pavex.operations.repository.WorkforceAvailabilityRepository
 import com.pavex.operations.repository.WorkforceMemberRepository
 import com.pavex.operations.repository.WorkforceShiftAssignmentRepository
 import org.springframework.dao.DataIntegrityViolationException
+import org.springframework.data.domain.PageRequest
+import org.springframework.data.domain.Sort
 import org.springframework.orm.ObjectOptimisticLockingFailureException
 import org.springframework.security.access.AccessDeniedException
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
+import java.time.Clock
 import java.time.Instant
 import java.time.temporal.ChronoUnit
 import java.util.UUID
@@ -45,6 +48,7 @@ class WorkShiftService(
     private val availabilities: WorkforceAvailabilityRepository,
     private val identity: IdentityWorkforceClient,
     private val network: NetworkHubClient,
+    private val clock: Clock,
 ) {
     @Transactional(readOnly = true)
     fun search(
@@ -58,24 +62,31 @@ class WorkShiftService(
     ): PageResponse<WorkShiftResponse> {
         if (hubId != null && !scope.canAccessHub(hubId)) throw AccessDeniedException("Hub is outside the allowed scope")
         val pagination = OneBasedPagination.normalize(pageInput, pageSizeInput)
-        val filtered = shifts.findAllByOrderByStartsAtAscCodeAsc().asSequence()
-            .filter { scope.canAccessHub(it.hubId) }
-            .filter { hubId == null || it.hubId == hubId }
-            .filter { status == null || it.status == status }
-            .filter { from == null || !it.endsAt.isBefore(from) }
-            .filter { to == null || !it.startsAt.isAfter(to) }
-            .toList()
-        val total = filtered.size.toLong()
-        val fromIndex = ((pagination.page - 1) * pagination.pageSize).coerceAtMost(filtered.size)
-        val toIndex = (fromIndex + pagination.pageSize).coerceAtMost(filtered.size)
-        val pageRows = filtered.subList(fromIndex, toIndex)
+        if (!scope.isGlobal && scope.hubIds.isEmpty()) {
+            return PageResponse(emptyList(), pagination.page, pagination.pageSize, 0)
+        }
+        val pageable = PageRequest.of(
+            pagination.zeroBasedPage,
+            pagination.pageSize,
+            Sort.by(Sort.Order.asc("startsAt"), Sort.Order.asc("code"), Sort.Order.asc("id")),
+        )
+        val result = shifts.searchVisible(
+            globalAccess = scope.isGlobal,
+            allowedHubIds = scope.hubIds.ifEmpty { setOf(QUERY_SENTINEL_UUID) },
+            hubId = hubId,
+            status = status,
+            from = from,
+            to = to,
+            pageable = pageable,
+        )
+        val pageRows = result.content
         val counts = rosterCounts(pageRows.map { it.id })
         val hubs = network.snapshots(pageRows.map { it.hubId }).associateBy { it.hubId }
         return PageResponse(
             items = pageRows.map { response(it, counts[it.id] ?: 0, hubs[it.hubId]) },
             page = pagination.page,
             pageSize = pagination.pageSize,
-            totalCount = total,
+            totalCount = result.totalElements,
         )
     }
 
@@ -102,7 +113,7 @@ class WorkShiftService(
         if (hub.status != "ACTIVE") {
             throw InvalidOperationsRequestException("hub_not_active", "The hub does not exist or is inactive.")
         }
-        val now = Instant.now()
+        val now = Instant.now(clock)
         val shift = try {
             WorkShift.create(request.hubId, request.name, request.startsAt, request.endsAt, actorUserId, now)
         } catch (exception: IllegalArgumentException) {
@@ -128,7 +139,7 @@ class WorkShiftService(
             )
         }
         try {
-            shift.updateSchedule(request.name, request.startsAt, request.endsAt, Instant.now())
+            shift.updateSchedule(request.name, request.startsAt, request.endsAt, Instant.now(clock))
             shifts.saveAndFlush(shift)
         } catch (exception: IllegalArgumentException) {
             throw invalidShift(exception)
@@ -144,7 +155,7 @@ class WorkShiftService(
     fun cancel(actorUserId: UUID, scope: WorkforceAccessScope, shiftId: UUID, reason: String): WorkShiftResponse {
         val shift = findShift(shiftId)
         ensureShiftAccess(scope, shift)
-        val now = Instant.now()
+        val now = Instant.now(clock)
         val changed = try {
             shift.cancel(actorUserId, reason, now)
         } catch (exception: IllegalArgumentException) {
@@ -177,7 +188,7 @@ class WorkShiftService(
         requireActor(actorUserId)
         val shift = findShift(shiftId)
         ensureShiftAccess(scope, shift)
-        val now = Instant.now()
+        val now = Instant.now(clock)
         if (shift.status != WorkShiftStatus.SCHEDULED || !shift.startsAt.isAfter(now)) {
             throw InvalidOperationsRequestException(
                 "shift_not_assignable",
@@ -238,10 +249,11 @@ class WorkShiftService(
             ?: throw OperationsNotFoundException("shift_assignment_not_found", "The shift assignment was not found.")
         val member = findMember(workforceMemberId)
         val wasCheckedIn = assignment.status == WorkforceShiftAssignmentStatus.CHECKED_IN
+        val now = Instant.now(clock)
         try {
-            val changed = assignment.cancel(actorUserId, reason, Instant.now())
+            val changed = assignment.cancel(actorUserId, reason, now)
             if (changed) {
-                if (wasCheckedIn) setOffDuty(listOf(workforceMemberId), Instant.now())
+                if (wasCheckedIn) setOffDuty(listOf(workforceMemberId), now)
                 roster.saveAndFlush(assignment)
             }
         } catch (exception: IllegalArgumentException) {
@@ -267,10 +279,11 @@ class WorkShiftService(
         val assignment = roster.findByShiftIdAndWorkforceMemberId(shiftId, workforceMemberId)
             ?: throw OperationsNotFoundException("shift_assignment_not_found", "The shift assignment was not found.")
         val member = findMember(workforceMemberId)
+        val now = Instant.now(clock)
         try {
-            val changed = assignment.markAbsent(actorUserId, shift.startsAt, note, Instant.now())
+            val changed = assignment.markAbsent(actorUserId, shift.startsAt, note, now)
             if (changed) {
-                setOffDuty(listOf(workforceMemberId), Instant.now())
+                setOffDuty(listOf(workforceMemberId), now)
                 roster.saveAndFlush(assignment)
             }
         } catch (exception: IllegalArgumentException) {
@@ -286,7 +299,7 @@ class WorkShiftService(
     @Transactional(readOnly = true)
     fun mine(userId: UUID, from: Instant?, to: Instant?): List<MyWorkShiftResponse> {
         val member = members.findByUserId(userId) ?: return emptyList()
-        val now = Instant.now()
+        val now = Instant.now(clock)
         var rangeStart = from ?: now.minus(7, ChronoUnit.DAYS)
         var rangeEnd = to ?: now.plus(30, ChronoUnit.DAYS)
         if (rangeEnd < rangeStart) {
@@ -294,7 +307,7 @@ class WorkShiftService(
             rangeStart = rangeEnd
             rangeEnd = swap
         }
-        val assignments = roster.findAllByWorkforceMemberId(member.id)
+        val assignments = roster.findAllByWorkforceMemberIdAndShiftWindow(member.id, rangeStart, rangeEnd)
         if (assignments.isEmpty()) return emptyList()
         val shiftById = shifts.findAllByIdIn(assignments.map { it.shiftId }).associateBy { it.id }
         val selected = assignments.mapNotNull { assignment ->
@@ -358,7 +371,7 @@ class WorkShiftService(
         val availability = availabilities.findById(member.id).orElseThrow {
             OperationsConflictException("availability_not_found", "Workforce availability was not found.")
         }
-        val now = Instant.now()
+        val now = Instant.now(clock)
         try {
             assignment.checkIn(userId, shift.startsAt, shift.endsAt, now)
             availability.setStatus(WorkforceAvailabilityStatus.AVAILABLE, now)
@@ -379,7 +392,7 @@ class WorkShiftService(
             ?: throw OperationsNotFoundException("workforce_member_not_found", "Workforce member was not found.")
         val assignment = roster.findByShiftIdAndWorkforceMemberId(shiftId, member.id)
             ?: throw OperationsNotFoundException("shift_assignment_not_found", "The shift assignment was not found.")
-        val now = Instant.now()
+        val now = Instant.now(clock)
         try {
             assignment.checkOut(userId, now)
             availabilities.findById(member.id).ifPresent { availability ->
@@ -515,6 +528,7 @@ class WorkShiftService(
     )
 
     companion object {
+        private val QUERY_SENTINEL_UUID: UUID = UUID(0, 1)
         private val ACTIVE_ROSTER_STATUSES = listOf(
             WorkforceShiftAssignmentStatus.SCHEDULED,
             WorkforceShiftAssignmentStatus.CHECKED_IN,

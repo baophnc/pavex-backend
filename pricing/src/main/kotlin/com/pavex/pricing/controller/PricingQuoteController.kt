@@ -3,6 +3,7 @@ package com.pavex.pricing.controller
 import com.pavex.pricing.dto.CreatePricingQuoteRequest
 import com.pavex.pricing.dto.PricingQuoteResponse
 import com.pavex.pricing.service.QuoteService
+import jakarta.validation.Valid
 import org.springframework.http.HttpStatus
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
@@ -17,5 +18,5 @@ class PricingQuoteController(
 ) {
     @PostMapping
     @ResponseStatus(HttpStatus.OK)
-    fun create(@RequestBody request: CreatePricingQuoteRequest): PricingQuoteResponse = quotes.create(request)
+    fun create(@Valid @RequestBody request: CreatePricingQuoteRequest): PricingQuoteResponse = quotes.create(request)
 }

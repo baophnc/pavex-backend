@@ -10,8 +10,10 @@ import com.pavex.operations.dto.WorkShiftDetailResponse
 import com.pavex.operations.dto.WorkShiftResponse
 import com.pavex.operations.dto.WorkforceShiftAssignmentResponse
 import com.pavex.operations.entity.WorkShiftStatus
+import com.pavex.operations.security.requirePavexActor
 import com.pavex.operations.service.WorkShiftService
 import com.pavex.operations.service.WorkforceAccessScopeService
+import jakarta.validation.Valid
 import org.springframework.http.HttpStatus
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.security.core.Authentication
@@ -53,28 +55,28 @@ class AdminWorkShiftController(
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    fun create(authentication: Authentication, @RequestBody request: CreateWorkShiftRequest): WorkShiftResponse =
+    fun create(authentication: Authentication, @Valid @RequestBody request: CreateWorkShiftRequest): WorkShiftResponse =
         service.create(actor(authentication), accessScopes.resolve(authentication), request)
 
     @PutMapping("/{id}")
     fun update(
         authentication: Authentication,
         @PathVariable id: UUID,
-        @RequestBody request: UpdateWorkShiftRequest,
+        @Valid @RequestBody request: UpdateWorkShiftRequest,
     ): WorkShiftResponse = service.update(actor(authentication), accessScopes.resolve(authentication), id, request)
 
     @PostMapping("/{id}/cancel")
     fun cancel(
         authentication: Authentication,
         @PathVariable id: UUID,
-        @RequestBody request: CancelWorkShiftRequest,
+        @Valid @RequestBody request: CancelWorkShiftRequest,
     ): WorkShiftResponse = service.cancel(actor(authentication), accessScopes.resolve(authentication), id, request.reason)
 
     @PostMapping("/{id}/members")
     fun assignMember(
         authentication: Authentication,
         @PathVariable id: UUID,
-        @RequestBody request: AssignWorkforceShiftRequest,
+        @Valid @RequestBody request: AssignWorkforceShiftRequest,
     ): WorkforceShiftAssignmentResponse = service.assignMember(
         actor(authentication),
         accessScopes.resolve(authentication),
@@ -96,9 +98,9 @@ class AdminWorkShiftController(
         authentication: Authentication,
         @PathVariable id: UUID,
         @PathVariable memberId: UUID,
-        @RequestBody request: MarkShiftAbsentRequest,
+        @Valid @RequestBody request: MarkShiftAbsentRequest,
     ): WorkforceShiftAssignmentResponse =
         service.markAbsent(actor(authentication), accessScopes.resolve(authentication), id, memberId, request.note)
 
-    private fun actor(authentication: Authentication): UUID = UUID.fromString(authentication.name)
+    private fun actor(authentication: Authentication): UUID = authentication.requirePavexActor().userId
 }

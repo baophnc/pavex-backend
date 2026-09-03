@@ -153,6 +153,7 @@ class AuthController(
 
     @PostMapping("/verify-email")
     fun verifyEmail(
+        @Valid
         @RequestBody
         request: VerifyEmailRequest,
         httpRequest: HttpServletRequest,
@@ -178,6 +179,7 @@ class AuthController(
 
     @PostMapping("/resend-verification")
     fun resendVerification(
+        @Valid
         @RequestBody
         request: ResendVerificationRequest,
         httpRequest: HttpServletRequest,

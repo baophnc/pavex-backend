@@ -5,13 +5,15 @@ import com.pavex.operations.entity.OperationalAssignmentStatus
 import com.pavex.operations.entity.OperationalAssignmentType
 import com.pavex.operations.entity.WorkforceAvailabilityStatus
 import com.pavex.operations.entity.WorkforceMemberKind
+import jakarta.validation.constraints.NotBlank
+import jakarta.validation.constraints.Size
 import java.time.Instant
 import java.util.UUID
 
 data class AssignOperationalWorkRequest(val workforceMemberId: UUID)
-data class CancelOperationalAssignmentRequest(val reason: String)
-data class RejectOwnAssignmentRequest(val reason: String)
-data class CompleteOwnAssignmentRequest(val note: String? = null)
+data class CancelOperationalAssignmentRequest(@field:NotBlank @field:Size(max = 500) val reason: String)
+data class RejectOwnAssignmentRequest(@field:NotBlank @field:Size(max = 500) val reason: String)
+data class CompleteOwnAssignmentRequest(@field:Size(max = 500) val note: String? = null)
 data class SetMyAvailabilityRequest(val status: WorkforceAvailabilityStatus)
 
 data class ShipmentAssignmentRouteLeg(

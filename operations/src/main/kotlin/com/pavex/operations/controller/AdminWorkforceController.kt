@@ -10,9 +10,11 @@ import com.pavex.operations.dto.WorkforceAuditResponse
 import com.pavex.operations.dto.WorkforceMemberResponse
 import com.pavex.operations.entity.WorkforceMemberKind
 import com.pavex.operations.entity.WorkforceMemberStatus
+import com.pavex.operations.security.requirePavexActor
 import com.pavex.operations.service.WorkforceAccessScopeService
 import com.pavex.operations.service.WorkforceOnboardingService
 import com.pavex.operations.service.WorkforceService
+import jakarta.validation.Valid
 import org.springframework.http.HttpStatus
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.security.core.Authentication
@@ -59,35 +61,35 @@ class AdminWorkforceController(
     @ResponseStatus(HttpStatus.CREATED)
     fun onboard(
         authentication: Authentication,
-        @RequestBody request: OnboardWorkforceMemberRequest,
+        @Valid @RequestBody request: OnboardWorkforceMemberRequest,
     ): WorkforceMemberResponse = onboarding.onboard(actor(authentication), accessScopes.resolve(authentication), request)
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     fun create(
         authentication: Authentication,
-        @RequestBody request: CreateWorkforceMemberRequest,
+        @Valid @RequestBody request: CreateWorkforceMemberRequest,
     ): WorkforceMemberResponse = service.create(actor(authentication), accessScopes.resolve(authentication), request)
 
     @PatchMapping("/{id}/status")
     fun setStatus(
         authentication: Authentication,
         @PathVariable id: UUID,
-        @RequestBody request: SetWorkforceStatusRequest,
+        @Valid @RequestBody request: SetWorkforceStatusRequest,
     ): WorkforceMemberResponse = service.setStatus(actor(authentication), accessScopes.resolve(authentication), id, request)
 
     @PatchMapping("/{id}/capacity")
     fun setCapacity(
         authentication: Authentication,
         @PathVariable id: UUID,
-        @RequestBody request: SetWorkforceCapacityRequest,
+        @Valid @RequestBody request: SetWorkforceCapacityRequest,
     ): WorkforceMemberResponse = service.setCapacity(actor(authentication), accessScopes.resolve(authentication), id, request)
 
     @PostMapping("/{id}/hubs")
     fun assignHub(
         authentication: Authentication,
         @PathVariable id: UUID,
-        @RequestBody request: AssignWorkforceHubRequest,
+        @Valid @RequestBody request: AssignWorkforceHubRequest,
     ): WorkforceMemberResponse = service.assignHub(actor(authentication), accessScopes.resolve(authentication), id, request)
 
     @DeleteMapping("/{id}/hubs/{hubId}")
@@ -104,5 +106,5 @@ class AdminWorkforceController(
         @PathVariable id: UUID,
     ): List<WorkforceAuditResponse> = service.audit(accessScopes.resolve(authentication), id)
 
-    private fun actor(authentication: Authentication): UUID = UUID.fromString(authentication.name)
+    private fun actor(authentication: Authentication): UUID = authentication.requirePavexActor().userId
 }

@@ -1,3 +1,9 @@
+gateway:
+  client-ip:
+    # Empty by default: forwarded headers are ignored unless the direct peer is
+    # an explicitly trusted ingress/load-balancer address or CIDR.
+    trusted-proxies: ${GATEWAY_TRUSTED_PROXIES:}
+
 spring:
   application:
     name: api-gateway

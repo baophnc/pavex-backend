@@ -7,18 +7,7 @@ import reactor.core.publisher.Mono
 
 @Configuration
 class GatewayConfig {
-
     @Bean("clientIpKeyResolver")
-    fun clientIpKeyResolver(): KeyResolver {
-        return KeyResolver { exchange ->
-            val clientIp =
-                exchange.request
-                    .remoteAddress
-                    ?.address
-                    ?.hostAddress
-                    ?: "unknown"
-
-            Mono.just(clientIp)
-        }
-    }
+    fun clientIpKeyResolver(clientIps: TrustedProxyClientIpResolver): KeyResolver =
+        KeyResolver { exchange -> Mono.just(clientIps.resolve(exchange)) }
 }

@@ -8,6 +8,7 @@ import com.pavex.operations.dto.OperationsOutboxDeadLetterResponse
 import com.pavex.operations.dto.OperationsOutboxSummaryResponse
 import com.pavex.operations.entity.OperationalAssignmentEventType
 import com.pavex.operations.exception.OperationsNotFoundException
+import com.pavex.operations.security.requirePavexActor
 import com.pavex.operations.service.AssignmentAccessScope
 import com.pavex.operations.service.AssignmentAccessScopeService
 import com.pavex.operations.service.OperationalAssignmentEventQueryService
@@ -115,6 +116,5 @@ class AdminOperationsReliabilityController(
         if (!scope.isGlobal) throw AccessDeniedException("Global assignment management access is required")
     }
 
-    private fun actor(authentication: Authentication): UUID = runCatching { UUID.fromString(authentication.name) }
-        .getOrElse { throw AccessDeniedException("Authenticated user id is invalid") }
+    private fun actor(authentication: Authentication): UUID = authentication.requirePavexActor().userId
 }

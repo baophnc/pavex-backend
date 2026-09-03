@@ -2,6 +2,7 @@ package com.pavex.operations.controller
 
 import com.pavex.operations.dto.MyWorkShiftResponse
 import com.pavex.operations.dto.WorkforceShiftAssignmentResponse
+import com.pavex.operations.security.requirePavexActor
 import com.pavex.operations.service.WorkShiftService
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.security.core.Authentication
@@ -37,5 +38,5 @@ class OperationsShiftController(
     fun checkOut(authentication: Authentication, @PathVariable id: UUID): WorkforceShiftAssignmentResponse =
         service.checkOut(actor(authentication), id)
 
-    private fun actor(authentication: Authentication): UUID = UUID.fromString(authentication.name)
+    private fun actor(authentication: Authentication): UUID = authentication.requirePavexActor().userId
 }

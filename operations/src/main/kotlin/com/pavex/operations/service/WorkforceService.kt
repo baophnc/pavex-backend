@@ -37,10 +37,13 @@ import com.pavex.operations.repository.WorkforceAvailabilityRepository
 import com.pavex.operations.repository.WorkforceMemberRepository
 import com.pavex.operations.repository.WorkforceShiftAssignmentRepository
 import org.springframework.dao.DataIntegrityViolationException
+import org.springframework.data.domain.PageRequest
+import org.springframework.data.domain.Sort
 import org.springframework.orm.ObjectOptimisticLockingFailureException
 import org.springframework.security.access.AccessDeniedException
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
+import java.time.Clock
 import java.time.Instant
 import java.util.UUID
 
@@ -55,6 +58,7 @@ class WorkforceService(
     private val shifts: WorkShiftRepository,
     private val identity: IdentityWorkforceClient,
     private val network: NetworkHubClient,
+    private val clock: Clock,
 ) {
     @Transactional(readOnly = true)
     fun search(
@@ -68,37 +72,49 @@ class WorkforceService(
     ): PageResponse<WorkforceMemberResponse> {
         if (hubId != null && !scope.canAccessHub(hubId)) throw AccessDeniedException("Hub is outside the allowed scope")
         val pagination = OneBasedPagination.normalize(pageInput, pageSizeInput)
-        val all = members.findAllByOrderByEmployeeCodeAsc()
-        if (all.isEmpty()) return PageResponse(emptyList(), pagination.page, pagination.pageSize, 0)
+        if (!scope.isGlobal && scope.hubIds.isEmpty()) {
+            return PageResponse(emptyList(), pagination.page, pagination.pageSize, 0)
+        }
 
-        val membershipsByMember = memberships.findAllByWorkforceMemberIdIn(all.map { it.id }).groupBy { it.workforceMemberId }
-        var filtered = all.asSequence()
-            .filter { status == null || it.status == status }
-            .filter { kind == null || it.kind == kind }
-            .filter { member ->
-                val activeHubs = membershipsByMember[member.id].orEmpty().filter { it.isActive }.map { it.hubId }.toSet()
-                (scope.isGlobal || activeHubs.any(scope.hubIds::contains)) &&
-                    (hubId == null || hubId in activeHubs)
-            }
-            .toList()
-
+        val allowedHubIds = scope.hubIds.ifEmpty { setOf(QUERY_SENTINEL_UUID) }
         val needle = search?.trim()?.takeIf { it.isNotBlank() }
-        if (needle != null && filtered.isNotEmpty()) {
-            val identityMatches = identity.snapshots(filtered.map { it.userId }, needle).map { it.userId }.toSet()
-            filtered = filtered.filter { member ->
-                member.employeeCode.contains(needle, ignoreCase = true) || member.userId in identityMatches
+        val identityUserIds = if (needle == null) {
+            setOf(QUERY_SENTINEL_UUID)
+        } else {
+            val candidateUserIds = members.findVisibleUserIds(status, kind, scope.isGlobal, allowedHubIds, hubId)
+            if (candidateUserIds.isEmpty()) {
+                setOf(QUERY_SENTINEL_UUID)
+            } else {
+                identity.snapshots(candidateUserIds, needle).map { it.userId }.toSet()
+                    .ifEmpty { setOf(QUERY_SENTINEL_UUID) }
             }
         }
 
-        val total = filtered.size.toLong()
-        val fromIndex = ((pagination.page - 1) * pagination.pageSize).coerceAtMost(filtered.size)
-        val toIndex = (fromIndex + pagination.pageSize).coerceAtMost(filtered.size)
-        val pageMembers = filtered.subList(fromIndex, toIndex)
+        val pageable = PageRequest.of(
+            pagination.zeroBasedPage,
+            pagination.pageSize,
+            Sort.by(Sort.Order.asc("employeeCode"), Sort.Order.asc("id")),
+        )
+        val result = members.searchVisible(
+            status = status,
+            kind = kind,
+            globalAccess = scope.isGlobal,
+            allowedHubIds = allowedHubIds,
+            hubId = hubId,
+            needle = needle,
+            identityUserIds = identityUserIds,
+            pageable = pageable,
+        )
+        if (result.isEmpty) return PageResponse(emptyList(), pagination.page, pagination.pageSize, result.totalElements)
+
+        val pageMembers = result.content
+        val membershipsByMember = memberships.findAllByWorkforceMemberIdIn(pageMembers.map { it.id })
+            .groupBy { it.workforceMemberId }
         return PageResponse(
             items = enrich(pageMembers, scope, membershipsByMember),
             page = pagination.page,
             pageSize = pagination.pageSize,
-            totalCount = total,
+            totalCount = result.totalElements,
         )
     }
 
@@ -126,7 +142,7 @@ class WorkforceService(
             ?: throw OperationsNotFoundException("identity_user_not_found", "Identity user was not found.")
         validateIdentity(request.kind, identitySnapshot)
 
-        val now = Instant.now()
+        val now = Instant.now(clock)
         val member = WorkforceMember.create(request.userId, request.kind, now)
         try {
             members.saveAndFlush(member)
@@ -160,7 +176,7 @@ class WorkforceService(
         val member = findMember(memberId)
         val previous = member.status
         if (previous == request.status) return get(scope, memberId)
-        val now = Instant.now()
+        val now = Instant.now(clock)
 
         if (request.status != WorkforceMemberStatus.ACTIVE) {
             val activeAssignments = assignments.findAllByAssigneeWorkforceMemberIdAndStatusIn(
@@ -246,7 +262,7 @@ class WorkforceService(
         }
         val previous = availability.maxConcurrentAssignments
         if (previous == request.maxConcurrentAssignments) return get(scope, memberId)
-        val now = Instant.now()
+        val now = Instant.now(clock)
         availability.setMaximum(request.maxConcurrentAssignments, now)
         availabilities.saveAndFlush(availability)
         audit(member.id, null, actorUserId, WorkforceAuditAction.CAPACITY_CHANGED, previous.toString(), request.maxConcurrentAssignments.toString(), request.reason, now)
@@ -277,7 +293,7 @@ class WorkforceService(
         val current = memberships.findByWorkforceMemberIdAndHubId(member.id, request.hubId)
         if (current?.isActive == true && current.isPrimary == request.isPrimary) return get(scope, member.id)
         val previousState = current?.let { membershipState(it) }
-        val now = Instant.now()
+        val now = Instant.now(clock)
 
         if (request.isPrimary) {
             val currentPrimaries = memberships.findAllByWorkforceMemberIdAndIsActiveTrue(member.id)
@@ -344,7 +360,7 @@ class WorkforceService(
             )
         }
 
-        val now = Instant.now()
+        val now = Instant.now(clock)
         hubAssignments.forEach { assignment ->
             assignment.lastActorUserId = actorUserId
             assignment.requeue(now)
@@ -550,6 +566,7 @@ class WorkforceService(
     }
 
     companion object {
+        private val QUERY_SENTINEL_UUID: UUID = UUID(0, 1)
         private const val ACTIVE_HUB_STATUS = "ACTIVE"
     }
 }

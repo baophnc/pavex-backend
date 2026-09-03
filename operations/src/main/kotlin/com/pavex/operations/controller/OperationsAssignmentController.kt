@@ -5,7 +5,9 @@ import com.pavex.operations.dto.MyAvailabilityResponse
 import com.pavex.operations.dto.OperationalAssignmentResponse
 import com.pavex.operations.dto.RejectOwnAssignmentRequest
 import com.pavex.operations.dto.SetMyAvailabilityRequest
+import com.pavex.operations.security.requirePavexActor
 import com.pavex.operations.service.OperationalAssignmentService
+import jakarta.validation.Valid
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.security.core.Authentication
 import org.springframework.web.bind.annotation.GetMapping
@@ -30,7 +32,7 @@ class OperationsAssignmentController(
     @PreAuthorize("hasAuthority('assignments.execute-own')")
     fun availability(
         authentication: Authentication,
-        @RequestBody request: SetMyAvailabilityRequest,
+        @Valid @RequestBody request: SetMyAvailabilityRequest,
     ): MyAvailabilityResponse = service.setMyAvailability(actor(authentication), request.status)
 
     @PostMapping("/assignments/{id}/accept")
@@ -43,7 +45,7 @@ class OperationsAssignmentController(
     fun reject(
         authentication: Authentication,
         @PathVariable id: UUID,
-        @RequestBody request: RejectOwnAssignmentRequest,
+        @Valid @RequestBody request: RejectOwnAssignmentRequest,
     ): OperationalAssignmentResponse = service.reject(actor(authentication), id, request.reason)
 
     @PostMapping("/assignments/{id}/start")
@@ -56,8 +58,8 @@ class OperationsAssignmentController(
     fun complete(
         authentication: Authentication,
         @PathVariable id: UUID,
-        @RequestBody request: CompleteOwnAssignmentRequest,
+        @Valid @RequestBody request: CompleteOwnAssignmentRequest,
     ): OperationalAssignmentResponse = service.complete(actor(authentication), id, request.note)
 
-    private fun actor(authentication: Authentication): UUID = UUID.fromString(authentication.name)
+    private fun actor(authentication: Authentication): UUID = authentication.requirePavexActor().userId
 }
