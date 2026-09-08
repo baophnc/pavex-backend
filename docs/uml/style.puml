@@ -1,0 +1,23 @@
+' Shared print-friendly UML style. Render locally; no remote includes.
+!pragma layout smetana
+skinparam backgroundColor white
+skinparam defaultFontName Arial
+skinparam defaultFontSize 15
+skinparam shadowing false
+skinparam roundcorner 0
+skinparam ArrowColor #374151
+skinparam ArrowThickness 1
+skinparam packageStyle rectangle
+skinparam classAttributeIconSize 0
+skinparam classBackgroundColor #F7FAFC
+skinparam classBorderColor #334155
+skinparam usecaseBackgroundColor #F7FAFC
+skinparam usecaseBorderColor #334155
+skinparam actorBorderColor #334155
+skinparam actorFontColor #111827
+skinparam noteBackgroundColor #FFF9E6
+skinparam noteBorderColor #A38A45
+skinparam nodesep 35
+skinparam ranksep 55
+hide empty methods
+hide circle

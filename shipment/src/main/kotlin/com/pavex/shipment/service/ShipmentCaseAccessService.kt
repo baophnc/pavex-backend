@@ -29,10 +29,16 @@ class ShipmentCaseAccessService(
             (allowGlobalManageFallback && actor.hasAuthority(CASES_MANAGE))
         if (!hasRequired) throw AccessDeniedException("Shipment case access is not allowed.")
 
-        if (actor.hasRole(ADMIN_ROLE) || actor.hasRole(OPERATIONS_MANAGER_ROLE)) {
+        if (actor.hasAnyRole(ADMIN_ROLE, PLATFORM_SUPER_ADMIN_ROLE, OPERATIONS_MANAGER_ROLE)) {
             return HubAccessScope.global(actor.userId)
         }
-        if (!actor.hasAuthority(HUB_MANAGE) || !actor.hasRole(HUB_MANAGER_ROLE)) {
+        val scopedRoleAllowed = if (requiredAuthority == CASES_MANAGE) {
+            actor.hasRole(HUB_MANAGER_ROLE) && actor.hasAuthority(HUB_MANAGE)
+        } else {
+            actor.hasAnyRole(HUB_MANAGER_ROLE, HUB_DISPATCHER_ROLE) &&
+                (actor.hasAuthority(HUB_READ) || actor.hasAuthority(HUB_MANAGE))
+        }
+        if (!scopedRoleAllowed) {
             throw AccessDeniedException("Shipment case access is not allowed.")
         }
 
@@ -46,9 +52,12 @@ class ShipmentCaseAccessService(
     companion object {
         const val CASES_READ = "shipments.cases.read"
         const val CASES_MANAGE = "shipments.cases.manage"
+        const val HUB_READ = "operations.hub.read"
         const val HUB_MANAGE = "operations.hub.manage"
         const val ADMIN_ROLE = "ADMIN"
+        const val PLATFORM_SUPER_ADMIN_ROLE = "PLATFORM_SUPER_ADMIN"
         const val OPERATIONS_MANAGER_ROLE = "OPERATIONS_MANAGER"
         const val HUB_MANAGER_ROLE = "HUB_MANAGER"
+        const val HUB_DISPATCHER_ROLE = "HUB_DISPATCHER"
     }
 }

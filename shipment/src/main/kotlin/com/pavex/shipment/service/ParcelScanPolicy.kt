@@ -25,6 +25,9 @@ object ParcelScanPolicy {
             ParcelStatus.DELIVERED,
             -> hub.hubId == destinationHubId
 
+            ParcelStatus.AT_TRANSIT_HUB ->
+                hub.onReservedRoute && hub.hubId != originHubId && hub.hubId != destinationHubId
+
             ParcelStatus.RETURNED -> hub.hubId == originHubId
 
             ParcelStatus.IN_TRANSIT,

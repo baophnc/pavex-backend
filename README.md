@@ -68,7 +68,8 @@ Use the selector in the top bar to switch between:
 - `Partners API` - merchant, address and location APIs.
 - `Network API` - logistics geography, topology, routing and capacity APIs.
 - `Pricing API` - versioned rate plans and public quote APIs.
-- `Shipment API` - shipment foundation; create/query lifecycle APIs arrive in later Shipment patches.
+- `Shipment API` - shipment lifecycle and parcel operations.
+- `Operations API` - workforce, shifts, assignments and operational reliability.
 
 The aggregated OpenAPI JSON documents are also available through the Gateway:
 
@@ -85,7 +86,10 @@ For protected operations, click **Authorize** and paste the access token returne
 Internal `/internal/**` service-to-service endpoints are intentionally excluded.
 Set `PAVEX_PUBLIC_BASE_URL` when Swagger should execute requests against a non-local Gateway.
 
-Swagger/OpenAPI is disabled by default with the `prod` profile. If a production
-deployment intentionally exposes documentation, enable `SPRINGDOC_API_DOCS_ENABLED`
-on Auth/Identity/Partners/Network/Pricing/Shipment and both `SPRINGDOC_API_DOCS_ENABLED` and
-`SPRINGDOC_SWAGGER_UI_ENABLED` on the Gateway.
+This repository currently uses one local-only `application.yaml` per service.
+There is no production profile or production hardening in this configuration.
+See [local configuration and admin login](docs/security-keys.md) before running
+the stack. Do not deploy the bundled local bootstrap credential.
+
+For the seed-light account/workforce test sequence, see
+[`docs/backend-manual-test-flow.md`](docs/backend-manual-test-flow.md).

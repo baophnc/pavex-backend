@@ -4,6 +4,7 @@ import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
 import org.springframework.http.ProblemDetail
 import org.springframework.http.ResponseEntity
+import org.springframework.http.converter.HttpMessageNotReadableException
 import org.springframework.web.bind.MethodArgumentNotValidException
 import org.springframework.web.bind.annotation.ExceptionHandler
 import org.springframework.web.bind.annotation.RestControllerAdvice
@@ -11,6 +12,19 @@ import java.net.URI
 
 @RestControllerAdvice
 class GlobalExceptionHandler {
+
+    // Handle malformed/missing JSON fields here instead of forwarding to the
+    // protected /error endpoint, which can mask a bad request as a JWT 401.
+    @ExceptionHandler(HttpMessageNotReadableException::class)
+    fun handleUnreadableMessage(): ProblemDetail =
+        ProblemDetail.forStatusAndDetail(
+            HttpStatus.BAD_REQUEST,
+            "Request body must be valid JSON with all required fields",
+        ).apply {
+            title = "invalid_request_body"
+            type = URI.create("https://api.pavex.com/problems/invalid_request_body")
+            setProperty("code", "invalid_request_body")
+        }
 
     @ExceptionHandler(RateLimitExceededException::class)
     fun handleRateLimitExceeded(

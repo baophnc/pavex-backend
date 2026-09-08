@@ -6,6 +6,10 @@ data class OperationsHubSnapshotRequest(
     val hubIds: List<UUID>,
 )
 
+data class OperationsHubCodeSnapshotRequest(
+    val hubCodes: List<String>,
+)
+
 data class OperationsHubSnapshot(
     val hubId: UUID,
     val code: String,

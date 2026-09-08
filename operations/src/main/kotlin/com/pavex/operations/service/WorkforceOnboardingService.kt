@@ -89,7 +89,10 @@ class WorkforceOnboardingService(
             throw InvalidOperationsRequestException("workforce_hub_required", "A primary hub is required for this workforce role.")
         }
         if (request.kind == WorkforceMemberKind.DISPATCHER && request.dispatcherAccessLevel == null) {
-            throw InvalidOperationsRequestException("dispatcher_access_required", "Choose HUB or GLOBAL dispatcher access.")
+            throw InvalidOperationsRequestException(
+                "dispatcher_access_required",
+                "Choose HUB, HUB_MANAGER or GLOBAL dispatcher access.",
+            )
         }
     }
 
@@ -102,13 +105,13 @@ class WorkforceOnboardingService(
         }
     }
 
-    private fun workforceRole(request: OnboardWorkforceMemberRequest): String = when (request.kind) {
-        WorkforceMemberKind.COURIER, WorkforceMemberKind.LINE_HAUL_DRIVER -> "DRIVER"
-        WorkforceMemberKind.WAREHOUSE_OPERATOR -> "WAREHOUSE_STAFF"
-        WorkforceMemberKind.DISPATCHER -> when (request.dispatcherAccessLevel) {
-            DispatcherAccessLevel.HUB -> "HUB_MANAGER"
-            DispatcherAccessLevel.GLOBAL -> "OPERATIONS_MANAGER"
-            null -> throw InvalidOperationsRequestException("dispatcher_access_required", "Choose HUB or GLOBAL dispatcher access.")
+    private fun workforceRole(request: OnboardWorkforceMemberRequest): String {
+        if (request.kind == WorkforceMemberKind.DISPATCHER && request.dispatcherAccessLevel == null) {
+            throw InvalidOperationsRequestException(
+                "dispatcher_access_required",
+                "Choose HUB, HUB_MANAGER or GLOBAL dispatcher access.",
+            )
         }
+        return WorkforceRolePolicy.onboardingRole(request.kind, request.dispatcherAccessLevel)
     }
 }

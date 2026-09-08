@@ -29,7 +29,7 @@ class UserRoleController(
 ) {
 
     @PreAuthorize(
-        "hasAuthority('${AuthorizationPermissions.Identity.ASSIGN_ROLE}')"
+        "hasAuthority('${AuthorizationPermissions.Identity.ASSIGN_ROLE}') and hasAnyRole('ADMIN','PLATFORM_SUPER_ADMIN','IAM_ADMIN')"
     )
     @PostMapping(
         "/{userId}/roles"
@@ -48,7 +48,7 @@ class UserRoleController(
         @RequestBody
         request: AssignRoleRequest,
     ) {
-        roleService.assignRole(
+        roleService.assignRoleAuthorized(
             actorUserId =
                 UUID.fromString(
                     authentication
@@ -66,7 +66,7 @@ class UserRoleController(
 
 
     @PreAuthorize(
-        "hasAuthority('${AuthorizationPermissions.Identity.ASSIGN_ROLE}')"
+        "hasAuthority('${AuthorizationPermissions.Identity.ASSIGN_ROLE}') and hasAnyRole('ADMIN','PLATFORM_SUPER_ADMIN','IAM_ADMIN')"
     )
     @DeleteMapping(
         "/{userId}/roles/{roleCode}"
@@ -84,7 +84,7 @@ class UserRoleController(
         @PathVariable
         roleCode: String,
     ) {
-        roleService.removeRole(
+        roleService.removeRoleAuthorized(
             actorUserId =
                 UUID.fromString(
                     authentication

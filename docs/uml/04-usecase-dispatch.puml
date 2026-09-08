@@ -1,0 +1,46 @@
+@startuml
+!include style.puml
+left to right direction
+title PAVEX — Nhân sự và điều phối\nHiện trạng · association không biểu diễn thứ tự thao tác
+actor "Quản lý vận hành\nOPERATIONS_MANAGER" as Ops
+actor "Quản lý bưu cục\nHUB_MANAGER" as Manager
+actor "Điều phối bưu cục\nHUB_DISPATCHER" as Dispatcher
+rectangle "PAVEX — Operations" {
+  usecase "Onboard nhân viên\nvà cấp danh tính phù hợp" as Onboard
+  usecase "Quản lý nhân viên,\ntrạng thái, sức tải và hub" as Workforce
+  usecase "Lập ca và bố trí\nnhân viên vào ca" as Shifts
+  usecase "Tra cứu nhiệm vụ và\nnhân sự có thể phân công" as Search
+  usecase "Gán / gán lại\nnhân viên cho nhiệm vụ" as Assign
+  usecase "Hủy nhiệm vụ\nkhi hợp lệ" as Cancel
+  usecase "Xem lịch sử điều phối\nvà sự kiện nhiệm vụ" as Events
+  usecase "Xử lý thông điệp lỗi\nretry / discard" as Retry
+}
+Ops -- Onboard
+Ops -- Workforce
+Ops -- Shifts
+Ops -- Search
+Ops -- Assign
+Ops -- Cancel
+Ops -- Events
+Ops -- Retry
+Manager -- Workforce
+Manager -- Shifts
+Manager -- Search
+Manager -- Assign
+Manager -- Cancel
+Manager -- Events
+Dispatcher -- Search
+Dispatcher -- Assign
+Dispatcher -- Cancel
+Dispatcher -- Events
+legend bottom
+  {permission AND scope AND domain constraints}
+  Hub-scoped actor chỉ thao tác trên membership active.
+  Nhân viên được gán phải đúng kind, hub, ca, availability,
+  sức tải và trạng thái nhiệm vụ được phép.
+  ────────────────────────────────
+  Onboard liên dịch vụ và xử lý outbox chỉ cho global scope.
+  Hub Manager không kế thừa Operations Manager.
+  Platform admin có quyền quản trị tương ứng, lược ở trang này.
+endlegend
+@enduml

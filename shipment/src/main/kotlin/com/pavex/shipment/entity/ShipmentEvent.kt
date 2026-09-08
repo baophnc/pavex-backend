@@ -48,7 +48,7 @@ class ShipmentEvent(
                 shipment = shipment,
                 status = ShipmentStatus.AWAITING_PICKUP,
                 code = "shipment.created",
-                description = "Shipment created and awaiting pickup.",
+                description = "Đã tạo đơn hàng, chờ nhân viên lấy hàng.",
                 actorUserId = actorUserId,
                 locationName = shipment.sender.wardName,
                 occurredAt = occurredAt,

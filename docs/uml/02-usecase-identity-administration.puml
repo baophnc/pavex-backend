@@ -1,0 +1,54 @@
+@startuml
+!include style.puml
+left to right direction
+title PAVEX — Danh tính và quản trị\nHiện trạng · quyền chi tiết được kiểm tra tại API/service
+actor "Người dùng" as User
+actor "Quản trị IAM\nIAM_ADMIN" as IAM
+actor "Quản trị nền tảng\nPLATFORM_SUPER_ADMIN / ADMIN" as Admin
+actor "Quản lý mạng lưới\nNETWORK_MANAGER" as Network
+actor "Quản lý vận hành\nOPERATIONS_MANAGER" as Ops
+actor "Google Identity" as Google
+actor "Dịch vụ email\nSMTP / Mailpit local" as Mail
+rectangle "PAVEX — Danh tính / Quản trị" {
+  usecase "Đăng ký, xác minh email\nvà chấp nhận lời mời" as Register
+  usecase "Đăng nhập bằng mật khẩu" as Login
+  usecase "Đăng nhập Google" as GoogleLogin
+  usecase "Khôi phục / đổi mật khẩu\nvà quản lý phiên của mình" as Session
+  usecase "Quản lý hồ sơ\ncủa mình" as Profile
+  usecase "Quản lý người dùng\nvà lời mời" as Users
+  usecase "Quản lý role, permission\nvà gán / thu hồi role" as Roles
+  usecase "Duyệt / đổi trạng thái\nmerchant" as Merchant
+  usecase "Quản lý hub, vùng phục vụ,\nlane, lịch và tuyến mẫu" as Topology
+  usecase "Quản lý / kích hoạt\nbảng giá" as Rates
+  usecase "Xem control tower,\nxử lý ngoại lệ và hồ sơ sự cố" as Cases
+}
+User -- Register
+User -- Login
+User -- GoogleLogin
+User -- Session
+User -- Profile
+GoogleLogin -- Google
+Register -- Mail
+Session -- Mail
+IAM -- Users
+IAM -- Roles
+Admin -- Users
+Admin -- Roles
+Admin -- Merchant
+Admin -- Topology
+Admin -- Rates
+Admin -- Cases
+Network -- Topology
+Ops -- Topology
+Ops -- Cases
+legend bottom
+  Gán role không phải kế thừa actor trong UML.
+  Role hệ thống được bảo vệ; không cho tự nâng quyền.
+  GOOGLE_CLIENT_IDS phải được cấu hình để dùng Google login.
+  ────────────────────────────────
+  Ngoại lệ: hold/resume, hoàn, chuyển tiếp, hủy, cân lại.
+  Hồ sơ: tạo, phân người xử lý, điều tra, liên kết, đóng.
+  HUB_MANAGER / HUB_DISPATCHER mặc định chỉ đọc hồ sơ,
+  không mặc nhiên được quyền xử lý như OPERATIONS_MANAGER.
+endlegend
+@enduml

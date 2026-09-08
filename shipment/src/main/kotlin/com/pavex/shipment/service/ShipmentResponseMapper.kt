@@ -72,7 +72,7 @@ object ShipmentResponseMapper {
                     ShipmentTimelineEventResponse(
                         status = event.status,
                         code = event.code,
-                        description = event.description,
+                        description = ShipmentVietnameseText.event(event.description),
                         parcelCode = event.parcelId?.let(parcelCodes::get),
                         locationName = event.locationName,
                         occurredAt = event.occurredAt,
@@ -122,7 +122,7 @@ object ShipmentResponseMapper {
             timeline = events.map { event ->
                 PublicTrackingEvent(
                     status = event.status,
-                    description = event.description,
+                    description = ShipmentVietnameseText.event(event.description),
                     locationName = event.locationName,
                     occurredAt = event.occurredAt,
                 )
@@ -189,6 +189,8 @@ object ShipmentResponseMapper {
             widthCm = parcel.widthCm,
             heightCm = parcel.heightCm,
             status = parcel.status,
+            currentHubId = parcel.currentHubId,
+            currentRouteLegId = parcel.currentRouteLegId,
         )
     }
 }

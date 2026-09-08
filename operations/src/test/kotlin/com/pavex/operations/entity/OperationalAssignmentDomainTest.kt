@@ -10,6 +10,24 @@ import java.util.UUID
 
 class OperationalAssignmentDomainTest {
     @Test
+    fun `blocked assignment must be activated before it can be assigned`() {
+        val now = Instant.parse("2026-08-31T08:00:00Z")
+        val assignment = OperationalAssignment.create(
+            UUID.randomUUID(), 2, null, OperationalAssignmentType.ORIGIN_HUB_HANDLING,
+            WorkforceMemberKind.WAREHOUSE_OPERATOR, UUID.randomUUID(), 50, now,
+            OperationalAssignmentStatus.BLOCKED,
+        )
+
+        assertThrows(IllegalStateException::class.java) {
+            assignment.assign(UUID.randomUUID(), null, now)
+        }
+        assignment.activate(now.plusSeconds(1))
+        assignment.assign(UUID.randomUUID(), null, now.plusSeconds(2))
+
+        assertEquals(OperationalAssignmentStatus.ASSIGNED, assignment.status)
+    }
+
+    @Test
     fun `assignment follows worker lifecycle`() {
         val now = Instant.parse("2026-08-31T08:00:00Z")
         val memberId = UUID.randomUUID()

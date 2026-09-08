@@ -33,6 +33,14 @@ class ShipmentOperationsScanGuard(
             )
         }
 
+        val checkpoint = nextStatus == null || nextStatus == target.parcelStatus
+        if (checkpoint && target.currentHubId != hub.hubId) {
+            throw InvalidShipmentRequestException(
+                "scan_hub_mismatch",
+                "A parcel checkpoint must be recorded at the parcel's current hub.",
+            )
+        }
+
         val warehouseRequired = nextStatus == null || nextStatus in WAREHOUSE_STATUSES
         if (warehouseRequired && !operations.canOperateAtHub(actorUserId, hub.hubId, OperationsCapability.PARCEL_SCANNING)) {
             throw ShipmentForbiddenException(
@@ -69,7 +77,7 @@ class ShipmentOperationsScanGuard(
             else -> null
         }
 
-        val arrivingLineHaul = if (nextStatus == ParcelStatus.AT_DESTINATION_HUB) {
+        val arrivingLineHaul = if (nextStatus in LINE_HAUL_ARRIVAL_STATUSES) {
             val routeLegId = request.routeLegId ?: throw InvalidShipmentRequestException(
                 "route_leg_required",
                 "Destination-hub receipt requires the reserved route-leg identifier.",
@@ -82,28 +90,19 @@ class ShipmentOperationsScanGuard(
                 )
         } else null
 
-        val handlingAssignment = when {
-            nextStatus == ParcelStatus.IN_TRANSIT && hub.hubId == target.originHubId ->
-                operations.findTypeAssignment(
-                    target.shipmentId,
-                    OperationsAssignmentType.ORIGIN_HUB_HANDLING,
-                    target.originHubId,
-                )?.also(::requireCompletable)
-                    ?: throw ShipmentConflictException(
-                        "origin_handling_assignment_missing",
-                        "Origin-hub handling must be assigned and accepted before line-haul departure.",
-                    )
-            nextStatus == ParcelStatus.OUT_FOR_DELIVERY ->
-                operations.findTypeAssignment(
-                    target.shipmentId,
-                    OperationsAssignmentType.DESTINATION_HUB_HANDLING,
-                    target.destinationHubId,
-                )?.also(::requireCompletable)
-                    ?: throw ShipmentConflictException(
-                        "destination_handling_assignment_missing",
-                        "Destination-hub handling must be assigned and accepted before last-mile dispatch.",
-                    )
+        val handlingType = when {
+            nextStatus == ParcelStatus.AT_ORIGIN_HUB -> OperationsAssignmentType.ORIGIN_HUB_HANDLING
+            checkpoint && target.parcelStatus == ParcelStatus.AT_TRANSIT_HUB -> OperationsAssignmentType.TRANSIT_HUB_HANDLING
+            checkpoint && target.parcelStatus == ParcelStatus.AT_DESTINATION_HUB -> OperationsAssignmentType.DESTINATION_HUB_HANDLING
             else -> null
+        }
+        val handlingAssignment = handlingType?.let { type ->
+            operations.findTypeAssignment(target.shipmentId, type, hub.hubId)
+                ?.also(::requireCompletable)
+                ?: throw ShipmentConflictException(
+                    "hub_handling_assignment_missing",
+                    "Hub handling must be assigned and accepted before confirming this checkpoint.",
+                )
         }
 
         return ShipmentScanOperationsContext(ownedAssignment, arrivingLineHaul, handlingAssignment)
@@ -132,7 +131,9 @@ class ShipmentOperationsScanGuard(
             )
         }
 
-        context.handlingAssignment?.let { assignment ->
+        context.handlingAssignment
+            ?.takeIf { allParcelsHandled(response, it) }
+            ?.let { assignment ->
             complete(
                 target,
                 assignment,
@@ -145,15 +146,17 @@ class ShipmentOperationsScanGuard(
         }
 
         context.arrivingLineHaul?.let { assignment ->
-            complete(
-                target,
-                assignment,
-                actorUserId,
-                OperationsAssignmentType.LINE_HAUL,
-                assignment.hubId,
-                assignment.routeLegId,
-                "Reserved route leg was received at the destination hub.",
-            )
+            if (allParcelsArrived(response, request, assignment)) {
+                complete(
+                    target,
+                    assignment,
+                    actorUserId,
+                    OperationsAssignmentType.LINE_HAUL,
+                    assignment.hubId,
+                    assignment.routeLegId,
+                    "Reserved route leg was received at the destination hub.",
+                )
+            }
         }
     }
 
@@ -195,6 +198,31 @@ class ShipmentOperationsScanGuard(
         }
     }
 
+    private fun allParcelsHandled(
+        response: ShipmentDetailResponse,
+        assignment: ShipmentOperationsAssignmentSnapshot,
+    ): Boolean {
+        val expectedStatus = when (assignment.type) {
+            OperationsAssignmentType.ORIGIN_HUB_HANDLING -> ParcelStatus.AT_ORIGIN_HUB
+            OperationsAssignmentType.TRANSIT_HUB_HANDLING -> ParcelStatus.AT_TRANSIT_HUB
+            OperationsAssignmentType.DESTINATION_HUB_HANDLING -> ParcelStatus.AT_DESTINATION_HUB
+            else -> return false
+        }
+        return response.parcels.all {
+            it.status == expectedStatus && it.currentHubId == assignment.hubId
+        }
+    }
+
+    private fun allParcelsArrived(
+        response: ShipmentDetailResponse,
+        request: RecordParcelScanRequest,
+        assignment: ShipmentOperationsAssignmentSnapshot,
+    ): Boolean = response.parcels.all {
+        it.status == request.nextStatus &&
+            it.currentHubId == request.hubId &&
+            it.currentRouteLegId == assignment.routeLegId
+    }
+
     private fun complete(
         target: ParcelScanTarget,
         assignment: ShipmentOperationsAssignmentSnapshot,
@@ -218,9 +246,14 @@ class ShipmentOperationsScanGuard(
     companion object {
         private val WAREHOUSE_STATUSES = setOf(
             ParcelStatus.AT_ORIGIN_HUB,
+            ParcelStatus.AT_TRANSIT_HUB,
             ParcelStatus.AT_DESTINATION_HUB,
             ParcelStatus.RETURNING,
             ParcelStatus.RETURNED,
+        )
+        private val LINE_HAUL_ARRIVAL_STATUSES = setOf(
+            ParcelStatus.AT_TRANSIT_HUB,
+            ParcelStatus.AT_DESTINATION_HUB,
         )
         private val COMPLETABLE_STATUSES = setOf(
             OperationsAssignmentStatus.ACCEPTED,

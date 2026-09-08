@@ -1,5 +1,7 @@
 package com.pavex.auth.dto.auth
 
+import com.pavex.auth.event.PasswordResetPortal
+
 import jakarta.validation.constraints.Email
 import jakarta.validation.constraints.NotBlank
 import jakarta.validation.constraints.Size
@@ -17,4 +19,5 @@ data class ForgotPasswordRequest(
         message = "Email must not exceed 255 characters",
     )
     val email: String,
+    val portal: PasswordResetPortal = PasswordResetPortal.CLIENT,
 )

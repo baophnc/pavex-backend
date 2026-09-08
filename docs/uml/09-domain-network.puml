@@ -1,0 +1,68 @@
+@startuml
+!include style.puml
+title PAVEX — Mạng lưới và năng lực vận chuyển\nHiện trạng · hub hierarchy không đồng nghĩa tuyến đi bắt buộc
+class Hub {
+  code : String
+  type : REGIONAL_GATEWAY / PROVINCIAL / LOCAL
+  status : HubStatus
+}
+class HubLane {
+  code : String
+  transportMode : TransportMode
+  estimatedTransitMinutes : Integer
+}
+class LaneSchedule {
+  departureTime : LocalTime
+  effectiveFrom : LocalDate
+  capacityKg : Decimal
+}
+class LaneCapacityReservation {
+  routeRevision : Integer
+  legSequence : Integer
+  serviceDate : LocalDate
+  reservedWeightKg : Decimal
+  status : RESERVED / CONSUMED / RELEASED
+}
+class RouteTemplate {
+  code : String
+  revision : Integer
+  status : RouteTemplateStatus
+}
+class RouteTemplateLeg {
+  sequence : Integer
+}
+class NetworkRegion {
+  code : String
+}
+class ServiceArea {
+  code : String
+}
+class ServiceAreaCoverage {
+  provinceCode : String
+  wardCode : String [0..1]
+  tier : STANDARD / REMOTE / ISLAND
+}
+class "Shipment\n(Shipment)" as Shipment
+Hub "0..1\nparent" -- "0..*\nchildren" Hub : phân cấp
+Hub "1\nfrom" -- "0..*" HubLane : đầu chặng
+Hub "1\nto" -- "0..*" HubLane : cuối chặng
+HubLane "1" -- "0..*" LaneSchedule
+LaneSchedule "1" -- "0..*" LaneCapacityReservation
+Shipment "1" -- "0..*" LaneCapacityReservation : tuyến đã giữ chỗ
+RouteTemplate "1" -- "0..*" RouteTemplateLeg : {ordered}
+HubLane "1" -- "0..*" RouteTemplateLeg
+NetworkRegion "1" -- "0..*" ServiceArea
+Hub "1\nprimaryHub" -- "0..*" ServiceArea
+ServiceArea "1" -- "0..*" ServiceAreaCoverage
+legend bottom
+  Tuyến mẫu ACTIVE phải có chặng hợp lệ, liên tục.
+  0..* cho phép cấu hình chưa hoàn thiện ở trạng thái INACTIVE.
+  Chọn tuyến bằng route template hoặc graph;
+  không ép mọi đơn qua đủ cả 3 cấp hub.
+  ────────────────────────────────
+  Một reservation tương ứng một chặng theo ngày/lịch.
+  Mô hình hiện chưa có Trip/Vehicle/Manifest riêng.
+  Các endpoint hub của RouteTemplate và laneId dự phòng
+  trong reservation được lược khỏi hình để giảm giao cắt.
+endlegend
+@enduml

@@ -1,3 +1,4 @@
+# LOCAL DEVELOPMENT ONLY. Do not deploy with these credentials or bootstrap settings.
 spring:
   application:
     name: discovery-server

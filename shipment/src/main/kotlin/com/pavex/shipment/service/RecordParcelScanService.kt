@@ -100,11 +100,7 @@ class RecordParcelScanService(
     }
 
     private fun defaultDescription(status: ParcelStatus?, hubName: String): String =
-        if (status == null) {
-            "Parcel scanned at $hubName."
-        } else {
-            "Parcel status updated to ${status.name} at $hubName."
-        }
+        ShipmentVietnameseText.scan(status, hubName)
 }
 
 @Service
@@ -119,6 +115,8 @@ class ParcelScanTargetReader(
             shipmentId = shipment.id,
             parcelId = parcel.id,
             parcelCode = parcel.code,
+            parcelStatus = parcel.status,
+            currentHubId = parcel.currentHubId,
             routeRevision = shipment.routeRevision,
             originHubId = shipment.originHubId,
             destinationHubId = shipment.destinationHubId,
@@ -243,6 +241,8 @@ data class ParcelScanTarget(
     val shipmentId: UUID,
     val parcelId: UUID,
     val parcelCode: String,
+    val parcelStatus: ParcelStatus,
+    val currentHubId: UUID?,
     val routeRevision: Int,
     val originHubId: UUID,
     val destinationHubId: UUID,

@@ -13,6 +13,7 @@ import java.util.UUID
 interface HubRepository : JpaRepository<Hub, UUID> {
     fun existsByCodeIgnoreCase(code: String): Boolean
     fun findByCodeIgnoreCase(code: String): Hub?
+    fun findAllByCodeIn(codes: Collection<String>): List<Hub>
     fun findAllByParentHubId(parentHubId: UUID): List<Hub>
     fun findAllByStatus(status: HubStatus): List<Hub>
 

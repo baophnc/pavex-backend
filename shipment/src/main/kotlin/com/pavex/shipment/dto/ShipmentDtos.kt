@@ -127,4 +127,6 @@ data class ParcelResponse(
     val widthCm: BigDecimal,
     val heightCm: BigDecimal,
     val status: ParcelStatus,
+    val currentHubId: UUID?,
+    val currentRouteLegId: UUID?,
 )

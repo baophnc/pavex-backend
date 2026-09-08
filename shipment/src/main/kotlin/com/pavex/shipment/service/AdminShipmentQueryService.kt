@@ -137,7 +137,7 @@ class AdminShipmentQueryService(
                         id = event.id,
                         status = event.status,
                         code = event.code,
-                        description = event.description,
+                        description = ShipmentVietnameseText.event(event.description),
                         parcelCode = event.parcelId?.let(parcelCodes::get),
                         actorUserId = event.actorUserId,
                         hubId = event.hubId,

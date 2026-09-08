@@ -6,20 +6,12 @@ import com.pavex.operations.entity.OperationalAssignmentStatus
 import com.pavex.operations.repository.OperationalAssignmentEventLogRepository
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
-import org.mockito.ArgumentMatchers.anyBoolean
-import org.mockito.ArgumentMatchers.anyCollection
-import org.mockito.ArgumentMatchers.isNull
 import org.mockito.Mockito.mock
-import org.mockito.Mockito.`when`
 import org.springframework.data.domain.PageImpl
-import org.springframework.data.domain.Pageable
 import java.time.Instant
 import java.util.UUID
 
 class OperationalAssignmentEventQueryServiceTest {
-    private val repository = mock(OperationalAssignmentEventLogRepository::class.java)
-    private val service = OperationalAssignmentEventQueryService(repository)
-
     @Test
     fun `search clamps page size and maps immutable event history`() {
         val event = OperationalAssignmentEventLog(
@@ -33,19 +25,13 @@ class OperationalAssignmentEventQueryServiceTest {
             reason = "vehicle issue",
             occurredAt = Instant.parse("2026-08-31T08:00:00Z"),
         )
-        `when`(
-            repository.search(
-                isNull(),
-                isNull(),
-                isNull(),
-                anyBoolean(),
-                anyCollection(),
-                org.mockito.ArgumentMatchers.any(Pageable::class.java),
-            ),
-        ).thenReturn(PageImpl(listOf(event)))
+        val repository = mock(OperationalAssignmentEventLogRepository::class.java) { invocation ->
+            if (invocation.method.name == "search") PageImpl(listOf(event)) else null
+        }
+        val service = OperationalAssignmentEventQueryService(repository)
 
         val page = service.search(
-            AssignmentAccessScope(isGlobal = true, hubIds = emptySet()),
+            AssignmentAccessScope.global(UUID.randomUUID()),
             assignmentId = null,
             shipmentId = null,
             eventType = null,
@@ -62,8 +48,10 @@ class OperationalAssignmentEventQueryServiceTest {
 
     @Test
     fun `empty local scope does not query event repository`() {
+        val repository = mock(OperationalAssignmentEventLogRepository::class.java)
+        val service = OperationalAssignmentEventQueryService(repository)
         val page = service.search(
-            AssignmentAccessScope(isGlobal = false, hubIds = emptySet()),
+            AssignmentAccessScope.assignedHubs(UUID.randomUUID(), emptySet()),
             null,
             null,
             null,

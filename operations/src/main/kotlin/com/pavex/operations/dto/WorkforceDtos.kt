@@ -150,7 +150,7 @@ data class WorkforceAuditResponse(
 )
 
 enum class WorkforceOnboardingGender { MALE, FEMALE, OTHER }
-enum class DispatcherAccessLevel { HUB, GLOBAL }
+enum class DispatcherAccessLevel { HUB, HUB_MANAGER, GLOBAL }
 
 data class OnboardWorkforceMemberRequest(
     @field:NotBlank @field:Email @field:Size(max = 320) val email: String,

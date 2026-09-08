@@ -26,6 +26,7 @@ import com.pavex.operations.repository.WorkforceAvailabilityRepository
 import com.pavex.operations.repository.WorkforceMemberRepository
 import com.pavex.operations.repository.WorkforceShiftAssignmentRepository
 import org.springframework.data.domain.PageRequest
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.data.domain.Sort
 import org.springframework.orm.ObjectOptimisticLockingFailureException
 import org.springframework.security.access.AccessDeniedException
@@ -47,6 +48,8 @@ class OperationalAssignmentService(
     private val identity: IdentityWorkforceClient,
     private val locks: AssignmentLockService,
     private val clock: Clock,
+    @Value("\${operations.dispatch.auto-assign-enabled:true}")
+    private val autoAssignEnabled: Boolean = true,
 ) {
     @Transactional
     fun plan(plan: ShipmentAssignmentPlan): List<OperationalAssignmentResponse> {
@@ -60,7 +63,12 @@ class OperationalAssignmentService(
         drafts.map { "${it.hubId}:${it.requiredKind}" }.distinct().sorted().forEach(locks::pool)
         val plannedLoads = mutableMapOf<UUID, Int>()
         val now = Instant.now(clock)
-        val created = drafts.map { draft ->
+        val created = drafts.mapIndexed { index, draft ->
+            val initialStatus = if (index == 0) {
+                OperationalAssignmentStatus.READY
+            } else {
+                OperationalAssignmentStatus.BLOCKED
+            }
             val assignment = OperationalAssignment.create(
                 shipmentId = plan.shipmentId,
                 sequence = draft.sequence,
@@ -70,10 +78,13 @@ class OperationalAssignmentService(
                 hubId = draft.hubId,
                 priority = plan.priority,
                 now = now,
+                initialStatus = initialStatus,
             )
-            selectCandidate(draft.hubId, draft.requiredKind, plannedLoads, now)?.let { memberId ->
-                assignment.assign(memberId, null, now)
-                plannedLoads[memberId] = plannedLoads.getOrDefault(memberId, 0) + 1
+            if (initialStatus == OperationalAssignmentStatus.READY) {
+                selectCandidate(draft.hubId, draft.requiredKind, plannedLoads, now)?.let { memberId ->
+                    assignment.assign(memberId, null, now)
+                    plannedLoads[memberId] = plannedLoads.getOrDefault(memberId, 0) + 1
+                }
             }
             assignment
         }
@@ -85,6 +96,7 @@ class OperationalAssignmentService(
 
     @Transactional
     fun redispatch(assignmentId: UUID): Boolean {
+        if (!autoAssignEnabled) return false
         locks.assignment(assignmentId.toString().replace("-", ""))
         val assignmentResult = assignments.findById(assignmentId)
         if (assignmentResult.isEmpty) return false
@@ -194,8 +206,12 @@ class OperationalAssignmentService(
     ): OperationalAssignmentResponse {
         val assignment = findAssignment(assignmentId)
         ensureScope(scope, assignment.hubId)
+        val wasBlocked = assignment.status == OperationalAssignmentStatus.BLOCKED
         assignment.lastActorUserId = actorUserId
-        return mutate(assignment) { assignment.cancel(reason, Instant.now(clock)) }
+        val now = Instant.now(clock)
+        val response = mutate(assignment) { assignment.cancel(reason, now) }
+        if (!wasBlocked) activateNext(assignment, now)
+        return response
     }
 
     @Transactional
@@ -269,7 +285,7 @@ class OperationalAssignmentService(
             ?: throw OperationsConflictException("assignment_not_assigned", "The operational assignment does not have an assignee.")
         val now = Instant.now(clock)
         assignment.lastActorUserId = request.actorUserId
-        return mutate(assignment) {
+        val response = mutate(assignment) {
             if (assignment.status == OperationalAssignmentStatus.ACCEPTED) {
                 assignment.start(assignee, now)
             }
@@ -278,6 +294,8 @@ class OperationalAssignmentService(
             }
             assignment.complete(assignee, request.note, now)
         }
+        activateNext(assignment, now)
+        return response
     }
 
     @Transactional
@@ -293,8 +311,18 @@ class OperationalAssignmentService(
         mutateOwned(userId, assignmentId) { assignment, member -> assignment.start(member.id, Instant.now(clock)) }
 
     @Transactional
-    fun complete(userId: UUID, assignmentId: UUID, note: String?): OperationalAssignmentResponse =
-        mutateOwned(userId, assignmentId) { assignment, member -> assignment.complete(member.id, note, Instant.now(clock)) }
+    fun complete(userId: UUID, assignmentId: UUID, note: String?): OperationalAssignmentResponse {
+        val member = activeMember(userId)
+            ?: throw OperationsNotFoundException("workforce_member_not_found", "An active workforce member was not found.")
+        val assignment = findAssignment(assignmentId)
+        if (assignment.assigneeWorkforceMemberId != member.id) {
+            throw OperationsNotFoundException("assignment_not_found", "Assignment was not found.")
+        }
+        throw OperationsConflictException(
+            "shipment_event_required",
+            "Shipment movement assignments are completed by a parcel scan or delivery event.",
+        )
+    }
 
     private fun validateShipmentAssignmentReference(
         shipmentId: UUID,
@@ -349,6 +377,20 @@ class OperationalAssignmentService(
         throw OperationsConflictException("assignment_changed", "Assignment changed concurrently.")
     }
 
+    private fun activateNext(completed: OperationalAssignment, now: Instant) {
+        val next = assignments.findAllByShipmentIdOrderBySequenceAsc(completed.shipmentId)
+            .firstOrNull { it.sequence > completed.sequence && it.status !in TERMINAL_STATUSES }
+            ?: return
+        if (next.status != OperationalAssignmentStatus.BLOCKED) return
+
+        next.activate(now)
+        assignments.saveAndFlush(next)
+        selectCandidate(next.hubId, next.requiredKind, emptyMap(), now)?.let { memberId ->
+            next.assign(memberId, null, now)
+            assignments.saveAndFlush(next)
+        }
+    }
+
     private fun selectCandidate(
         hubId: UUID,
         kind: WorkforceMemberKind,
@@ -356,6 +398,9 @@ class OperationalAssignmentService(
         now: Instant,
         excludedMemberIds: Set<UUID> = emptySet(),
     ): UUID? {
+        // Applies to initial planning, next-leg activation and background redispatch.
+        // Manual assign() still performs the full scope/shift/capacity checks.
+        if (!autoAssignEnabled) return null
         val candidates = eligibleBaseCandidates(hubId, kind, now)
             .filterNot { it.member.id in excludedMemberIds }
         if (candidates.isEmpty()) return null
@@ -419,7 +464,7 @@ class OperationalAssignmentService(
         return locallyEligible.mapNotNull { member ->
             val availability = availabilityByMember[member.id] ?: return@mapNotNull null
             val identitySnapshot = identityByUser[member.userId] ?: return@mapNotNull null
-            if (identitySnapshot.accountStatus != "ACTIVE" || !hasCompatibleRole(kind, identitySnapshot.roles.toSet())) return@mapNotNull null
+            if (identitySnapshot.accountStatus != "ACTIVE" || !WorkforceRolePolicy.isCompatible(kind, identitySnapshot.roles)) return@mapNotNull null
             Candidate(member, availability.maxConcurrentAssignments)
         }
     }
@@ -433,18 +478,12 @@ class OperationalAssignmentService(
             throw InvalidOperationsRequestException("assignee_not_eligible", "The member is no longer assigned to the required hub.")
         }
         val snapshot = identity.snapshots(listOf(member.userId)).singleOrNull()
-        if (snapshot == null || snapshot.accountStatus != "ACTIVE" || !hasCompatibleRole(member.kind, snapshot.roles.toSet())) {
+        if (snapshot == null || snapshot.accountStatus != "ACTIVE" || !WorkforceRolePolicy.isCompatible(member.kind, snapshot.roles)) {
             throw InvalidOperationsRequestException(
                 "identity_access_revoked",
                 "The Identity account is inactive or no longer has the role required for this assignment.",
             )
         }
-    }
-
-    private fun hasCompatibleRole(kind: WorkforceMemberKind, roles: Set<String>): Boolean = when (kind) {
-        WorkforceMemberKind.WAREHOUSE_OPERATOR -> "WAREHOUSE_STAFF" in roles
-        WorkforceMemberKind.COURIER, WorkforceMemberKind.LINE_HAUL_DRIVER -> "DRIVER" in roles
-        WorkforceMemberKind.DISPATCHER -> "OPERATIONS_MANAGER" in roles || "HUB_MANAGER" in roles
     }
 
     private fun activeMember(userId: UUID): WorkforceMember? = members.findByUserId(userId)
@@ -504,6 +543,15 @@ class OperationalAssignmentService(
                 WorkforceMemberKind.LINE_HAUL_DRIVER,
                 leg.fromHubId,
             )
+            if (leg.toHubId != plan.destinationHubId) {
+                drafts += AssignmentDraft(
+                    sequence++,
+                    leg.routeLegId,
+                    OperationalAssignmentType.TRANSIT_HUB_HANDLING,
+                    WorkforceMemberKind.WAREHOUSE_OPERATOR,
+                    leg.toHubId,
+                )
+            }
         }
         drafts += AssignmentDraft(
             sequence++,
@@ -544,6 +592,7 @@ class OperationalAssignmentService(
         val TERMINAL_STATUSES = setOf(OperationalAssignmentStatus.COMPLETED, OperationalAssignmentStatus.CANCELLED)
         private val REDISPATCHABLE_STATUSES = setOf(
             OperationalAssignmentStatus.PENDING,
+            OperationalAssignmentStatus.READY,
             OperationalAssignmentStatus.REJECTED,
         )
         private const val MAX_ADMIN_RESULTS = 500

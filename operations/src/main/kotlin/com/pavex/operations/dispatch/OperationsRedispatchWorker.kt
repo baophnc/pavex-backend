@@ -43,6 +43,10 @@ class OperationsRedispatchWorker(
 
     companion object {
         private val log = LoggerFactory.getLogger(OperationsRedispatchWorker::class.java)
-        private val DISPATCHABLE = listOf(OperationalAssignmentStatus.PENDING, OperationalAssignmentStatus.REJECTED)
+        private val DISPATCHABLE = listOf(
+            OperationalAssignmentStatus.PENDING,
+            OperationalAssignmentStatus.READY,
+            OperationalAssignmentStatus.REJECTED,
+        )
     }
 }

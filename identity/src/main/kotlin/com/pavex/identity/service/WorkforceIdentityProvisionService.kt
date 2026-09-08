@@ -75,6 +75,10 @@ class WorkforceIdentityProvisionService(
 
     companion object {
         private val ALLOWED_WORKFORCE_ROLES = setOf(
+            "COURIER",
+            "LINE_HAUL_DRIVER",
+            "WAREHOUSE_OPERATOR",
+            "HUB_DISPATCHER",
             "DRIVER",
             "WAREHOUSE_STAFF",
             "HUB_MANAGER",

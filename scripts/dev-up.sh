@@ -14,54 +14,14 @@ done
 
 "$script_dir/dev-setup.sh"
 
-set -a
-# shellcheck disable=SC1091
-source "$local_dir/dev.env"
-set +a
+# Runtime configuration lives in each service's application.yaml.
+# Do not source legacy .local/dev.env or override JWT key paths here.
 
-export DB_URL="jdbc:postgresql://localhost:5433/pavex_auth"
-export DB_USERNAME="pavex"
-export DB_PASSWORD="pavex"
-export IDENTITY_DB_URL="jdbc:postgresql://localhost:5434/pavex_identity"
-export IDENTITY_DB_USERNAME="pavex"
-export IDENTITY_DB_PASSWORD="pavex"
-export PARTNERS_DB_URL="jdbc:postgresql://localhost:5435/pavex_partners"
-export PARTNERS_DB_USERNAME="pavex"
-export PARTNERS_DB_PASSWORD="pavex"
-export NETWORK_DB_URL="jdbc:postgresql://localhost:5436/pavex_network"
-export NETWORK_DB_USERNAME="pavex"
-export NETWORK_DB_PASSWORD="pavex"
-export PRICING_DB_URL="jdbc:postgresql://localhost:5437/pavex_pricing"
-export PRICING_DB_USERNAME="pavex"
-export PRICING_DB_PASSWORD="pavex"
-export SHIPMENT_DB_URL="jdbc:postgresql://localhost:5438/pavex_shipments"
-export SHIPMENT_DB_USERNAME="pavex"
-export SHIPMENT_DB_PASSWORD="pavex"
-export NETWORK_DEMO_SEED_ENABLED="${NETWORK_DEMO_SEED_ENABLED:-true}"
-export PRICING_DEMO_SEED_ENABLED="${PRICING_DEMO_SEED_ENABLED:-true}"
-export JWT_ISSUER="http://localhost:8081"
-export JWT_PRIVATE_KEY="file:$repo_dir/auth/.keys/private.pem"
-export JWT_PUBLIC_KEY="file:$repo_dir/auth/.keys/public.pem"
-export IDENTITY_SERVICE_JWT_ISSUER="http://localhost:8082"
-export IDENTITY_SERVICE_JWT_PRIVATE_KEY="file:$repo_dir/identity/.keys/private.pem"
-export IDENTITY_SERVICE_JWT_PUBLIC_KEY="file:$repo_dir/identity/.keys/public.pem"
-export PARTNERS_SERVICE_JWT_ISSUER="http://localhost:8083"
-export PARTNERS_SERVICE_JWT_PRIVATE_KEY="file:$repo_dir/partners/.keys/private.pem"
-export PARTNERS_SERVICE_JWT_PUBLIC_KEY="file:$repo_dir/partners/.keys/public.pem"
-export PRICING_SERVICE_JWT_ISSUER="http://localhost:8086"
-export PRICING_SERVICE_JWT_PRIVATE_KEY="file:$repo_dir/pricing/.keys/private.pem"
-export PRICING_SERVICE_JWT_PUBLIC_KEY="file:$repo_dir/pricing/.keys/public.pem"
-export EUREKA_DEFAULT_ZONE="http://localhost:8761/eureka/"
-export EUREKA_REGISTRY_FETCH_INTERVAL_SECONDS="5"
-# Eureka client registration is asynchronous. Keep the local initial
-# replication delay short so freshly started services appear in the registry
-# quickly; production can keep the library default by not setting these envs.
-export EUREKA_INITIAL_INSTANCE_INFO_REPLICATION_INTERVAL_SECONDS="${EUREKA_INITIAL_INSTANCE_INFO_REPLICATION_INTERVAL_SECONDS:-5}"
-export EUREKA_INSTANCE_INFO_REPLICATION_INTERVAL_SECONDS="${EUREKA_INSTANCE_INFO_REPLICATION_INTERVAL_SECONDS:-10}"
+started_pid_files=()
 
 cleanup_started_apps() {
-  for pid_file in "$local_dir"/pids/*.pid; do
-    [[ -e "$pid_file" ]] || continue
+  for pid_file in "${started_pid_files[@]}"; do
+    [[ -n "$pid_file" && -e "$pid_file" ]] || continue
     app_pid="$(<"$pid_file")"
     if kill -0 "$app_pid" 2>/dev/null; then
       kill "$app_pid" 2>/dev/null || true
@@ -109,8 +69,9 @@ start_app() {
   if [[ -f "$pid_file" ]]; then
     stale_pid="$(<"$pid_file")"
     if kill -0 "$stale_pid" 2>/dev/null; then
-      echo "$app_name is already starting with PID $stale_pid" >&2
-      return 1
+      echo "$app_name is already starting with PID $stale_pid; waiting for health"
+      wait_for_health "$app_name" "$health_url" "$log_file" "$stale_pid"
+      return 0
     fi
     rm -f "$pid_file"
   fi
@@ -118,6 +79,7 @@ start_app() {
   nohup java -jar "$repo_dir/$jar_path" </dev/null >"$log_file" 2>&1 &
   app_pid=$!
   printf '%s\n' "$app_pid" > "$pid_file"
+  started_pid_files+=("$pid_file")
   wait_for_health "$app_name" "$health_url" "$log_file" "$app_pid"
 }
 
@@ -187,6 +149,7 @@ start_app auth-service auth/target/auth-service-0.0.1-SNAPSHOT.jar http://localh
 start_app partners-service partners/target/partners-service-0.0.1-SNAPSHOT.jar http://localhost:8083/actuator/health
 start_app network-service network/target/network-service-0.0.1-SNAPSHOT.jar http://localhost:8085/actuator/health
 start_app pricing-service pricing/target/pricing-service-0.0.1-SNAPSHOT.jar http://localhost:8086/actuator/health
+start_app operations-service operations/target/operations-service-0.0.1-SNAPSHOT.jar http://localhost:8087/actuator/health
 start_app shipment-service shipment/target/shipment-service-0.0.1-SNAPSHOT.jar http://localhost:8084/actuator/health
 start_app api-gateway platform/api-gateway/target/api-gateway-0.0.1-SNAPSHOT.jar http://localhost:8080/actuator/health
 

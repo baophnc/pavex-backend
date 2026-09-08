@@ -154,11 +154,6 @@ class AuthService(
         val now =
             Instant.now()
 
-        val authorization =
-            jwtService.resolveAuthorization(
-                account
-            )
-
         val lockoutEnd =
             account.lockoutEndAt
 
@@ -210,6 +205,10 @@ class AuthService(
         if (!account.emailVerified) {
             throw EmailNotVerifiedException()
         }
+
+        // Authenticate the credential first. An invalid password must not
+        // provision/repair Identity state or depend on Identity availability.
+        val authorization = jwtService.resolveAuthorization(account)
 
         account.failedLoginAttempts = 0
         account.lockoutEndAt = null

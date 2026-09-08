@@ -1,3 +1,7 @@
+pavex:
+  bootstrap-admin:
+    enabled: false
+
 security:
   jwt:
     issuer: http://localhost:8081

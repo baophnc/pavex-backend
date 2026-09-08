@@ -46,7 +46,7 @@ short-lived RSA service JWT with:
 
 Network trusts only Pricing's public key on `/internal/v1/network/**`. Run
 `bash scripts/security-bootstrap-local.sh` from the repository root to generate Pricing's local
-keypair under `.local/keys/pricing/`. Never commit generated keys.
+keypair under `~/.pavex/keys/pricing/`. Never commit generated keys.
 
 The demo values are development data, not a production tariff. Patch 03 adds the complete
 activation/retirement workflow, Shipment-facing quote contract, audit and production hardening.
@@ -86,9 +86,9 @@ Patch 03 closes the Pricing backend before Shipment work begins:
 - `GET /api/v1/admin/pricing/quotes/{quoteId}` lets support/admin inspect the same snapshot even after expiry.
 - `GET /internal/v1/pricing/quotes/{quoteId}` is reserved for Shipment and rejects expired quotes.
 
-Shipment Patch 02 enables the internal quote endpoint by default. Production should provide
-Shipment's dedicated RSA public key via `SHIPMENT_SERVICE_JWT_PUBLIC_KEY`; local development uses
-`.local/keys/shipment/public.pem`. There is no Auth-key fallback. The trusted token must use `sub=shipment-service`,
+Shipment Patch 02 enables the internal quote endpoint by default. Local development uses
+Shipment's dedicated RSA public key at `~/.pavex/keys/shipment/public.pem`.
+Production configuration is deferred. There is no Auth-key fallback. The trusted token must use `sub=shipment-service`,
 `aud=pricing-service`, `typ=service` and `scope=pricing.quote.read`. Set
 `PRICING_SHIPMENT_INTEGRATION_ENABLED=false` only when intentionally running Pricing without Shipment.
 

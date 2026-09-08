@@ -1,3 +1,4 @@
+# LOCAL DEVELOPMENT ONLY. Do not deploy with these credentials or bootstrap settings.
 spring:
   application:
     name: auth-service
@@ -62,8 +63,7 @@ server:
 
 
 security:
-  # Local defaults assume the app is started from the repository root (IntelliJ default).
-  # Production overrides these values in application-prod.yaml.
+  # LOCAL ONLY: all launch methods share the same host key directory.
   jwt:
     issuer: ${JWT_ISSUER:http://localhost:8081}
 
@@ -71,14 +71,14 @@ security:
 
     refresh-token-ttl: P30D
 
-    private-key: ${JWT_PRIVATE_KEY:file:./.local/keys/auth/private.pem}
-    public-key: ${JWT_PUBLIC_KEY:file:./.local/keys/auth/public.pem}
+    private-key: file:${pavex.keys-dir}/auth/private.pem
+    public-key: file:${pavex.keys-dir}/auth/public.pem
 
   service-jwt:
     ttl: ${SERVICE_JWT_TTL:PT1M}
     identity:
       issuer: ${IDENTITY_SERVICE_JWT_ISSUER:http://localhost:8082}
-      public-key: ${IDENTITY_SERVICE_JWT_PUBLIC_KEY:file:./.local/keys/identity/public.pem}
+      public-key: file:${pavex.keys-dir}/identity/public.pem
 
 
 auth:
@@ -89,13 +89,12 @@ auth:
     client-ids: ${GOOGLE_CLIENT_IDS:${GOOGLE_CLIENT_ID:}}
 
   security:
-    # Fixed LOCAL-DEV fallback so IntelliJ Run works without sourcing .local/dev.env.
-    # Production requires AUTH_SECURITY_KEY_HASH_SECRET via application-prod.yaml.
+    # Local development secret only; do not deploy this configuration.
     verification-token-ttl: PT24H
     verification-resend-cooldown: PT2M
     password-reset-token-ttl: PT1H
     invitation-token-ttl: PT24H
-    key-hash-secret: ${AUTH_SECURITY_KEY_HASH_SECRET:cGF2ZXgtbG9jYWwtZGV2LWtleS0wMTIzNDU2Nzg5YWI=}
+    key-hash-secret: cGF2ZXgtbG9jYWwtZGV2LWtleS0wMTIzNDU2Nzg5YWI=
 
   cleanup:
     enabled: ${AUTH_CLEANUP_ENABLED:true}
@@ -116,23 +115,27 @@ auth:
     confirm-timeout: ${AUTH_OUTBOX_CONFIRM_TIMEOUT:PT5S}
     published-retention: ${AUTH_OUTBOX_PUBLISHED_RETENTION:P7D}
     consumed-retention: ${AUTH_CONSUMED_MESSAGE_RETENTION:P30D}
-    # Fixed LOCAL-DEV fallback so IntelliJ Run works without sourcing .local/dev.env.
-    # Production requires OUTBOX_PAYLOAD_ENCRYPTION_KEY via application-prod.yaml.
-    payload-encryption-key: ${OUTBOX_PAYLOAD_ENCRYPTION_KEY:cGF2ZXgtbG9jYWwtb3V0Ym94LWtleS0wMTIzNDU2Nzg=}
+    # Local development secret only; do not deploy this configuration.
+    payload-encryption-key: cGF2ZXgtbG9jYWwtb3V0Ym94LWtleS0wMTIzNDU2Nzg=
 
 
 pavex:
+  keys-dir: ${user.home}/.pavex/keys
+
+  # Local bootstrap: same identity and credential in Auth and Identity.
   bootstrap-admin:
-    enabled: ${BOOTSTRAP_ADMIN_ENABLED:false}
-    id: ${BOOTSTRAP_ADMIN_ID:00000000-0000-0000-0000-000000000001}
-    email: ${BOOTSTRAP_ADMIN_EMAIL:admin@pavex.com}
-    password: ${BOOTSTRAP_ADMIN_PASSWORD:}
+    enabled: true
+    id: '00000000-0000-0000-0000-000000000001'
+    email: admin@pavex.com
+    password: '1205@Phuc'
+    reset-password: true
   openapi:
     gateway-url: ${PAVEX_PUBLIC_BASE_URL:http://localhost:8080}
   email:
     from: ${MAIL_FROM:no-reply@pavex.local}
     verification-url: ${EMAIL_VERIFICATION_URL:http://localhost:3000/verify-email}
     password-reset-url: ${PASSWORD_RESET_URL:http://localhost:3000/reset-password}
+    management-password-reset-url: ${MANAGEMENT_PASSWORD_RESET_URL:http://localhost:3001/reset-password}
     invitation-url: ${INVITATION_URL:http://localhost:3000/accept-invite}
 
 eureka:
@@ -140,13 +143,15 @@ eureka:
     enabled: ${EUREKA_ENABLED:true}
     register-with-eureka: ${EUREKA_REGISTER_WITH_EUREKA:true}
     fetch-registry: ${EUREKA_FETCH_REGISTRY:true}
-    registry-fetch-interval-seconds: ${EUREKA_REGISTRY_FETCH_INTERVAL_SECONDS:30}
+    registry-fetch-interval-seconds: ${EUREKA_REGISTRY_FETCH_INTERVAL_SECONDS:5}
     service-url:
       defaultZone: ${EUREKA_DEFAULT_ZONE:http://localhost:8761/eureka/}
     healthcheck:
       enabled: ${EUREKA_HEALTHCHECK_ENABLED:false}
 
   instance:
+    initial-instance-info-replication-interval-seconds: 5
+    instance-info-replication-interval-seconds: 10
     prefer-ip-address: ${EUREKA_PREFER_IP_ADDRESS:false}
 
 springdoc:

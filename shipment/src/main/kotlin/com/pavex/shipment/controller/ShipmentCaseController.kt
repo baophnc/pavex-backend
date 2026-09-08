@@ -2,6 +2,7 @@ package com.pavex.shipment.controller
 
 import com.pavex.common.api.PageResponse
 import com.pavex.shipment.dto.AddShipmentCaseNoteRequest
+import com.pavex.shipment.dto.AdminShipmentDetailResponse
 import com.pavex.shipment.dto.AssignShipmentCaseRequest
 import com.pavex.shipment.dto.CreateProblemParcelCaseRequest
 import com.pavex.shipment.dto.CreateUnidentifiedParcelCaseRequest
@@ -45,12 +46,21 @@ class ShipmentCaseController(
         @RequestParam(required = false) hubId: UUID?,
         @RequestParam(required = false) assignedToUserId: UUID?,
         @RequestParam(required = false) shipmentId: UUID?,
+        @RequestParam(required = false) trackingCode: String?,
         @RequestParam(name = "q", required = false) search: String?,
         @RequestParam(defaultValue = "1") page: Int,
         @RequestParam(defaultValue = "50") pageSize: Int,
     ): ResponseEntity<PageResponse<ShipmentCaseSummaryResponse>> = ResponseEntity.ok(
-        service.search(authentication, type, status, severity, hubId, assignedToUserId, shipmentId, search, page, pageSize),
+        service.search(authentication, type, status, severity, hubId, assignedToUserId, shipmentId, trackingCode, search, page, pageSize),
     )
+
+    @GetMapping("/shipment-lookup/{trackingCode}")
+    @PreAuthorize("hasAuthority('shipments.cases.manage')")
+    fun lookupShipment(
+        authentication: Authentication,
+        @PathVariable trackingCode: String,
+    ): ResponseEntity<AdminShipmentDetailResponse> =
+        ResponseEntity.ok(service.lookupShipment(authentication, trackingCode))
 
     @GetMapping("/summary")
     fun summary(

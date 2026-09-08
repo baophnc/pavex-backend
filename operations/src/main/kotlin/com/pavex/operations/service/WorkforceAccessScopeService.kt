@@ -14,8 +14,13 @@ class WorkforceAccessScopeService(
 ) {
     fun resolve(authentication: Authentication): WorkforceAccessScope {
         val actor = authentication.requirePavexActor()
-        if (actor.hasAuthority(WORKFORCE_MANAGE)) return HubAccessScope.global(actor.userId)
-        if (!actor.hasAnyAuthority(WORKFORCE_READ, HUB_MANAGE)) {
+        if (
+            actor.hasAuthority(WORKFORCE_MANAGE) &&
+            actor.hasAnyRole(LEGACY_ADMIN_ROLE, PLATFORM_SUPER_ADMIN_ROLE, OPERATIONS_MANAGER_ROLE)
+        ) {
+            return HubAccessScope.global(actor.userId)
+        }
+        if (!actor.hasAnyAuthority(WORKFORCE_READ, WORKFORCE_MANAGE, DISPATCH_MANAGE, HUB_MANAGE)) {
             throw AccessDeniedException("Workforce access is not allowed")
         }
         return hubScopes.resolve(actor.userId)
@@ -24,6 +29,10 @@ class WorkforceAccessScopeService(
     companion object {
         const val WORKFORCE_READ = "operations.workforce.read"
         const val WORKFORCE_MANAGE = "operations.workforce.manage"
+        const val DISPATCH_MANAGE = "operations.dispatch.manage"
         const val HUB_MANAGE = "operations.hub.manage"
+        const val LEGACY_ADMIN_ROLE = "ADMIN"
+        const val PLATFORM_SUPER_ADMIN_ROLE = "PLATFORM_SUPER_ADMIN"
+        const val OPERATIONS_MANAGER_ROLE = "OPERATIONS_MANAGER"
     }
 }

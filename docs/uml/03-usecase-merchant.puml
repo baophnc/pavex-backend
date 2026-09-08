@@ -1,0 +1,45 @@
+@startuml
+!include style.puml
+left to right direction
+title PAVEX — Khách hàng và tạo vận đơn\nHiện trạng · include chỉ biểu diễn hành vi bắt buộc
+actor "Khách truy cập\n(kể cả người nhận)" as Guest
+actor "Người dùng có tài khoản" as User
+actor "Merchant" as Merchant
+User <|-- Merchant
+rectangle "PAVEX — Dịch vụ khách hàng" {
+  usecase "Tra cứu vận đơn\nbằng tracking code" as Track
+  usecase "Ước tính cước" as Quote
+  usecase "Tìm bưu cục công khai" as Hub
+  usecase "Quản lý địa chỉ cá nhân" as Address
+  usecase "Đăng ký / cập nhật\nhồ sơ merchant" as Apply
+  usecase "Quản lý địa chỉ lấy hàng" as Pickup
+  usecase "Tạo vận đơn" as Create
+  usecase "Xem đơn hàng của mình" as Read
+  usecase "Hủy đơn của mình\nkhi còn đủ điều kiện" as Cancel
+  usecase "Kiểm tra merchant\nvà báo giá còn hiệu lực" as Validate
+  usecase "Chọn tuyến và\ngiữ chỗ năng lực vận chuyển" as Reserve
+  usecase "Lập chuỗi nhiệm vụ\nvận hành" as Plan
+}
+Guest -- Track
+Guest -- Quote
+Guest -- Hub
+User -- Address
+User -- Apply
+Merchant -- Pickup
+Merchant -- Create
+Merchant -- Read
+Merchant -- Cancel
+Create ..> Validate : <<include>>
+Create ..> Reserve : <<include>>
+Create ..> Plan : <<include>>
+legend bottom
+  Tiền điều kiện: đã đăng nhập, có shipments.create,
+  merchant đủ điều kiện và đã có quote được chọn.
+  Ước tính cước là hành động riêng, không phải
+  một bước luôn gọi lại khi tạo đơn.
+  ────────────────────────────────
+  Lập nhiệm vụ không đồng nghĩa mọi nhiệm vụ được gán ngay.
+  Các bước sau chờ bước trước; thiếu nhân sự có thể chờ dispatch.
+  Không có bước bắt buộc "văn phòng kích đơn" trong luồng hiện tại.
+endlegend
+@enduml

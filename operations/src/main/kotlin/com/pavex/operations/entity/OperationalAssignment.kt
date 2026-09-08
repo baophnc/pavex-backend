@@ -14,11 +14,14 @@ enum class OperationalAssignmentType {
     PICKUP,
     ORIGIN_HUB_HANDLING,
     LINE_HAUL,
+    TRANSIT_HUB_HANDLING,
     DESTINATION_HUB_HANDLING,
     LAST_MILE_DELIVERY,
 }
 
 enum class OperationalAssignmentStatus {
+    BLOCKED,
+    READY,
     PENDING,
     ASSIGNED,
     ACCEPTED,
@@ -97,6 +100,14 @@ class OperationalAssignment(
         return true
     }
 
+    fun activate(now: Instant): Boolean {
+        if (status == OperationalAssignmentStatus.READY) return false
+        ensureStatus(OperationalAssignmentStatus.BLOCKED)
+        status = OperationalAssignmentStatus.READY
+        updatedAt = now
+        return true
+    }
+
     fun requeue(now: Instant): Boolean {
         check(status == OperationalAssignmentStatus.ASSIGNED || status == OperationalAssignmentStatus.ACCEPTED) {
             "Only assigned or accepted assignments can be requeued."
@@ -106,7 +117,7 @@ class OperationalAssignment(
         assignedAt = null
         acceptedAt = null
         resolutionNote = null
-        status = OperationalAssignmentStatus.PENDING
+        status = OperationalAssignmentStatus.READY
         updatedAt = now
         return true
     }
@@ -175,6 +186,7 @@ class OperationalAssignment(
         private val ZERO_UUID = UUID(0, 0)
         private val ASSIGNABLE_STATUSES = setOf(
             OperationalAssignmentStatus.PENDING,
+            OperationalAssignmentStatus.READY,
             OperationalAssignmentStatus.ASSIGNED,
             OperationalAssignmentStatus.REJECTED,
         )
@@ -188,11 +200,15 @@ class OperationalAssignment(
             hubId: UUID,
             priority: Int,
             now: Instant,
+            initialStatus: OperationalAssignmentStatus = OperationalAssignmentStatus.READY,
         ): OperationalAssignment {
             require(shipmentId != ZERO_UUID && hubId != ZERO_UUID && sequence > 0) {
                 "Shipment, hub and sequence are required."
             }
             require(priority in 0..100) { "Assignment priority must be between 0 and 100." }
+            require(initialStatus in setOf(OperationalAssignmentStatus.BLOCKED, OperationalAssignmentStatus.READY)) {
+                "A planned assignment must start as BLOCKED or READY."
+            }
             val id = UUID.randomUUID()
             val compact = id.toString().replace("-", "").uppercase()
             return OperationalAssignment(
@@ -204,7 +220,7 @@ class OperationalAssignment(
                 type = type,
                 requiredKind = requiredKind,
                 hubId = hubId,
-                status = OperationalAssignmentStatus.PENDING,
+                status = initialStatus,
                 priority = priority,
                 createdAt = now,
                 updatedAt = now,

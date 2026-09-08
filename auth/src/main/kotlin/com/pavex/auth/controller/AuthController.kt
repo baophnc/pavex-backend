@@ -224,7 +224,7 @@ class AuthController(
                 AuthRateLimitPolicy.FORGOT_PASSWORD_EMAIL,
                 subject,
             )
-            passwordResetService.forgotPassword(request.email)
+            passwordResetService.forgotPassword(request.email, request.portal)
 
             MessageResponse(
                 message =

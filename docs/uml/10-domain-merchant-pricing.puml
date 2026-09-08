@@ -1,0 +1,68 @@
+@startuml
+!include style.puml
+title PAVEX — Merchant và báo giá\nHiện trạng · địa chỉ và giá được snapshot khi tạo vận đơn
+class "UserAccount\n(Identity)" as User
+class Merchant {
+  merchantCode : String
+  businessName : String
+  status : MerchantStatus
+}
+class MerchantPickupAddress {
+  name : String
+  contactPhone : String
+  isDefault : Boolean
+}
+class UserAddress {
+  label : String
+  isDefault : Boolean
+}
+class RatePlan {
+  code : String
+  revision : Integer
+  status : DRAFT / ACTIVE / RETIRED
+  currency : String
+}
+class RateRule {
+  serviceLevel : STANDARD / EXPRESS
+  pricingZone : PricingZone
+  baseFee : Money
+}
+class QuoteRequest {
+  expiresAt : Instant
+  chargeableWeightKg : Decimal
+  codAmount : Money
+}
+class QuoteParcel {
+  sequence : Integer
+  actualWeightKg : Decimal
+  chargeableWeightKg : Decimal
+}
+class QuoteOption {
+  serviceLevel : STANDARD / EXPRESS
+  total : Money
+}
+class "Shipment\n(Shipment)" as Shipment {
+  shippingFee : Money
+  codAmount : Money
+  rateRevision : Integer
+}
+User "1" -- "0..1" Merchant
+User "1" -- "0..*" UserAddress
+Merchant "1" -- "0..*" MerchantPickupAddress
+Merchant "1" -- "0..*" Shipment
+RatePlan "1" *-- "0..*" RateRule
+RatePlan "1" -- "0..*" QuoteRequest : tính theo phiên bản
+QuoteRequest "1" *-- "1..*" QuoteParcel
+QuoteRequest "1" *-- "1..*" QuoteOption
+QuoteOption "1" -- "0..1" Shipment : được chọn
+legend bottom
+  QuoteOption.id là quoteId được chọn của Shipment.
+  Một quoteId không được tái sử dụng cho vận đơn khác.
+  Báo giá là API public, không bắt buộc gắn User/Merchant.
+  ────────────────────────────────
+  RatePlan DRAFT có thể chưa có rule; ACTIVE được validate.
+  Money là ký hiệu khái niệm (code dùng Long theo đơn vị VND).
+  Sửa địa chỉ gốc / bảng giá không sửa snapshot đơn đã tạo.
+  COD amount/fee không đồng nghĩa đã có nghiệp vụ đối soát COD.
+endlegend
+@enduml

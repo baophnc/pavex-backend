@@ -421,7 +421,7 @@ class Shipment(
             shipment = this,
             status = status,
             code = "shipment.completed",
-            description = "Shipment lifecycle completed.",
+            description = "Đã hoàn tất vòng đời đơn hàng.",
             actorUserId = actorUserId,
             occurredAt = completedAt,
             recordedAt = completedAt,
@@ -472,6 +472,7 @@ class Shipment(
         if (items.any { it.status == ParcelStatus.DELIVERY_FAILED }) return ShipmentStatus.DELIVERY_FAILED
         if (items.any { it.status == ParcelStatus.OUT_FOR_DELIVERY }) return ShipmentStatus.OUT_FOR_DELIVERY
         if (items.any { it.status == ParcelStatus.AT_DESTINATION_HUB }) return ShipmentStatus.AT_DESTINATION_HUB
+        if (items.any { it.status == ParcelStatus.AT_TRANSIT_HUB }) return ShipmentStatus.IN_TRANSIT
         if (items.any { it.status == ParcelStatus.IN_TRANSIT }) return ShipmentStatus.IN_TRANSIT
         if (items.any { it.status == ParcelStatus.AT_ORIGIN_HUB }) return ShipmentStatus.AT_ORIGIN_HUB
         return if (items.any { it.status == ParcelStatus.PICKED_UP }) ShipmentStatus.PICKED_UP else ShipmentStatus.AWAITING_PICKUP

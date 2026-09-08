@@ -1,0 +1,70 @@
+@startuml
+!include style.puml
+title PAVEX — Danh tính, phân quyền và nhân sự\nHiện trạng · Role và WorkforceMemberKind là hai khái niệm khác nhau
+package "Identity" {
+  class UserAccount {
+    email : String
+    status : AccountStatus
+    authorizationVersion : Long
+  }
+  class UserProfile {
+    displayName : String [0..1]
+  }
+  class Role {
+    code : String
+    isSystem : Boolean
+  }
+  class Permission {
+    code : String
+  }
+  class "Gán vai trò\nUserRole" as UserRole {
+    assignedAt : Instant
+  }
+}
+package "Operations" {
+  class WorkforceMember {
+    employeeCode : String
+    kind : WorkforceMemberKind
+    status : WorkforceMemberStatus
+  }
+  class HubMembership {
+    isPrimary : Boolean
+    isActive : Boolean
+  }
+  class WorkforceAvailability {
+    status : WorkforceAvailabilityStatus
+    maxConcurrentAssignments : Integer
+  }
+  class WorkShift {
+    code : String
+    startsAt : Instant
+    endsAt : Instant
+  }
+  class WorkforceShiftAssignment {
+    status : WorkforceShiftAssignmentStatus
+    checkedInAt : Instant [0..1]
+  }
+}
+class "Hub\n(Network)" as Hub
+UserAccount "1" -- "0..1" UserProfile
+UserAccount "1" -- "0..*" UserRole
+Role "1" -- "0..*" UserRole
+Role "0..*" -- "0..*" Permission : cho phép
+UserAccount "1" -- "0..1" WorkforceMember : cùng userId
+WorkforceMember "1" -- "0..*" HubMembership
+Hub "1" -- "0..*" HubMembership
+WorkforceMember "1" -- "0..1" WorkforceAvailability
+Hub "1" -- "0..*" WorkShift
+WorkShift "1" -- "0..*" WorkforceShiftAssignment
+WorkforceMember "1" -- "0..*" WorkforceShiftAssignment
+legend bottom
+  {unique(member, hub)}
+  Tối đa 1 membership vừa active vừa primary / nhân viên.
+  Hub scope chỉ lấy membership active của nhân viên ACTIVE.
+  ────────────────────────────────
+  RolePermission được giản lược thành association nhiều–nhiều.
+  Auth giữ credential riêng; không đưa password hash vào domain.
+  HUB_MANAGER hiện gắn với workforce kind DISPATCHER,
+  không có class con HubManager trong mô hình hiện tại.
+endlegend
+@enduml

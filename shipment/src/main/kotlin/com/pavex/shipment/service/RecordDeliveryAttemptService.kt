@@ -245,7 +245,8 @@ class DeliveryAttemptWriter(
                 parcelId = parcel.id,
                 nextStatus = if (delivered) ParcelStatus.DELIVERED else ParcelStatus.DELIVERY_FAILED,
                 eventCode = if (delivered) "parcel.delivered" else "parcel.delivery-failed",
-                description = if (delivered) "Parcel delivered with proof." else "Delivery attempt failed: ${attempt.failureReason}.",
+                description = if (delivered) "Đã giao hàng và ghi nhận bằng chứng giao nhận."
+                    else "Giao hàng không thành công: ${ShipmentVietnameseText.deliveryFailure(attempt.failureReason)}.",
                 actorUserId = actorUserId,
                 hubId = shipment.destinationHubId,
                 locationName = shipment.recipient.wardName,

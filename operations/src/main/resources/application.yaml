@@ -1,3 +1,4 @@
+# LOCAL DEVELOPMENT ONLY. Do not deploy with these credentials or bootstrap settings.
 spring:
   application:
     name: operations-service
@@ -33,18 +34,20 @@ server:
 security:
   jwt:
     issuer: ${JWT_ISSUER:http://localhost:8081}
-    public-key: ${JWT_PUBLIC_KEY:file:./.local/keys/auth/public.pem}
+    public-key: file:${pavex.keys-dir}/auth/public.pem
   service-jwt:
     issuer: ${OPERATIONS_SERVICE_JWT_ISSUER:http://localhost:8087}
     ttl: ${OPERATIONS_SERVICE_JWT_TTL:PT1M}
-    private-key: ${OPERATIONS_SERVICE_JWT_PRIVATE_KEY:file:./.local/keys/operations/private.pem}
-    public-key: ${OPERATIONS_SERVICE_JWT_PUBLIC_KEY:file:./.local/keys/operations/public.pem}
+    private-key: file:${pavex.keys-dir}/operations/private.pem
+    public-key: file:${pavex.keys-dir}/operations/public.pem
   trusted-services:
     shipment:
       issuer: ${SHIPMENT_SERVICE_JWT_ISSUER:http://localhost:8084}
-      public-key: ${SHIPMENT_SERVICE_JWT_PUBLIC_KEY:file:./.local/keys/shipment/public.pem}
+      public-key: file:${pavex.keys-dir}/shipment/public.pem
 
 operations:
+  dispatch:
+    auto-assign-enabled: ${OPERATIONS_AUTO_ASSIGN_ENABLED:true}
   messaging:
     exchange: ${OPERATIONS_MESSAGING_EXCHANGE:pavex.events}
   outbox:
@@ -67,20 +70,22 @@ operations:
       service-url: ${NETWORK_SERVICE_URL:http://network-service}
 
 pavex:
-  openapi:
-    gateway-url: ${PAVEX_PUBLIC_BASE_URL:http://localhost:8080}
+  keys-dir: ${user.home}/.pavex/keys
+  gateway-url: ${PAVEX_PUBLIC_BASE_URL:http://localhost:8080}
 
 eureka:
   client:
     enabled: ${EUREKA_ENABLED:true}
     register-with-eureka: ${EUREKA_REGISTER_WITH_EUREKA:true}
     fetch-registry: ${EUREKA_FETCH_REGISTRY:true}
-    registry-fetch-interval-seconds: ${EUREKA_REGISTRY_FETCH_INTERVAL_SECONDS:30}
+    registry-fetch-interval-seconds: ${EUREKA_REGISTRY_FETCH_INTERVAL_SECONDS:5}
     service-url:
       defaultZone: ${EUREKA_DEFAULT_ZONE:http://localhost:8761/eureka/}
     healthcheck:
       enabled: ${EUREKA_HEALTHCHECK_ENABLED:false}
   instance:
+    initial-instance-info-replication-interval-seconds: 5
+    instance-info-replication-interval-seconds: 10
     prefer-ip-address: ${EUREKA_PREFER_IP_ADDRESS:false}
 
 springdoc:

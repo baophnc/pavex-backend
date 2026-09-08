@@ -28,6 +28,7 @@ class ParcelScanLifecycleTest {
         val actor = UUID.randomUUID()
         val originHubId = UUID.randomUUID()
         val destinationHubId = UUID.randomUUID()
+        val transitHubId = UUID.randomUUID()
         val shipment = shipment(now, actor, originHubId, destinationHubId)
         val parcel = shipment.parcels.single()
 
@@ -37,7 +38,11 @@ class ParcelScanLifecycleTest {
 
         transition(shipment, parcel.id, ParcelStatus.AT_ORIGIN_HUB, actor, originHubId, "Origin", now.plusSeconds(20))
         transition(shipment, parcel.id, ParcelStatus.IN_TRANSIT, actor, originHubId, "Origin", now.plusSeconds(30))
-        transition(shipment, parcel.id, ParcelStatus.AT_DESTINATION_HUB, actor, destinationHubId, "Destination", now.plusSeconds(40))
+        transition(shipment, parcel.id, ParcelStatus.AT_TRANSIT_HUB, actor, transitHubId, "Gateway", now.plusSeconds(40))
+        assertEquals(ParcelStatus.AT_TRANSIT_HUB, parcel.status)
+        assertEquals(ShipmentStatus.IN_TRANSIT, shipment.status)
+        transition(shipment, parcel.id, ParcelStatus.IN_TRANSIT, actor, transitHubId, "Gateway", now.plusSeconds(50))
+        transition(shipment, parcel.id, ParcelStatus.AT_DESTINATION_HUB, actor, destinationHubId, "Destination", now.plusSeconds(60))
 
         assertEquals(ParcelStatus.AT_DESTINATION_HUB, parcel.status)
         assertEquals(ShipmentStatus.AT_DESTINATION_HUB, shipment.status)
@@ -54,7 +59,9 @@ class ParcelScanLifecycleTest {
         val unrelatedHub = hub(UUID.randomUUID(), active = true, onReservedRoute = false)
 
         assertTrue(ParcelScanPolicy.isHubAllowed(origin, destination, routeHub, ParcelStatus.IN_TRANSIT))
+        assertTrue(ParcelScanPolicy.isHubAllowed(origin, destination, routeHub, ParcelStatus.AT_TRANSIT_HUB))
         assertFalse(ParcelScanPolicy.isHubAllowed(origin, destination, unrelatedHub, ParcelStatus.IN_TRANSIT))
+        assertFalse(ParcelScanPolicy.isHubAllowed(origin, destination, unrelatedHub, ParcelStatus.AT_TRANSIT_HUB))
         assertFalse(ParcelScanPolicy.isHubAllowed(origin, destination, routeHub, ParcelStatus.AT_DESTINATION_HUB))
         assertTrue(ParcelScanPolicy.isHubAllowed(origin, destination, hub(destination), ParcelStatus.AT_DESTINATION_HUB))
         assertFalse(ParcelScanPolicy.isHubAllowed(origin, destination, hub(origin, active = false), null))

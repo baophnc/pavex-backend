@@ -4,6 +4,7 @@ import tools.jackson.databind.ObjectMapper
 import com.pavex.common.api.OneBasedPagination
 import com.pavex.common.api.PageResponse
 import com.pavex.shipment.client.NetworkShipmentClient
+import com.pavex.shipment.dto.AdminShipmentDetailResponse
 import com.pavex.shipment.dto.ShipmentCaseEventResponse
 import com.pavex.shipment.dto.ShipmentCaseMonitoringSummary
 import com.pavex.shipment.dto.ShipmentCaseResponse
@@ -13,6 +14,7 @@ import com.pavex.shipment.entity.ShipmentCaseSeverity
 import com.pavex.shipment.entity.ShipmentCaseStatus
 import com.pavex.shipment.entity.ShipmentCaseType
 import com.pavex.shipment.entity.Shipment
+import com.pavex.shipment.entity.ShipmentStatus
 import com.pavex.shipment.exception.ShipmentConflictException
 import com.pavex.shipment.exception.ShipmentForbiddenException
 import com.pavex.shipment.exception.ShipmentNotFoundException
@@ -38,6 +40,7 @@ class ShipmentCaseService(
     private val shipments: ShipmentRepository,
     private val network: NetworkShipmentClient,
     private val access: ShipmentCaseAccessService,
+    private val adminShipmentQueries: AdminShipmentQueryService,
     private val outbox: ShipmentOutboxService,
     private val objectMapper: ObjectMapper,
     private val clock: Clock = Clock.systemUTC(),
@@ -60,6 +63,7 @@ class ShipmentCaseService(
         if (parcelId != null && shipment.parcels.none { it.id == parcelId }) {
             throw UnprocessableShipmentException("case_parcel_not_found", "Parcel does not belong to the shipment.")
         }
+        ensureShipmentAtHub(shipment, hubId, parcelId)
         val now = clock.instant()
         val item = domain {
             ShipmentCase.createProblem(shipmentId, parcelId, hubId, severity, title, description, actor(authentication), now)
@@ -98,6 +102,7 @@ class ShipmentCaseService(
         hubId: UUID?,
         assignedToUserId: UUID?,
         shipmentId: UUID?,
+        rawTrackingCode: String?,
         search: String?,
         page: Int,
         pageSize: Int,
@@ -105,7 +110,23 @@ class ShipmentCaseService(
         val scope = access.resolveRead(authentication)
         if (hubId != null && !scope.canAccessHub(hubId)) forbidden()
         val pagination = OneBasedPagination.normalize(page, pageSize)
-        val spec = specification(scope, type, status, severity, hubId, assignedToUserId, shipmentId, search)
+        val trackingShipmentId = rawTrackingCode?.trim()?.takeIf(String::isNotEmpty)?.let { raw ->
+            ShipmentCodeNormalizer.normalizeOrNull(raw)
+                ?.takeIf { !it.contains('-') }
+                ?.let(shipments::findByTrackingCodeIgnoreCase)
+                ?.id
+                ?: ZERO_UUID
+        }
+        val spec = specification(
+            scope,
+            type,
+            status,
+            severity,
+            hubId,
+            assignedToUserId,
+            trackingShipmentId ?: shipmentId,
+            search,
+        )
         val result = cases.findAll(
             spec,
             PageRequest.of(
@@ -165,6 +186,18 @@ class ShipmentCaseService(
         return responseWithShipment(item)
     }
 
+    @Transactional(readOnly = true)
+    fun lookupShipment(authentication: Authentication, rawTrackingCode: String): AdminShipmentDetailResponse {
+        val scope = access.resolveManage(authentication)
+        val trackingCode = ShipmentCodeNormalizer.normalizeOrNull(rawTrackingCode)
+            ?.takeIf { !it.contains('-') }
+            ?: throw ShipmentNotFoundException("shipment_not_found", "Shipment was not found.")
+        val shipment = shipments.findByTrackingCodeIgnoreCase(trackingCode)
+            ?: throw ShipmentNotFoundException("shipment_not_found", "Shipment was not found.")
+        if (!scope.isGlobal && currentHubIds(shipment).none(scope.hubIds::contains)) forbidden()
+        return adminShipmentQueries.get(shipment.trackingCode)
+    }
+
     @Transactional
     fun assign(authentication: Authentication, caseId: UUID, assignedToUserId: UUID, note: String?): ShipmentCaseResponse =
         mutate(authentication, caseId) { item, now -> item.assign(assignedToUserId, actor(authentication), note, now) }
@@ -194,6 +227,7 @@ class ShipmentCaseService(
         if (parcelId != null && shipment.parcels.none { it.id == parcelId }) {
             throw UnprocessableShipmentException("case_parcel_not_found", "Parcel does not belong to the shipment.")
         }
+        ensureShipmentAtHub(shipment, item.hubId, parcelId)
         mutateLoaded(item) { now -> item.linkToShipment(shipmentId, parcelId, actor(authentication), note, now) }
         return response(item, shipment)
     }
@@ -236,6 +270,48 @@ class ShipmentCaseService(
         if (!scope.canAccessHub(hubId)) forbidden()
         val hub = network.resolveHub(hubId)
         if (!hub.active) throw UnprocessableShipmentException("case_hub_inactive", "The case hub is inactive.")
+    }
+
+    private fun ensureShipmentAtHub(shipment: Shipment, hubId: UUID, parcelId: UUID?) {
+        val parcelHubId = parcelId?.let { id -> shipment.parcels.first { it.id == id }.currentHubId }
+        val visibleAtHub = parcelHubId?.let { it == hubId } ?: (hubId in currentHubIds(shipment))
+        if (!visibleAtHub) {
+            throw ShipmentForbiddenException(
+                "case_shipment_hub_forbidden",
+                "Shipment is not currently associated with the selected case hub.",
+            )
+        }
+    }
+
+    private fun currentHubIds(shipment: Shipment): Set<UUID> = buildSet {
+        shipment.parcels.mapNotNullTo(this) { it.currentHubId }
+        if (isNotEmpty()) return@buildSet
+
+        shipment.events.filter { it.hubId != null }
+            .maxWithOrNull(compareBy({ it.occurredAt }, { it.id }))
+            ?.hubId
+            ?.let(::add)
+        if (isNotEmpty()) return@buildSet
+
+        when (shipment.status) {
+            ShipmentStatus.AWAITING_PICKUP,
+            ShipmentStatus.PICKED_UP,
+            ShipmentStatus.AT_ORIGIN_HUB,
+            ShipmentStatus.IN_TRANSIT,
+            -> add(shipment.originHubId)
+
+            ShipmentStatus.AT_DESTINATION_HUB,
+            ShipmentStatus.OUT_FOR_DELIVERY,
+            ShipmentStatus.DELIVERY_FAILED,
+            ShipmentStatus.PARTIALLY_DELIVERED,
+            ShipmentStatus.DELIVERED,
+            -> add(shipment.destinationHubId)
+
+            ShipmentStatus.RETURNING,
+            ShipmentStatus.RETURNED,
+            ShipmentStatus.CANCELLED,
+            -> Unit
+        }
     }
 
     private fun publishLatest(item: ShipmentCase) {
@@ -372,4 +448,8 @@ class ShipmentCaseService(
         .replace("\\", "\\\\")
         .replace("%", "\\%")
         .replace("_", "\\_")
+
+    companion object {
+        private val ZERO_UUID: UUID = UUID(0, 0)
+    }
 }

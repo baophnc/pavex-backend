@@ -15,7 +15,7 @@ must not read Auth or Identity tables directly.
 ## Service-to-service boundary
 
 Partners owns a dedicated RSA service-JWT key pair. Local development generates it under
-`.local/keys/partners/` with `bash scripts/security-bootstrap-local.sh`. Calls to Identity use short-lived service JWTs:
+`~/.pavex/keys/partners/` with `bash scripts/security-bootstrap-local.sh`. Calls to Identity use short-lived service JWTs:
 
 - issuer: `http://localhost:8083`
 - subject: `partners-service`
@@ -36,8 +36,8 @@ Shipment calls the internal order-capability endpoint with its own service JWT:
 - token type: `service`
 - scopes: `partners.orders.evaluate`, `partners.locations.read`
 
-Production must provide `SHIPMENT_SERVICE_JWT_ISSUER` and
-`SHIPMENT_SERVICE_JWT_PUBLIC_KEY`.
+The local YAML trusts Shipment's dedicated public key. Production configuration
+is deferred; see [local security configuration](../docs/security-keys.md).
 
 ## API surface
 

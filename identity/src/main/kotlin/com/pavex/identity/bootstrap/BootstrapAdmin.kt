@@ -13,6 +13,7 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.ApplicationArguments
 import org.springframework.boot.ApplicationRunner
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
+import org.springframework.core.annotation.Order
 import org.springframework.stereotype.Component
 import org.springframework.transaction.annotation.Transactional
 import java.time.Instant
@@ -20,6 +21,7 @@ import java.time.LocalDate
 import java.util.UUID
 
 @Component
+@Order(100)
 @ConditionalOnProperty(
     prefix = "pavex.bootstrap-admin",
     name = ["enabled"],
@@ -109,13 +111,18 @@ class BootstrapAdmin(
 
         profiles.save(profile)
 
-        roleService.assignRole(
+        val addedAdminPermissions = roleService.synchronizeSystemAdminPermissions(now)
+        roleService.assignBootstrapPlatformRole(
             actorUserId = adminId,
             targetUserId = adminId,
-            rawRoleCode = RoleService.ADMIN_ROLE,
         )
 
-        log.info("Bootstrap admin identity is ready: {} ({})", email, adminId)
+        log.info(
+            "Bootstrap admin identity is ready: {} ({}) [admin permissions synchronized: +{}]",
+            email,
+            adminId,
+            addedAdminPermissions,
+        )
     }
 
     companion object {

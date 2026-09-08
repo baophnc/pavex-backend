@@ -1,0 +1,44 @@
+@startuml
+!include style.puml
+left to right direction
+title PAVEX — Thực thi lấy hàng, trung chuyển, giao hàng\nHiện trạng · actor specialization chỉ cho hành vi dùng chung
+actor "<i>Nhân viên thực thi</i>" as Worker
+actor "Courier\nCOURIER" as Courier
+actor "Nhân viên kho\nWAREHOUSE_OPERATOR" as Warehouse
+actor "Tài xế trung chuyển\nLINE_HAUL_DRIVER" as Driver
+Worker <|-- Courier
+Worker <|-- Warehouse
+Worker <|-- Driver
+rectangle "PAVEX — Nhiệm vụ và kiện hàng" {
+  usecase "Xem ca, check-in/out\nvà cập nhật sẵn sàng" as Shift
+  usecase "Xem, nhận / từ chối\nnhiệm vụ của mình" as Accept
+  usecase "Bắt đầu / hoàn tất\nnhiệm vụ hợp lệ" as Execute
+  usecase "Ghi nhận lấy hàng\nPICKED_UP" as Pickup
+  usecase "Ghi nhận nhập kho\nvà xử lý tại hub" as Handling
+  usecase "Ghi nhận xuất phát\ntrên chặng trung chuyển" as Transit
+  usecase "Ghi nhận mang hàng đi giao\nOUT_FOR_DELIVERY" as Out
+  usecase "Ghi nhận giao thành công" as Success
+  usecase "Ghi nhận giao thất bại" as Fail
+  usecase "Ghi thông tin\nbằng chứng giao hàng" as Proof
+}
+Worker -- Shift
+Worker -- Accept
+Worker -- Execute
+Courier -- Pickup
+Warehouse -- Handling
+Driver -- Transit
+Courier -- Out
+Courier -- Success
+Courier -- Fail
+Success ..> Proof : <<include>>
+legend bottom
+  Phương thức: OTP / SIGNATURE / PHOTO; code lưu tham chiếu.
+  Chưa thể suy ra có hệ thống xác minh OTP/upload ảnh hoàn chỉnh.
+  Giao thất bại bắt buộc có lý do; không include bằng chứng thành công.
+  ────────────────────────────────
+  Các thao tác own cần đúng assignee; scan kho cần đúng hub/capability.
+  Không cho dùng scan để ép DELIVERED/DELIVERY_FAILED:
+  phải qua DeliveryAttempt, kiểm tra custody và nhiệm vụ last-mile.
+  Các bước liên kết được đóng khi điều kiện nghiệp vụ đáp ứng.
+endlegend
+@enduml

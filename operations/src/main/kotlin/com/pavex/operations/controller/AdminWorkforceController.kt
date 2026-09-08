@@ -32,7 +32,7 @@ import java.util.UUID
 
 @RestController
 @RequestMapping("/api/v1/admin/operations/workforce")
-@PreAuthorize("hasAnyAuthority('operations.workforce.manage','operations.hub.manage')")
+@PreAuthorize("hasAnyAuthority('operations.workforce.read','operations.workforce.manage','operations.dispatch.manage','operations.hub.manage')")
 class AdminWorkforceController(
     private val service: WorkforceService,
     private val onboarding: WorkforceOnboardingService,
@@ -65,6 +65,7 @@ class AdminWorkforceController(
     ): WorkforceMemberResponse = onboarding.onboard(actor(authentication), accessScopes.resolve(authentication), request)
 
     @PostMapping
+    @PreAuthorize("hasAnyAuthority('operations.workforce.manage','operations.hub.manage')")
     @ResponseStatus(HttpStatus.CREATED)
     fun create(
         authentication: Authentication,
@@ -72,6 +73,7 @@ class AdminWorkforceController(
     ): WorkforceMemberResponse = service.create(actor(authentication), accessScopes.resolve(authentication), request)
 
     @PatchMapping("/{id}/status")
+    @PreAuthorize("hasAnyAuthority('operations.workforce.manage','operations.hub.manage')")
     fun setStatus(
         authentication: Authentication,
         @PathVariable id: UUID,
@@ -79,6 +81,7 @@ class AdminWorkforceController(
     ): WorkforceMemberResponse = service.setStatus(actor(authentication), accessScopes.resolve(authentication), id, request)
 
     @PatchMapping("/{id}/capacity")
+    @PreAuthorize("hasAnyAuthority('operations.workforce.manage','operations.hub.manage')")
     fun setCapacity(
         authentication: Authentication,
         @PathVariable id: UUID,
@@ -86,6 +89,7 @@ class AdminWorkforceController(
     ): WorkforceMemberResponse = service.setCapacity(actor(authentication), accessScopes.resolve(authentication), id, request)
 
     @PostMapping("/{id}/hubs")
+    @PreAuthorize("hasAnyAuthority('operations.workforce.manage','operations.hub.manage')")
     fun assignHub(
         authentication: Authentication,
         @PathVariable id: UUID,
@@ -93,6 +97,7 @@ class AdminWorkforceController(
     ): WorkforceMemberResponse = service.assignHub(actor(authentication), accessScopes.resolve(authentication), id, request)
 
     @DeleteMapping("/{id}/hubs/{hubId}")
+    @PreAuthorize("hasAnyAuthority('operations.workforce.manage','operations.hub.manage')")
     fun unassignHub(
         authentication: Authentication,
         @PathVariable id: UUID,
@@ -101,6 +106,7 @@ class AdminWorkforceController(
     ): WorkforceMemberResponse = service.unassignHub(actor(authentication), accessScopes.resolve(authentication), id, hubId, reason)
 
     @GetMapping("/{id}/audit")
+    @PreAuthorize("hasAnyAuthority('operations.workforce.read','operations.workforce.manage','operations.hub.manage')")
     fun audit(
         authentication: Authentication,
         @PathVariable id: UUID,

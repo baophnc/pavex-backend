@@ -5,5 +5,5 @@ import org.springframework.security.access.AccessDeniedException
 import org.springframework.security.core.Authentication
 
 fun Authentication.requirePavexActor(): PavexActor =
-    PavexActor.parse(name, authorities.map { it.authority })
+    PavexActor.parse(name, authorities.mapNotNull { it.authority })
         ?: throw AccessDeniedException("Authenticated user id is invalid.")

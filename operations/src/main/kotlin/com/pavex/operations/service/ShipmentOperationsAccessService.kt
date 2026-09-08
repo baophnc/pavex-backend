@@ -37,11 +37,11 @@ class ShipmentOperationsAccessService(
     }
 
     private fun allowedRoles(capability: OperationsCapability): Set<String> = when (capability) {
-        OperationsCapability.PARCEL_SCANNING -> setOf("WAREHOUSE_STAFF")
+        OperationsCapability.PARCEL_SCANNING -> WorkforceRolePolicy.acceptedRoles(WorkforceMemberKind.WAREHOUSE_OPERATOR)
         OperationsCapability.PICKUP,
         OperationsCapability.LAST_MILE_DELIVERY,
-        OperationsCapability.LINE_HAUL,
-        -> setOf("DRIVER")
+        -> WorkforceRolePolicy.acceptedRoles(WorkforceMemberKind.COURIER)
+        OperationsCapability.LINE_HAUL -> WorkforceRolePolicy.acceptedRoles(WorkforceMemberKind.LINE_HAUL_DRIVER)
     }
 
     companion object {

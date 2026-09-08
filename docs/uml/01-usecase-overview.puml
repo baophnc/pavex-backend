@@ -1,0 +1,44 @@
+@startuml
+!include style.puml
+left to right direction
+title PAVEX — Use Case tổng quan\nHiện trạng code · mức mục tiêu nghiệp vụ
+actor "Khách truy cập" as Guest
+actor "Merchant" as Merchant
+actor "Quản trị nền tảng\nPLATFORM_SUPER_ADMIN / ADMIN" as Admin
+actor "Quản lý vận hành\nOPERATIONS_MANAGER" as Ops
+actor "Quản lý bưu cục\nHUB_MANAGER" as HubManager
+actor "Điều phối bưu cục\nHUB_DISPATCHER" as Dispatcher
+actor "<i>Nhân viên thực thi</i>" as Worker
+rectangle "Hệ thống PAVEX\nClient portal + Management portal + Backend" {
+  usecase "Tra cứu vận đơn,\ncước và bưu cục công khai" as Public
+  usecase "Quản lý đơn hàng\ncủa merchant" as Orders
+  usecase "Quản trị tài khoản\nvà phân quyền" as IAM
+  usecase "Quản trị mạng lưới\nvà bảng giá" as Network
+  usecase "Quản lý nhân sự\nvà ca làm" as Workforce
+  usecase "Phân công / điều phối\ncông việc vận hành" as Dispatch
+  usecase "Giám sát và xử lý\nsự cố vận đơn" as Exceptions
+  usecase "Thực hiện nhiệm vụ\nđược giao" as Execute
+}
+Guest -- Public
+Merchant -- Orders
+Admin -- IAM
+Admin -- Network
+Ops -- Workforce
+Ops -- Dispatch
+Ops -- Exceptions
+HubManager -- Workforce
+HubManager -- Dispatch
+Dispatcher -- Dispatch
+Worker -- Execute
+legend bottom
+  Bảng tổng quan không liệt kê toàn bộ quyền kế thừa.
+  PLATFORM_SUPER_ADMIN có toàn bộ permission catalog,
+  nhưng API own/assigned vẫn kiểm tra dữ liệu và nhiệm vụ.
+  IAM_ADMIN / NETWORK_MANAGER xem sơ đồ 02.
+  ────────────────────────────────
+  Nhân viên thực thi: Courier, Warehouse Operator,
+  Line-haul Driver. Xem sơ đồ 05.
+  Hub Manager / Dispatcher bị giới hạn hub được gán.
+  Đăng nhập là tiền điều kiện, không include ở mọi use case.
+endlegend
+@enduml

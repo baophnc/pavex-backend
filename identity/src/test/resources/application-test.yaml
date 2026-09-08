@@ -1,3 +1,7 @@
+pavex:
+  bootstrap-admin:
+    enabled: false
+
 spring:
   datasource:
     url: jdbc:h2:mem:pavex_identity;MODE=PostgreSQL;DB_CLOSE_DELAY=-1
@@ -23,6 +27,9 @@ security:
     public-key: classpath:keys/test-public.pem
     partners:
       issuer: http://localhost:8083
+      public-key: classpath:keys/test-public.pem
+    operations:
+      issuer: http://localhost:8087
       public-key: classpath:keys/test-public.pem
 
 eureka:

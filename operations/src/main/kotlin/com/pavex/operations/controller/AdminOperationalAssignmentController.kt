@@ -21,7 +21,7 @@ import java.util.UUID
 
 @RestController
 @RequestMapping("/api/v1/admin/operations/assignments")
-@PreAuthorize("hasAnyAuthority('operations.assignments.manage','operations.hub.manage')")
+@PreAuthorize("hasAnyAuthority('operations.assignments.read','operations.assignments.manage','operations.dispatch.manage','operations.hub.manage')")
 class AdminOperationalAssignmentController(
     private val service: OperationalAssignmentService,
     private val accessScopes: AssignmentAccessScopeService,
@@ -36,6 +36,7 @@ class AdminOperationalAssignmentController(
         service.search(accessScopes.resolve(authentication), shipmentId, hubId, status)
 
     @PostMapping("/{id}/assign")
+    @PreAuthorize("hasAnyAuthority('operations.assignments.manage','operations.dispatch.manage','operations.hub.manage')")
     fun assign(
         authentication: Authentication,
         @PathVariable id: UUID,
@@ -48,6 +49,7 @@ class AdminOperationalAssignmentController(
     )
 
     @PostMapping("/{id}/cancel")
+    @PreAuthorize("hasAnyAuthority('operations.assignments.manage','operations.dispatch.manage','operations.hub.manage')")
     fun cancel(
         authentication: Authentication,
         @PathVariable id: UUID,

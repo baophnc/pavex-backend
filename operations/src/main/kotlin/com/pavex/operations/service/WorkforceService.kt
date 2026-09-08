@@ -101,7 +101,7 @@ class WorkforceService(
             globalAccess = scope.isGlobal,
             allowedHubIds = allowedHubIds,
             hubId = hubId,
-            needle = needle,
+            needle = needle.orEmpty(),
             identityUserIds = identityUserIds,
             pageable = pageable,
         )
@@ -500,12 +500,7 @@ class WorkforceService(
     }
 
     private fun isIdentityCompatible(kind: WorkforceMemberKind, snapshot: WorkforceIdentitySnapshot): Boolean {
-        val roles = snapshot.roles.toSet()
-        return when (kind) {
-            WorkforceMemberKind.WAREHOUSE_OPERATOR -> "WAREHOUSE_STAFF" in roles
-            WorkforceMemberKind.COURIER, WorkforceMemberKind.LINE_HAUL_DRIVER -> "DRIVER" in roles
-            WorkforceMemberKind.DISPATCHER -> "OPERATIONS_MANAGER" in roles || "HUB_MANAGER" in roles
-        }
+        return WorkforceRolePolicy.isCompatible(kind, snapshot.roles)
     }
 
     private fun defaultMaximumAssignments(kind: WorkforceMemberKind): Int = when (kind) {

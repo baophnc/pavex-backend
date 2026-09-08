@@ -78,7 +78,7 @@ interface WorkforceMemberRepository : JpaRepository<WorkforceMember, UUID> {
                 )
           )
           and (
-                :needle is null
+                :needle = ''
                 or lower(m.employeeCode) like lower(concat('%', :needle, '%'))
                 or m.userId in :identityUserIds
           )
@@ -109,7 +109,7 @@ interface WorkforceMemberRepository : JpaRepository<WorkforceMember, UUID> {
                 )
           )
           and (
-                :needle is null
+                :needle = ''
                 or lower(m.employeeCode) like lower(concat('%', :needle, '%'))
                 or m.userId in :identityUserIds
           )
@@ -121,7 +121,7 @@ interface WorkforceMemberRepository : JpaRepository<WorkforceMember, UUID> {
         @Param("globalAccess") globalAccess: Boolean,
         @Param("allowedHubIds") allowedHubIds: Collection<UUID>,
         @Param("hubId") hubId: UUID?,
-        @Param("needle") needle: String?,
+        @Param("needle") needle: String,
         @Param("identityUserIds") identityUserIds: Collection<UUID>,
         pageable: Pageable,
     ): Page<WorkforceMember>

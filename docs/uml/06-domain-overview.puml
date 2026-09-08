@@ -1,0 +1,35 @@
+@startuml
+!include style.puml
+title PAVEX — Domain Model tổng quan\nKhái niệm nghiệp vụ hiện có · không phải ERD hay sơ đồ deployment
+class "Người dùng\nUserAccount" as User
+class "Vai trò\nRole" as Role
+class "Merchant" as Merchant
+class "Nhân viên vận hành\nWorkforceMember" as Worker
+class "Phân thuộc bưu cục\nHubMembership" as Membership
+class "Bưu cục / Hub" as Hub
+class "Vận đơn\nShipment" as Shipment
+class "Kiện hàng\nParcel" as Parcel
+class "Nhiệm vụ\nOperationalAssignment" as Assignment
+class "Lần giao hàng\nDeliveryAttempt" as Delivery
+User "0..*" -- "0..*" Role : được cấp
+User "1" -- "0..1" Merchant : chủ hồ sơ
+User "1" -- "0..1" Worker : danh tính nhân viên
+Worker "1" -- "0..*" Membership
+Hub "1" -- "0..*" Membership
+Merchant "1" -- "0..*" Shipment : sở hữu
+Shipment "1" *-- "1..*" Parcel : các kiện
+Shipment "1" -- "0..*" Assignment : chuỗi công việc {ordered}
+Worker "0..1" -- "0..*" Assignment : người được gán
+Hub "1" -- "0..*" Assignment : hub phụ trách
+Parcel "1" -- "0..*" Delivery : lịch sử giao
+legend bottom
+  Shipment hợp lệ có ít nhất 1 Parcel.
+  Nhiệm vụ có thể chưa có assignee; nhiều nhiệm vụ cho một vận đơn.
+  Một người có thể vừa có hồ sơ merchant vừa là nhân viên.
+  Chi tiết tuyến, báo giá, sự cố và phân quyền ở các trang 07–10.
+  ────────────────────────────────
+  RBAC không thay thế hub membership.
+  Quan hệ khác service là tham chiếu nghiệp vụ,
+  không khẳng định có foreign key xuyên database.
+endlegend
+@enduml

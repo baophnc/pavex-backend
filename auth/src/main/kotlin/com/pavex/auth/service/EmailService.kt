@@ -1,5 +1,7 @@
 package com.pavex.auth.service
 
+import com.pavex.auth.event.PasswordResetPortal
+
 import jakarta.mail.internet.MimeMessage
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.mail.javamail.JavaMailSender
@@ -27,6 +29,8 @@ class EmailService(
     private val passwordResetUrl: String,
     @Value("\${pavex.email.invitation-url}")
     private val invitationUrl: String,
+    @Value("\${pavex.email.management-password-reset-url:http://localhost:3001/reset-password}")
+    private val managementPasswordResetUrl: String,
 ) {
 
     fun sendVerificationEmail(
@@ -96,6 +100,7 @@ class EmailService(
     fun sendPasswordResetEmail(
         to: String,
         rawToken: String,
+        portal: PasswordResetPortal = PasswordResetPortal.CLIENT,
     ) {
         val encodedToken =
             URLEncoder.encode(
@@ -103,8 +108,11 @@ class EmailService(
                 StandardCharsets.UTF_8,
             )
 
-        val resetLink =
-            "$passwordResetUrl?token=$encodedToken"
+        val destination = when (portal) {
+            PasswordResetPortal.CLIENT -> passwordResetUrl
+            PasswordResetPortal.MANAGEMENT -> managementPasswordResetUrl
+        }
+        val resetLink = "$destination?token=$encodedToken"
 
         val message: MimeMessage =
             mailSender.createMimeMessage()
@@ -120,33 +128,34 @@ class EmailService(
         helper.setTo(to)
 
         helper.setSubject(
-            "Reset your PAVEX password"
+            "PAVEX — Thiết lập mật khẩu của bạn"
         )
 
         helper.setText(
             """
             <html>
             <body>
-                <h2>Reset your PAVEX password</h2>
+                <h2>Thiết lập mật khẩu PAVEX</h2>
 
                 <p>
-                    We received a request to reset
-                    your PAVEX account password.
+                    Bạn vừa yêu cầu tạo mới hoặc đặt lại mật khẩu tài khoản PAVEX.
+                    Nếu tài khoản do quản trị viên tạo, đây cũng là bước xác minh
+                    email để bạn bắt đầu sử dụng tài khoản.
                 </p>
 
                 <p>
                     <a href="$resetLink">
-                        Reset password
+                        Đặt mật khẩu mới
                     </a>
                 </p>
 
                 <p>
-                    This link expires in 1 hour.
+                    Liên kết chỉ dùng một lần và có hiệu lực trong 1 giờ.
                 </p>
 
                 <p>
-                    If you did not request this,
-                    you can safely ignore this email.
+                    Nếu bạn không yêu cầu thao tác này, hãy bỏ qua email.
+                    Không chia sẻ liên kết với người khác.
                 </p>
             </body>
             </html>

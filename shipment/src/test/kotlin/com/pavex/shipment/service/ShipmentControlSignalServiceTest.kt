@@ -23,12 +23,12 @@ class ShipmentControlSignalServiceTest {
         shipmentId = UUID.randomUUID(),
         parcelId = UUID.randomUUID(),
         parcelCode = "PAVEX-P01",
+        parcelStatus = ParcelStatus.AWAITING_PICKUP,
+        currentHubId = null,
         routeRevision = 1,
         originHubId = UUID.randomUUID(),
         destinationHubId = UUID.randomUUID(),
         lifecycleStatus = ShipmentLifecycleStatus.ACTIVE,
-        parcelStatus = ParcelStatus.IN_TRANSIT,
-        isOnHold = false,
     )
 
     @Test

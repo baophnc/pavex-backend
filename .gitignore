@@ -34,3 +34,7 @@ Thumbs.db
 
 ### Test-only crypto fixtures ###
 !**/src/test/resources/keys/*.pem
+**/.keys/private.pem
+**/.keys/public.pem
+__MACOSX/
+*.tsbuildinfo

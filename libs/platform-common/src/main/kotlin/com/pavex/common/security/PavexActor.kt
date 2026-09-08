@@ -12,6 +12,8 @@ data class PavexActor(
 
     fun hasRole(roleCode: String): Boolean = "ROLE_${roleCode.uppercase()}" in authorities
 
+    fun hasAnyRole(vararg roleCodes: String): Boolean = roleCodes.any(::hasRole)
+
     companion object {
         fun parse(subject: String?, authorities: Iterable<String>): PavexActor? {
             val userId = subject?.let { runCatching { UUID.fromString(it) }.getOrNull() } ?: return null

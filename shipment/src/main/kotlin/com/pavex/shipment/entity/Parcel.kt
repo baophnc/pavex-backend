@@ -125,7 +125,7 @@ class Parcel(
                 custodyType = ParcelCustodyType.COURIER
                 custodyReferenceId = actorUserId
             }
-            ParcelStatus.AT_ORIGIN_HUB, ParcelStatus.AT_DESTINATION_HUB -> {
+            ParcelStatus.AT_ORIGIN_HUB, ParcelStatus.AT_TRANSIT_HUB, ParcelStatus.AT_DESTINATION_HUB -> {
                 val requiredHubId = requireNotNull(hubId) { "$nextStatus requires a hub." }
                 stage = ParcelStage.AT_HUB
                 currentLocationType = ParcelLocationType.HUB
@@ -242,7 +242,12 @@ class Parcel(
             ParcelStatus.AWAITING_PICKUP to setOf(ParcelStatus.PICKED_UP, ParcelStatus.CANCELLED),
             ParcelStatus.PICKED_UP to setOf(ParcelStatus.AT_ORIGIN_HUB),
             ParcelStatus.AT_ORIGIN_HUB to setOf(ParcelStatus.IN_TRANSIT),
-            ParcelStatus.IN_TRANSIT to setOf(ParcelStatus.AT_DESTINATION_HUB, ParcelStatus.RETURNING),
+            ParcelStatus.IN_TRANSIT to setOf(
+                ParcelStatus.AT_TRANSIT_HUB,
+                ParcelStatus.AT_DESTINATION_HUB,
+                ParcelStatus.RETURNING,
+            ),
+            ParcelStatus.AT_TRANSIT_HUB to setOf(ParcelStatus.IN_TRANSIT, ParcelStatus.RETURNING),
             ParcelStatus.AT_DESTINATION_HUB to setOf(ParcelStatus.OUT_FOR_DELIVERY, ParcelStatus.RETURNING),
             ParcelStatus.OUT_FOR_DELIVERY to setOf(ParcelStatus.DELIVERED, ParcelStatus.DELIVERY_FAILED),
             ParcelStatus.DELIVERY_FAILED to setOf(ParcelStatus.OUT_FOR_DELIVERY, ParcelStatus.RETURNING),

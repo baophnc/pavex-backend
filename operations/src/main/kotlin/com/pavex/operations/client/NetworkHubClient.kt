@@ -1,6 +1,7 @@
 package com.pavex.operations.client
 
 import com.pavex.contracts.operations.OperationsHubSnapshot
+import com.pavex.contracts.operations.OperationsHubCodeSnapshotRequest
 import com.pavex.contracts.operations.OperationsHubSnapshotRequest
 import com.pavex.operations.exception.OperationsUnavailableException
 import com.pavex.operations.security.service.ServiceJwtIssuer
@@ -31,6 +32,24 @@ class NetworkHubClient(
 
     fun find(hubId: UUID): OperationsHubSnapshot? = snapshots(listOf(hubId)).singleOrNull()
 
+    fun snapshotsByCodes(hubCodes: Collection<String>): List<OperationsHubSnapshot> = try {
+        client.post()
+            .uri("/internal/v1/network/operations/hubs/snapshots-by-codes")
+            .header(HttpHeaders.AUTHORIZATION, "Bearer ${serviceJwtIssuer.issueForNetwork()}")
+            .body(OperationsHubCodeSnapshotRequest(hubCodes.distinct().take(BATCH_SIZE)))
+            .retrieve()
+            .body(object : ParameterizedTypeReference<List<OperationsHubSnapshot>>() {})
+            .orEmpty()
+    } catch (_: HttpClientErrorException.Unauthorized) {
+        throw unavailable("network_authentication_failed", "Operations could not authenticate with Network.")
+    } catch (_: HttpClientErrorException.Forbidden) {
+        throw unavailable("network_authorization_failed", "Operations is not authorized to read Network hubs.")
+    } catch (_: IllegalStateException) {
+        throw unavailable("network_unavailable", "Network hub lookup is temporarily unavailable.")
+    } catch (_: RestClientException) {
+        throw unavailable("network_unavailable", "Network hub lookup is temporarily unavailable.")
+    }
+
     private fun fetch(hubIds: List<UUID>): List<OperationsHubSnapshot> = try {
         client.post()
             .uri("/internal/v1/network/operations/hubs/snapshots")
@@ -43,6 +62,8 @@ class NetworkHubClient(
         throw unavailable("network_authentication_failed", "Operations could not authenticate with Network.")
     } catch (_: HttpClientErrorException.Forbidden) {
         throw unavailable("network_authorization_failed", "Operations is not authorized to read Network hubs.")
+    } catch (_: IllegalStateException) {
+        throw unavailable("network_unavailable", "Network hub lookup is temporarily unavailable.")
     } catch (_: RestClientException) {
         throw unavailable("network_unavailable", "Network hub lookup is temporarily unavailable.")
     }

@@ -2,6 +2,8 @@ package com.pavex.auth.service
 
 import com.pavex.auth.entity.PasswordResetToken
 import com.pavex.auth.event.PasswordResetRequestedEvent
+import com.pavex.auth.event.PasswordResetPortal
+import com.pavex.auth.repository.InvitationTokenRepository
 import com.pavex.auth.exception.InvalidPasswordResetTokenException
 import com.pavex.auth.messaging.AuthMessagingTopology
 import com.pavex.auth.repository.PasswordResetTokenRepository
@@ -39,6 +41,9 @@ class PasswordResetService(
     private val advisoryLockService:
         AdvisoryLockService,
 
+    private val invitationTokenRepository: InvitationTokenRepository,
+    private val identityStateSyncService: IdentityStateSyncService,
+
     @Value(
         "\${auth.security.password-reset-token-ttl:PT1H}"
     )
@@ -49,6 +54,7 @@ class PasswordResetService(
     @Transactional
     fun forgotPassword(
         emailInput: String,
+        portal: PasswordResetPortal = PasswordResetPortal.CLIENT,
     ) {
 
         val email =
@@ -109,6 +115,7 @@ class PasswordResetService(
                 PasswordResetRequestedEvent(
                     email = account.email,
                     rawToken = issued.raw,
+                    portal = portal,
                 ),
             aggregateType = "user",
             aggregateId = account.id,
@@ -147,12 +154,15 @@ class PasswordResetService(
 
         /*
          * Thứ tự lock cố định:
-         * password-reset -> user-session.
+         * password-reset -> invitation -> user-session.
+         * Serialize with invitation acceptance before changing credentials.
          */
         advisoryLockService
             .lockPasswordReset(
                 userId
             )
+
+        advisoryLockService.lockInvitation(userId)
 
         advisoryLockService
             .lockUserSessions(
@@ -195,6 +205,10 @@ class PasswordResetService(
 
         account.failedLoginAttempts = 0
         account.lockoutEndAt = null
+        // Possession of the emailed, single-use token proves mailbox ownership.
+        // This also enables first-time password setup for admin-created users.
+        // Identity account status and roles are deliberately left unchanged.
+        account.emailVerified = true
         account.updatedAt = now
 
         userAccountRepository.save(
@@ -216,5 +230,8 @@ class PasswordResetService(
                 now =
                     now,
             )
+
+        invitationTokenRepository.invalidateUnusedByUserId(userId, now)
+        identityStateSyncService.emailVerifiedAfterCommit(userId)
     }
 }

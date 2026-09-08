@@ -20,8 +20,8 @@ interface WorkShiftRepository : JpaRepository<WorkShift, UUID> {
         where (:globalAccess = true or s.hubId in :allowedHubIds)
           and (:hubId is null or s.hubId = :hubId)
           and (:status is null or s.status = :status)
-          and (:fromTime is null or s.endsAt >= :fromTime)
-          and (:toTime is null or s.startsAt <= :toTime)
+          and s.endsAt >= coalesce(:fromTime, s.endsAt)
+          and s.startsAt <= coalesce(:toTime, s.startsAt)
         """,
         countQuery = """
         select count(s.id)
@@ -29,8 +29,8 @@ interface WorkShiftRepository : JpaRepository<WorkShift, UUID> {
         where (:globalAccess = true or s.hubId in :allowedHubIds)
           and (:hubId is null or s.hubId = :hubId)
           and (:status is null or s.status = :status)
-          and (:fromTime is null or s.endsAt >= :fromTime)
-          and (:toTime is null or s.startsAt <= :toTime)
+          and s.endsAt >= coalesce(:fromTime, s.endsAt)
+          and s.startsAt <= coalesce(:toTime, s.startsAt)
         """,
     )
     fun searchVisible(

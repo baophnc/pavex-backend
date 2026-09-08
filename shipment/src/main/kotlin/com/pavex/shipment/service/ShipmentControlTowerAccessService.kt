@@ -18,10 +18,13 @@ class ShipmentControlTowerAccessService(
         if (!actor.hasAuthority(CONTROL_TOWER_READ)) {
             throw AccessDeniedException("Shipment control tower access is not allowed.")
         }
-        if (actor.hasRole(ADMIN_ROLE) || actor.hasRole(OPERATIONS_MANAGER_ROLE)) {
+        if (actor.hasAnyRole(ADMIN_ROLE, PLATFORM_SUPER_ADMIN_ROLE, OPERATIONS_MANAGER_ROLE)) {
             return HubAccessScope.global(actor.userId)
         }
-        if (!actor.hasAuthority(HUB_MANAGE) || !actor.hasRole(HUB_MANAGER_ROLE)) {
+        if (
+            !(actor.hasAuthority(HUB_READ) || actor.hasAuthority(HUB_MANAGE)) ||
+            !actor.hasAnyRole(HUB_MANAGER_ROLE, HUB_DISPATCHER_ROLE)
+        ) {
             throw AccessDeniedException("Shipment control tower access is not allowed.")
         }
         val scope = operations.caseAdminScope(actor.userId)
@@ -33,9 +36,12 @@ class ShipmentControlTowerAccessService(
 
     companion object {
         const val CONTROL_TOWER_READ = "shipments.control-tower.read"
+        const val HUB_READ = "operations.hub.read"
         const val HUB_MANAGE = "operations.hub.manage"
         const val ADMIN_ROLE = "ADMIN"
+        const val PLATFORM_SUPER_ADMIN_ROLE = "PLATFORM_SUPER_ADMIN"
         const val OPERATIONS_MANAGER_ROLE = "OPERATIONS_MANAGER"
         const val HUB_MANAGER_ROLE = "HUB_MANAGER"
+        const val HUB_DISPATCHER_ROLE = "HUB_DISPATCHER"
     }
 }

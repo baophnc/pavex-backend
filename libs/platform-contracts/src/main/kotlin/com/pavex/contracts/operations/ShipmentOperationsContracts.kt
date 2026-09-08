@@ -13,11 +13,14 @@ enum class OperationsAssignmentType {
     PICKUP,
     ORIGIN_HUB_HANDLING,
     LINE_HAUL,
+    TRANSIT_HUB_HANDLING,
     DESTINATION_HUB_HANDLING,
     LAST_MILE_DELIVERY,
 }
 
 enum class OperationsAssignmentStatus {
+    BLOCKED,
+    READY,
     PENDING,
     ASSIGNED,
     ACCEPTED,

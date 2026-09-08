@@ -427,11 +427,7 @@ class WorkShiftService(
     private fun ensureIdentityEligible(member: WorkforceMember, errorCode: String) {
         val snapshot = identity.snapshots(listOf(member.userId)).singleOrNull()
         val roles = snapshot?.roles?.toSet().orEmpty()
-        val compatible = snapshot?.accountStatus == "ACTIVE" && when (member.kind) {
-            WorkforceMemberKind.WAREHOUSE_OPERATOR -> "WAREHOUSE_STAFF" in roles
-            WorkforceMemberKind.COURIER, WorkforceMemberKind.LINE_HAUL_DRIVER -> "DRIVER" in roles
-            WorkforceMemberKind.DISPATCHER -> "OPERATIONS_MANAGER" in roles || "HUB_MANAGER" in roles
-        }
+        val compatible = snapshot?.accountStatus == "ACTIVE" && WorkforceRolePolicy.isCompatible(member.kind, roles)
         if (!compatible) {
             throw InvalidOperationsRequestException(
                 errorCode,

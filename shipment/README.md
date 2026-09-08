@@ -63,8 +63,8 @@ docker compose up -d shipment-db
 ./mvnw -pl shipment spring-boot:run
 ```
 
-Local defaults verify user tokens with `.local/keys/auth/public.pem` and sign Shipment
-service tokens with the separate `.local/keys/shipment/` keypair.
+Local defaults verify user tokens with `~/.pavex/keys/auth/public.pem` and sign Shipment
+service tokens with the separate `~/.pavex/keys/shipment/` keypair.
 
 Patch 02 requires Discovery, Partners, Network and Pricing to be running and registered in Eureka.
 

@@ -27,7 +27,7 @@ class ShipmentExceptionAccessService(
         if (acceptedAuthorities.none(actor::hasAuthority)) {
             throw AccessDeniedException("Shipment exception access is not allowed.")
         }
-        if (actor.hasRole(ADMIN_ROLE) || actor.hasRole(OPERATIONS_MANAGER_ROLE)) {
+        if (actor.hasAnyRole(ADMIN_ROLE, PLATFORM_SUPER_ADMIN_ROLE, OPERATIONS_MANAGER_ROLE)) {
             return HubAccessScope.global(actor.userId)
         }
         if (!actor.hasAuthority(HUB_READ)) {
@@ -46,6 +46,7 @@ class ShipmentExceptionAccessService(
         const val WEIGHT_ADJUST = "shipments.weight.adjust"
         const val HUB_READ = "operations.hub.read"
         const val ADMIN_ROLE = "ADMIN"
+        const val PLATFORM_SUPER_ADMIN_ROLE = "PLATFORM_SUPER_ADMIN"
         const val OPERATIONS_MANAGER_ROLE = "OPERATIONS_MANAGER"
     }
 }

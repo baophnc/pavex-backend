@@ -11,6 +11,7 @@ import java.util.UUID
 
 enum class OperationalAssignmentEventType {
     PLANNED,
+    ACTIVATED,
     ASSIGNED,
     REASSIGNED,
     ACCEPTED,

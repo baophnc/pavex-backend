@@ -112,6 +112,40 @@ class RoleServiceTest {
     }
 
     @Test
+    fun `bootstrap synchronization grants every catalog permission to admin`() {
+        val adminRole = Role(
+            code = "ADMIN",
+            name = "Administrator",
+            isSystem = true,
+        )
+        val existingPermission = permission("operations.workforce.read")
+        val newPermission = permission("operations.workforce.manage")
+        var bumpedRoleId: UUID? = null
+        var savedMappings = emptyList<RolePermission>()
+
+        val service = service(
+            role = adminRole,
+            permissionsByCode = listOf(existingPermission, newPermission),
+            currentMappings = listOf(
+                RolePermission(
+                    roleId = adminRole.id,
+                    permissionId = existingPermission.id,
+                )
+            ),
+            onSaveMappings = { savedMappings = it },
+            onBumpAuthorization = { bumpedRoleId = it },
+        )
+
+        val added = service.synchronizeSystemAdminPermissions(
+            Instant.parse("2026-09-03T00:00:00Z")
+        )
+
+        assertEquals(1, added)
+        assertEquals(listOf(newPermission.id), savedMappings.map { it.permissionId })
+        assertEquals(adminRole.id, bumpedRoleId)
+    }
+
+    @Test
     fun `workforce roles cannot be assigned directly from identity`() {
         val service = service(role = null)
 
@@ -158,6 +192,7 @@ class RoleServiceTest {
         val roleRepository = proxy<RoleRepository> { method, args ->
             when (method) {
                 "findByCode" -> role?.takeIf { it.code == args?.firstOrNull() }
+                "findByCodeForUpdate" -> role?.takeIf { it.code == args?.firstOrNull() }
                 "findByIdForUpdate" -> role?.takeIf { it.id == args?.firstOrNull() }
                 "save", "saveAndFlush" -> args?.first()
                 "delete" -> Unit

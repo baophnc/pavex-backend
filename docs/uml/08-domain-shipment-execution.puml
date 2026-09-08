@@ -1,0 +1,78 @@
+@startuml
+!include style.puml
+title PAVEX — Vận đơn, thực thi và sự cố\nHiện trạng · không tạo các entity RouteLeg / Proof chưa tồn tại
+class Shipment {
+  trackingCode : String
+  status : ShipmentStatus
+  lifecycleStatus : ShipmentLifecycleStatus
+  routeRevision : Integer
+}
+class ShipmentAddressSnapshot <<value object>> {
+  contactName : String
+  contactPhone : String
+  addressLine : String
+}
+class Parcel {
+  code : String
+  status : ParcelStatus
+  actualWeightKg : Decimal
+  custodyType : ParcelCustodyType
+}
+class ShipmentEvent {
+  code : String
+  occurredAt : Instant
+}
+class DeliveryAttempt {
+  attemptNumber : Integer
+  outcome : DeliveryAttemptOutcome
+  failureReason : DeliveryFailureReason [0..1]
+  proofMethod : DeliveryProofMethod [0..1]
+  evidenceReference : String [0..1]
+}
+class "OperationalAssignment\n(Operations)" as Assignment {
+  code : String
+  sequence : Integer
+  type : OperationalAssignmentType
+  status : OperationalAssignmentStatus
+}
+class ShipmentCase {
+  caseNumber : String
+  type : ShipmentCaseType
+  status : ShipmentCaseStatus
+}
+class ShipmentCaseEvent {
+  code : String
+  occurredAt : Instant
+}
+class ShipmentExceptionRequest {
+  kind : RETURN / FORWARD / CANCELLATION
+  status : ShipmentExceptionRequestStatus
+}
+class ShipmentWeightAdjustment {
+  oldActualWeightKg : Decimal
+  newActualWeightKg : Decimal
+  reviewCompleted : Boolean
+}
+Shipment "1" *-- "1" ShipmentAddressSnapshot : sender
+Shipment "1" *-- "1" ShipmentAddressSnapshot : recipient
+Shipment "1" *-- "1..*" Parcel
+Shipment "1" *-- "0..*" ShipmentEvent
+Parcel "0..1" -- "0..*" ShipmentEvent : có thể liên quan
+Parcel "1" -- "0..*" DeliveryAttempt
+Shipment "1" -- "0..*" Assignment : {ordered by sequence}
+Shipment "0..1" -- "0..*" ShipmentCase
+Parcel "0..1" -- "0..*" ShipmentCase
+ShipmentCase "1" *-- "0..*" ShipmentCaseEvent
+Shipment "1" -- "0..*" ShipmentExceptionRequest
+Parcel "1" -- "0..*" ShipmentWeightAdjustment
+legend bottom
+  UNIDENTIFIED_PARCEL có thể chưa liên kết vận đơn/kiện.
+  Khi có parcel: parcel phải thuộc shipment tương ứng.
+  Mỗi case thuộc 1 hub; quan hệ hub lược để dễ đọc.
+  ────────────────────────────────
+  PICKUP, ORIGIN_HUB_HANDLING, LINE_HAUL,
+  TRANSIT_HUB_HANDLING, DESTINATION_HUB_HANDLING,
+  LAST_MILE_DELIVERY. Không phải subclass hierarchy.
+  routeLegId tham chiếu chặng đã giữ chỗ từ Network.
+endlegend
+@enduml

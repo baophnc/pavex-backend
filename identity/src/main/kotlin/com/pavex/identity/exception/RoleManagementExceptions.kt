@@ -28,6 +28,20 @@ class WorkforceRoleManagedByOperationsException : ApiException(
     message = "Operational workforce roles are managed by Operations > Workforce and cannot be assigned or removed directly in Identity.",
 )
 
+class RoleDelegationForbiddenException(
+    message: String = "The requested role or permission set exceeds the actor's delegation authority.",
+) : ApiException(
+    status = HttpStatus.FORBIDDEN,
+    code = "role_delegation_forbidden",
+    message = message,
+)
+
+class SelfRoleMutationForbiddenException : ApiException(
+    status = HttpStatus.FORBIDDEN,
+    code = "self_role_mutation_forbidden",
+    message = "Users cannot assign or remove their own roles.",
+)
+
 class UnknownPermissionException(
     permissionCodes: Collection<String>,
 ) : ApiException(

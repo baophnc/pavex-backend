@@ -16,8 +16,10 @@ import com.pavex.identity.exception.InvalidRoleCodeException
 import com.pavex.identity.exception.InvalidRoleNameException
 import com.pavex.identity.exception.LastActiveAdminException
 import com.pavex.identity.exception.RoleAlreadyExistsException
+import com.pavex.identity.exception.RoleDelegationForbiddenException
 import com.pavex.identity.exception.RoleInUseException
 import com.pavex.identity.exception.RoleNotFoundException
+import com.pavex.identity.exception.SelfRoleMutationForbiddenException
 import com.pavex.identity.exception.SystemRoleProtectedException
 import com.pavex.identity.exception.UnknownPermissionException
 import com.pavex.identity.exception.UserNotFoundException
@@ -135,6 +137,21 @@ class RoleService(
 
         val roleIds = userRoles.map { it.roleId }.toSet()
         val roles = roleRepository.findAllByIdIn(roleIds)
+        val roleCodes = roles.map { it.code }.toSet()
+
+        // ADMIN is a platform superuser invariant, not a mutable permission bundle.
+        // New permission catalog entries therefore become available to ADMIN on
+        // the next token issue/refresh even if a migration forgot a mapping row.
+        if (roleCodes.any(PLATFORM_SUPERUSER_ROLES::contains)) {
+            return UserAuthorization(
+                roles = roleCodes,
+                permissions = permissionRepository
+                    .findAllByOrderByCodeAsc()
+                    .map { it.code }
+                    .toSet(),
+            )
+        }
+
         val mappings = rolePermissionRepository.findAllByRoleIdIn(roleIds)
         val permissionIds = mappings.map { it.permissionId }.toSet()
         val permissions = if (permissionIds.isEmpty()) {
@@ -144,9 +161,38 @@ class RoleService(
         }
 
         return UserAuthorization(
-            roles = roles.map { it.code }.toSet(),
+            roles = roleCodes,
             permissions = permissions.map { it.code }.toSet(),
         )
+    }
+
+    @Transactional
+    fun synchronizeSystemAdminPermissions(now: Instant = Instant.now()): Int {
+        val adminRole = roleRepository.findByCodeForUpdate(ADMIN_ROLE)
+            ?: error("System ADMIN role has not been seeded")
+        val permissions = permissionRepository.findAllByOrderByCodeAsc()
+        if (permissions.isEmpty()) return 0
+
+        val currentPermissionIds = rolePermissionRepository
+            .findAllByRoleId(adminRole.id)
+            .map { it.permissionId }
+            .toSet()
+        val missing = permissions.filter { it.id !in currentPermissionIds }
+        if (missing.isEmpty()) return 0
+
+        rolePermissionRepository.saveAll(
+            missing.map { permission ->
+                RolePermission(
+                    roleId = adminRole.id,
+                    permissionId = permission.id,
+                )
+            }
+        )
+        userAccountRepository.bumpAuthorizationVersionForRole(
+            roleId = adminRole.id,
+            updatedAt = now,
+        )
+        return missing.size
     }
 
     @Transactional(readOnly = true)
@@ -154,6 +200,7 @@ class RoleService(
         val roles = roleRepository.findAllByOrderByCodeAsc()
         if (roles.isEmpty()) return emptyList()
 
+        val allPermissions = permissionRepository.findAllByOrderByCodeAsc()
         val mappings = rolePermissionRepository.findAllByRoleIdIn(roles.map { it.id })
         val permissionIds = mappings.map { it.permissionId }.toSet()
         val permissionsById = if (permissionIds.isEmpty()) {
@@ -164,10 +211,14 @@ class RoleService(
         val mappingsByRoleId = mappings.groupBy { it.roleId }
 
         return roles.map { role ->
-            val permissions = mappingsByRoleId[role.id]
-                .orEmpty()
-                .mapNotNull { permissionsById[it.permissionId] }
-                .sortedBy { it.code }
+            val permissions = if (role.code in PLATFORM_SUPERUSER_ROLES) {
+                allPermissions
+            } else {
+                mappingsByRoleId[role.id]
+                    .orEmpty()
+                    .mapNotNull { permissionsById[it.permissionId] }
+                    .sortedBy { it.code }
+            }
 
             role.toResponse(permissions)
         }
@@ -219,6 +270,13 @@ class RoleService(
     }
 
     @Transactional
+    fun createRoleAuthorized(actorUserId: UUID, request: CreateRoleRequest): RoleResponse {
+        val permissions = resolvePermissions(request.permissionCodes)
+        ensureCanDelegatePermissions(actorUserId, permissions.map { it.code }.toSet())
+        return createRole(request)
+    }
+
+    @Transactional
     fun updateRole(
         roleId: UUID,
         request: UpdateRoleRequest,
@@ -264,6 +322,17 @@ class RoleService(
         )
 
         return role.toResponse(desiredPermissions)
+    }
+
+    @Transactional
+    fun replacePermissionsAuthorized(
+        actorUserId: UUID,
+        roleId: UUID,
+        request: ReplaceRolePermissionsRequest,
+    ): RoleResponse {
+        val permissions = resolvePermissions(request.permissionCodes)
+        ensureCanDelegatePermissions(actorUserId, permissions.map { it.code }.toSet())
+        return replacePermissions(roleId, request)
     }
 
     @Transactional
@@ -313,6 +382,24 @@ class RoleService(
     }
 
     @Transactional
+    fun assignRoleAuthorized(
+        actorUserId: UUID,
+        targetUserId: UUID,
+        rawRoleCode: String,
+    ) {
+        if (actorUserId == targetUserId) throw SelfRoleMutationForbiddenException()
+        val roleCode = normalizeRoleCode(rawRoleCode)
+        val role = roleRepository.findByCode(roleCode) ?: throw RoleNotFoundException()
+        ensureCanDelegateRole(actorUserId, role)
+        assignRole(actorUserId, targetUserId, roleCode)
+    }
+
+    @Transactional
+    fun assignBootstrapPlatformRole(actorUserId: UUID, targetUserId: UUID) {
+        assignRole(actorUserId, targetUserId, PLATFORM_SUPER_ADMIN_ROLE)
+    }
+
+    @Transactional
     fun removeRole(
         actorUserId: UUID,
         targetUserId: UUID,
@@ -352,6 +439,19 @@ class RoleService(
         user.authorizationVersion += 1
         user.updatedAt = now
         userAccountRepository.save(user)
+    }
+
+    @Transactional
+    fun removeRoleAuthorized(
+        actorUserId: UUID,
+        targetUserId: UUID,
+        rawRoleCode: String,
+    ) {
+        if (actorUserId == targetUserId) throw SelfRoleMutationForbiddenException()
+        val roleCode = normalizeRoleCode(rawRoleCode)
+        val role = roleRepository.findByCode(roleCode) ?: throw RoleNotFoundException()
+        ensureCanDelegateRole(actorUserId, role)
+        removeRole(actorUserId, targetUserId, roleCode)
     }
 
     /**
@@ -409,6 +509,30 @@ class RoleService(
             .sortedBy { it.code }
     }
 
+    private fun ensureCanDelegateRole(actorUserId: UUID, role: Role) {
+        val actor = getAuthorization(actorUserId)
+        if (actor.roles.any(PLATFORM_SUPERUSER_ROLES::contains)) return
+        if (IAM_ADMIN_ROLE !in actor.roles) throw RoleDelegationForbiddenException()
+        if (role.code in SENSITIVE_ASSIGNMENT_ROLES) {
+            throw RoleDelegationForbiddenException(
+                "Only a platform super administrator can change privileged administrator roles."
+            )
+        }
+        if (role.code in WORKFORCE_MANAGED_ROLES) throw WorkforceRoleManagedByOperationsException()
+        if (role.code in IAM_ASSIGNABLE_SYSTEM_ROLES) return
+
+        val rolePermissions = loadPermissions(role.id).map { it.code }.toSet()
+        if (!actor.permissions.containsAll(rolePermissions)) throw RoleDelegationForbiddenException()
+    }
+
+    private fun ensureCanDelegatePermissions(actorUserId: UUID, permissionCodes: Set<String>) {
+        val actor = getAuthorization(actorUserId)
+        if (actor.roles.any(PLATFORM_SUPERUSER_ROLES::contains)) return
+        if (IAM_ADMIN_ROLE !in actor.roles || !actor.permissions.containsAll(permissionCodes)) {
+            throw RoleDelegationForbiddenException()
+        }
+    }
+
     private fun Role.toResponse(permissions: List<Permission>): RoleResponse =
         RoleResponse(
             id = id,
@@ -450,8 +574,22 @@ class RoleService(
     companion object {
         const val CUSTOMER_ROLE = "CUSTOMER"
         const val ADMIN_ROLE = "ADMIN"
+        const val PLATFORM_SUPER_ADMIN_ROLE = "PLATFORM_SUPER_ADMIN"
+        const val IAM_ADMIN_ROLE = "IAM_ADMIN"
         const val MERCHANT_ROLE = "MERCHANT"
-        val WORKFORCE_MANAGED_ROLES = setOf("DRIVER", "WAREHOUSE_STAFF", "HUB_MANAGER", "OPERATIONS_MANAGER")
+        val PLATFORM_SUPERUSER_ROLES = setOf(ADMIN_ROLE, PLATFORM_SUPER_ADMIN_ROLE)
+        val SENSITIVE_ASSIGNMENT_ROLES = setOf(ADMIN_ROLE, PLATFORM_SUPER_ADMIN_ROLE, IAM_ADMIN_ROLE)
+        val IAM_ASSIGNABLE_SYSTEM_ROLES = setOf(CUSTOMER_ROLE, MERCHANT_ROLE)
+        val WORKFORCE_MANAGED_ROLES = setOf(
+            "DRIVER",
+            "WAREHOUSE_STAFF",
+            "HUB_MANAGER",
+            "OPERATIONS_MANAGER",
+            "HUB_DISPATCHER",
+            "WAREHOUSE_OPERATOR",
+            "LINE_HAUL_DRIVER",
+            "COURIER",
+        )
 
         private val ROLE_CODE_REGEX = Regex("^[A-Z][A-Z0-9_]{2,63}$")
     }

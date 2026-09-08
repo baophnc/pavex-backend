@@ -29,8 +29,24 @@ class AssignmentAccessScopeServiceTest {
 
     @Test
     fun `global assignment manager receives global scope`() {
-        val authentication = auth("operations.assignments.manage")
+        val authentication = auth("operations.assignments.manage", "ROLE_OPERATIONS_MANAGER")
         assertTrue(service.resolve(authentication).isGlobal)
+    }
+
+    @Test
+    fun `manage permission without a global role remains hub scoped`() {
+        val userId = UUID.randomUUID()
+        val member = WorkforceMember.create(userId, WorkforceMemberKind.DISPATCHER, Instant.now())
+        val hubId = UUID.randomUUID()
+        `when`(members.findByUserId(userId)).thenReturn(member)
+        `when`(memberships.findAllByWorkforceMemberIdAndIsActiveTrue(member.id)).thenReturn(
+            listOf(HubMembership(workforceMemberId = member.id, hubId = hubId)),
+        )
+
+        val scope = service.resolve(auth("operations.assignments.manage", userId = userId))
+
+        assertFalse(scope.isGlobal)
+        assertTrue(hubId in scope.hubIds)
     }
 
     @Test
@@ -48,7 +64,7 @@ class AssignmentAccessScopeServiceTest {
         `when`(assignments.findById(ownedAssignment.id)).thenReturn(Optional.of(ownedAssignment))
         `when`(assignments.findById(foreignAssignment.id)).thenReturn(Optional.of(foreignAssignment))
 
-        val scope = service.resolve(auth("operations.hub.manage", userId))
+        val scope = service.resolve(auth("operations.hub.manage", userId = userId))
 
         assertFalse(scope.isGlobal)
         assertTrue(service.canAccessAssignment(scope, ownedAssignment.id))
@@ -62,17 +78,17 @@ class AssignmentAccessScopeServiceTest {
         member.status = WorkforceMemberStatus.SUSPENDED
         `when`(members.findByUserId(userId)).thenReturn(member)
 
-        val scope = service.resolve(auth("operations.hub.manage", userId))
+        val scope = service.resolve(auth("operations.hub.manage", userId = userId))
 
         assertFalse(scope.isGlobal)
         assertTrue(scope.hubIds.isEmpty())
     }
 
-    private fun auth(authority: String, userId: UUID = UUID.randomUUID()) =
+    private fun auth(vararg authorities: String, userId: UUID = UUID.randomUUID()) =
         UsernamePasswordAuthenticationToken(
             userId.toString(),
             "n/a",
-            listOf(SimpleGrantedAuthority(authority)),
+            authorities.map(::SimpleGrantedAuthority),
         )
 
     private fun assignment(hubId: UUID) = OperationalAssignment.create(

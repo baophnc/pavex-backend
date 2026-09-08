@@ -1,6 +1,7 @@
 package com.pavex.network.controller
 
 import com.pavex.contracts.operations.OperationsHubSnapshot
+import com.pavex.contracts.operations.OperationsHubCodeSnapshotRequest
 import com.pavex.contracts.operations.OperationsHubSnapshotRequest
 import com.pavex.network.repository.HubRepository
 import io.swagger.v3.oas.annotations.Hidden
@@ -21,22 +22,37 @@ class InternalOperationsNetworkController(
     ): List<OperationsHubSnapshot> {
         val ids = request.hubIds.distinct().take(MAX_BATCH_SIZE)
         if (ids.isEmpty()) return emptyList()
-        return hubs.findAllById(ids)
-            .sortedBy { it.code }
-            .map { hub ->
-                OperationsHubSnapshot(
-                    hubId = hub.id,
-                    code = hub.code,
-                    name = hub.name,
-                    type = hub.type.name,
-                    status = hub.status.name,
-                    addressLine = hub.addressLine,
-                    provinceCode = hub.provinceCode,
-                    wardCode = hub.wardCode,
-                    parentHubId = hub.parentHubId,
-                )
-            }
+        return hubs.findAllById(ids).toSnapshots()
     }
+
+    @PostMapping("/hubs/snapshots-by-codes")
+    fun hubSnapshotsByCodes(
+        @RequestBody request: OperationsHubCodeSnapshotRequest,
+    ): List<OperationsHubSnapshot> {
+        val codes = request.hubCodes.asSequence()
+            .map { it.trim().uppercase() }
+            .filter { it.isNotEmpty() }
+            .distinct()
+            .take(MAX_BATCH_SIZE)
+            .toList()
+        if (codes.isEmpty()) return emptyList()
+        return hubs.findAllByCodeIn(codes).toSnapshots()
+    }
+
+    private fun Iterable<com.pavex.network.entity.Hub>.toSnapshots(): List<OperationsHubSnapshot> =
+        sortedBy { it.code }.map { hub ->
+            OperationsHubSnapshot(
+                hubId = hub.id,
+                code = hub.code,
+                name = hub.name,
+                type = hub.type.name,
+                status = hub.status.name,
+                addressLine = hub.addressLine,
+                provinceCode = hub.provinceCode,
+                wardCode = hub.wardCode,
+                parentHubId = hub.parentHubId,
+            )
+        }
 
     companion object {
         private const val MAX_BATCH_SIZE = 1000

@@ -17,8 +17,13 @@ class AssignmentAccessScopeService(
 ) {
     fun resolve(authentication: Authentication): AssignmentAccessScope {
         val actor = authentication.requirePavexActor()
-        if (actor.hasAuthority(ASSIGNMENTS_MANAGE)) return HubAccessScope.global(actor.userId)
-        if (!actor.hasAnyAuthority(ASSIGNMENTS_READ, HUB_MANAGE)) {
+        if (
+            actor.hasAuthority(ASSIGNMENTS_MANAGE) &&
+            actor.hasAnyRole(LEGACY_ADMIN_ROLE, PLATFORM_SUPER_ADMIN_ROLE, OPERATIONS_MANAGER_ROLE)
+        ) {
+            return HubAccessScope.global(actor.userId)
+        }
+        if (!actor.hasAnyAuthority(ASSIGNMENTS_READ, ASSIGNMENTS_MANAGE, DISPATCH_MANAGE, HUB_MANAGE)) {
             throw AccessDeniedException("Assignment access is not allowed")
         }
         return hubScopes.resolve(actor.userId)
@@ -33,6 +38,10 @@ class AssignmentAccessScopeService(
     companion object {
         const val ASSIGNMENTS_READ = "operations.assignments.read"
         const val ASSIGNMENTS_MANAGE = "operations.assignments.manage"
+        const val DISPATCH_MANAGE = "operations.dispatch.manage"
         const val HUB_MANAGE = "operations.hub.manage"
+        const val LEGACY_ADMIN_ROLE = "ADMIN"
+        const val PLATFORM_SUPER_ADMIN_ROLE = "PLATFORM_SUPER_ADMIN"
+        const val OPERATIONS_MANAGER_ROLE = "OPERATIONS_MANAGER"
     }
 }
