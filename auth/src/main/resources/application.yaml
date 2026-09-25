@@ -71,6 +71,9 @@ security:
 
     refresh-token-ttl: P30D
 
+    # Absolute cap for a refresh-token rotation chain, counted from the original login.
+    refresh-session-max-lifetime: ${AUTH_REFRESH_SESSION_MAX_LIFETIME:P90D}
+
     private-key: file:${pavex.keys-dir}/auth/private.pem
     public-key: file:${pavex.keys-dir}/auth/public.pem
 

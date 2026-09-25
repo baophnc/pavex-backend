@@ -44,6 +44,16 @@ class RefreshSession(
     )
     var createdAt: Instant = Instant.now(),
 
+    /**
+     * Login time of the whole rotation chain. Copied to every replacement so the chain
+     * has an absolute lifetime no matter how often it is refreshed.
+     */
+    @Column(
+        name = "session_started_at",
+        nullable = false,
+    )
+    var sessionStartedAt: Instant = createdAt,
+
     @Column(name = "revoked_at")
     var revokedAt: Instant? = null,
 
