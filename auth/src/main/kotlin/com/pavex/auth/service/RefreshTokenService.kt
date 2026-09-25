@@ -28,7 +28,20 @@ class RefreshTokenService(
     @Value("\${security.jwt.refresh-token-ttl}")
     private val refreshTokenTtl:
         Duration,
+
+    @Value("\${security.jwt.refresh-session-max-lifetime:P90D}")
+    private val refreshSessionMaxLifetime:
+        Duration,
 ) {
+
+    init {
+        require(!refreshSessionMaxLifetime.isNegative && !refreshSessionMaxLifetime.isZero) {
+            "security.jwt.refresh-session-max-lifetime must be positive."
+        }
+        require(refreshSessionMaxLifetime >= refreshTokenTtl) {
+            "security.jwt.refresh-session-max-lifetime must not be shorter than refresh-token-ttl."
+        }
+    }
 
     @Transactional(
         propagation = Propagation.MANDATORY,
@@ -37,6 +50,7 @@ class RefreshTokenService(
         userId: UUID,
         now: Instant,
         clientMetadata: ClientMetadata,
+        sessionStartedAt: Instant = now,
     ): IssuedRefreshToken {
 
         val issued =
@@ -47,9 +61,11 @@ class RefreshTokenService(
                 userId = userId,
                 tokenHash = issued.hash,
                 createdAt = now,
+                sessionStartedAt = sessionStartedAt,
                 expiresAt =
-                    now.plus(
-                        refreshTokenTtl
+                    expiresAt(
+                        now = now,
+                        sessionStartedAt = sessionStartedAt,
                     ),
                 ipAddress =
                     clientMetadata
@@ -150,6 +166,8 @@ class RefreshTokenService(
                 now = now,
                 clientMetadata =
                     clientMetadata,
+                sessionStartedAt =
+                    current.sessionStartedAt,
             )
 
         current.revokedAt =
@@ -167,6 +185,28 @@ class RefreshTokenService(
             token = replacement.token,
             expiresAt = replacement.expiresAt,
         )
+    }
+
+
+    /**
+     * Sliding window (refresh-token-ttl) capped by the absolute chain lifetime.
+     */
+    internal fun expiresAt(
+        now: Instant,
+        sessionStartedAt: Instant,
+    ): Instant {
+
+        val sliding =
+            now.plus(
+                refreshTokenTtl
+            )
+
+        val absolute =
+            sessionStartedAt.plus(
+                refreshSessionMaxLifetime
+            )
+
+        return if (sliding.isBefore(absolute)) sliding else absolute
     }
 
 
