@@ -233,6 +233,7 @@ class MerchantService(
                 changedAt = now,
             ),
         )
+        roleOutbox.supersedePendingRoleChanges(merchant.userId, now)
         roleOutbox.save(
             MerchantRoleOutboxMessage(
                 merchantId = merchant.id,

@@ -56,10 +56,12 @@ class MerchantServiceTest {
             status = MerchantStatus.ACTIVE,
         )
         var capturedOutbox: MerchantRoleOutboxMessage? = null
+        var supersededUserId: UUID? = null
         val service = service(
             merchantByUser = merchant,
             merchantById = merchant,
             captureOutbox = { capturedOutbox = it },
+            captureSupersede = { supersededUserId = it },
         )
 
         service.changeStatus(
@@ -71,6 +73,7 @@ class MerchantServiceTest {
         assertEquals(MerchantStatus.SUSPENDED, merchant.status)
         assertFalse(requireNotNull(capturedOutbox).enabled)
         assertEquals(merchant.userId, capturedOutbox.userId)
+        assertEquals(merchant.userId, supersededUserId, "Older pending role changes must be superseded first")
     }
 
     private fun service(
@@ -78,6 +81,7 @@ class MerchantServiceTest {
         merchantById: Merchant? = null,
         defaultPickup: MerchantPickupAddress? = null,
         captureOutbox: (MerchantRoleOutboxMessage) -> Unit = {},
+        captureSupersede: (UUID) -> Unit = {},
     ): MerchantService {
         val merchantRepository = proxy<MerchantRepository> { method, _ ->
             when (method) {
@@ -95,11 +99,18 @@ class MerchantServiceTest {
             }
         }
         val outboxRepository = proxy<MerchantRoleOutboxRepository> { method, args ->
-            if (method == "save") {
-                val message = args?.first() as MerchantRoleOutboxMessage
-                captureOutbox(message)
-                message
-            } else defaultValue(method)
+            when (method) {
+                "save" -> {
+                    val message = args?.first() as MerchantRoleOutboxMessage
+                    captureOutbox(message)
+                    message
+                }
+                "supersedePendingRoleChanges" -> {
+                    captureSupersede(args?.first() as UUID)
+                    0
+                }
+                else -> defaultValue(method)
+            }
         }
         val pickupRepository = proxy<MerchantPickupAddressRepository> { method, _ ->
             if (method == "findFirstByMerchantIdAndIsDefaultTrue") defaultPickup

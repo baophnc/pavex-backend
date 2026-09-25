@@ -30,4 +30,16 @@ class MerchantRoleOutboxMessage(
     var attemptCount: Int = 0,
     @Column(name = "last_error", length = 2000)
     var lastError: String? = null,
-)
+    @Column(name = "superseded_at")
+    var supersededAt: Instant? = null,
+) {
+    /**
+     * A newer role change exists for the same user, so this message must never be sent.
+     * It is closed as processed so it leaves the dispatch queue permanently.
+     */
+    fun markSuperseded(now: Instant) {
+        supersededAt = now
+        processedAt = now
+        lastError = null
+    }
+}
