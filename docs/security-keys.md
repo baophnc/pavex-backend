@@ -1,4 +1,4 @@
-# Local configuration and login
+# Cấu hình chạy chung và đăng nhập
 
 Each of the nine services has exactly one runtime configuration:
 `src/main/resources/application.yaml`. YAML under `src/test/resources` is
@@ -10,7 +10,7 @@ bootstrap properties. This setup is intentionally **local only**, not production
 Run once (also called by `scripts/dev-up.sh`):
 
 ```bash
-bash scripts/security-bootstrap-local.sh
+bash scripts/security-bootstrap.sh
 ```
 
 All services, whether launched from IntelliJ or the script, use
@@ -53,6 +53,12 @@ IntelliJ: start infrastructure with `docker compose up -d --wait`, then Discover
 Identity, Auth and the remaining services. Wait for Eureka registration.
 No active Spring profile is required. The launcher skips already-healthy
 processes; stop old processes first when applying new configuration/builds.
+
+Eureka now advertises all JVM services as `127.0.0.1` with
+`prefer-ip-address: true`. This avoids Gateway DNS failures for macOS hostnames
+ending in `.local`. Restart Discovery and the service JVMs after this change
+to clear old registrations and client caches. This is a same-machine setup,
+not a multi-host/container deployment configuration.
 
 Direct backend login uses `POST /api/v1/auth/login` with JSON fields
 `email` and `password`, not `login`. Send no stale Bearer token on login.

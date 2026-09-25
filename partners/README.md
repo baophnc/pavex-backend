@@ -15,7 +15,7 @@ must not read Auth or Identity tables directly.
 ## Service-to-service boundary
 
 Partners owns a dedicated RSA service-JWT key pair. Local development generates it under
-`~/.pavex/keys/partners/` with `bash scripts/security-bootstrap-local.sh`. Calls to Identity use short-lived service JWTs:
+`~/.pavex/keys/partners/` with `bash scripts/security-bootstrap.sh`. Calls to Identity use short-lived service JWTs:
 
 - issuer: `http://localhost:8083`
 - subject: `partners-service`

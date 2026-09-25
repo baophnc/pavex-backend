@@ -4,7 +4,7 @@ set -euo pipefail
 script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 case "${1:-sync}" in
   init|sync)
-    exec "$script_dir/security-bootstrap-local.sh"
+    exec bash "$script_dir/security-bootstrap.sh"
     ;;
   status)
     for issuer in auth identity partners pricing shipment operations; do

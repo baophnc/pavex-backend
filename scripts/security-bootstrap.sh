@@ -17,7 +17,7 @@ for issuer in auth identity partners pricing shipment operations; do
     fi
     openssl genpkey -algorithm RSA -pkeyopt rsa_keygen_bits:3072 \
       -out "$key_dir/private.pem" >/dev/null 2>&1
-    echo "[created] $issuer local keypair"
+    echo "[created] $issuer development keypair"
   fi
   # Repair a stale public key from the existing private key; never rotate it.
   public_tmp="$(mktemp "$key_dir/public.XXXXXX")"
@@ -34,4 +34,4 @@ for issuer in auth identity partners pricing shipment operations; do
   chmod 644 "$key_dir/public.pem"
   echo "[ready] $issuer -> $key_dir"
 done
-echo "Local JWT keys are ready. Restart all services together after changing keys."
+echo "JWT keys are ready. No Spring profile is required. Existing private keys were preserved."

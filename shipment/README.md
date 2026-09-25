@@ -58,7 +58,7 @@ UUIDs remain internal transport/database identifiers and should not be rendered 
 ## Local runtime
 
 ```bash
-bash scripts/security-bootstrap-local.sh
+bash scripts/security-bootstrap.sh
 docker compose up -d shipment-db
 ./mvnw -pl shipment spring-boot:run
 ```

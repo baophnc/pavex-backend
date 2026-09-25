@@ -1,6 +1,40 @@
 # Pavex Backend
 
-## Run the local stack
+## Chạy hệ thống — một cấu hình, không chia local/prod
+
+Mỗi service chỉ đọc `src/main/resources/application.yaml`. Không cần chọn
+Active profiles, không cần `.local/dev.env` hay file bootstrap bên ngoài.
+`application-test.yaml` chỉ dành cho kiểm thử tự động, không phải môi trường chạy app.
+
+**IntelliJ:** reload Maven project rồi dùng các cấu hình **PAVEX - ...** trong
+thư mục `.run`. Các cấu hình này không có profile, biến bootstrap hoặc đường dẫn
+cấu hình riêng. Nếu IntelliJ đang mở lúc cấu hình cũ được sửa, mở lại project
+để tránh dùng bản Run configuration còn lưu trong bộ nhớ.
+
+Chuẩn bị trước khi bấm Run:
+
+```bash
+bash scripts/dev-setup.sh
+docker compose up -d --wait
+bash scripts/check-setup.sh
+```
+
+Chạy theo thứ tự: **Discovery → Identity → Auth → Partners / Network / Pricing /
+Operations / Shipment → Gateway**. Đợi Identity và Auth khởi động xong trước khi
+đăng nhập. Tài khoản quản trị và cổng chạy được khai báo ngay trong YAML.
+
+Eureka đăng ký mọi service bằng **127.0.0.1**, không dùng tên máy dạng
+`Bao-Phuc-2.local`. Cấu hình này dành cho các JVM chạy cùng máy; chưa dùng cho
+các JVM chạy trong container hay trên nhiều máy. Nếu trước đó Gateway báo
+`UnknownHostException` khi đăng nhập, dừng các JVM, khởi động lại Discovery
+để bỏ registry cũ rồi chạy lại các service và Gateway. Không cần xóa database,
+đổi mật khẩu hoặc sửa `/etc/hosts`.
+
+`.local/` chỉ chứa log, PID và nhật ký seed, **không phải Spring profile**.
+Không xóa thư mục này để sửa lỗi cấu hình: mất nhật ký sẽ làm seed không nhận ra
+dữ liệu đã tạo. Khóa JWT vẫn được giữ nguyên, không xoay khóa hoặc xóa database.
+
+Hoặc chạy toàn bộ bằng một lệnh:
 
 Requirements: Java 21, Docker Desktop, `curl`, and OpenSSL.
 
@@ -8,7 +42,7 @@ Requirements: Java 21, Docker Desktop, `curl`, and OpenSSL.
 ./scripts/dev-up.sh
 ```
 
-The command generates local-only JWT/outbox secrets, starts PostgreSQL, Redis,
+The command prepares missing JWT keypairs, starts PostgreSQL, Redis,
 RabbitMQ and Mailpit, builds the reactor, then starts Eureka, Identity, Auth,
 Partners, Network, Pricing, Shipment and the API Gateway. Runtime logs are written to `.local/logs/`.
 

@@ -1,0 +1,10 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="PAVEX - Partners" type="Application" factoryName="Application">
+    <option name="MAIN_CLASS_NAME" value="com.pavex.partners.PartnersApplicationKt" />
+    <module name="partners-service" />
+    <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+    <method v="2">
+      <option name="Make" enabled="true" />
+    </method>
+  </configuration>
+</component>

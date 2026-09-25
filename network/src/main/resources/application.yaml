@@ -67,7 +67,10 @@ eureka:
   instance:
     initial-instance-info-replication-interval-seconds: 5
     instance-info-replication-interval-seconds: 10
-    prefer-ip-address: ${EUREKA_PREFER_IP_ADDRESS:false}
+    # All services currently run on this machine. Do not advertise macOS .local hostnames.
+    prefer-ip-address: true
+    ip-address: 127.0.0.1
+    hostname: 127.0.0.1
 
 springdoc:
   api-docs:

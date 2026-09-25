@@ -45,7 +45,7 @@ short-lived RSA service JWT with:
 - `scope=network.pricing.resolve`
 
 Network trusts only Pricing's public key on `/internal/v1/network/**`. Run
-`bash scripts/security-bootstrap-local.sh` from the repository root to generate Pricing's local
+`bash scripts/security-bootstrap.sh` from the repository root to generate Pricing's development
 keypair under `~/.pavex/keys/pricing/`. Never commit generated keys.
 
 The demo values are development data, not a production tariff. Patch 03 adds the complete
