@@ -43,6 +43,7 @@ class CreateShipmentService(
     private val pricing: PricingQuoteClient,
     private val network: NetworkShipmentClient,
     private val operations: OperationsShipmentClient,
+    private val networkConfirmations: ShipmentNetworkConfirmationService,
     private val writer: ShipmentCreationWriter,
     private val trackingCodes: ShipmentCodeGenerator,
     private val objectMapper: ObjectMapper,
@@ -102,34 +103,41 @@ class CreateShipmentService(
             )
         }
 
-        repeat(MAXIMUM_INSERT_ATTEMPTS) { attemptIndex ->
-            val shipmentId = UUID.randomUUID()
-            var reservation: ShipmentNetworkReservationSnapshot? = null
-            var operationsPlanned = false
-            try {
-                reservation = network.reserve(
-                    ReserveShipmentNetworkRequest(
-                        shipmentId = shipmentId,
-                        actorUserId = actorUserId,
-                        routeRevision = INITIAL_ROUTE_REVISION,
-                        originProvinceCode = sender.provinceCode,
-                        originWardCode = sender.wardCode,
-                        destinationProvinceCode = recipient.provinceCode,
-                        destinationWardCode = recipient.wardCode,
-                        shipmentWeightKg = shipmentWeightKg,
-                        readyAt = now,
-                        expectedOriginServiceAreaId = quote.origin.serviceAreaId,
-                        expectedOriginRegionId = quote.origin.regionId,
-                        expectedOriginHubId = quote.origin.primaryHubId,
-                        expectedDestinationServiceAreaId = quote.destination.serviceAreaId,
-                        expectedDestinationRegionId = quote.destination.regionId,
-                        expectedDestinationHubId = quote.destination.primaryHubId,
-                    ),
-                )
-                validateReservation(quote, shipmentId, shipmentWeightKg, reservation)
-                operations.plan(shipmentId, reservation)
-                operationsPlanned = true
+        // The network reservation and operations plan are tied to shipmentId, so they are
+        // made exactly once. Only the tracking code is regenerated if it collides.
+        val shipmentId = UUID.randomUUID()
+        // If reserve() itself fails nothing is held; an ambiguous failure (e.g. a timeout
+        // after Network committed) is cleaned up by Network's unconfirmed-reservation expiry.
+        val reservation = network.reserve(
+            ReserveShipmentNetworkRequest(
+                shipmentId = shipmentId,
+                actorUserId = actorUserId,
+                routeRevision = INITIAL_ROUTE_REVISION,
+                originProvinceCode = sender.provinceCode,
+                originWardCode = sender.wardCode,
+                destinationProvinceCode = recipient.provinceCode,
+                destinationWardCode = recipient.wardCode,
+                shipmentWeightKg = shipmentWeightKg,
+                readyAt = now,
+                expectedOriginServiceAreaId = quote.origin.serviceAreaId,
+                expectedOriginRegionId = quote.origin.regionId,
+                expectedOriginHubId = quote.origin.primaryHubId,
+                expectedDestinationServiceAreaId = quote.destination.serviceAreaId,
+                expectedDestinationRegionId = quote.destination.regionId,
+                expectedDestinationHubId = quote.destination.primaryHubId,
+            ),
+        )
+        try {
+            validateReservation(quote, shipmentId, shipmentWeightKg, reservation)
+            operations.plan(shipmentId, reservation)
+        } catch (exception: RuntimeException) {
+            compensateIfNeeded(reservation, operationsPlanned = false, shipmentId, actorUserId, "Shipment creation aborted.")
+            throw exception
+        }
+        val operationsPlanned = true
 
+        repeat(MAXIMUM_TRACKING_CODE_ATTEMPTS) {
+            try {
                 val shipment = Shipment.createFoundation(
                     id = shipmentId,
                     trackingCode = trackingCodes.create(now),
@@ -159,29 +167,34 @@ class CreateShipmentService(
                     updatedAt = now,
                 )
 
-                return CreateShipmentResult(writer.persist(shipment), replayed = false)
+                val created = writer.persist(shipment)
+                if (reservation.batchId != null) {
+                    networkConfirmations.confirmBestEffort(shipmentId, reservation.routeRevision, actorUserId)
+                }
+                return CreateShipmentResult(created, replayed = false)
             } catch (exception: DataIntegrityViolationException) {
-                compensateIfNeeded(reservation, operationsPlanned, shipmentId, actorUserId, "Shipment persistence failed.")
-
+                // A concurrent request with the same Idempotency-Key or quote won the race:
+                // release what this request reserved and answer like that request did.
                 writer.findExisting(actorUserId, idempotencyKey)?.let {
+                    compensateIfNeeded(reservation, operationsPlanned, shipmentId, actorUserId, "Duplicate shipment request.")
                     return replayOrConflict(it, fingerprint)
                 }
                 if (writer.isQuoteUsed(quote.quoteId)) {
+                    compensateIfNeeded(reservation, operationsPlanned, shipmentId, actorUserId, "Quote already used.")
                     throw quoteAlreadyUsed()
                 }
-                if (attemptIndex == MAXIMUM_INSERT_ATTEMPTS - 1) {
-                    throw ShipmentUnavailableException(
-                        "tracking_code_allocation_failed",
-                        "A unique PAVEX tracking code could not be allocated. Please retry the request.",
-                    )
-                }
+                // Otherwise the random tracking code collided; retry with a new one.
             } catch (exception: RuntimeException) {
-                compensateIfNeeded(reservation, operationsPlanned, shipmentId, actorUserId, "Shipment creation aborted.")
+                compensateIfNeeded(reservation, operationsPlanned, shipmentId, actorUserId, "Shipment persistence failed.")
                 throw exception
             }
         }
 
-        error("Unreachable shipment creation state.")
+        compensateIfNeeded(reservation, operationsPlanned, shipmentId, actorUserId, "Tracking code allocation failed.")
+        throw ShipmentUnavailableException(
+            "tracking_code_allocation_failed",
+            "A unique PAVEX tracking code could not be allocated. Please retry the request.",
+        )
     }
 
     private fun compensateIfNeeded(
@@ -418,7 +431,7 @@ class CreateShipmentService(
     )
 
     companion object {
-        private const val MAXIMUM_INSERT_ATTEMPTS = 5
+        private const val MAXIMUM_TRACKING_CODE_ATTEMPTS = 5
         private const val INITIAL_ROUTE_REVISION = 1
     }
 }

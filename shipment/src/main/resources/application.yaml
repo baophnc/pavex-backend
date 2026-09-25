@@ -55,6 +55,12 @@ shipment:
     high-case-sla: ${SHIPMENT_CONTROL_HIGH_CASE_SLA:PT2H}
     critical-case-sla: ${SHIPMENT_CONTROL_CRITICAL_CASE_SLA:PT30M}
     require-signature-on-delivery: ${SHIPMENT_CONTROL_REQUIRE_SIGNATURE:false}
+  # Retries confirming Network capacity reservations. Network expires unconfirmed
+  # reservations after network.capacity.unconfirmed-reservation-ttl (default 30 min).
+  network-confirmation:
+    poll-interval: ${SHIPMENT_NETWORK_CONFIRMATION_POLL_INTERVAL:PT30S}
+    lookback: ${SHIPMENT_NETWORK_CONFIRMATION_LOOKBACK:PT24H}
+    batch-size: ${SHIPMENT_NETWORK_CONFIRMATION_BATCH_SIZE:50}
 
 pavex:
   keys-dir: ${user.home}/.pavex/keys

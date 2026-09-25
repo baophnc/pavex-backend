@@ -1,5 +1,6 @@
 package com.pavex.shipment.client
 
+import com.pavex.contracts.network.ConfirmShipmentNetworkRequest
 import com.pavex.contracts.network.ReleaseShipmentNetworkRequest
 import com.pavex.contracts.network.ReserveShipmentNetworkRequest
 import com.pavex.contracts.network.ShipmentHubSnapshot
@@ -133,6 +134,29 @@ class NetworkShipmentClient(
         return response ?: throw unavailable("network_invalid_response", "Network returned an empty hub response.")
     }
 
+    /**
+     * Tells Network the reservation now belongs to a persisted shipment so it is never expired.
+     * Transport failures are thrown as [RestClientException] so the caller can retry later.
+     */
+    fun confirm(shipmentId: UUID, routeRevision: Int, actorUserId: UUID): NetworkConfirmationResult =
+        try {
+            client.post()
+                .uri(
+                    "/internal/v1/network/shipments/capacity/reservations/{shipmentId}/revisions/{routeRevision}/confirm",
+                    shipmentId,
+                    routeRevision,
+                )
+                .header(HttpHeaders.AUTHORIZATION, "Bearer ${serviceJwtIssuer.issueForNetwork()}")
+                .body(ConfirmShipmentNetworkRequest(actorUserId))
+                .retrieve()
+                .toBodilessEntity()
+            NetworkConfirmationResult.CONFIRMED
+        } catch (_: HttpClientErrorException.Conflict) {
+            NetworkConfirmationResult.ALREADY_RELEASED
+        } catch (_: HttpClientErrorException.NotFound) {
+            NetworkConfirmationResult.NOT_FOUND
+        }
+
     fun releaseBestEffort(shipmentId: UUID, routeRevision: Int, actorUserId: UUID, reason: String) {
         try {
             client.post()
@@ -166,3 +190,5 @@ class NetworkShipmentClient(
         private val logger = LoggerFactory.getLogger(NetworkShipmentClient::class.java)
     }
 }
+
+enum class NetworkConfirmationResult { CONFIRMED, ALREADY_RELEASED, NOT_FOUND }

@@ -58,6 +58,10 @@ class LaneCapacityReservation(
     var createdAt: Instant = Instant.now(),
     @Column(name = "updated_at", nullable = false)
     var updatedAt: Instant = Instant.now(),
+    @Column(name = "confirmation_deadline_at")
+    var confirmationDeadlineAt: Instant? = null,
+    @Column(name = "confirmed_at")
+    var confirmedAt: Instant? = null,
     @Version
     var version: Long = 0,
 ) {
@@ -68,6 +72,18 @@ class LaneCapacityReservation(
         }
         status = LaneCapacityReservationStatus.CONSUMED
         updatedAt = Instant.now()
+    }
+
+    /** The owning shipment exists, so this reservation must never be expired. */
+    fun confirm(now: Instant) {
+        if (confirmedAt != null) return
+        confirmedAt = now
+        updatedAt = now
+    }
+
+    fun isExpiredUnconfirmed(now: Instant): Boolean {
+        val deadline = confirmationDeadlineAt ?: return false
+        return status == LaneCapacityReservationStatus.RESERVED && confirmedAt == null && !deadline.isAfter(now)
     }
 
     fun release() {

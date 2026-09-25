@@ -1,5 +1,6 @@
 package com.pavex.network.controller
 
+import com.pavex.contracts.network.ConfirmShipmentNetworkRequest
 import com.pavex.contracts.network.ReleaseShipmentNetworkRequest
 import com.pavex.contracts.network.ReserveShipmentNetworkRequest
 import com.pavex.contracts.network.ShipmentHubSnapshot
@@ -30,6 +31,15 @@ class InternalShipmentNetworkController(
         @RequestBody request: ReleaseShipmentNetworkRequest,
     ) {
         reservations.release(shipmentId, routeRevision, request)
+    }
+
+    @PostMapping("/capacity/reservations/{shipmentId}/revisions/{routeRevision}/confirm")
+    fun confirm(
+        @PathVariable shipmentId: UUID,
+        @PathVariable routeRevision: Int,
+        @RequestBody request: ConfirmShipmentNetworkRequest,
+    ) {
+        reservations.confirm(shipmentId, routeRevision, request)
     }
 
     @GetMapping("/hubs/{hubId}")
