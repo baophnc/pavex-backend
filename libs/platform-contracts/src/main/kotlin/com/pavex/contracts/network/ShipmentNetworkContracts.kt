@@ -58,6 +58,11 @@ data class ReleaseShipmentNetworkRequest(
     val reason: String? = null,
 )
 
+/** Sent by Shipment once the shipment row that owns the reservation is persisted. */
+data class ConfirmShipmentNetworkRequest(
+    val actorUserId: UUID,
+)
+
 data class ShipmentOperationalHubSnapshot(
     val hubId: UUID,
     val hubCode: String,

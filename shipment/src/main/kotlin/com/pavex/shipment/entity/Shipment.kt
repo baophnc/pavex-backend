@@ -182,6 +182,10 @@ class Shipment(
     var heldAt: Instant? = null,
     @Column(name = "has_pending_weight_review", nullable = false)
     var hasPendingWeightReview: Boolean = false,
+    @Column(name = "network_confirmed_at")
+    var networkConfirmedAt: Instant? = null,
+    @Column(name = "network_confirmation_error", length = 200)
+    var networkConfirmationError: String? = null,
     @Version
     var version: Long = 0,
     @Column(name = "created_at", nullable = false)

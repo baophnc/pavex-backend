@@ -45,6 +45,10 @@ network:
     schedule-search-days: ${NETWORK_SCHEDULE_SEARCH_DAYS:30}
   capacity:
     reservation-retries: ${NETWORK_CAPACITY_RESERVATION_RETRIES:8}
+    # Shipment must confirm a reservation within this window or it is released.
+    unconfirmed-reservation-ttl: ${NETWORK_UNCONFIRMED_RESERVATION_TTL:PT30M}
+    expiry-poll-interval: ${NETWORK_CAPACITY_EXPIRY_POLL_INTERVAL:PT1M}
+    expiry-batch-size: ${NETWORK_CAPACITY_EXPIRY_BATCH_SIZE:50}
   seed:
     demo:
       enabled: ${NETWORK_DEMO_SEED_ENABLED:true}

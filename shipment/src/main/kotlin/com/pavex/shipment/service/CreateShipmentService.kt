@@ -43,6 +43,7 @@ class CreateShipmentService(
     private val pricing: PricingQuoteClient,
     private val network: NetworkShipmentClient,
     private val operations: OperationsShipmentClient,
+    private val networkConfirmations: ShipmentNetworkConfirmationService,
     private val writer: ShipmentCreationWriter,
     private val trackingCodes: ShipmentCodeGenerator,
     private val objectMapper: ObjectMapper,
@@ -105,7 +106,8 @@ class CreateShipmentService(
         // The network reservation and operations plan are tied to shipmentId, so they are
         // made exactly once. Only the tracking code is regenerated if it collides.
         val shipmentId = UUID.randomUUID()
-        // If reserve() itself fails, Network has not committed a reservation for this shipment.
+        // If reserve() itself fails nothing is held; an ambiguous failure (e.g. a timeout
+        // after Network committed) is cleaned up by Network's unconfirmed-reservation expiry.
         val reservation = network.reserve(
             ReserveShipmentNetworkRequest(
                 shipmentId = shipmentId,
@@ -165,7 +167,11 @@ class CreateShipmentService(
                     updatedAt = now,
                 )
 
-                return CreateShipmentResult(writer.persist(shipment), replayed = false)
+                val created = writer.persist(shipment)
+                if (reservation.batchId != null) {
+                    networkConfirmations.confirmBestEffort(shipmentId, reservation.routeRevision, actorUserId)
+                }
+                return CreateShipmentResult(created, replayed = false)
             } catch (exception: DataIntegrityViolationException) {
                 // A concurrent request with the same Idempotency-Key or quote won the race:
                 // release what this request reserved and answer like that request did.

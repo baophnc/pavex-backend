@@ -20,7 +20,9 @@ import com.pavex.network.exception.NotFoundException
 import com.pavex.network.repository.HubLaneRepository
 import com.pavex.network.repository.LaneCapacityReservationRepository
 import com.pavex.network.repository.LaneScheduleRepository
+import com.pavex.network.repository.ReservationIdentity
 import org.springframework.beans.factory.annotation.Value
+import org.springframework.data.domain.PageRequest
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.math.BigDecimal
@@ -48,8 +50,16 @@ class NetworkCapacityService(
         return toResponse(items)
     }
 
+    /**
+     * @param confirmationDeadlineAt when set, the reservation is released automatically unless
+     * it is confirmed (see [confirm]) before this instant. Admin reservations pass null.
+     */
     @Transactional
-    fun reserve(request: ReserveLaneCapacityRequest, actorUserId: UUID): CapacityReservationResponse {
+    fun reserve(
+        request: ReserveLaneCapacityRequest,
+        actorUserId: UUID,
+        confirmationDeadlineAt: Instant? = null,
+    ): CapacityReservationResponse {
         validateIdentity(request.shipmentId, request.routeRevision)
         if (request.shipmentWeightKg.signum() <= 0) {
             throw InvalidNetworkRequestException("invalid_shipment_weight", "Shipment weight must be positive.")
@@ -155,6 +165,7 @@ class NetworkCapacityService(
                     routeTemplateId = plan.routeTemplateId,
                     routeTemplateCode = plan.routeTemplateCode,
                     routeTemplateRevision = plan.routeTemplateRevision,
+                    confirmationDeadlineAt = confirmationDeadlineAt,
                 )
             }
             val saved = reservations.saveAll(items).sortedBy { it.legSequence }
@@ -203,6 +214,71 @@ class NetworkCapacityService(
         return response
     }
 
+    /**
+     * Marks a shipment reservation as owned by a persisted shipment. Idempotent.
+     */
+    @Transactional
+    fun confirm(shipmentId: UUID, routeRevision: Int, actorUserId: UUID): CapacityReservationResponse {
+        validateIdentity(shipmentId, routeRevision)
+        transactionLocks.lock("shipment:$shipmentId:$routeRevision")
+        val items = reservations.findAllByShipmentIdAndRouteRevisionOrderByLegSequenceAsc(shipmentId, routeRevision)
+        if (items.isEmpty()) throw reservationNotFound()
+        if (items.all { it.confirmedAt != null }) return toResponse(items)
+        if (items.any { it.status == LaneCapacityReservationStatus.RELEASED }) {
+            throw ConflictException(
+                "capacity_already_released",
+                "The capacity reservation was released before the shipment confirmed it.",
+            )
+        }
+
+        val before = toResponse(items)
+        val now = Instant.now()
+        items.forEach { it.confirm(now) }
+        val saved = reservations.saveAll(items).sortedBy { it.legSequence }
+        val response = toResponse(saved)
+        audit.record(
+            NetworkAuditEntityType.CAPACITY_RESERVATION,
+            saved.first().batchId,
+            NetworkAuditAction.UPDATED,
+            actorUserId,
+            before,
+            response,
+            reason = "Confirmed by persisted shipment",
+        )
+        return response
+    }
+
+    @Transactional(readOnly = true)
+    fun findExpiredUnconfirmedReservations(now: Instant, limit: Int): List<ReservationIdentity> =
+        reservations.findExpiredUnconfirmedReservations(now, PageRequest.of(0, limit))
+
+    /**
+     * Releases one expired, never-confirmed shipment reservation. Re-checks every leg under the
+     * shipment lock so a confirmation or consumption racing with the expiry job always wins.
+     *
+     * @return true when capacity was released.
+     */
+    @Transactional
+    fun releaseIfExpiredUnconfirmed(shipmentId: UUID, routeRevision: Int, now: Instant): Boolean {
+        transactionLocks.lock("shipment:$shipmentId:$routeRevision")
+        val items = reservations.findAllByShipmentIdAndRouteRevisionOrderByLegSequenceAsc(shipmentId, routeRevision)
+        if (items.isEmpty() || !items.all { it.isExpiredUnconfirmed(now) }) return false
+
+        val before = toResponse(items)
+        items.forEach(LaneCapacityReservation::release)
+        val saved = reservations.saveAll(items).sortedBy { it.legSequence }
+        audit.record(
+            NetworkAuditEntityType.CAPACITY_RESERVATION,
+            saved.first().batchId,
+            NetworkAuditAction.RELEASED,
+            SYSTEM_ACTOR_ID,
+            before,
+            toResponse(saved),
+            reason = "Shipment never confirmed the reservation before its deadline",
+        )
+        return true
+    }
+
     @Transactional
     fun consumeLeg(
         shipmentId: UUID,
@@ -230,6 +306,9 @@ class NetworkCapacityService(
         }
 
         val before = toResponse(items)
+        // Consumption proves the shipment exists, so the batch can never expire afterwards.
+        val now = Instant.now()
+        items.forEach { it.confirm(now) }
         target.consume()
         val saved = reservations.saveAll(items).sortedBy { it.legSequence }
         val response = toResponse(saved)
@@ -404,6 +483,9 @@ class NetworkCapacityService(
     }
 
     companion object {
+        /** Audit actor for automatic, non-user actions. */
+        val SYSTEM_ACTOR_ID: UUID = UUID(0, 0)
+
         private val ALLOCATED_STATUSES = listOf(
             LaneCapacityReservationStatus.RESERVED,
             LaneCapacityReservationStatus.CONSUMED,

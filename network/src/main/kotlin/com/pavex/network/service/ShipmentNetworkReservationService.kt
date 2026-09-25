@@ -1,5 +1,6 @@
 package com.pavex.network.service
 
+import com.pavex.contracts.network.ConfirmShipmentNetworkRequest
 import com.pavex.contracts.network.NetworkCoverageTier
 import com.pavex.contracts.network.ReleaseShipmentNetworkRequest
 import com.pavex.contracts.network.ReserveShipmentNetworkRequest
@@ -17,9 +18,12 @@ import com.pavex.network.exception.NotFoundException
 import com.pavex.network.repository.HubLaneRepository
 import com.pavex.network.repository.HubRepository
 import com.pavex.network.repository.LaneCapacityReservationRepository
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.math.BigDecimal
+import java.time.Duration
+import java.time.Instant
 import java.util.UUID
 
 @Service
@@ -29,6 +33,8 @@ class ShipmentNetworkReservationService(
     private val lanes: HubLaneRepository,
     private val hubs: HubRepository,
     private val reservations: LaneCapacityReservationRepository,
+    @Value("\${network.capacity.unconfirmed-reservation-ttl:PT30M}")
+    private val unconfirmedReservationTtl: Duration,
 ) {
     @Transactional
     fun reserve(request: ReserveShipmentNetworkRequest): ShipmentNetworkReservationSnapshot {
@@ -52,6 +58,7 @@ class ShipmentNetworkReservationService(
                 mode = RoutePlanningMode.PREFER_TEMPLATE,
             ),
             request.actorUserId,
+            confirmationDeadlineAt = Instant.now().plus(unconfirmedReservationTtl),
         )
 
         val reservedLanes = lanes.findAllById(reservation.legs.map { it.laneId }).associateBy { it.id }
@@ -121,6 +128,19 @@ class ShipmentNetworkReservationService(
             routeRevision = routeRevision,
             actorUserId = request.actorUserId,
             reason = request.reason,
+        )
+    }
+
+    @Transactional
+    fun confirm(
+        shipmentId: UUID,
+        routeRevision: Int,
+        request: ConfirmShipmentNetworkRequest,
+    ) {
+        capacity.confirm(
+            shipmentId = shipmentId,
+            routeRevision = routeRevision,
+            actorUserId = request.actorUserId,
         )
     }
 
