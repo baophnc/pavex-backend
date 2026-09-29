@@ -36,6 +36,9 @@ security:
     operations:
       issuer: ${OPERATIONS_SERVICE_JWT_ISSUER:http://localhost:8087}
       public-key: file:${pavex.keys-dir}/operations/public.pem
+    fleet:
+      issuer: ${FLEET_SERVICE_JWT_ISSUER:http://localhost:8089}
+      public-key: file:${pavex.keys-dir}/fleet/public.pem
 
 network:
   partners:
