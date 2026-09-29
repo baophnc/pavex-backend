@@ -10,7 +10,17 @@ import java.time.Instant
 import java.util.UUID
 
 enum class PricingAuditEntityType { RATE_PLAN, RATE_RULE }
-enum class PricingAuditAction { CREATED, UPDATED, RULE_UPSERTED, RULE_DELETED, REVISION_CREATED, ACTIVATED, RETIRED, DELETED }
+enum class PricingAuditAction {
+    CREATED,
+    UPDATED,
+    RULE_UPSERTED,
+    RULE_DELETED,
+    REVISION_CREATED,
+    ACTIVATED,
+    RETIRED,
+    DELETED,
+    SUPERSEDED,
+}
 
 @Entity
 @Table(name = "audit_logs", schema = "pricing")

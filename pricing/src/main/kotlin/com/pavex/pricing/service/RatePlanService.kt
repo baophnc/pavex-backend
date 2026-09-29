@@ -244,23 +244,63 @@ class RatePlanService(
         return response
     }
 
+    /**
+     * Activates a draft. With [replaceActivePlan], an overlapping active plan is ended exactly when
+     * this one starts, in the same transaction, so quoting never runs without a rate plan.
+     *
+     * A plan never starts in the past: quotes already issued were priced by another plan, so a draft
+     * whose saved start has passed starts now. The admin preview uses the same rule.
+     */
     @Transactional
-    fun activate(id: UUID, actorUserId: UUID, reason: String?, now: Instant = Instant.now()): RatePlanResponse {
+    fun activate(
+        id: UUID,
+        actorUserId: UUID,
+        reason: String?,
+        replaceActivePlan: Boolean = false,
+        now: Instant = Instant.now(),
+    ): RatePlanResponse {
         val plan = find(id)
         plan.requireDraft()
         validateCompleteRules(plan)
-        val effectiveFrom = plan.effectiveFrom ?: now
-        validateWindow(effectiveFrom, plan.effectiveTo)
-        val overlaps = ratePlans.findOverlappingActive(RatePlanStatus.ACTIVE, plan.id, effectiveFrom, plan.effectiveTo)
-        if (overlaps.isNotEmpty()) {
+        val startsAt = maxOf(plan.effectiveFrom ?: now, now)
+        validateWindow(startsAt, plan.effectiveTo)
+        val overlaps = ratePlans.findOverlappingActive(RatePlanStatus.ACTIVE, plan.id, startsAt, plan.effectiveTo)
+        if (overlaps.isNotEmpty() && !replaceActivePlan) {
             val conflicting = overlaps.joinToString { "${it.code}-r${it.revision}" }
             throw ConflictException(
                 "active_rate_plan_overlap",
-                "This rate plan overlaps an active rate plan: $conflicting. Retire or end the existing plan first.",
+                "This rate plan overlaps an active rate plan: $conflicting. " +
+                    "Activate it with replaceActivePlan to hand over when it starts, or retire the existing plan first.",
             )
         }
+        // Same order as the admin preview: a plan scheduled after this one cannot be replaced at all,
+        // so report that before asking the admin to move the end date.
+        overlaps.firstOrNull { it.effectiveFrom?.isBefore(startsAt) == false }?.let {
+            throw ConflictException(
+                "rate_plan_replacement_starts_later",
+                "Rate plan ${it.code}-r${it.revision} starts at or after this plan. Retire it instead of replacing it.",
+            )
+        }
+        overlaps.forEach { requireNoCoverageGap(it, plan) }
+
+        val replaced = overlaps.map { existing ->
+            val before = RatePlanResponse.from(existing)
+            existing.supersede(startsAt, actorUserId, now)
+            existing to before
+        }
         val before = RatePlanResponse.from(plan)
-        plan.activate(actorUserId, now)
+        plan.activate(actorUserId, now, startsAt)
+        replaced.forEach { (existing, previous) ->
+            audit.record(
+                PricingAuditEntityType.RATE_PLAN,
+                existing.id,
+                PricingAuditAction.SUPERSEDED,
+                actorUserId,
+                previous,
+                RatePlanResponse.from(ratePlans.save(existing)),
+                replacementReason(plan, reason),
+            )
+        }
         val response = RatePlanResponse.from(ratePlans.save(plan))
         audit.record(
             PricingAuditEntityType.RATE_PLAN,
@@ -326,6 +366,24 @@ class RatePlanService(
             )
         }
     }
+
+    /** Replacing must not leave time the old plan covered without any plan afterwards. */
+    private fun requireNoCoverageGap(existing: RatePlan, replacement: RatePlan) {
+        val replacementEnd = replacement.effectiveTo ?: return
+        val existingEnd = existing.effectiveTo
+        if (existingEnd == null || existingEnd.isAfter(replacementEnd)) {
+            throw ConflictException(
+                "rate_plan_replacement_gap",
+                "This rate plan ends before ${existing.code}-r${existing.revision} would have ended, " +
+                    "which would leave no active rate plan afterwards.",
+            )
+        }
+    }
+
+    private fun replacementReason(replacement: RatePlan, reason: String?): String =
+        listOfNotNull("Thay thế bởi ${replacement.code}-r${replacement.revision}.", reason?.trim()?.takeIf { it.isNotEmpty() })
+            .joinToString(" ")
+            .take(500)
 
     private fun validateWindow(effectiveFrom: Instant?, effectiveTo: Instant?) {
         if (effectiveFrom != null && effectiveTo != null && !effectiveTo.isAfter(effectiveFrom)) {

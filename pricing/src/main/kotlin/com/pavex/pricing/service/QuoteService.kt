@@ -18,6 +18,7 @@ import com.pavex.pricing.exception.ConflictException
 import com.pavex.pricing.exception.InvalidPricingRequestException
 import com.pavex.pricing.exception.NotFoundException
 import com.pavex.pricing.exception.PricingUnavailableException
+import com.pavex.pricing.exception.UnprocessablePricingRequestException
 import com.pavex.pricing.repository.QuoteRequestRepository
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -43,9 +44,9 @@ class QuoteService(
             request.declaredValue,
         )
 
-        val origin = networkLocations.resolve(request.originProvinceCode, request.originWardCode)
-        val destination = networkLocations.resolve(request.destinationProvinceCode, request.destinationWardCode)
-        val zone = resolveZone(origin, destination)
+        val origin = resolveEndpoint(request.originProvinceCode, request.originWardCode, "origin")
+        val destination = resolveEndpoint(request.destinationProvinceCode, request.destinationWardCode, "destination")
+        val zone = resolveZone(request, origin, destination)
         val originTier = origin.coverageTier.toLocal()
         val destinationTier = destination.coverageTier.toLocal()
         val prices = calculator.price(
@@ -115,6 +116,14 @@ class QuoteService(
         return saved.toPublicResponse()
     }
 
+    /** Says which end is outside the network, so the customer knows which address to change. */
+    private fun resolveEndpoint(provinceCode: String, wardCode: String, side: String): NetworkLocationResolutionResponse = try {
+        networkLocations.resolve(provinceCode, wardCode)
+    } catch (exception: UnprocessablePricingRequestException) {
+        if (exception.code != "location_not_covered") throw exception
+        throw UnprocessablePricingRequestException("${side}_not_covered", "The $side location is outside the Pavex service network.")
+    }
+
     private fun activeRatePlan(now: Instant): RatePlan = try {
         ratePlanService.currentEntity(now)
     } catch (_: NotFoundException) {
@@ -160,11 +169,17 @@ class QuoteService(
         return listOf(CreatePricingParcelRequest(weight, length, width, height))
     }
 
+    /**
+     * Priced by province like the market (GHTK, J&T): same province, same region (miền), or across
+     * regions. With one post office per ward, comparing service areas would make almost every
+     * in-province order look like a regional one.
+     */
     private fun resolveZone(
+        request: CreatePricingQuoteRequest,
         origin: NetworkLocationResolutionResponse,
         destination: NetworkLocationResolutionResponse,
     ): PricingZone = when {
-        origin.serviceAreaId == destination.serviceAreaId -> PricingZone.SAME_SERVICE_AREA
+        request.originProvinceCode.trim() == request.destinationProvinceCode.trim() -> PricingZone.SAME_PROVINCE
         origin.regionId == destination.regionId -> PricingZone.SAME_REGION
         else -> PricingZone.CROSS_REGION
     }
@@ -202,7 +217,7 @@ private fun QuoteOption.toPublicResponse(): PricingOptionResponse = PricingOptio
 )
 
 private fun PricingZone.toLegacyLane(): String = when (this) {
-    PricingZone.SAME_SERVICE_AREA -> "Local"
+    PricingZone.SAME_PROVINCE -> "Local"
     PricingZone.SAME_REGION -> "Regional"
     PricingZone.CROSS_REGION -> "National"
 }

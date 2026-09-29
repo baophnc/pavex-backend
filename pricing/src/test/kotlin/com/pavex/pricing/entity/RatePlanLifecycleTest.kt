@@ -3,6 +3,7 @@ package com.pavex.pricing.entity
 import com.pavex.pricing.exception.ConflictException
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
+import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Test
 import java.math.BigDecimal
@@ -50,6 +51,51 @@ class RatePlanLifecycleTest {
         assertEquals(RatePlanStatus.RETIRED, plan.status)
         assertEquals(retiredAt, plan.effectiveTo)
         assertEquals(actor, plan.retiredBy)
+    }
+
+    @Test
+    fun `a due hand-over ends and retires the replaced plan`() {
+        val plan = activePlan(Instant.parse("2026-08-01T00:00:00Z"))
+        val actor = UUID.randomUUID()
+        val now = Instant.parse("2026-09-25T05:00:00Z")
+
+        plan.supersede(now, actor, now)
+
+        assertEquals(RatePlanStatus.RETIRED, plan.status)
+        assertEquals(now, plan.effectiveTo)
+        assertEquals(actor, plan.retiredBy)
+    }
+
+    @Test
+    fun `a scheduled hand-over keeps the replaced plan active until then`() {
+        val plan = activePlan(Instant.parse("2026-08-01T00:00:00Z"))
+        val now = Instant.parse("2026-09-25T05:00:00Z")
+        val handOverAt = Instant.parse("2026-10-01T00:00:00Z")
+
+        plan.supersede(handOverAt, UUID.randomUUID(), now)
+
+        assertEquals(RatePlanStatus.ACTIVE, plan.status)
+        assertEquals(handOverAt, plan.effectiveTo)
+        assertNull(plan.retiredAt)
+    }
+
+    @Test
+    fun `a plan cannot be replaced at or before its own start`() {
+        val start = Instant.parse("2026-10-01T00:00:00Z")
+        val plan = activePlan(start)
+
+        assertThrows(ConflictException::class.java) {
+            plan.supersede(start, UUID.randomUUID(), Instant.parse("2026-09-25T05:00:00Z"))
+        }
+        assertEquals(RatePlanStatus.ACTIVE, plan.status)
+        assertNull(plan.effectiveTo)
+    }
+
+    private fun activePlan(effectiveFrom: Instant): RatePlan {
+        val plan = RatePlan(code = "DOMESTIC", revision = 1, name = "Domestic r1", effectiveFrom = effectiveFrom)
+        completeRules(plan)
+        plan.activate(UUID.randomUUID(), effectiveFrom)
+        return plan
     }
 
     private fun completeRules(plan: RatePlan) {

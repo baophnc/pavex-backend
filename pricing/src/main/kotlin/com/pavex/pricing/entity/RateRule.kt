@@ -26,7 +26,7 @@ class RateRule(
     var serviceLevel: ServiceLevel = ServiceLevel.STANDARD,
     @Enumerated(EnumType.STRING)
     @Column(name = "pricing_zone", nullable = false, length = 30)
-    var pricingZone: PricingZone = PricingZone.SAME_SERVICE_AREA,
+    var pricingZone: PricingZone = PricingZone.SAME_PROVINCE,
     @Column(name = "base_fee", nullable = false)
     var baseFee: Long = 0,
     @Column(name = "included_weight_kg", nullable = false, precision = 10, scale = 2)

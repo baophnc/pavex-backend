@@ -95,7 +95,12 @@ class RatePlanController(
         @PathVariable id: UUID,
         @Valid @RequestBody(required = false) request: RatePlanLifecycleRequest?,
         @AuthenticationPrincipal jwt: Jwt,
-    ): RatePlanResponse = service.activate(id, actor(jwt), request?.reason)
+    ): RatePlanResponse = service.activate(
+        id,
+        actor(jwt),
+        request?.reason,
+        replaceActivePlan = request?.replaceActivePlan ?: false,
+    )
 
     @PostMapping("/{id}/retire")
     @PreAuthorize("hasAuthority('pricing.manage')")

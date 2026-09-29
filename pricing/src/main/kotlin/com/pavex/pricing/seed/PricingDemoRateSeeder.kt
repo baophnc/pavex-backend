@@ -57,10 +57,10 @@ class PricingDemoRateSeeder(
         )
 
         plan.rules += listOf(
-            rule(plan, ServiceLevel.STANDARD, PricingZone.SAME_SERVICE_AREA, 20_000, 2, 4_000, 1, 2),
+            rule(plan, ServiceLevel.STANDARD, PricingZone.SAME_PROVINCE, 20_000, 2, 4_000, 1, 2),
             rule(plan, ServiceLevel.STANDARD, PricingZone.SAME_REGION, 25_000, 2, 5_000, 1, 2),
             rule(plan, ServiceLevel.STANDARD, PricingZone.CROSS_REGION, 30_000, 2, 6_000, 2, 3),
-            rule(plan, ServiceLevel.EXPRESS, PricingZone.SAME_SERVICE_AREA, 30_000, 2, 6_000, 1, 1),
+            rule(plan, ServiceLevel.EXPRESS, PricingZone.SAME_PROVINCE, 30_000, 2, 6_000, 1, 1),
             rule(plan, ServiceLevel.EXPRESS, PricingZone.SAME_REGION, 38_000, 2, 7_000, 1, 2),
             rule(plan, ServiceLevel.EXPRESS, PricingZone.CROSS_REGION, 50_000, 2, 9_000, 1, 2),
         )

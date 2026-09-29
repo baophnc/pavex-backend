@@ -5,7 +5,7 @@ import java.time.Instant
 import java.util.UUID
 
 enum class PricingQuoteServiceLevel { STANDARD, EXPRESS }
-enum class PricingQuoteZone { SAME_SERVICE_AREA, SAME_REGION, CROSS_REGION }
+enum class PricingQuoteZone { SAME_PROVINCE, SAME_REGION, CROSS_REGION }
 enum class PricingQuoteCoverageTier { STANDARD, REMOTE, ISLAND }
 
 data class PricingQuoteLocationSnapshot(
