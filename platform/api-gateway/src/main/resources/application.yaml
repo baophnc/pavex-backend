@@ -118,6 +118,14 @@ spring:
               filters:
                 - SetPath=/v3/api-docs
 
+            - id: billing-openapi
+              order: -993
+              uri: lb://billing-service
+              predicates:
+                - Path=/openapi/billing
+              filters:
+                - SetPath=/v3/api-docs
+
             # /api/v1/auth/** is mostly owned by Auth, but the current-user
             # profile endpoints are Identity-owned. Give these exact routes a
             # lower order value so they win before the Auth wildcard route.
@@ -256,6 +264,18 @@ spring:
                     redis-rate-limiter.burstCapacity: ${GATEWAY_API_BURST_CAPACITY:60}
                     redis-rate-limiter.requestedTokens: 1
 
+            - id: partners-support
+              uri: lb://partners-service
+              predicates:
+                - Path=/api/v1/support/**,/api/v1/admin/support/**
+              filters:
+                - name: RequestRateLimiter
+                  args:
+                    key-resolver: "#{@clientIpKeyResolver}"
+                    redis-rate-limiter.replenishRate: ${GATEWAY_API_REPLENISH_RATE:30}
+                    redis-rate-limiter.burstCapacity: ${GATEWAY_API_BURST_CAPACITY:60}
+                    redis-rate-limiter.requestedTokens: 1
+
             - id: network-api
               uri: lb://network-service
               predicates:
@@ -283,7 +303,7 @@ spring:
             - id: shipment-api
               uri: lb://shipment-service
               predicates:
-                - Path=/api/v1/shipments/**,/api/v1/tracking/**,/api/v1/parcel-scans/**,/api/v1/deliveries/**,/api/v1/admin/shipments/**,/api/v1/admin/shipment-cases/**,/api/v1/admin/control-tower/**,/api/v1/admin/shipment-exceptions/**
+                - Path=/api/v1/shipments/**,/api/v1/tracking/**,/api/v1/parcel-scans/**,/api/v1/deliveries/**,/api/v1/workforce/**,/api/v1/admin/shipments/**,/api/v1/admin/shipment-cases/**,/api/v1/admin/control-tower/**,/api/v1/admin/shipment-exceptions/**
               filters:
                 - name: RequestRateLimiter
                   args:
@@ -302,6 +322,18 @@ spring:
                     key-resolver: "#{@clientIpKeyResolver}"
                     redis-rate-limiter.replenishRate: ${GATEWAY_OPERATIONS_REPLENISH_RATE:30}
                     redis-rate-limiter.burstCapacity: ${GATEWAY_OPERATIONS_BURST_CAPACITY:60}
+                    redis-rate-limiter.requestedTokens: 1
+
+            - id: billing-api
+              uri: lb://billing-service
+              predicates:
+                - Path=/api/v1/billing/**,/api/v1/admin/billing/**,/api/v1/integrations/payos/**
+              filters:
+                - name: RequestRateLimiter
+                  args:
+                    key-resolver: "#{@clientIpKeyResolver}"
+                    redis-rate-limiter.replenishRate: ${GATEWAY_BILLING_REPLENISH_RATE:20}
+                    redis-rate-limiter.burstCapacity: ${GATEWAY_BILLING_BURST_CAPACITY:40}
                     redis-rate-limiter.requestedTokens: 1
 
 springdoc:
@@ -327,6 +359,8 @@ springdoc:
         url: /openapi/shipments
       - name: Operations API
         url: /openapi/operations
+      - name: Billing API
+        url: /openapi/billing
     operations-sorter: method
     tags-sorter: alpha
     display-request-duration: true
