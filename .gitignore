@@ -38,3 +38,6 @@ Thumbs.db
 **/.keys/public.pem
 __MACOSX/
 *.tsbuildinfo
+
+### Python ###
+__pycache__/

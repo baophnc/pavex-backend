@@ -442,8 +442,10 @@ class OperationalAssignmentService(
         val memberCandidates = members.findAllByStatusAndKind(WorkforceMemberStatus.ACTIVE, kind)
         if (memberCandidates.isEmpty()) return emptyList()
         val ids = memberCandidates.map { it.id }
-        val activeHubMembers = memberships.findAllByWorkforceMemberIdIn(ids)
-            .filter { it.isActive && it.hubId == hubId }
+        val activeMemberships = memberships.findAllByWorkforceMemberIdIn(ids).filter { it.isActive }
+        val hubsByMember = activeMemberships.groupBy({ it.workforceMemberId }, { it.hubId })
+        val activeHubMembers = activeMemberships
+            .filter { it.hubId == hubId }
             .map { it.workforceMemberId }
             .toSet()
         val hubCandidates = memberCandidates.filter { it.id in activeHubMembers }
@@ -460,7 +462,7 @@ class OperationalAssignmentService(
             val shift = shiftById[roster.shiftId]
             shift != null &&
                 shift.status == WorkShiftStatus.SCHEDULED &&
-                shift.hubId == hubId &&
+                ShiftCoverage.covers(kind, hubId, shift.hubId, hubsByMember[roster.workforceMemberId].orEmpty()) &&
                 !now.isBefore(shift.startsAt) &&
                 now < shift.endsAt
         }.map { it.workforceMemberId }.toSet()
