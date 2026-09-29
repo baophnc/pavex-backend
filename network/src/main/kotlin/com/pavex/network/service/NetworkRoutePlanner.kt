@@ -8,6 +8,7 @@ import com.pavex.network.entity.Hub
 import com.pavex.network.entity.HubLane
 import com.pavex.network.entity.HubLaneStatus
 import com.pavex.network.entity.HubStatus
+import com.pavex.network.entity.HubType
 import com.pavex.network.entity.LaneSchedule
 import com.pavex.network.entity.LaneScheduleStatus
 import com.pavex.network.entity.RouteTemplate
@@ -80,29 +81,24 @@ class NetworkRoutePlanner(
             )
         }
 
-        val activeHubs = hubs.findAllByStatus(HubStatus.ACTIVE).associateBy { it.id }
-        val eligibleLanes = lanes.findAllByStatusAndMaxShipmentWeightKgGreaterThanEqual(
-            HubLaneStatus.ACTIVE,
-            shipmentWeightKg,
-        ).filter { it.fromHubId in activeHubs && it.toHubId in activeHubs }
-        val laneIds = eligibleLanes.map { it.id }
-        val activeSchedules = if (laneIds.isEmpty()) {
-            emptyList()
-        } else {
-            schedules.findAllByLaneIdInAndStatus(laneIds, LaneScheduleStatus.ACTIVE)
-        }
-        val capacity = capacitySnapshots.build(activeSchedules, readyAt, scheduleSearchDays, excludedDepartures)
+        // Local hubs are leaves of the hub hierarchy, so a sensible route stays on the two
+        // branches and the provincial/regional backbone. Loading only that corridor keeps a
+        // quote cheap when every ward has its own post office; the whole network is the fallback.
+        val corridor = loadGraph(corridorHubIds(origin.primaryHubId, destination.primaryHubId), shipmentWeightKg, readyAt, excludedDepartures)
+        var wholeNetwork: PlanningGraph? = null
+        fun whole() = wholeNetwork ?: loadGraph(null, shipmentWeightKg, readyAt, excludedDepartures).also { wholeNetwork = it }
 
         if (mode != RoutePlanningMode.GRAPH_ONLY) {
-            val preferred = tryPreferredTemplate(
-                originHubId = origin.primaryHubId,
-                destinationHubId = destination.primaryHubId,
-                readyAt = readyAt,
-                shipmentWeightKg = shipmentWeightKg,
-                eligibleLanes = eligibleLanes,
-                activeSchedules = activeSchedules,
-                capacity = capacity,
+            val candidates = templates.findAllByOriginHubIdAndDestinationHubIdAndStatusOrderByPriorityAscCodeAsc(
+                origin.primaryHubId,
+                destination.primaryHubId,
+                RouteTemplateStatus.ACTIVE,
             )
+            // A preferred journey may name any lane, so it is checked against the whole network.
+            val graph = if (candidates.isEmpty()) null else whole()
+            val preferred = graph?.let {
+                tryPreferredTemplate(candidates, readyAt, shipmentWeightKg, it.lanes, it.schedules, it.capacity)
+            }
             if (preferred != null) {
                 return buildPlan(
                     source = RoutePlanSource.ROUTE_TEMPLATE,
@@ -116,25 +112,28 @@ class NetworkRoutePlanner(
                     shipmentWeightKg = shipmentWeightKg,
                     readyAt = readyAt,
                     path = preferred.path,
-                    activeHubs = activeHubs,
-                    capacity = capacity,
+                    activeHubs = graph.hubs,
+                    capacity = graph.capacity,
                 )
             }
             if (mode == RoutePlanningMode.TEMPLATE_ONLY) throw templateRouteNotFound()
         }
 
-        if (eligibleLanes.isEmpty()) throw routeNotFound()
-        val path = EarliestArrivalPathFinder.find(
+        fun findPath(graph: PlanningGraph) = if (graph.lanes.isEmpty()) null else EarliestArrivalPathFinder.find(
             originHubId = origin.primaryHubId,
             destinationHubId = destination.primaryHubId,
             readyAt = readyAt,
-            lanes = eligibleLanes,
-            schedules = activeSchedules,
+            lanes = graph.lanes,
+            schedules = graph.schedules,
             transferBufferMinutes = transferBufferMinutes,
             scheduleSearchDays = scheduleSearchDays,
             shipmentWeightKg = shipmentWeightKg,
-            capacity = capacity,
-        ) ?: throw routeNotFound()
+            capacity = graph.capacity,
+        )
+
+        val corridorPath = findPath(corridor)
+        val graph = if (corridorPath != null) corridor else whole()
+        val path = corridorPath ?: findPath(graph) ?: throw routeNotFound()
 
         return buildPlan(
             source = RoutePlanSource.GRAPH,
@@ -148,26 +147,73 @@ class NetworkRoutePlanner(
             shipmentWeightKg = shipmentWeightKg,
             readyAt = readyAt,
             path = path,
-            activeHubs = activeHubs,
-            capacity = capacity,
+            activeHubs = graph.hubs,
+            capacity = graph.capacity,
         )
     }
 
+    private data class PlanningGraph(
+        val hubs: Map<UUID, Hub>,
+        val lanes: List<HubLane>,
+        val schedules: List<LaneSchedule>,
+        val capacity: DepartureCapacitySnapshot,
+    )
+
+    /** Active lanes, schedules and booked capacity among [hubIds], or across the whole network when null. */
+    private fun loadGraph(
+        hubIds: Set<UUID>?,
+        shipmentWeightKg: BigDecimal,
+        readyAt: Instant,
+        excludedDepartures: Set<DepartureKey>,
+    ): PlanningGraph {
+        val activeHubs = (if (hubIds == null) hubs.findAllByStatus(HubStatus.ACTIVE) else hubs.findAllById(hubIds))
+            .filter { it.status == HubStatus.ACTIVE }
+            .associateBy { it.id }
+        val eligibleLanes = (
+            if (hubIds == null) {
+                lanes.findAllByStatusAndMaxShipmentWeightKgGreaterThanEqual(HubLaneStatus.ACTIVE, shipmentWeightKg)
+            } else {
+                lanes.findAllByStatusAndMaxShipmentWeightKgGreaterThanEqualAndFromHubIdInAndToHubIdIn(
+                    HubLaneStatus.ACTIVE,
+                    shipmentWeightKg,
+                    hubIds,
+                    hubIds,
+                )
+            }
+            ).filter { it.fromHubId in activeHubs && it.toHubId in activeHubs }
+        val activeSchedules = if (eligibleLanes.isEmpty()) {
+            emptyList()
+        } else {
+            schedules.findAllByLaneIdInAndStatus(eligibleLanes.map { it.id }, LaneScheduleStatus.ACTIVE)
+        }
+        val capacity = capacitySnapshots.build(activeSchedules, readyAt, scheduleSearchDays, excludedDepartures)
+        return PlanningGraph(activeHubs, eligibleLanes, activeSchedules, capacity)
+    }
+
+    private fun corridorHubIds(originHubId: UUID, destinationHubId: UUID): Set<UUID> {
+        val backbone = hubs.findAllByStatusAndTypeIn(HubStatus.ACTIVE, BACKBONE_TYPES).map { it.id }
+        return (backbone + ancestry(originHubId) + ancestry(destinationHubId)).toSet()
+    }
+
+    /** The hub and its parents up to the regional gateway. */
+    private fun ancestry(hubId: UUID): List<UUID> {
+        val chain = mutableListOf(hubId)
+        var parent = hubs.findById(hubId).orElse(null)?.parentHubId
+        while (parent != null && parent !in chain && chain.size < MAX_HIERARCHY_DEPTH) {
+            chain += parent
+            parent = hubs.findById(parent).orElse(null)?.parentHubId
+        }
+        return chain
+    }
+
     private fun tryPreferredTemplate(
-        originHubId: UUID,
-        destinationHubId: UUID,
+        candidates: List<RouteTemplate>,
         readyAt: Instant,
         shipmentWeightKg: BigDecimal,
         eligibleLanes: List<HubLane>,
         activeSchedules: List<LaneSchedule>,
         capacity: DepartureCapacitySnapshot,
     ): PreferredTemplatePlan? {
-        val candidates = templates.findAllByOriginHubIdAndDestinationHubIdAndStatusOrderByPriorityAscCodeAsc(
-            originHubId,
-            destinationHubId,
-            RouteTemplateStatus.ACTIVE,
-        )
-        if (candidates.isEmpty()) return null
 
         val legsByTemplate = templateLegs
             .findAllByRouteTemplateIdInOrderByRouteTemplateIdAscSequenceAsc(candidates.map { it.id })
@@ -282,4 +328,9 @@ class NetworkRoutePlanner(
         val path: List<PlannedGraphLeg>,
     )
 
+
+    companion object {
+        private val BACKBONE_TYPES = listOf(HubType.PROVINCIAL, HubType.REGIONAL_GATEWAY)
+        private const val MAX_HIERARCHY_DEPTH = 8
+    }
 }

@@ -16,6 +16,7 @@ interface HubRepository : JpaRepository<Hub, UUID> {
     fun findAllByCodeIn(codes: Collection<String>): List<Hub>
     fun findAllByParentHubId(parentHubId: UUID): List<Hub>
     fun findAllByStatus(status: HubStatus): List<Hub>
+    fun findAllByStatusAndTypeIn(status: HubStatus, types: Collection<HubType>): List<Hub>
 
     @Query(
         """

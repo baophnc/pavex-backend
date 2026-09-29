@@ -51,4 +51,11 @@ interface HubLaneRepository : JpaRepository<HubLane, UUID> {
         status: HubLaneStatus,
         maxShipmentWeightKg: BigDecimal,
     ): List<HubLane>
+
+    fun findAllByStatusAndMaxShipmentWeightKgGreaterThanEqualAndFromHubIdInAndToHubIdIn(
+        status: HubLaneStatus,
+        maxShipmentWeightKg: BigDecimal,
+        fromHubIds: Collection<UUID>,
+        toHubIds: Collection<UUID>,
+    ): List<HubLane>
 }
