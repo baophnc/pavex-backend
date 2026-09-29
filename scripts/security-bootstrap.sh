@@ -7,7 +7,7 @@ key_root="$HOME/.pavex/keys"
 command -v openssl >/dev/null 2>&1 || { echo "OpenSSL is required." >&2; exit 1; }
 umask 077
 mkdir -p "$key_root"
-for issuer in auth identity partners pricing shipment operations; do
+for issuer in auth identity partners pricing shipment operations billing; do
   key_dir="$key_root/$issuer"
   mkdir -p "$key_dir"
   if [[ ! -s "$key_dir/private.pem" ]]; then

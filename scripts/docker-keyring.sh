@@ -7,7 +7,7 @@ case "${1:-sync}" in
     exec bash "$script_dir/security-bootstrap.sh"
     ;;
   status)
-    for issuer in auth identity partners pricing shipment operations; do
+    for issuer in auth identity partners pricing shipment operations billing; do
       key_dir="$HOME/.pavex/keys/$issuer"
       if [[ -s "$key_dir/private.pem" && -s "$key_dir/public.pem" ]]; then
         echo "[ready] $issuer -> $key_dir"

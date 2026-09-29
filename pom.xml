@@ -50,6 +50,7 @@
         <module>pricing</module>
         <module>shipment</module>
         <module>operations</module>
+        <module>billing</module>
         <module>platform/discovery-server</module>
         <module>platform/api-gateway</module>
     </modules>
