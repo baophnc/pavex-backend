@@ -36,6 +36,22 @@ class SecurityConfig {
             .build()
 
     @Bean
+    @Order(0)
+    fun billingInternalSecurityFilterChain(
+        http: HttpSecurity,
+        @Qualifier("billingServiceJwtDecoder") billingServiceJwtDecoder: JwtDecoder,
+    ): SecurityFilterChain =
+        http
+            .securityMatcher("/internal/v1/operations/access/**")
+            .csrf { it.disable() }
+            .sessionManagement { it.sessionCreationPolicy(SessionCreationPolicy.STATELESS) }
+            .authorizeHttpRequests { it.anyRequest().authenticated() }
+            .oauth2ResourceServer { resourceServer ->
+                resourceServer.jwt { jwt -> jwt.decoder(billingServiceJwtDecoder) }
+            }
+            .build()
+
+    @Bean
     @Order(2)
     fun securityFilterChain(
         http: HttpSecurity,

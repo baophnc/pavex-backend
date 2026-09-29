@@ -29,14 +29,14 @@ class AssignmentAccessScopeServiceTest {
 
     @Test
     fun `global assignment manager receives global scope`() {
-        val authentication = auth("operations.assignments.manage", "ROLE_OPERATIONS_MANAGER")
+        val authentication = auth("operations.assignments.manage", "scope.all-hubs")
         assertTrue(service.resolve(authentication).isGlobal)
     }
 
     @Test
     fun `manage permission without a global role remains hub scoped`() {
         val userId = UUID.randomUUID()
-        val member = WorkforceMember.create(userId, WorkforceMemberKind.DISPATCHER, Instant.now())
+        val member = WorkforceMember.create(userId, WorkforceMemberKind.HUB_MANAGER, Instant.now())
         val hubId = UUID.randomUUID()
         `when`(members.findByUserId(userId)).thenReturn(member)
         `when`(memberships.findAllByWorkforceMemberIdAndIsActiveTrue(member.id)).thenReturn(
@@ -52,7 +52,7 @@ class AssignmentAccessScopeServiceTest {
     @Test
     fun `hub manager can only access assignment at owned hub`() {
         val userId = UUID.randomUUID()
-        val member = WorkforceMember.create(userId, WorkforceMemberKind.DISPATCHER, Instant.now())
+        val member = WorkforceMember.create(userId, WorkforceMemberKind.HUB_MANAGER, Instant.now())
         val ownedHub = UUID.randomUUID()
         val foreignHub = UUID.randomUUID()
         `when`(members.findByUserId(userId)).thenReturn(member)
@@ -74,7 +74,7 @@ class AssignmentAccessScopeServiceTest {
     @Test
     fun `suspended workforce member receives empty assigned hub scope`() {
         val userId = UUID.randomUUID()
-        val member = WorkforceMember.create(userId, WorkforceMemberKind.DISPATCHER, Instant.now())
+        val member = WorkforceMember.create(userId, WorkforceMemberKind.HUB_MANAGER, Instant.now())
         member.status = WorkforceMemberStatus.SUSPENDED
         `when`(members.findByUserId(userId)).thenReturn(member)
 

@@ -31,13 +31,16 @@ class ShipmentOperationsAccessService(
     }
 
     private fun allowedKinds(capability: OperationsCapability): Set<WorkforceMemberKind> = when (capability) {
-        OperationsCapability.PARCEL_SCANNING -> setOf(WorkforceMemberKind.WAREHOUSE_OPERATOR)
+        OperationsCapability.PARCEL_SCANNING -> HUB_STAFF_KINDS
         OperationsCapability.PICKUP, OperationsCapability.LAST_MILE_DELIVERY -> setOf(WorkforceMemberKind.COURIER)
         OperationsCapability.LINE_HAUL -> setOf(WorkforceMemberKind.LINE_HAUL_DRIVER)
+        OperationsCapability.CASH_HANDLING -> HUB_STAFF_KINDS
     }
 
     private fun allowedRoles(capability: OperationsCapability): Set<String> = when (capability) {
-        OperationsCapability.PARCEL_SCANNING -> WorkforceRolePolicy.acceptedRoles(WorkforceMemberKind.WAREHOUSE_OPERATOR)
+        OperationsCapability.PARCEL_SCANNING,
+        OperationsCapability.CASH_HANDLING,
+        -> HUB_STAFF_KINDS.flatMapTo(mutableSetOf(), WorkforceRolePolicy::acceptedRoles)
         OperationsCapability.PICKUP,
         OperationsCapability.LAST_MILE_DELIVERY,
         -> WorkforceRolePolicy.acceptedRoles(WorkforceMemberKind.COURIER)
@@ -46,5 +49,7 @@ class ShipmentOperationsAccessService(
 
     companion object {
         private val ZERO_UUID = UUID(0, 0)
+        /** Hub managers work the counter and the sorting line alongside their staff. */
+        private val HUB_STAFF_KINDS = setOf(WorkforceMemberKind.WAREHOUSE_OPERATOR, WorkforceMemberKind.HUB_MANAGER)
     }
 }

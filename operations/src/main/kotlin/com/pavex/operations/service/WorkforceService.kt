@@ -506,7 +506,7 @@ class WorkforceService(
     private fun defaultMaximumAssignments(kind: WorkforceMemberKind): Int = when (kind) {
         WorkforceMemberKind.COURIER -> 8
         WorkforceMemberKind.WAREHOUSE_OPERATOR -> 30
-        WorkforceMemberKind.DISPATCHER -> 10
+        WorkforceMemberKind.HUB_MANAGER -> 10
         WorkforceMemberKind.LINE_HAUL_DRIVER -> 2
     }
 

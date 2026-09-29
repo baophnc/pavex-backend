@@ -28,6 +28,10 @@ class OperationsAssignmentController(
     @PreAuthorize("hasAuthority('assignments.read-own')")
     fun mine(authentication: Authentication): List<OperationalAssignmentResponse> = service.mine(actor(authentication))
 
+    @GetMapping("/availability")
+    @PreAuthorize("hasAuthority('assignments.read-own')")
+    fun myAvailability(authentication: Authentication): MyAvailabilityResponse = service.myAvailability(actor(authentication))
+
     @PutMapping("/availability")
     @PreAuthorize("hasAuthority('assignments.execute-own')")
     fun availability(

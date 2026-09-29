@@ -10,7 +10,7 @@ import jakarta.persistence.Version
 import java.time.Instant
 import java.util.UUID
 
-enum class WorkforceMemberKind { COURIER, WAREHOUSE_OPERATOR, DISPATCHER, LINE_HAUL_DRIVER }
+enum class WorkforceMemberKind { COURIER, WAREHOUSE_OPERATOR, HUB_MANAGER, LINE_HAUL_DRIVER }
 enum class WorkforceMemberStatus { ACTIVE, SUSPENDED, OFFBOARDED }
 
 @Entity

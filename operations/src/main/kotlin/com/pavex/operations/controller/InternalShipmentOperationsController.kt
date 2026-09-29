@@ -9,6 +9,7 @@ import com.pavex.contracts.operations.ShipmentAssignmentAccessRequest
 import com.pavex.contracts.operations.ShipmentAssignmentCompletionRequest
 import com.pavex.contracts.operations.ShipmentCaseAdminScopeSnapshot
 import com.pavex.contracts.operations.ShipmentOperationsAssignmentSnapshot
+import com.pavex.contracts.operations.WorkforceAssignmentSnapshot
 import com.pavex.contracts.operations.ShipmentOperationsPlanResponse
 import com.pavex.operations.dto.OperationalAssignmentResponse
 import com.pavex.operations.dto.ShipmentAssignmentPlan
@@ -60,6 +61,26 @@ class InternalShipmentOperationsController(
         assignments.cancelShipment(shipmentId, request.reason)
         return ResponseEntity.noContent().build()
     }
+
+    /** Open assignments of one worker, for the shipment-side field app views. */
+    @GetMapping("/assignments/by-user/{userId}")
+    fun userAssignments(@PathVariable userId: UUID): List<WorkforceAssignmentSnapshot> =
+        assignments.mine(userId).map { value ->
+            WorkforceAssignmentSnapshot(
+                id = value.id,
+                code = value.code,
+                shipmentId = value.shipmentId,
+                sequence = value.sequence,
+                routeLegId = value.routeLegId,
+                type = OperationsAssignmentType.valueOf(value.type.name),
+                hubId = value.hubId,
+                status = com.pavex.contracts.operations.OperationsAssignmentStatus.valueOf(value.status.name),
+                priority = value.priority,
+                assignedAt = value.assignedAt,
+                acceptedAt = value.acceptedAt,
+                startedAt = value.startedAt,
+            )
+        }
 
     @GetMapping("/case-admin-scope/{userId}")
     fun caseAdminScope(@PathVariable userId: UUID): ShipmentCaseAdminScopeSnapshot =
