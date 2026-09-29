@@ -315,167 +315,154 @@ flutter run                  # chọn iPhone, simulator hoặc Android
 
 #### 2.5.1 Nguồn gốc
 
-- **Seed toàn quốc:** `scripts/seed-nationwide/apply.sh` chạy lúc 17:06 ngày 25/09/2026, với ngày dữ liệu 2026-09-25.
-  - Script sinh dữ liệu bằng `generate.py`, xuất SQL vào `.local/seed/nationwide/sql/`, rồi nạp vào network, identity, auth, operations và partners.
-  - Nó xoá vận đơn, báo giá, tiền và hoá đơn cũ, và thay mạng lưới demo cũ bằng mạng lưới toàn quốc (mỗi phường/xã có một bưu cục).
-  - Backup trước khi nạp nằm ở `.local/backups/20260925-170608/`.
-- **Vận đơn demo:** 30 vận đơn (mỗi shop 1 đơn) được tạo ngày 25/09 qua API.
-- **Bảng giá:** bảng giá demo do service Pricing tự tạo khi khởi động (`PRICING_DEMO_SEED_ENABLED=true`, mặc định bật).
-- Toàn bộ tài khoản, bưu cục và shop được liệt kê trong **`.local/seed/nationwide/manifest.json`**.
+- **Mạng lưới** (3.358 hub, tuyến, lịch chạy): từ `scripts/seed-nationwide/generate.py`, nạp ngày 25/09/2026.
+  Mỗi phường/xã có một bưu cục.
+- **Nhân sự:** từ `scripts/seed-nationwide/staff.py`, nạp lại ngày 29/09/2026 bằng `apply.sh --staff-only`.
+- **Không seed** shop, khách hàng và vận đơn: tự tạo khi test (mục 2.5.9).
+- **Bảng giá:** bảng giá demo do Pricing tự tạo khi khởi động (`PRICING_DEMO_SEED_ENABLED=true`, mặc định bật).
+- **Tra cứu toàn bộ nhân sự:**
+  - `.local/seed/nationwide/staff.csv` (mở bằng Excel);
+  - `.local/seed/nationwide/staff.json`.
+  - Có đủ email, họ tên, chức vụ, mã nhân viên, SĐT, nơi làm, ngày nghỉ trong tuần, bưu cục trên tuyến.
+- **Giữ nguyên khi seed lại:** `admin@pavex.com` và các tài khoản tự đăng ký (ví dụ Gmail của bạn). Tài khoản giữ lại
+  bị gỡ vai trò MERCHANT, vì hồ sơ shop đã xoá.
 
 #### 2.5.2 Mật khẩu
 
-- **Mọi tài khoản seed** dùng chung một mật khẩu dev. Mật khẩu được in ở cuối
-  `scripts/seed-nationwide/apply.sh`, và nằm trong trường `password` của `manifest.json`.
-- **`admin@pavex.com`**: mật khẩu nằm ở mục `bootstrap-admin` trong
-  `identity/src/main/resources/application.yaml` (và `auth/...`).
+- **Mọi tài khoản seed** dùng chung một mật khẩu dev, in ở cuối `apply.sh` và nằm trong trường `password` của `staff.json`.
+- **`admin@pavex.com`**: mật khẩu ở mục `bootstrap-admin` trong `identity/src/main/resources/application.yaml` (và `auth/...`).
 
 Đây là thông tin đăng nhập chỉ dùng cho môi trường dev. Tài liệu này cố ý không chép mật khẩu ra.
 
-#### 2.5.3 Số liệu tổng hợp
+#### 2.5.3 Số liệu
 
-| Nhóm | Dữ liệu | Số lượng |
-|---|---|---:|
-| Tài khoản | Tài khoản đăng nhập (`auth.user_account`) | **17.571** |
-| | Bưu tá (COURIER) | 7.325 |
-| | Nhân viên bưu cục (WAREHOUSE_OPERATOR) | 3.440 |
-| | Tài xế trung chuyển (LINE_HAUL_DRIVER) | 3.400 |
-| | Trưởng bưu cục / trưởng kho / giám đốc trung tâm (HUB_MANAGER) | 3.357 |
-| | Quản lý vận hành miền (OPERATIONS_MANAGER) | 3 |
-| | Kinh doanh & CSKH (COMMERCIAL_MANAGER) | 2 |
-| | Kế toán (FINANCE_ACCOUNTANT) | 2 |
-| | Shop (MERCHANT; mỗi shop cũng có vai trò CUSTOMER) | 31 |
-| | Khách hàng (CUSTOMER, gồm cả 30 shop) | 41 |
-| | Quản trị (ADMIN) | 1 |
-| Mạng lưới | Vùng (Bắc, Trung, Nam) | 3 |
-| | Hub | **3.358** |
-| | Trung tâm khai thác miền (REGIONAL_GATEWAY) | 3 |
-| | Kho trung chuyển tỉnh (PROVINCIAL) | 34 |
-| | Bưu cục phường/xã (LOCAL) | 3.321 |
-| | Vùng phục vụ và phạm vi phủ | 3.321 |
-| | Tuyến vận chuyển (lane) | 6.714 |
-| | Lịch chạy | 13.364 |
-| Vận hành | Nhân sự (workforce member, có gắn bưu cục) | 17.522 |
-| | Ca làm việc / lượt phân ca | 6.714 / 35.044 |
-| | Phân công việc (assignment) | 316 |
-| Partners | Merchant | 31 |
-| | Điểm lấy hàng (mỗi shop có 2) | 62 |
-| | Địa chỉ đã lưu của khách | 10 |
-| | Yêu cầu hỗ trợ | 0 (bảng được tạo ở migration V7) |
-| Pricing | Bảng giá `DEMO-2026-08-r1` "Bảng giá demo tháng 08/2026" | 1, ACTIVE |
-| | Báo giá | 30 |
-| Shipment | Vận đơn / kiện | 30 / 35 |
-| | Theo trạng thái | Chờ lấy hàng 23 · Đã lấy hàng 1 · Tại bưu cục gửi 3 · Đang trung chuyển 3 |
-| | Có COD | 18; có cả đơn người gửi trả cước và người nhận trả cước |
-| Billing | Tiền mặt bưu tá thu, hoá đơn, tài khoản nhận tiền của shop | 0 |
+Tổng **17.402 tài khoản nhân sự**, 17.378 người có hồ sơ nhân sự vận hành, 452 tuyến xe gom.
 
-#### 2.5.4 Tài khoản văn phòng
+| Chức vụ | Số người |
+|---|---:|
+| Quản trị hệ thống | 2 |
+| Quản lý vận hành miền Bắc | 2 |
+| Quản lý vận hành miền Trung | 2 |
+| Quản lý vận hành miền Nam | 2 |
+| Kinh doanh & CSKH | 10 |
+| Kế toán | 6 |
+| Giám đốc trung tâm | 3 |
+| Phó giám đốc trung tâm | 6 |
+| Trưởng kho | 34 |
+| Phó kho | 34 |
+| Nhân viên khai thác | 889 |
+| Trưởng bưu cục | 3.320 |
+| Nhân viên bưu cục | 2.050 |
+| Bưu tá | 9.950 |
+| Tài xế tuyến bưu cục | 904 |
+| Tài xế trục | 127 |
+| Tài xế liên vùng | 61 |
 
-| Vai trò | Email | Họ tên | Chức danh |
-|---|---|---|---|
-| ADMIN | `admin@pavex.com` | — | Quản trị hệ thống |
-| OPERATIONS_MANAGER | `vanhanh.mienbac@pavex.com` | Lê Ngọc Phong | Quản lý vận hành miền Bắc |
-| OPERATIONS_MANAGER | `vanhanh.mientrung@pavex.com` | Nguyễn Thị Ngân | Quản lý vận hành miền Trung |
-| OPERATIONS_MANAGER | `vanhanh.miennam@pavex.com` | Vũ Thanh Hòa | Quản lý vận hành miền Nam |
-| COMMERCIAL_MANAGER | `kinhdoanh1@pavex.com` | Nguyễn Gia Tài | Kinh doanh & CSKH |
-| COMMERCIAL_MANAGER | `kinhdoanh2@pavex.com` | Trần Hồng Oanh | Kinh doanh & CSKH |
-| FINANCE_ACCOUNTANT | `ketoan1@pavex.com` | Nguyễn Tuyết Nga | Kế toán |
-| FINANCE_ACCOUNTANT | `ketoan2@pavex.com` | Trần Kim Huyền | Kế toán |
+| Trạng thái | Số người | Ý nghĩa |
+|---|---:|---|
+| Đang làm | 15.834 | Đăng nhập, có ca, nhận việc bình thường |
+| Nghỉ phép | 858 | Có ca nhưng đang tắt Sẵn sàng; check-in thì nhận việc lại |
+| Mới mời, chưa kích hoạt | 180 | Chưa đăng nhập được; quản trị gửi lời mời để họ tự đặt mật khẩu |
+| Tạm khoá | 161 | Tài khoản và hồ sơ nhân sự bị tạm ngưng, không đăng nhập, không có ca |
+| Đã nghỉ việc | 369 | Tài khoản bị vô hiệu, không còn thuộc bưu cục nào |
 
-#### 2.5.5 Nhân sự hub: quy tắc đặt email
+#### 2.5.4 Email và mã nhân viên
 
-Mỗi bưu cục phường/xã đang phục vụ (3.320 bưu cục) có 1 trưởng bưu cục, 1 nhân viên, 1–3 bưu tá và 1 tài xế.
-Kho tỉnh và trung tâm miền có đông nhân viên hơn (tối đa 6 nhân viên mỗi nơi). Email được đặt theo quy tắc:
+Email theo mẫu **`<tên>.<họ + đệm>.<chức vụ>@pavex.com`**, viết thường không dấu. Người trùng tên thì thêm số vào
+cuối, ví dụ `hung.phancong.tbc@pavex.com` và `hung.phancong.tbc2@pavex.com`. Mã nhân viên dạng `PVX000123`, tăng dần.
 
-| Vai trò | Mẫu email | Ví dụ (Bưu cục Ba Đình, Hà Nội — `BC-HN-BADINH`) |
-|---|---|---|
-| Trưởng bưu cục | `truongbc.<tỉnh>.<phường>@pavex.com` | `truongbc.hn.badinh@pavex.com` — Phan Công Hùng |
-| Nhân viên bưu cục | `nhanvien.<tỉnh>.<phường>@pavex.com` | `nhanvien.hn.badinh@pavex.com` — Trần Ngọc Ly |
-| Bưu tá | `buuta<N>.<tỉnh>.<phường>@pavex.com` | `buuta1.hn.badinh@pavex.com` — Bùi Hữu Kiên (Ba Đình có `buuta1`–`buuta3`) |
-| Tài xế | `taixe.<tỉnh>.<phường>@pavex.com` | `taixe.hn.badinh@pavex.com` — Đặng Văn Long |
-| Trưởng kho tỉnh | `truongkho.<tỉnh>@pavex.com` | `truongkho.hn@pavex.com` — kho `KHO-HN` |
-| Giám đốc trung tâm miền | `giamdoc.<miền>@pavex.com` | `giamdoc.mienbac@pavex.com` — `TT-MIENBAC` |
-
-Ba trung tâm khai thác miền: `TT-MIENBAC`, `TT-MIENTRUNG`, `TT-MIENNAM`.
-Kho tỉnh có mã dạng `KHO-<tỉnh>` (ví dụ `KHO-HN`, `KHO-CB`); bưu cục có mã dạng `BC-<tỉnh>-<phường>`.
-
-Tra cứu tài khoản của một bưu cục bất kỳ (chạy trong `pavex-backend`):
-
-```bash
-# mọi tài khoản của các bưu cục có tên chứa "Hoàn Kiếm"
-jq -r '.accounts[] | select((.hubName // "") | contains("Hoàn Kiếm")) | [.roles[0], .email, .name, .hubCode] | @tsv' \
-  .local/seed/nationwide/manifest.json
-
-# 5 bưu tá đầu tiên ở Đà Nẵng
-jq -r '[.accounts[] | select(.roles | index("COURIER")) | select(.province == "Đà Nẵng")][:5][] | [.email, .name, .hubName] | @tsv' \
-  .local/seed/nationwide/manifest.json
-```
-
-#### 2.5.6 Shop
-
-30 shop, mỗi shop có 2 điểm lấy hàng. Mỗi shop là tài khoản đã xác thực, có hồ sơ merchant đang
-hoạt động và vai trò MERCHANT + CUSTOMER.
-
-| Mã | Tên shop | Email | Chủ shop | Tỉnh |
+| Viết tắt | Chức vụ | | Viết tắt | Chức vụ |
 |---|---|---|---|---|
-| PVM000002 | Thời trang Mộc Lan | `shop01.thoitrangmoclan@khachhang.pavex.com` | Lê Quốc Phúc | Hồ Chí Minh |
-| PVM000003 | Gốm sứ Minh Khai | `shop02.gomsuminhkhai@khachhang.pavex.com` | Nguyễn Anh Thắng | Hà Nội |
-| PVM000004 | Trà Thái Nguyên Hồng Hà | `shop03.trathainguyenhongha@khachhang.pavex.com` | Nguyễn Gia Khoa | Thái Nguyên |
-| PVM000005 | Cà phê Buôn Hồ | `shop04.caphebuonho@khachhang.pavex.com` | Lê Tuyết Nhung | Đắk Lắk |
-| PVM000006 | Nước mắm Cô Tô | `shop05.nuocmamcoto@khachhang.pavex.com` | Nguyễn Hoài Linh | Quảng Ninh |
-| PVM000007 | Đặc sản Huế Mệ Thu | `shop06.dacsanhuemethu@khachhang.pavex.com` | Bùi Thùy Hiền | Huế |
-| PVM000008 | Bánh pía Sóc Trăng Tân Huê | `shop07.banhpiasoctrangtanhue@khachhang.pavex.com` | Nguyễn Bảo Bình | Cần Thơ |
-| PVM000009 | Mỹ phẩm Thiên Hương | `shop08.myphamthienhuong@khachhang.pavex.com` | Nguyễn Thanh Hoa | Hồ Chí Minh |
-| PVM000010 | Sách cũ Phố Đinh | `shop09.sachcuphodinh@khachhang.pavex.com` | Đặng Khánh Thư | Hà Nội |
-| PVM000011 | Đồ gỗ Đồng Kỵ Xuân Trường | `shop10.dogodongkyxuantruong@khachhang.pavex.com` | Trần Gia Quang | Bắc Ninh |
-| PVM000012 | Hải sản khô Nha Trang Biển Xanh | `shop11.haisankhonhatrangbienxan@khachhang.pavex.com` | Hoàng Bảo Vy | Khánh Hoà |
-| PVM000013 | Điện thoại Hòa Phát Tech | `shop12.dienthoaihoaphattech@khachhang.pavex.com` | Bùi Tuyết Vy | Hồ Chí Minh |
-| PVM000014 | Tơ lụa Hà Đông Vạn Phúc | `shop13.toluahadongvanphuc@khachhang.pavex.com` | Lê Khánh Vân | Hà Nội |
-| PVM000015 | Nông sản Đà Lạt Xanh | `shop14.nongsandalatxanh@khachhang.pavex.com` | Đặng Minh Lan | Lâm Đồng |
-| PVM000016 | Mắm Châu Đốc Ba Hiền | `shop15.mamchaudocbahien@khachhang.pavex.com` | Vũ Quang Luân | An Giang |
-| PVM000017 | Thời trang trẻ em Bông Mai | `shop16.thoitrangtreembongmai@khachhang.pavex.com` | Trần Gia Phúc | Đà Nẵng |
-| PVM000018 | Phụ kiện xe máy Tuấn Phát | `shop17.phukienxemaytuanphat@khachhang.pavex.com` | Phan Thanh Thảo | Đồng Nai |
-| PVM000019 | Gạo sạch Đồng Tháp Mười | `shop18.gaosachdongthapmuoi@khachhang.pavex.com` | Nguyễn Mai Trinh | Đồng Tháp |
-| PVM000020 | Nón lá Chuông Hồng Nhung | `shop19.nonlachuonghongnhung@khachhang.pavex.com` | Nguyễn Bảo Ngọc | Hà Nội |
-| PVM000021 | Kẹo dừa Bến Tre Sáu Hòa | `shop20.keoduabentresauhoa@khachhang.pavex.com` | Nguyễn Khánh Loan | Vĩnh Long |
-| PVM000022 | Đồ handmade Mây Tre Việt | `shop21.dohandmademaytreviet@khachhang.pavex.com` | Hoàng Kim Yến | Phú Thọ |
-| PVM000023 | Mật ong Tây Bắc Sơn Tuyền | `shop22.matongtaybacsontuyen@khachhang.pavex.com` | Nguyễn Anh Cường | Sơn La |
-| PVM000024 | Giày da Hiệp Thành | `shop23.giaydahiepthanh@khachhang.pavex.com` | Nguyễn Phương Nhi | Hồ Chí Minh |
-| PVM000025 | Văn phòng phẩm An Khang | `shop24.vanphongphamankhang@khachhang.pavex.com` | Lâm Tuyết Ly | Hải Phòng |
-| PVM000026 | Mỹ nghệ Non Nước Ngũ Hành | `shop25.mynghenonnuocnguhanh@khachhang.pavex.com` | Lê Hữu Minh | Đà Nẵng |
-| PVM000027 | Thực phẩm chay Tâm An | `shop26.thucphamchaytaman@khachhang.pavex.com` | Nguyễn Trung Hùng | Cần Thơ |
-| PVM000028 | Đồ chơi gỗ Bé Xinh | `shop27.dochoigobexinh@khachhang.pavex.com` | Nguyễn Thanh Hạnh | Ninh Bình |
-| PVM000029 | Yến sào Khánh Hòa Hải Âu | `shop28.yensaokhanhhoahaiau@khachhang.pavex.com` | Nguyễn Anh Khánh | Khánh Hoà |
-| PVM000030 | Rượu cần Tây Nguyên Y Moan | `shop29.ruoucantaynguyenymoan@khachhang.pavex.com` | Trần Thu Ngân | Gia Lai |
-| PVM000031 | Linh kiện điện tử Minh Quân | `shop30.linhkiendientuminhquan@khachhang.pavex.com` | Mai Hồng Nhi | Hà Nội |
+| `qtht` | Quản trị hệ thống | | `tk` / `pk` | Trưởng kho / Phó kho tỉnh |
+| `qlvh` | Quản lý vận hành miền | | `nvkt` | Nhân viên khai thác (kho tỉnh, trung tâm) |
+| `cskh` | Kinh doanh & CSKH | | `tbc` | Trưởng bưu cục |
+| `kt` | Kế toán | | `nvbc` | Nhân viên bưu cục |
+| `gdtt` / `pgdtt` | Giám đốc / Phó giám đốc trung tâm miền | | `bt` | Bưu tá |
+| | | | `tx` | Tài xế (tuyến, trục, liên vùng) |
 
-Merchant thứ 31 là `baofuc1205@gmail.com`, tạo từ seed E2E cũ ngày 08/09. Tài khoản này được giữ lại,
-nhưng các vận đơn cũ của nó đã bị xoá khi đổi sang mạng lưới toàn quốc.
+`pavex.com` là tên miền của đơn vị khác và hiện không nhận thư. Thư gửi tới tài khoản seed sẽ bị trả về, nhưng vẫn nên
+tránh bấm "gửi lời mời" hay "quên mật khẩu" cho tài khoản seed khi `.env` đang bật gửi mail thật.
 
-#### 2.5.7 Khách hàng (không phải shop)
+#### 2.5.5 Quy mô từng nơi
 
-| Email | Họ tên |
-|---|---|
-| `khach01@khachhang.pavex.com` | Trần Công Khánh |
-| `khach02@khachhang.pavex.com` | Hoàng Phương Vy |
-| `khach03@khachhang.pavex.com` | Trần Khánh Ly |
-| `khach04@khachhang.pavex.com` | Nguyễn Hồng Hoa |
-| `khach05@khachhang.pavex.com` | Nguyễn Tuyết Vân |
-| `khach06@khachhang.pavex.com` | Võ Kim Hạnh |
-| `khach07@khachhang.pavex.com` | Lê Trung Trí |
-| `khach08@khachhang.pavex.com` | Võ Mai Vân |
-| `khach09@khachhang.pavex.com` | Trần Gia Hùng |
-| `khach10@khachhang.pavex.com` | Lê Ngọc Hà |
+| Nơi | Số nơi | Trưởng | Nhân viên | Bưu tá |
+|---|---:|---|---|---|
+| Bưu cục phường ở TP lớn (Hà Nội, TP.HCM, Hải Phòng, Đà Nẵng, Cần Thơ) | 263 | 1 | 2 | 6–10 |
+| Bưu cục phường ở tỉnh khác | 434 | 1 | 1 | 3–5 |
+| Bưu cục xã | 2.146 | 1 | 0–1 (trưởng tự quét hàng) | 2–3 |
+| Bưu cục xã vùng xa | 465 | 1 | 0 | 1–2 |
+| Bưu cục đặc khu, hải đảo | 12 | 1 | 0 | 1–2 |
+| Kho tỉnh | 34 | trưởng + phó | 10–40, theo số bưu cục phục vụ | — |
+| Trung tâm miền | 3 | giám đốc + 2 phó | 66–80 | — |
+| Văn phòng | — | Quản trị 2, Vận hành miền 6, Kinh doanh & CSKH 10, Kế toán 6 | | |
 
-Manifest còn có 400 người nhận mẫu (tên, SĐT, địa chỉ khắp 3 miền), dùng để tạo vận đơn demo.
+Họ tên theo tỉ lệ họ thực tế và vùng miền. Giới tính và tuổi theo công việc (bưu tá 20–40, tài xế 25–55…). SĐT đúng
+đầu số các nhà mạng, không trùng.
 
-#### 2.5.8 Những gì **chưa** có dữ liệu
+#### 2.5.6 Tài xế và tuyến xe
 
-- **Yêu cầu hỗ trợ:** bảng chỉ được tạo sau khi partners áp migration V7; hộp thư sẽ trống cho tới khi có khách gửi form.
-- **Tiền mặt, đối soát, hoá đơn, tài khoản nhận tiền của shop:** chưa có. Chúng chỉ sinh ra khi bưu tá giao
-  một đơn có tiền cần thu, và khi shop khai báo tài khoản nhận tiền.
-- **Vận đơn đi tới bước giao hàng:** chưa có. 30 đơn hiện có dừng ở chặng đầu (chờ lấy hàng, tại bưu cục gửi,
-  đang trung chuyển), nên màn "Giao hàng" của bưu tá đang trống.
+- **Tài xế tuyến bưu cục** thuộc đội xe của kho tỉnh.
+  - Bưu cục chính của họ là kho tỉnh, nhưng họ cũng là thành viên của mọi bưu cục trên tuyến.
+  - Mỗi tuyến gom 6 bưu cục liền nhau ở TP lớn, 8 bưu cục ở tỉnh khác. Mỗi tuyến có 2 tài xế.
+- **Tài xế trục** chạy kho tỉnh ↔ trung tâm miền: thuộc kho tỉnh, và là thành viên của trung tâm miền.
+- **Tài xế liên vùng** thuộc trung tâm miền.
+- **Luật giao việc (Operations):**
+  - Tài xế check-in ca ở kho tỉnh là nhận được việc trung chuyển ở mọi hub mình là thành viên.
+  - Các nhân viên khác vẫn phải check-in đúng tại hub có việc.
+  - Ví dụ: tài xế `dung.nguyendinh.tx@pavex.com` thuộc KHO-HN và chạy tuyến có BC-HN-BADINH (6 bưu cục).
+
+#### 2.5.7 Ca làm tự động
+
+Operations tự giữ sẵn ca cho **7 ngày tới**. Việc này chạy khi khởi động và mỗi giờ một lần, nên không phải tạo ca bằng tay.
+
+- **Mỗi nơi có mấy ca:**
+  - Bưu cục nhỏ (dưới 5 người): 1 ca hành chính 07:30–17:30.
+  - Bưu cục lớn: ca sáng 07:00–15:00 và ca chiều 13:00–21:00.
+  - Kho tỉnh và trung tâm miền: 3 ca 06–14, 14–22, 22–06.
+  - Tài xế chỉ có hai ca ban ngày: 06–14 và 14–22.
+- **Ai làm ca nào:**
+  - Mỗi người làm 6 ngày, nghỉ 1 ngày cố định trong tuần (cột "Ngày nghỉ" trong `staff.csv`).
+  - Ca sáng và ca chiều đổi nhau theo từng tuần.
+  - Ca nào của hub nào cũng luôn có người.
+- **Tự check-out:** ai quên check-out thì hệ thống tự check-out sau khi ca kết thúc 1 giờ.
+- **Người mới:** nhân sự thêm vào sẽ tự có ca từ lần chạy kế tiếp.
+- **Tắt tính năng:** đặt `OPERATIONS_SHIFT_ROSTER_ENABLED=false`.
+
+Để test: đăng nhập app hiện trường bằng một tài khoản đang có ca, bấm **Check-in** ở tab Hôm nay, rồi bật **Sẵn sàng**.
+
+#### 2.5.8 Tài khoản thử tiêu biểu
+
+Luôn ở trạng thái Đang làm. Ngày nghỉ là ngày không có ca trong tuần.
+
+| Vai trò | Đăng nhập ở | Email | Họ tên | Ngày nghỉ | Việc nên thử |
+|---|---|---|---|---|---|
+| Quản trị | Management :3001 | `hung.phananh.qtht@pavex.com` | Phan Anh Hùng | — | Toàn quyền (ngoài `admin@pavex.com`) |
+| Vận hành miền Bắc | Management :3001 | `huong.tranminh.qlvh@pavex.com` | Trần Minh Hương | — | Vận đơn, phân công, giám sát, xe trung chuyển toàn quốc |
+| Vận hành miền Nam | Management :3001 | `hanh.dangthu.qlvh@pavex.com` | Đặng Thu Hạnh | — | Như trên |
+| Kinh doanh & CSKH | Management :3001 | `chau.vuminh.cskh@pavex.com` | Vũ Minh Châu | — | Duyệt shop mới, bảng giá, yêu cầu hỗ trợ |
+| Kế toán | Management :3001 | `chi.nguyenthi.kt@pavex.com` | Nguyễn Thị Chi | — | Duyệt tiền nộp, đối soát, hoá đơn |
+| Giám đốc TT miền Bắc | Management :3001 | `hai.nguyendinh.gdtt@pavex.com` | Nguyễn Đình Hải | Chủ nhật | Nhân sự, ca làm, phân công tại TT-MIENBAC |
+| Trưởng kho Hà Nội | Management :3001 | `vy.hoangthuy.tk@pavex.com` | Hoàng Thùy Vy | Thứ Sáu | Kho KHO-HN, xe trung chuyển đi/đến kho |
+| Nhân viên khai thác KHO-HN | App hiện trường | `quang.nguyenthanh.nvkt4@pavex.com` | Nguyễn Thanh Quang | Thứ Tư | Nhập kho, kiểm kho, xuất kho |
+| Tài xế tuyến (Ba Đình) | App hiện trường | `dung.nguyendinh.tx@pavex.com` | Nguyễn Đình Dũng | Chủ nhật | Check-in ca ở KHO-HN, nhận chuyến gom hàng các bưu cục trên tuyến, tab Chuyến gửi GPS |
+| Tài xế tuyến (Ba Đình), người thứ hai | App hiện trường | `phong.nguyenxuan.tx2@pavex.com` | Nguyễn Xuân Phong | Thứ Ba | Cùng tuyến, thường khác ngày nghỉ |
+| Tài xế trục Hà Nội | App hiện trường | `tam.trinhthanh.tx@pavex.com` | Trịnh Thanh Tâm | Chủ nhật | Chuyến KHO-HN ↔ TT-MIENBAC |
+| Trưởng bưu cục Ba Đình | Management / App | `nga.nguyenngoc.tbc@pavex.com` | Nguyễn Ngọc Nga | Chủ nhật | Nhân sự, ca, vận đơn, tiền của bưu cục; xem xe đi/đến |
+| Nhân viên bưu cục Ba Đình | App hiện trường | `thanh.hoangbao.nvbc@pavex.com` | Hoàng Bảo Thành | Thứ Năm | Nhập kho, nhận tiền bưu tá nộp |
+| Bưu tá Ba Đình | App / Management | `quynh.nguyenkim.bt@pavex.com` | Nguyễn Kim Quỳnh | Thứ Tư | Lấy hàng, giao hàng, thu tiền, nộp tiền |
+| Bưu tá Ba Đình, người thứ hai | App / Management | `khang.phamthanh.bt@pavex.com` | Phạm Thanh Khang | Thứ Ba | Như trên |
+| Trưởng kho TP.HCM | Management :3001 | `mai.chauthi.tk@pavex.com` | Châu Thị Mai | Chủ nhật | Kho KHO-HCM |
+| Tài xế tuyến (Sài Gòn) | App hiện trường | `hung.doxuan.tx2@pavex.com` | Đỗ Xuân Hùng | Thứ Tư | Tuyến có bưu cục Sài Gòn |
+| Trưởng bưu cục Sài Gòn | Management / App | `hoa.hoangkhanh.tbc@pavex.com` | Hoàng Khánh Hoa | Thứ Sáu | Bưu cục phường Sài Gòn |
+| Bưu tá Sài Gòn | App / Management | `vinh.vohuu.bt@pavex.com` | Võ Hữu Vinh | Thứ Ba | Lấy hàng, giao hàng, thu tiền |
+
+#### 2.5.9 Những gì **không** seed
+
+- **Shop và khách hàng:** tự đăng ký ở client portal.
+  - Muốn làm shop: gửi hồ sơ ở `/merchant/onboarding`, rồi Kinh doanh & CSKH duyệt ở `/partners/merchants`.
+  - Duyệt xong, đăng nhập lại để có menu Vận đơn.
+- **Vận đơn, tiền, hoá đơn, chuyến xe:** sinh ra khi bạn chạy luồng thật.
+- **Yêu cầu hỗ trợ:** giữ nguyên những gì đã có.
 
 ---
 
@@ -483,8 +470,8 @@ Manifest còn có 400 người nhận mẫu (tên, SĐT, địa chỉ khắp 3 m
 
 | Lệnh (chạy trong `pavex-backend`) | Tác dụng | Lưu ý |
 |---|---|---|
-| `scripts/seed-nationwide/apply.sh [--day YYYY-MM-DD] [--no-restart]` | Sinh và nạp lại toàn bộ bộ seed toàn quốc | **Xoá và thay dữ liệu hiện có.** Luôn backup vào `.local/backups/<thời điểm>/` trước khi nạp. Mặc định dừng các service rồi chạy lại `dev-up.sh` |
-| `node scripts/seed-nationwide/demo-shipments.mjs [--per-shop 8] [--progress 24]` | Tạo vận đơn demo qua API; đưa `--progress` đơn đi qua lấy hàng → bưu cục → trung chuyển → giao | Cần backend đang chạy. Ghi danh sách đơn vào `.local/seed/nationwide/shipments.json` |
+| `scripts/seed-nationwide/apply.sh --staff-only` | Giữ mạng lưới, sinh lại toàn bộ nhân sự; xoá shop, vận đơn, báo giá, tiền, chuyến xe | **Xoá và thay dữ liệu hiện có.** Luôn backup vào `.local/backups/<thời điểm>/` trước. Mặc định dừng các service rồi chạy lại `dev-up.sh` |
+| `scripts/seed-nationwide/apply.sh [--day YYYY-MM-DD]` | Như trên, và sinh lại cả mạng lưới (hub, tuyến, lịch chạy) | Chỉ cần khi đổi cấu trúc mạng lưới |
 | `node scripts/seed-baofuc-e2e.mjs`, `node scripts/seed-luong-giao-hang-viet.mjs` | Kịch bản E2E cũ | Viết cho mạng lưới demo cũ (`HN-HOANKIEM`, `HN-GW`…). **Chưa kiểm chứng** lại sau khi đổi sang mạng lưới toàn quốc |
 
 Khôi phục một database từ backup, ví dụ shipment:
@@ -502,20 +489,17 @@ Nên dừng các service trước khi khôi phục.
 
 ### 2.7 Thử nhanh theo từng vai trò
 
-Tất cả tài khoản dưới đây dùng mật khẩu ở mục 2.5.2.
+Danh sách tài khoản thử ở mục 2.5.8. Tất cả dùng mật khẩu ở mục 2.5.2. Một luồng đầy đủ nên thử theo thứ tự:
 
-| Vai trò | Đăng nhập ở | Tài khoản | Việc nên thử |
-|---|---|---|---|
-| Shop | Client portal :3000 | `shop02.gomsuminhkhai@khachhang.pavex.com` | Tạo vận đơn (điểm lấy hàng có sẵn, tính cước, chọn người nhận trả cước + COD), in nhãn, xem đối soát |
-| Khách hàng | Client portal :3000 | `khach01@khachhang.pavex.com` | Tra cứu vận đơn, gửi form hỗ trợ/khiếu nại (có thể gửi không cần đăng nhập) |
-| Kinh doanh & CSKH | Management :3001 | `kinhdoanh1@pavex.com` | Duyệt shop, bảng giá, **Yêu cầu hỗ trợ** (cần identity V15) |
-| Vận hành miền | Management :3001 | `vanhanh.mienbac@pavex.com` | Vận đơn, phân công, giám sát |
-| Trưởng bưu cục | Management :3001 | `truongbc.hn.badinh@pavex.com` | Nhân sự, ca làm, vận đơn của bưu cục |
-| Bưu tá | Management :3001 | `buuta1.hn.badinh@pavex.com` | **Giao hàng**: kiện đang giao, thu tiền, nộp tiền |
-| Tài xế trung chuyển | App hiện trường | `taixe.hn.thienloc@pavex.com` | Tab **Chuyến**: đồng ý chia sẻ vị trí, bắt đầu chuyến BC-HN-THIENLOC → KHO-HN, gửi GPS, bấm Đã tới |
-| Trưởng bưu cục (xem xe) | Management :3001 | `truongbc.hn.thienloc@pavex.com` | **Xe trung chuyển**: xe đi/đến bưu cục mình trên bản đồ, lộ trình từng chuyến |
-| Kế toán | Management :3001 | `ketoan1@pavex.com` | Tài chính: duyệt tiền nộp, đối soát, hoá đơn |
-| Quản trị | Management :3001 | `admin@pavex.com` | Toàn quyền |
+1. **Tạo shop:** đăng ký một tài khoản ở client portal :3000, gửi hồ sơ shop. Đăng nhập tài khoản Kinh doanh & CSKH
+   ở management :3001 để duyệt shop.
+2. **Tạo vận đơn:** đăng nhập lại shop, khai báo điểm lấy hàng (chọn phường Ba Đình, Hà Nội để khớp tài khoản thử),
+   tạo vận đơn có COD, in nhãn.
+3. **Lấy hàng và nhập kho:** bưu tá Ba Đình check-in ca trong app, nhận việc lấy hàng rồi quét Lấy hàng. Nhân viên
+   hoặc trưởng bưu cục Ba Đình quét Nhập kho.
+4. **Trung chuyển:** tài xế tuyến check-in ca ở KHO-HN, nhận việc trung chuyển, quét Lên xe (chuyến tự bắt đầu và gửi
+   GPS). Nhân viên khai thác KHO-HN quét Nhập kho.
+5. **Giao và tiền:** tiếp tục tới bưu cục phát; bưu tá giao, thu tiền, nộp tiền; kế toán duyệt và đối soát.
 
 Email phát sinh khi thử (xác thực, xác nhận yêu cầu hỗ trợ…) xem ở Mailpit: http://localhost:8025.
 
@@ -772,7 +756,13 @@ Chưa có phí hoàn hàng riêng.
 
 - **Nhân sự vận hành:** mỗi nhân viên hiện trường là một hồ sơ nhân sự (loại, trạng thái, năng lực), thuộc một hoặc nhiều
   bưu cục, trong đó có một bưu cục chính. Phạm vi dữ liệu ở mục 3.2 lấy từ đây.
-- **Ca làm:** tạo ca tại bưu cục, phân người vào ca, check-in/check-out, đánh vắng.
+- **Ca làm:**
+  - Tạo ca tại bưu cục, phân người vào ca, check-in/check-out, đánh vắng.
+  - Hệ thống **tự giữ sẵn ca 7 ngày tới** theo lịch luân phiên (làm 6 ngày nghỉ 1), và tự check-out người quên
+    check-out sau khi ca kết thúc 1 giờ (mục 2.5.7).
+- **Điều kiện được giao việc:**
+  - Là thành viên của hub có việc, đang check-in một ca, và đang bật Sẵn sàng.
+  - Riêng tài xế trung chuyển: check-in ca ở kho tỉnh là đủ để nhận việc ở mọi bưu cục trên tuyến của mình.
 - **Phân công việc:** mỗi vận đơn sinh các việc lấy hàng, khai thác, trung chuyển, giao. Việc được giao cho người phù
   hợp; người nhận việc chấp nhận rồi thực hiện. Mỗi việc có lịch sử. Trưởng bưu cục điều phối trong bưu cục của mình;
   vận hành miền điều phối toàn mạng (`/operations/dispatch`, có cả hàng sự kiện lỗi để gửi lại).
