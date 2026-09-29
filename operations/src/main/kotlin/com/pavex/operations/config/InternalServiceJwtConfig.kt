@@ -26,6 +26,10 @@ class InternalServiceJwtConfig(
     private val billingPublicKey: Resource,
     @Value("\${security.trusted-services.billing.issuer}")
     private val billingIssuer: String,
+    @Value("\${security.trusted-services.fleet.public-key}")
+    private val fleetPublicKey: Resource,
+    @Value("\${security.trusted-services.fleet.issuer}")
+    private val fleetIssuer: String,
 ) {
     /** Billing may only ask whether a user can handle cash at a hub. */
     @Bean("billingServiceJwtDecoder")
@@ -41,6 +45,25 @@ class InternalServiceJwtConfig(
                 exactClaim(PavexJwtClaims.TOKEN_TYPE, PavexTokenTypes.SERVICE),
                 audience(OPERATIONS_SERVICE),
                 scope(OPERATIONS_ACCESS_CHECK_SCOPE),
+            ),
+        )
+        return decoder
+    }
+
+    /** Fleet may only read a driver's line-haul work and a viewer's hub memberships. */
+    @Bean("fleetServiceJwtDecoder")
+    fun fleetServiceJwtDecoder(): JwtDecoder {
+        val publicKey = fleetPublicKey.inputStream.use {
+            requireNotNull(RsaKeyConverters.x509().convert(it))
+        }
+        val decoder = NimbusJwtDecoder.withPublicKey(publicKey).build()
+        decoder.setJwtValidator(
+            DelegatingOAuth2TokenValidator(
+                JwtValidators.createDefaultWithIssuer(fleetIssuer),
+                exactClaim("sub", FLEET_SERVICE),
+                exactClaim(PavexJwtClaims.TOKEN_TYPE, PavexTokenTypes.SERVICE),
+                audience(OPERATIONS_SERVICE),
+                scope(OPERATIONS_FLEET_READ_SCOPE),
             ),
         )
         return decoder
@@ -86,5 +109,7 @@ class InternalServiceJwtConfig(
         private const val OPERATIONS_SHIPMENT_SCOPE = "operations.shipments.execute"
         private const val BILLING_SERVICE = "billing-service"
         private const val OPERATIONS_ACCESS_CHECK_SCOPE = "operations.access.check"
+        private const val FLEET_SERVICE = "fleet-service"
+        private const val OPERATIONS_FLEET_READ_SCOPE = "operations.fleet.read"
     }
 }

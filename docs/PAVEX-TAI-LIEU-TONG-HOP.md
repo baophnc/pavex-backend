@@ -1,6 +1,6 @@
 # Pavex — Tài liệu tổng hợp
 
-> Cập nhật ngày 28/09/2026. Đây là tài liệu duy nhất của dự án: kiến trúc, cách chạy, dữ liệu seed, vai trò và quyền,
+> Cập nhật ngày 29/09/2026. Đây là tài liệu duy nhất của dự án: kiến trúc, cách chạy, dữ liệu seed, vai trò và quyền,
 > nghiệp vụ, màn hình, entity và thuộc tính, API.
 > Bảng entity, enum và API ở mục 6 được trích tự động từ mã nguồn vào ngày trên. Nếu lệch với code thì code đúng
 > (nguồn gốc: các class `@Entity` và `@RestController` trong từng service).
@@ -23,35 +23,37 @@
 Pavex Express là hệ thống giao vận cho shop online: shop tạo vận đơn và in nhãn, bưu tá lấy hàng rồi chuyển qua mạng
 lưới bưu cục toàn quốc, giao cho người nhận và thu tiền, sau đó Pavex đối soát tiền thu hộ (COD) với shop.
 
-### 1.1 Ba repo
+### 1.1 Bốn repo
 
 | Repo | Đường dẫn | Nội dung |
 |---|---|---|
-| `pavex-backend` | `~/IdeaProjects/pavex-backend` | 8 service nghiệp vụ Kotlin/Spring Boot 4, API Gateway, Eureka, thư viện dùng chung (`libs/`), script (`scripts/`) và tài liệu này |
+| `pavex-backend` | `~/IdeaProjects/pavex-backend` | 9 service nghiệp vụ Kotlin/Spring Boot 4, API Gateway, Eureka, thư viện dùng chung (`libs/`), script (`scripts/`) và tài liệu này |
 | `pavex-client-portal` | `~/Documents/GitHub/pavex-client-portal` | Website cho khách hàng và shop (Next.js 16, pnpm) |
 | `pavex-management-portal` | `~/Documents/GitHub/pavex-management-portal` | Trang quản trị cho nhân viên Pavex, gồm cả màn giao hàng của bưu tá (Next.js 16, pnpm) |
+| `pavex-warehouse` | `~/Documents/GitHub/pavex-warehouse` | App hiện trường cho bưu tá, nhân viên bưu cục, trưởng bưu cục và tài xế trung chuyển (Flutter) |
 
 ### 1.2 Quy mô
 
 | Hạng mục | Số lượng |
 |---|---|
-| Service | 8 service nghiệp vụ + API Gateway + Eureka |
-| Entity (bảng) | 73 |
-| Enum | 85 |
-| API | 273 (240 qua Gateway, 33 nội bộ giữa các service) |
+| Service | 9 service nghiệp vụ + API Gateway + Eureka |
+| Entity (bảng) | 76 |
+| Enum | 89 |
+| API | 286 (250 qua Gateway, 36 nội bộ giữa các service) |
 | Trang client portal | 36 |
-| Trang management portal | 47 |
+| Trang management portal | 48 |
 
 ### 1.3 Kiến trúc
 
 ```text
 Trình duyệt ──▶ Client portal :3000 ─────┐   Next.js làm BFF: giữ token trong cookie httpOnly,
 Trình duyệt ──▶ Management portal :3001 ─┤   trình duyệt không bao giờ thấy token
+App hiện trường (Flutter) ──────────────┤   gọi thẳng Gateway, token nằm trong keychain của máy
                                          ▼
                           API Gateway :8080  (định tuyến qua Eureka, CORS, giới hạn tần suất bằng Redis)
                                          ▼
-  Auth · Identity · Partners · Network · Pricing · Operations · Shipment · Billing
-     │  mỗi service một PostgreSQL riêng (cổng 5433–5440)
+  Auth · Identity · Partners · Network · Pricing · Operations · Shipment · Billing · Fleet
+     │  mỗi service một PostgreSQL riêng (cổng 5433–5441)
      └─ RabbitMQ: email, đồng bộ vai trò, sự kiện vận hành, sự kiện tiền (Shipment → Billing)
 ```
 
@@ -65,6 +67,7 @@ Trình duyệt ──▶ Management portal :3001 ─┤   trình duyệt không 
 | **Operations** | Nhân sự vận hành, thành viên bưu cục, ca làm, phân công việc | Identity, Network |
 | **Shipment** | Vận đơn, kiện, nhãn, quét kiện, giao hàng, thu tiền khi giao, ngoại lệ, sự cố, giám sát | Partners, Pricing, Network, Operations; gửi sự kiện cho Billing |
 | **Billing** | Tiền bưu tá thu, phiếu nộp tiền, đối soát COD, hoá đơn cước, thanh toán payOS | Partners, Shipment, Operations |
+| **Fleet** | Chuyến xe trung chuyển giữa các hub: vị trí GPS do app tài xế gửi, lộ trình, trễ và mất tín hiệu | Operations (việc LINE_HAUL, bưu cục của người xem), Network (tuyến, giờ đi/đến) |
 
 ### 1.4 Nguyên tắc kỹ thuật chung
 
@@ -108,6 +111,7 @@ Trình duyệt ──▶ Management portal :3001 ─┤   trình duyệt không 
 | shipment-db | 5438 | `pavex_shipments` |
 | operations-db | 5439 | `pavex_operations` |
 | billing-db | 5440 | `pavex_billing` |
+| fleet-db | 5441 | `pavex_fleet` |
 | Redis (rate limit của gateway) | 6379 | |
 | RabbitMQ | 5672, giao diện 15672 | đăng nhập `pavex` / `pavex` |
 | Mailpit (hộp thư giả) | SMTP 1025, giao diện **http://localhost:8025** | mọi email xác thực, quên mật khẩu, xác nhận yêu cầu hỗ trợ đều vào đây |
@@ -127,6 +131,7 @@ User/mật khẩu của mọi database: `pavex` / `pavex`.
 | Operations | 8087 | Nhân sự, ca làm, phân công |
 | Shipment | 8084 | Vận đơn, quét kiện, giao hàng, thu tiền |
 | Billing | 8088 | Tiền mặt bưu tá nộp, đối soát, hoá đơn, payOS |
+| Fleet | 8089 | Chuyến xe trung chuyển, vị trí GPS |
 | **API Gateway** | **8080** | Cửa vào duy nhất cho hai frontend; Swagger: **http://localhost:8080/swagger-ui.html** |
 
 **Frontend:**
@@ -135,6 +140,7 @@ User/mật khẩu của mọi database: `pavex` / `pavex`.
 |---|---|
 | Client portal (khách hàng, shop) | **http://localhost:3000** |
 | Management portal (nhân viên) | **http://localhost:3001** (phải chỉ định cổng, xem mục 2.4.2) |
+| App hiện trường (Flutter) | Chạy trên iPhone/Android hoặc simulator, xem mục 2.4.4 |
 
 ---
 
@@ -169,7 +175,7 @@ Script này làm lần lượt:
 1. Nạp `.env` ở thư mục gốc nếu có (xem mục 2.8), tạo khoá JWT còn thiếu và bật container (`docker compose up -d --wait`).
 2. Build lại toàn bộ: `./mvnw -DskipTests clean install`. Vì vậy mọi thay đổi code đều được áp dụng.
 3. Chạy các service theo thứ tự: Discovery → Identity → Auth → Partners → Network → Pricing →
-   Operations → Shipment → Billing → Gateway. Mỗi service phải báo healthy thì mới chạy service tiếp theo.
+   Operations → Shipment → Billing → Fleet → Gateway. Mỗi service phải báo healthy thì mới chạy service tiếp theo.
 4. Flyway tự áp các migration còn thiếu khi mỗi service khởi động.
 
 Log nằm ở `.local/logs/<tên-service>.log`, PID ở `.local/pids/`.
@@ -195,21 +201,23 @@ Nếu chỉ muốn xem dữ liệu mà không chạy app, bật riêng database:
 2. Chạy các cấu hình **PAVEX - …** trong `.run/` theo đúng thứ tự ở mục 2.3.2.
 3. Đợi Identity và Auth khởi động xong rồi mới đăng nhập.
 
-`.run/` hiện **chưa có cấu hình cho Billing**. Chạy Billing bằng `dev-up.sh`, hoặc
-`java -jar billing/target/billing-service-0.0.1-SNAPSHOT.jar` sau khi build.
+`.run/` hiện **chưa có cấu hình cho Billing và Fleet**. Chạy hai service này bằng `dev-up.sh`, hoặc
+`java -jar billing/target/billing-service-0.0.1-SNAPSHOT.jar` (và `fleet/target/fleet-service-0.0.1-SNAPSHOT.jar`) sau khi build.
 
 #### 2.3.5 Migration mới thêm
 
-Ba migration dưới đây được thêm ngày 27/09/2026. Database tạo trước ngày đó sẽ tự áp chúng ở lần khởi động kế tiếp:
+Các migration dưới đây được thêm ngày 27–29/09/2026. Database tạo trước đó sẽ tự áp chúng ở lần khởi động kế tiếp:
 
 | Service | Migration | Nội dung |
 |---|---|---|
 | identity | `V15__support_request_permissions.sql` | Quyền `support.requests.read` / `.manage` cho ADMIN và Kinh doanh & CSKH |
 | partners | `V7__create_support_requests.sql` | Bảng yêu cầu hỗ trợ, tệp đính kèm, lịch sử xử lý |
 | shipment | `V16__charge_cancellation_after_pickup.sql` | Đơn huỷ sau khi đã lấy hàng vẫn tính cước cho merchant |
+| identity | `V16__fleet_trip_permissions.sql` | Quyền `fleet.trips.report-own` (tài xế) và `fleet.trips.read-hub` (trưởng bưu cục, vận hành miền, quản trị) |
+| fleet | `V1__create_fleet.sql` | Database mới `pavex_fleet`: chuyến xe, điểm GPS chia bảng theo ngày, đồng ý chia sẻ vị trí, nhật ký xem lộ trình |
 
-Sau khi khởi động lại, **đăng xuất rồi đăng nhập lại** các tài khoản ADMIN và Kinh doanh & CSKH để token
-nhận quyền mới.
+Sau khi khởi động lại, **đăng xuất rồi đăng nhập lại** các tài khoản ADMIN, Kinh doanh & CSKH, trưởng bưu cục,
+vận hành miền và tài xế để token nhận quyền mới.
 
 #### 2.3.6 Lỗi thường gặp
 
@@ -283,7 +291,23 @@ Chỉ tài khoản nhân viên mới đăng nhập được. Riêng bưu tá ch�
 ```bash
 pnpm check                   # lint + typecheck, chạy trong từng portal
 ./mvnw -pl <module> -am test # test backend, ví dụ -pl shipment
+flutter analyze && flutter test  # app hiện trường
 ```
+
+#### 2.4.4 App hiện trường (Flutter)
+
+```bash
+cd ~/Documents/GitHub/pavex-warehouse
+flutter pub get
+flutter run                  # chọn iPhone, simulator hoặc Android
+```
+
+- Ở màn đăng nhập, bấm **Máy chủ** để trỏ tới Gateway: simulator iOS và macOS dùng `http://localhost:8080`,
+  Android emulator dùng `http://10.0.2.2:8080`, điện thoại thật dùng `http://<IP máy Mac>:8080` (cùng Wi‑Fi,
+  và cho phép Java nhận kết nối nếu tường lửa macOS hỏi).
+- iPhone thật: mở `ios/Runner.xcworkspace` bằng Xcode, chọn Team (Apple ID cá nhân) ở Signing rồi chạy.
+- GPS cho chuyến xe: thử trên simulator bằng Features → Location → Freeway Drive (iOS) hoặc Extended controls →
+  Location → Routes (Android). Bản macOS không có GPS.
 
 ---
 
@@ -488,6 +512,8 @@ Tất cả tài khoản dưới đây dùng mật khẩu ở mục 2.5.2.
 | Vận hành miền | Management :3001 | `vanhanh.mienbac@pavex.com` | Vận đơn, phân công, giám sát |
 | Trưởng bưu cục | Management :3001 | `truongbc.hn.badinh@pavex.com` | Nhân sự, ca làm, vận đơn của bưu cục |
 | Bưu tá | Management :3001 | `buuta1.hn.badinh@pavex.com` | **Giao hàng**: kiện đang giao, thu tiền, nộp tiền |
+| Tài xế trung chuyển | App hiện trường | `taixe.hn.thienloc@pavex.com` | Tab **Chuyến**: đồng ý chia sẻ vị trí, bắt đầu chuyến BC-HN-THIENLOC → KHO-HN, gửi GPS, bấm Đã tới |
+| Trưởng bưu cục (xem xe) | Management :3001 | `truongbc.hn.thienloc@pavex.com` | **Xe trung chuyển**: xe đi/đến bưu cục mình trên bản đồ, lộ trình từng chuyến |
 | Kế toán | Management :3001 | `ketoan1@pavex.com` | Tài chính: duyệt tiền nộp, đối soát, hoá đơn |
 | Quản trị | Management :3001 | `admin@pavex.com` | Toàn quyền |
 
@@ -542,14 +568,14 @@ Identity sở hữu danh mục vai trò và quyền; Auth chỉ đọc lại khi
 | `COURIER` | Bưu tá | Lấy hàng, giao hàng và thu tiền theo việc được giao | `assignments.accept-own`, `assignments.execute-own`, `assignments.read-own`, `billing.cash.collect`, `billing.cash.submit-own`, `deliveries.complete-own`, `scans.create`, `shipments.read-assigned` |
 | `CUSTOMER` | Khách cá nhân | Tài khoản khách hàng mặc định | — (chỉ dữ liệu của chính mình) |
 | `FINANCE_ACCOUNTANT` | Kế toán | Duyệt tiền nộp, đối soát và hóa đơn trên toàn quốc | `billing.cash.approve`, `billing.cash.read-hub`, `billing.manage`, `partners.merchants.read`, `scope.all-hubs`, `shipments.admin.read` |
-| `HUB_MANAGER` | Trưởng bưu cục | Điều phối, nhân sự, vận đơn và tiền thu hộ của bưu cục được phân công | `assignments.accept-own`, `assignments.execute-own`, `assignments.read-own`, `billing.cash.collect`, `billing.cash.read-hub`, `operations.assignments.read`, `operations.dispatch.manage`, `operations.hub.manage`, `operations.hub.read`, `operations.workforce.read`, `scans.create`, `shipments.cases.manage`, `shipments.cases.read`, `shipments.control-tower.read`, `shipments.exceptions.manage`, `shipments.exceptions.read`, `shipments.read-hub`, `shipments.weight.adjust` |
-| `LINE_HAUL_DRIVER` | Tài xế trung chuyển | Chạy các chuyến giữa bưu cục và kho theo việc được giao | `assignments.accept-own`, `assignments.execute-own`, `assignments.read-own`, `scans.create`, `shipments.read-assigned` |
+| `HUB_MANAGER` | Trưởng bưu cục | Điều phối, nhân sự, vận đơn và tiền thu hộ của bưu cục được phân công | `assignments.accept-own`, `assignments.execute-own`, `assignments.read-own`, `billing.cash.collect`, `billing.cash.read-hub`, `fleet.trips.read-hub`, `operations.assignments.read`, `operations.dispatch.manage`, `operations.hub.manage`, `operations.hub.read`, `operations.workforce.read`, `scans.create`, `shipments.cases.manage`, `shipments.cases.read`, `shipments.control-tower.read`, `shipments.exceptions.manage`, `shipments.exceptions.read`, `shipments.read-hub`, `shipments.weight.adjust` |
+| `LINE_HAUL_DRIVER` | Tài xế trung chuyển | Chạy các chuyến giữa bưu cục và kho theo việc được giao | `assignments.accept-own`, `assignments.execute-own`, `assignments.read-own`, `fleet.trips.report-own`, `scans.create`, `shipments.read-assigned` |
 | `MERCHANT` | Shop | Tạo và theo dõi vận đơn, hóa đơn của shop mình | `billing.invoices.pay-own`, `billing.invoices.read-own`, `partners.merchants.manage-own`, `shipments.cancel-own`, `shipments.create`, `shipments.read-own` |
-| `OPERATIONS_MANAGER` | Quản lý vận hành | Vận đơn, sự cố, nhân sự và mạng lưới trên toàn quốc | `network.manage`, `network.read`, `operations.assignments.manage`, `operations.assignments.read`, `operations.dispatch.manage`, `operations.hub.manage`, `operations.hub.read`, `operations.workforce.manage`, `operations.workforce.read`, `partners.merchants.read`, `pricing.read`, `scope.all-hubs`, `shipments.admin.read`, `shipments.cases.manage`, `shipments.cases.read`, `shipments.control-tower.read`, `shipments.exceptions.manage`, `shipments.exceptions.read`, `shipments.weight.adjust` |
+| `OPERATIONS_MANAGER` | Quản lý vận hành | Vận đơn, sự cố, nhân sự và mạng lưới trên toàn quốc | `fleet.trips.read-hub`, `network.manage`, `network.read`, `operations.assignments.manage`, `operations.assignments.read`, `operations.dispatch.manage`, `operations.hub.manage`, `operations.hub.read`, `operations.workforce.manage`, `operations.workforce.read`, `partners.merchants.read`, `pricing.read`, `scope.all-hubs`, `shipments.admin.read`, `shipments.cases.manage`, `shipments.cases.read`, `shipments.control-tower.read`, `shipments.exceptions.manage`, `shipments.exceptions.read`, `shipments.weight.adjust` |
 | `WAREHOUSE_OPERATOR` | Nhân viên bưu cục | Quét nhập/xuất kho và nhận tiền thu hộ tại bưu cục được phân công | `assignments.accept-own`, `assignments.execute-own`, `assignments.read-own`, `billing.cash.collect`, `billing.cash.read-hub`, `operations.hub.read`, `scans.create`, `shipments.exceptions.read`, `shipments.read-hub` |
 
 <details>
-<summary>Danh mục 49 quyền</summary>
+<summary>Danh mục 51 quyền</summary>
 
 | Quyền | Ý nghĩa |
 |---|---|
@@ -564,6 +590,8 @@ Identity sở hữu danh mục vai trò và quyền; Auth chỉ đọc lại khi
 | `billing.invoices.read-own` | Read own customer invoices |
 | `billing.manage` | Manage customer invoices and payments |
 | `deliveries.complete-own` | Complete own deliveries |
+| `fleet.trips.read-hub` | Watches line-haul trips leaving or arriving at the hubs in scope, with their GPS track |
+| `fleet.trips.report-own` | Starts and ends own line-haul trips and sends their GPS positions |
 | `identity.roles.assign` | Assign roles to users |
 | `identity.roles.manage` | Create, update and delete custom roles and manage their permission matrix |
 | `identity.roles.read` | Read roles |
@@ -797,6 +825,34 @@ Kế toán lập bảng đối soát cho một shop đến một mốc thời gi
   - Trả yêu cầu lại thì trạng thái về Mới. Giải quyết hoặc đóng phải có ghi chú. Mọi bước có lịch sử.
 - Bảng điều hành hiện số yêu cầu mới.
 
+### 4.9 Xe trung chuyển (Fleet)
+
+Theo dõi xe chạy giữa các hub (bưu cục → kho tỉnh → trung tâm miền và chiều ngược lại). Không theo dõi bưu tá đi
+giao, và khách hàng không bao giờ thấy vị trí.
+
+- **Chuyến là gì:** mỗi chặng của vận đơn sinh một việc LINE_HAUL cho tài xế. Các việc cùng tuyến, cùng giờ xuất phát
+  theo lịch nằm trên cùng một xe, nên Fleet gom chúng thành **một chuyến** = (tài xế, tuyến, giờ xuất phát).
+- **Đồng ý trước:** lần đầu, tài xế phải đồng ý điều khoản chia sẻ vị trí trong app. Đổi phiên bản điều khoản thì hỏi lại.
+- **Bắt đầu:** tài xế bấm "Bắt đầu chuyến" (có thể nhập biển số xe), hoặc chuyến **tự bắt đầu** khi quét Lên xe kiện
+  đầu tiên. Mỗi tài xế chỉ chạy một chuyến tại một thời điểm.
+- **Gửi vị trí:**
+  - App ghi GPS khi xe đi được trên 30 m (khoảng 15 giây một lần). Khi xe đứng yên, app hỏi vị trí mỗi phút để xe
+    không bị báo mất tín hiệu.
+  - App gửi theo lô mỗi 30 giây. Lúc mất sóng thì giữ lại trên máy và gửi bù khi có mạng. Gửi lặp lại không tạo điểm trùng.
+  - Server bỏ điểm có giờ ở tương lai hoặc trước lúc bắt đầu chuyến, và điểm nhảy xa bất thường (trên ~200 km/h).
+  - Vị trí giả (Android báo) được ghi cờ để cảnh báo.
+- **Kết thúc:** tài xế bấm "Đã tới", hoặc chuyến **tự kết thúc** khi hub đến nhập đủ kiện (các việc LINE_HAUL đã
+  hoàn tất). Hết chuyến thì app ngừng gửi.
+- **Ai xem được:**
+  - Trưởng bưu cục thấy các chuyến **đi hoặc đến** bưu cục mình.
+  - Vận hành miền và quản trị thấy toàn quốc.
+  - Mỗi lần mở lộ trình đều được ghi nhật ký.
+- **Trang "Xe trung chuyển"** (`/fleet`):
+  - Bản đồ các xe đang chạy, tự làm mới mỗi 10 giây. Lọc theo bưu cục.
+  - Trạng thái **trễ** (quá giờ tới dự kiến) và **mất tín hiệu** (quá 5 phút không có vị trí).
+  - Bấm vào một xe để xem lộ trình, quãng đường, tốc độ và pin điện thoại.
+- **Lưu trữ:** điểm GPS thô lưu theo từng ngày, tự xoá sau 30 ngày. Vị trí mới nhất và quãng đường nằm ngay trên chuyến.
+
 ---
 
 ## 5. Màn hình của hai portal
@@ -858,6 +914,7 @@ Menu chỉ hiện mục người dùng có quyền. Bưu tá chỉ thấy "Giao 
 | `/finance/cash` | Duyệt tiền nộp | Kế toán (`billing.cash.approve`) |
 | `/finance/invoices` | Hóa đơn Merchant | Kế toán (`billing.manage`) |
 | `/finance/settlements` | Đối soát Merchant | Kế toán (`billing.manage`) |
+| `/fleet` | Xe trung chuyển | Trưởng bưu cục, vận hành (`fleet.trips.read-hub`) |
 | `/forgot-password` | Quên mật khẩu | Công khai |
 | `/identity/roles` | Vai trò & quyền hạn | `identity.roles.read` |
 | `/identity/users` | Người dùng | `identity.users.read` |
@@ -1696,7 +1753,7 @@ Danh mục hành chính, sổ địa chỉ, shop, điểm lấy hàng, yêu cầ
 </details>
 
 <details>
-<summary>API (55 endpoint)</summary>
+<summary>API (56 endpoint)</summary>
 
 | Method | Đường dẫn | Quyền |
 |---|---|---|
@@ -1747,6 +1804,7 @@ Danh mục hành chính, sổ địa chỉ, shop, điểm lấy hàng, yêu cầ
 | `PUT` | `/api/v1/admin/network/service-areas/{id}` | `network.manage` |
 | `PATCH` | `/api/v1/admin/network/service-areas/{id}/status` | `network.manage` |
 | `GET` | `/api/v1/network/hubs` | Công khai |
+| `POST` | `/internal/v1/network/fleet/route-legs` | Nội bộ (JWT dịch vụ) |
 | `POST` | `/internal/v1/network/locations/resolve` | Nội bộ (JWT dịch vụ) |
 | `POST` | `/internal/v1/network/operations/hubs/snapshots` | Nội bộ (JWT dịch vụ) |
 | `POST` | `/internal/v1/network/operations/hubs/snapshots-by-codes` | Nội bộ (JWT dịch vụ) |
@@ -2148,7 +2206,7 @@ Danh mục hành chính, sổ địa chỉ, shop, điểm lấy hàng, yêu cầ
 </details>
 
 <details>
-<summary>API (48 endpoint)</summary>
+<summary>API (50 endpoint)</summary>
 
 | Method | Đường dẫn | Quyền |
 |---|---|---|
@@ -2191,6 +2249,8 @@ Danh mục hành chính, sổ địa chỉ, shop, điểm lấy hàng, yêu cầ
 | `POST` | `/api/v1/operations/shifts/{id}/check-in` | `assignments.execute-own` |
 | `POST` | `/api/v1/operations/shifts/{id}/check-out` | `assignments.execute-own` |
 | `POST` | `/internal/v1/operations/access/check` | Nội bộ (JWT dịch vụ) |
+| `GET` | `/internal/v1/operations/fleet/users/{userId}/hub-scope` | Nội bộ (JWT dịch vụ) |
+| `GET` | `/internal/v1/operations/fleet/users/{userId}/line-haul-assignments` | Nội bộ (JWT dịch vụ) |
 | `POST` | `/internal/v1/operations/shipments/access/check` | Nội bộ (JWT dịch vụ) |
 | `GET` | `/internal/v1/operations/shipments/assignments/by-user/{userId}` | Nội bộ (JWT dịch vụ) |
 | `GET` | `/internal/v1/operations/shipments/case-admin-scope/{userId}` | Nội bộ (JWT dịch vụ) |
@@ -2927,14 +2987,114 @@ Danh mục hành chính, sổ địa chỉ, shop, điểm lấy hàng, yêu cầ
 </details>
 
 
-### 6.9 Thư viện dùng chung (`libs/`)
+### 6.9 Fleet — `pavex_fleet` (5441, service 8089)
+
+Điểm GPS thô nằm trong bảng `fleet.trip_locations`, chia theo ngày (không qua JPA nên không có trong bảng entity dưới).
+Mỗi dòng gồm: chuyến, số thứ tự trên máy, thời điểm ghi, thời điểm nhận, lat, lng, độ chính xác, tốc độ, hướng, pin, cờ vị trí giả.
+
+<details>
+<summary><b>DriverConsent</b> — `fleet.driver_consents` · 3 thuộc tính — Tài xế đã đồng ý chia sẻ vị trí (theo phiên bản điều khoản)</summary>
+
+| Thuộc tính | Cột | Kiểu | Ràng buộc |
+|---|---|---|---|
+| `userId` | `user_id` | `UUID` | khoá chính |
+| `termsVersion` | `terms_version` | `String` | tối đa 20 ký tự, bắt buộc |
+| `acceptedAt` | `accepted_at` | `Instant` | bắt buộc |
+
+</details>
+
+<details>
+<summary><b>TripAccessLog</b> — `fleet.trip_access_log` · 4 thuộc tính — Ai đã mở lộ trình GPS của chuyến nào, lúc nào</summary>
+
+| Thuộc tính | Cột | Kiểu | Ràng buộc |
+|---|---|---|---|
+| `id` | `id` | `UUID` | khoá chính |
+| `tripId` | `trip_id` | `UUID` | bắt buộc |
+| `viewerUserId` | `viewer_user_id` | `UUID` | bắt buộc |
+| `viewedAt` | `viewed_at` | `Instant` | bắt buộc |
+
+</details>
+
+<details>
+<summary><b>FleetTrip</b> — `fleet.trips` · 34 thuộc tính — Chuyến xe trung chuyển: tài xế, tuyến, hub đi/đến, giờ kế hoạch và thực tế, vị trí mới nhất, quãng đường</summary>
+
+| Thuộc tính | Cột | Kiểu | Ràng buộc |
+|---|---|---|---|
+| `id` | `id` | `UUID` | khoá chính |
+| `driverUserId` | `driver_user_id` | `UUID` | bắt buộc |
+| `driverEmail` | `driver_email` | `String?` | tối đa 320 ký tự, có thể rỗng |
+| `laneId` | `lane_id` | `UUID` | bắt buộc |
+| `laneCode` | `lane_code` | `String` | tối đa 80 ký tự, bắt buộc |
+| `fromHubId` | `from_hub_id` | `UUID` | bắt buộc |
+| `fromHubCode` | `from_hub_code` | `String` | tối đa 50 ký tự, bắt buộc |
+| `fromHubName` | `from_hub_name` | `String` | tối đa 200 ký tự, bắt buộc |
+| `toHubId` | `to_hub_id` | `UUID` | bắt buộc |
+| `toHubCode` | `to_hub_code` | `String` | tối đa 50 ký tự, bắt buộc |
+| `toHubName` | `to_hub_name` | `String` | tối đa 200 ký tự, bắt buộc |
+| `plannedDepartureAt` | `planned_departure_at` | `Instant` | bắt buộc |
+| `plannedArrivalAt` | `planned_arrival_at` | `Instant` | bắt buộc |
+| `distanceKm` | `distance_km` | `BigDecimal?` | có thể rỗng |
+| `vehiclePlate` | `vehicle_plate` | `String?` | tối đa 20 ký tự, có thể rỗng |
+| `status` | `status` | `FleetTripStatus` | tối đa 20 ký tự, enum, bắt buộc |
+| `startSource` | `start_source` | `TripStartSource` | tối đa 20 ký tự, enum, bắt buộc |
+| `startedAt` | `started_at` | `Instant` | bắt buộc |
+| `endSource` | `end_source` | `TripEndSource?` | tối đa 20 ký tự, enum, có thể rỗng |
+| `arrivedAt` | `arrived_at` | `Instant?` | có thể rỗng |
+| `lastLat` | `last_lat` | `Double?` | có thể rỗng |
+| `lastLng` | `last_lng` | `Double?` | có thể rỗng |
+| `lastAccuracyM` | `last_accuracy_m` | `Double?` | có thể rỗng |
+| `lastSpeedMps` | `last_speed_mps` | `Double?` | có thể rỗng |
+| `lastHeadingDeg` | `last_heading_deg` | `Double?` | có thể rỗng |
+| `lastBatteryPct` | `last_battery_pct` | `Int?` | có thể rỗng |
+| `lastMocked` | `last_mocked` | `Boolean` | bắt buộc |
+| `lastRecordedAt` | `last_recorded_at` | `Instant?` | có thể rỗng |
+| `lastReceivedAt` | `last_received_at` | `Instant?` | có thể rỗng |
+| `pointCount` | `point_count` | `Long` | bắt buộc |
+| `travelledMeters` | `travelled_meters` | `Double` | bắt buộc |
+| `createdAt` | `created_at` | `Instant` | bắt buộc |
+| `updatedAt` | `updated_at` | `Instant` | bắt buộc |
+| `version` | `version` | `Long` | khoá lạc quan (@Version), bắt buộc |
+
+</details>
+
+<details>
+<summary>Enum trạng thái và danh mục</summary>
+
+| Enum | Giá trị |
+|---|---|
+| `DriverTripStatus` | `PLANNED`, `IN_PROGRESS`, `ARRIVED` |
+| `FleetTripStatus` | `IN_PROGRESS`, `ARRIVED` |
+| `TripStartSource` | `DRIVER`, `DEPART_SCAN` |
+| `TripEndSource` | `DRIVER`, `ALL_RECEIVED` |
+
+</details>
+
+<details>
+<summary>API (10 endpoint)</summary>
+
+| Method | Đường dẫn | Quyền |
+|---|---|---|
+| `GET` | `/api/v1/fleet/me/consent` | `fleet.trips.report-own` |
+| `PUT` | `/api/v1/fleet/me/consent` | `fleet.trips.report-own` |
+| `GET` | `/api/v1/fleet/me/trips` | `fleet.trips.report-own` |
+| `POST` | `/api/v1/fleet/me/trips/start` | `fleet.trips.report-own` |
+| `POST` | `/api/v1/fleet/me/trips/start-from-scan` | `fleet.trips.report-own` |
+| `POST` | `/api/v1/fleet/me/trips/{tripId}/arrive` | `fleet.trips.report-own` |
+| `POST` | `/api/v1/fleet/me/trips/{tripId}/locations` | `fleet.trips.report-own` |
+| `GET` | `/api/v1/fleet/trips` | `fleet.trips.read-hub` |
+| `GET` | `/api/v1/fleet/trips/{tripId}` | `fleet.trips.read-hub` |
+| `GET` | `/api/v1/fleet/trips/{tripId}/track` | `fleet.trips.read-hub` |
+
+</details>
+
+### 6.10 Thư viện dùng chung (`libs/`)
 
 | Thư viện | Nội dung chính |
 |---|---|
 | `libs/platform-common` | `PavexActor` / `requirePavexActor()` (đọc người gọi từ JWT), `HubAccessScope` (phạm vi bưu cục), chuẩn hoá SĐT `VietnamesePhone` |
 | `libs/platform-contracts` | DTO của API nội bộ, để service gọi và service nhận dùng chung một định nghĩa |
 | `platform/discovery-server` | Eureka (cổng 8761) |
-| `platform/api-gateway` | Gateway (cổng 8080): định tuyến, CORS, giới hạn tần suất theo IP |
+| `platform/api-gateway` | Gateway (cổng 8080): định tuyến, CORS, giới hạn tần suất theo IP; riêng `/api/v1/fleet/**` giới hạn theo người dùng, vì điện thoại 4G hay dùng chung IP |
 
 ---
 
@@ -2942,16 +3102,17 @@ Danh mục hành chính, sổ địa chỉ, shop, điểm lấy hàng, yêu cầ
 
 Flyway tự áp migration còn thiếu khi service khởi động. File nằm ở `<service>/src/main/resources/db/migration/`.
 
-| Service | Số migration | Mới nhất | Thêm ngày 27/09/2026 |
+| Service | Số migration | Mới nhất | Mới thêm 27–29/09/2026 |
 |---|---:|---|---|
 | Auth | 17 | `V19__add_refresh_session_absolute_lifetime.sql` | — |
-| Identity | 14 | `V15__support_request_permissions.sql` | `V15` |
+| Identity | 15 | `V16__fleet_trip_permissions.sql` | `V15`, `V16` |
 | Partners | 7 | `V7__create_support_requests.sql` | `V7` |
 | Network | 5 | `V5__expire_unconfirmed_shipment_reservations.sql` | — |
 | Pricing | 5 | `V5__province_pricing_zones.sql` | — |
 | Operations | 9 | `V9__hub_manager_workforce_kind.sql` | — |
 | Shipment | 15 | `V16__charge_cancellation_after_pickup.sql` | `V16` |
 | Billing | 1 | `V1__create_billing.sql` | — |
+| Fleet | 1 | `V1__create_fleet.sql` | `V1` (service mới) |
 
 ---
 
@@ -2963,8 +3124,11 @@ Flyway tự áp migration còn thiếu khi service khởi động. File nằm �
 | Chat hỗ trợ trên website | Giao diện demo, chưa nối backend. Khách dùng form hỗ trợ (mục 4.8) |
 | Chứng từ giao hàng dạng mã | Bưu tá nhập tay; hệ thống chưa gửi OTP cho người nhận để đối chiếu |
 | Cước | Không tính lại khi cân lại kiện; chưa có phí hoàn hàng |
-| Bưu tá | Dùng trang quản trị trên trình duyệt điện thoại; chưa có app riêng |
+| App hiện trường | Có app Flutter `pavex-warehouse` cho bưu tá, nhân viên, trưởng bưu cục và tài xế. Bưu tá vẫn dùng được màn Giao hàng trên web |
 | Kế toán | Chưa xuất dữ liệu sang phần mềm kế toán |
-| IntelliJ | `.run/` chưa có cấu hình chạy Billing (mục 2.3.4) |
+| IntelliJ | `.run/` chưa có cấu hình chạy Billing và Fleet (mục 2.3.4) |
+| Bản đồ xe | Dùng tile OpenStreetMap công cộng, chỉ hợp cho dev. Chạy thật nên đổi sang nhà cung cấp Việt Nam (Goong, VietMap) để hiển thị đúng chủ quyền |
+| Theo dõi xe | Chưa có toạ độ hub nên chưa tự nhận biết xe vào/rời hub bằng vị trí; chưa có danh mục xe (biển số do tài xế tự nhập); chưa dự báo giờ tới |
+| GPS nền trên iPhone | Cần tài xế cho phép vị trí; iOS có thể dừng app nếu tài xế vuốt tắt hẳn app giữa chuyến |
 | Script E2E cũ | `seed-baofuc-e2e.mjs`, `seed-luong-giao-hang-viet.mjs` viết cho mạng lưới demo cũ, chưa kiểm chứng lại |
 | Triển khai thật | Cấu hình hiện tại chỉ dành cho local. Trước khi deploy cần: quản lý secret, khoá JWT riêng, tắt hoặc đổi mật khẩu admin khởi tạo, đổi mật khẩu DB/RabbitMQ/Redis, đặt domain, CORS và danh sách proxy tin cậy (mục 2.3.7, 2.8) |

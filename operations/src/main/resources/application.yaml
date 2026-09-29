@@ -47,6 +47,9 @@ security:
     billing:
       issuer: ${BILLING_SERVICE_JWT_ISSUER:http://localhost:8088}
       public-key: file:${pavex.keys-dir}/billing/public.pem
+    fleet:
+      issuer: ${FLEET_SERVICE_JWT_ISSUER:http://localhost:8089}
+      public-key: file:${pavex.keys-dir}/fleet/public.pem
 
 operations:
   dispatch:

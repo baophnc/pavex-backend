@@ -28,6 +28,10 @@ class InternalServiceJwtConfig(
     private val operationsPublicKey: Resource,
     @Value("\${security.trusted-services.operations.issuer}")
     private val operationsIssuer: String,
+    @Value("\${security.trusted-services.fleet.public-key}")
+    private val fleetPublicKey: Resource,
+    @Value("\${security.trusted-services.fleet.issuer}")
+    private val fleetIssuer: String,
 ) {
     @Bean("pricingServiceJwtDecoder")
     fun pricingServiceJwtDecoder(): JwtDecoder = decoder(
@@ -51,6 +55,15 @@ class InternalServiceJwtConfig(
         issuer = operationsIssuer,
         subject = OPERATIONS_SERVICE,
         requiredScope = NETWORK_OPERATIONS_READ_SCOPE,
+    )
+
+    /** Fleet only reads the lane, hubs and planned times of line-haul route legs. */
+    @Bean("fleetServiceJwtDecoder")
+    fun fleetServiceJwtDecoder(): JwtDecoder = decoder(
+        publicKeyResource = fleetPublicKey,
+        issuer = fleetIssuer,
+        subject = FLEET_SERVICE,
+        requiredScope = NETWORK_FLEET_READ_SCOPE,
     )
 
     private fun decoder(
@@ -100,5 +113,7 @@ class InternalServiceJwtConfig(
         private const val NETWORK_PRICING_RESOLVE_SCOPE = "network.pricing.resolve"
         private const val NETWORK_SHIPMENT_RESERVE_SCOPE = "network.shipments.reserve"
         private const val NETWORK_OPERATIONS_READ_SCOPE = "network.operations.read"
+        private const val FLEET_SERVICE = "fleet-service"
+        private const val NETWORK_FLEET_READ_SCOPE = "network.fleet.read"
     }
 }
