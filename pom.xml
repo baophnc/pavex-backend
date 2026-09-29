@@ -51,6 +51,7 @@
         <module>shipment</module>
         <module>operations</module>
         <module>billing</module>
+        <module>fleet</module>
         <module>platform/discovery-server</module>
         <module>platform/api-gateway</module>
     </modules>

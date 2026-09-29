@@ -1,0 +1,88 @@
+# LOCAL DEVELOPMENT ONLY. Do not deploy with these credentials or bootstrap settings.
+spring:
+  application:
+    name: fleet-service
+
+  datasource:
+    url: ${FLEET_DB_URL:jdbc:postgresql://localhost:5441/pavex_fleet}
+    username: ${FLEET_DB_USERNAME:pavex}
+    password: ${FLEET_DB_PASSWORD:pavex}
+
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        default_schema: fleet
+
+  flyway:
+    enabled: true
+
+server:
+  port: ${FLEET_SERVER_PORT:8089}
+
+security:
+  jwt:
+    issuer: ${JWT_ISSUER:http://localhost:8081}
+    public-key: file:${pavex.keys-dir}/auth/public.pem
+  service-jwt:
+    issuer: ${FLEET_SERVICE_JWT_ISSUER:http://localhost:8089}
+    ttl: ${SERVICE_JWT_TTL:PT1M}
+    private-key: file:${pavex.keys-dir}/fleet/private.pem
+    public-key: file:${pavex.keys-dir}/fleet/public.pem
+
+fleet:
+  integrations:
+    operations:
+      service-url: ${OPERATIONS_SERVICE_URL:http://operations-service}
+    network:
+      service-url: ${NETWORK_SERVICE_URL:http://network-service}
+  tracking:
+    # A trip with no position for this long is shown as "signal lost".
+    signal-lost-after: ${FLEET_SIGNAL_LOST_AFTER:PT5M}
+    # Raw GPS points are dropped with their daily partition after this many days.
+    retention-days: ${FLEET_LOCATION_RETENTION_DAYS:30}
+    # How often in-progress trips are checked for "every parcel received at the destination hub".
+    arrival-check-interval: ${FLEET_ARRIVAL_CHECK_INTERVAL:PT1M}
+
+pavex:
+  keys-dir: ${user.home}/.pavex/keys
+  openapi:
+    gateway-url: ${PAVEX_PUBLIC_BASE_URL:http://localhost:8080}
+
+eureka:
+  client:
+    enabled: ${EUREKA_ENABLED:true}
+    register-with-eureka: ${EUREKA_REGISTER_WITH_EUREKA:true}
+    fetch-registry: ${EUREKA_FETCH_REGISTRY:true}
+    registry-fetch-interval-seconds: ${EUREKA_REGISTRY_FETCH_INTERVAL_SECONDS:5}
+    service-url:
+      defaultZone: ${EUREKA_DEFAULT_ZONE:http://localhost:8761/eureka/}
+    healthcheck:
+      enabled: ${EUREKA_HEALTHCHECK_ENABLED:false}
+  instance:
+    initial-instance-info-replication-interval-seconds: 5
+    instance-info-replication-interval-seconds: 10
+    # All services currently run on this machine. Do not advertise macOS .local hostnames.
+    prefer-ip-address: true
+    ip-address: 127.0.0.1
+    hostname: 127.0.0.1
+
+springdoc:
+  api-docs:
+    enabled: ${SPRINGDOC_API_DOCS_ENABLED:true}
+  paths-to-match:
+    - /api/**
+
+management:
+  health:
+    eureka:
+      enabled: false
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: never
