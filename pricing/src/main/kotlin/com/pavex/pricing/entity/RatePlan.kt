@@ -180,9 +180,9 @@ class RatePlan(
         return removed
     }
 
-    fun activate(actorUserId: UUID, now: Instant) {
+    fun activate(actorUserId: UUID, now: Instant, startsAt: Instant = effectiveFrom ?: now) {
         requireDraft()
-        if (effectiveFrom == null) effectiveFrom = now
+        effectiveFrom = startsAt
         if (effectiveTo != null && !effectiveTo!!.isAfter(requireNotNull(effectiveFrom))) {
             throw ConflictException(
                 "invalid_effective_window",
@@ -211,6 +211,33 @@ class RatePlan(
         }
         retiredBy = actorUserId
         retiredAt = now
+        updatedAt = now
+    }
+
+    /**
+     * Ends this active plan at [handOverAt], when its replacement starts. A hand-over that is
+     * already due retires the plan; a scheduled one leaves it active until then.
+     */
+    fun supersede(handOverAt: Instant, actorUserId: UUID, now: Instant) {
+        if (status != RatePlanStatus.ACTIVE) {
+            throw ConflictException(
+                "rate_plan_not_active",
+                "Only an active rate plan can be replaced.",
+            )
+        }
+        val start = requireNotNull(effectiveFrom) { "An active rate plan always has an effective-from time." }
+        if (!handOverAt.isAfter(start)) {
+            throw ConflictException(
+                "rate_plan_replacement_starts_later",
+                "Rate plan $code-r$revision starts at or after its replacement. Retire it instead of replacing it.",
+            )
+        }
+        effectiveTo = handOverAt
+        if (!handOverAt.isAfter(now)) {
+            status = RatePlanStatus.RETIRED
+            retiredBy = actorUserId
+            retiredAt = now
+        }
         updatedAt = now
     }
 

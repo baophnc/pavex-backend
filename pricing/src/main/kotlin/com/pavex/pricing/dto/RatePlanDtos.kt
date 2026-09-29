@@ -229,4 +229,6 @@ data class CreateRatePlanRevisionRequest(
 data class RatePlanLifecycleRequest(
     @field:Size(max = 500)
     val reason: String? = null,
+    /** Activate only: end the overlapping active plan exactly when this plan starts. */
+    val replaceActivePlan: Boolean = false,
 )

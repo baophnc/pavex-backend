@@ -28,7 +28,7 @@ class QuoteRequest(
     var rateVersion: String = "",
     @Enumerated(EnumType.STRING)
     @Column(name = "pricing_zone", nullable = false, length = 30)
-    var pricingZone: PricingZone = PricingZone.SAME_SERVICE_AREA,
+    var pricingZone: PricingZone = PricingZone.SAME_PROVINCE,
     @Column(name = "origin_province_code", nullable = false, length = 20)
     var originProvinceCode: String = "",
     @Column(name = "origin_ward_code", nullable = false, length = 20)
