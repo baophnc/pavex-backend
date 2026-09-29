@@ -24,7 +24,7 @@ class SecurityConfig {
     @Order(1)
     fun internalSecurityFilterChain(
         http: HttpSecurity,
-        @Qualifier("shipmentServiceJwtDecoder") shipmentServiceJwtDecoder: JwtDecoder,
+        @Qualifier("internalServiceJwtDecoder") internalServiceJwtDecoder: JwtDecoder,
     ): SecurityFilterChain =
         http
             .securityMatcher("/internal/v1/**")
@@ -34,7 +34,7 @@ class SecurityConfig {
                 it.anyRequest().authenticated()
             }
             .oauth2ResourceServer { resourceServer ->
-                resourceServer.jwt { jwt -> jwt.decoder(shipmentServiceJwtDecoder) }
+                resourceServer.jwt { jwt -> jwt.decoder(internalServiceJwtDecoder) }
             }
             .build()
 
@@ -57,6 +57,9 @@ class SecurityConfig {
                     "/actuator/health/**",
                 ).permitAll()
                     .requestMatchers(HttpMethod.GET, "/api/v1/locations/**").permitAll()
+                    // Contact, support, claim and career forms work without an account.
+                    .requestMatchers(HttpMethod.POST, "/api/v1/support/requests").permitAll()
+                    .requestMatchers("/api/v1/admin/support/**").authenticated()
                     .requestMatchers(
                         "/api/v1/partners/**",
                         "/api/v1/merchants/**",

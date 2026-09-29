@@ -63,6 +63,33 @@ data class AdminMerchantResponse(
     val history: List<MerchantStatusHistoryResponse>,
 )
 
+/** Whether an admin-reviewed merchant can actually create shipments, and why not. */
+data class AdminMerchantReadinessResponse(
+    /** Null when nothing else blocks but Identity could not be asked. */
+    val canCreateOrder: Boolean?,
+    val restrictions: List<String>,
+    val identityChecked: Boolean,
+    val defaultPickupAddressId: UUID?,
+    val pickupAddresses: List<AdminPickupAddressResponse>,
+)
+
+data class AdminPickupAddressResponse(
+    val id: UUID,
+    val name: String,
+    val contactName: String,
+    val contactPhone: String,
+    val addressLine: String,
+    val provinceCode: String,
+    val provinceName: String?,
+    val wardCode: String,
+    val wardName: String?,
+    val isDefault: Boolean,
+    /** False when the Shipment service would refuse this address as a sender. */
+    val usableAsSender: Boolean,
+    val createdAt: Instant,
+    val updatedAt: Instant,
+)
+
 data class MerchantListResponse(
     val content: List<MerchantProfileResponse>,
     val page: Int,
