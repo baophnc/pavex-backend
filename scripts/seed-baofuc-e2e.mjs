@@ -483,6 +483,12 @@ async function createShipment(order) {
       );
     }
 
+    // Shipment builds the sender from the saved pickup address at the quoted origin.
+    const { value: pickups } = await api("/merchants/me/pickup-addresses", { token });
+    const pickup = pickups.find(address =>
+      address.provinceCode === order.sender.provinceCode && address.wardCode === order.sender.wardCode,
+    );
+    if (!pickup) throw new Error(`Không tìm thấy điểm lấy hàng tại ${order.sender.provinceCode}/${order.sender.wardCode} cho ${order.merchantReference}.`);
     shipment = (await api("/shipments", {
       method: "POST",
       token,
@@ -490,7 +496,7 @@ async function createShipment(order) {
       body: {
         quoteId: option.quoteId,
         merchantReference: order.merchantReference,
-        sender: order.sender,
+        pickupAddressId: pickup.id,
         recipient: scenario.destination,
         shippingFeePayer: "SENDER",
         parcels: [order.parcel],

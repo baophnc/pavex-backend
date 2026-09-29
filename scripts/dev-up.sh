@@ -14,8 +14,32 @@ done
 
 "$script_dir/dev-setup.sh"
 
-# Runtime configuration lives in each service's application.yaml.
+# Runtime defaults live in each service's application.yaml. Real mail, payOS and Google settings
+# go in .env at the repository root (see .env.example); the services inherit them from here.
 # Do not source legacy .local/dev.env or override JWT key paths here.
+
+# Reads KEY=VALUE lines without evaluating them, so values with spaces, $ or quotes stay intact.
+# An empty value is skipped so the application.yaml default applies (Spring would otherwise use "").
+# A variable already exported in the shell wins, e.g. BILLING_PAYMENT_PROVIDER=fake ./scripts/dev-up.sh
+load_env_file() {
+  local file="$1" line key value
+  while IFS= read -r line || [[ -n "$line" ]]; do
+    line="${line%$'\r'}"
+    [[ "$line" =~ ^[[:space:]]*([A-Za-z_][A-Za-z0-9_]*)=(.*)$ ]] || continue
+    key="${BASH_REMATCH[1]}"
+    value="${BASH_REMATCH[2]}"
+    if [[ "$value" =~ ^\"(.*)\"$ || "$value" =~ ^\'(.*)\'$ ]]; then
+      value="${BASH_REMATCH[1]}"
+    fi
+    [[ -n "$value" ]] || continue
+    [[ -n "${!key+x}" ]] || export "$key=$value"
+  done < "$file"
+}
+
+if [[ -f "$repo_dir/.env" ]]; then
+  load_env_file "$repo_dir/.env"
+  echo "==> Loaded settings from .env"
+fi
 
 started_pid_files=()
 

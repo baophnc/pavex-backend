@@ -170,6 +170,16 @@ async function preparePeople() {
   }
 }
 
+async function pickupAddressAt(token, sender, name) {
+  const { value: pickups } = await api("/merchants/me/pickup-addresses", { token });
+  const existing = pickups.find(address => address.provinceCode === sender.provinceCode && address.wardCode === sender.wardCode);
+  if (existing) return existing;
+  const { value: created } = await api("/merchants/me/pickup-addresses", { method: "POST", token, body: {
+    ...sender, name, isDefault: !pickups.some(address => address.isDefault),
+  } });
+  return created;
+}
+
 async function prepareShifts() {
   for (const [code, hub] of hubs) {
     const workers = staff.filter(p => p.hubCode === code && p.kind !== "DISPATCHER");
@@ -238,9 +248,11 @@ async function prepareShipment() {
     } });
     const option = quote.options.find(o => o.serviceLevel === "STANDARD");
     if (!option) throw new Error("Pricing chưa có báo giá tiêu chuẩn cho tuyến mẫu.");
+    // Shipment builds the sender from a saved pickup address at the quoted origin.
+    const pickup = await pickupAddressAt(token, scenario.sender, "Điểm lấy hàng Cửa hàng May Mộc");
     shipment = (await api("/shipments", { method: "POST", token,
       headers: { "Idempotency-Key": scenario.code }, body: {
-        quoteId: option.quoteId, merchantReference: scenario.code, sender: scenario.sender, recipient: scenario.recipient,
+        quoteId: option.quoteId, merchantReference: scenario.code, pickupAddressId: pickup.id, recipient: scenario.recipient,
         shippingFeePayer: "SENDER", parcels: [{ description: "Áo sơ mi vải lanh màu trắng", quantity: 2, category: "APPAREL", isFragile: false }],
         note: "Đơn hàng kiểm thử. Người gửi trả phí; không thu hộ. Gọi người nhận trước khi giao.",
       } })).value;
@@ -260,7 +272,7 @@ async function prepareShipment() {
     ...staff.map(p => `| ${p.displayName} | ${p.email} | ${roleLabel(p)} | ${p.hubCode ? hubs.get(p.hubCode).name : "Toàn mạng"} |`),
     "", `Có ${assignments.length} công việc trong kế hoạch vận hành. Không tự phân công hoặc đẩy trạng thái.`,
     "", "Ca làm việc có hiệu lực 8 giờ kể từ lúc tạo; sau đó cần xếp ca mới.",
-    "Hướng dẫn từng bước: docs/kiem-thu-luong-tieng-viet.md.", ""];
+    "Tài liệu dự án: docs/PAVEX-TAI-LIEU-TONG-HOP.md.", ""];
   await writeFile(reportPath, lines.join("\n"), { mode: 0o600 });
   console.log(`Đã chuẩn bị đơn ${shipment.trackingCode}; giữ nguyên tiến độ nếu chạy lại. Báo cáo: ${reportPath}`);
 }
