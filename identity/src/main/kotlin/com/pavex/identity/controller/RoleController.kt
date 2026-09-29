@@ -39,7 +39,7 @@ class RoleController(
         roleService.getRoles()
 
     @PreAuthorize(
-        "hasAuthority('${AuthorizationPermissions.Identity.MANAGE_ROLES}') and hasAnyRole('ADMIN','PLATFORM_SUPER_ADMIN','IAM_ADMIN')"
+        "hasAuthority('${AuthorizationPermissions.Identity.MANAGE_ROLES}') and hasRole('ADMIN')"
     )
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
@@ -50,7 +50,7 @@ class RoleController(
         roleService.createRoleAuthorized(actor(authentication), request)
 
     @PreAuthorize(
-        "hasAuthority('${AuthorizationPermissions.Identity.MANAGE_ROLES}') and hasAnyRole('ADMIN','PLATFORM_SUPER_ADMIN','IAM_ADMIN')"
+        "hasAuthority('${AuthorizationPermissions.Identity.MANAGE_ROLES}') and hasRole('ADMIN')"
     )
     @PatchMapping("/{roleId}")
     fun updateRole(
@@ -60,7 +60,7 @@ class RoleController(
         roleService.updateRole(roleId, request)
 
     @PreAuthorize(
-        "hasAuthority('${AuthorizationPermissions.Identity.MANAGE_ROLES}') and hasAnyRole('ADMIN','PLATFORM_SUPER_ADMIN','IAM_ADMIN')"
+        "hasAuthority('${AuthorizationPermissions.Identity.MANAGE_ROLES}') and hasRole('ADMIN')"
     )
     @PutMapping("/{roleId}/permissions")
     fun replacePermissions(
@@ -71,7 +71,7 @@ class RoleController(
         roleService.replacePermissionsAuthorized(actor(authentication), roleId, request)
 
     @PreAuthorize(
-        "hasAuthority('${AuthorizationPermissions.Identity.MANAGE_ROLES}') and hasAnyRole('ADMIN','PLATFORM_SUPER_ADMIN','IAM_ADMIN')"
+        "hasAuthority('${AuthorizationPermissions.Identity.MANAGE_ROLES}') and hasRole('ADMIN')"
     )
     @DeleteMapping("/{roleId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
