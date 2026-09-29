@@ -20,7 +20,7 @@ class ShipmentCaseAccessServiceTest {
 
     @Test
     fun `operations manager with case manage receives global scope`() {
-        val scope = service.resolveManage(authentication(setOf("ROLE_OPERATIONS_MANAGER", "shipments.cases.manage")))
+        val scope = service.resolveManage(authentication(setOf("scope.all-hubs", "shipments.cases.manage")))
         assertTrue(scope.isGlobal)
         verifyNoInteractions(operations)
     }

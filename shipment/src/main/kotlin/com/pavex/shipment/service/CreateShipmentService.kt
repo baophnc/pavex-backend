@@ -1,5 +1,6 @@
 package com.pavex.shipment.service
 
+import com.pavex.common.contact.VietnamesePhone
 import com.pavex.contracts.network.ReserveShipmentNetworkRequest
 import com.pavex.contracts.network.ShipmentNetworkReservationSnapshot
 import com.pavex.contracts.partners.PartnerLocationSnapshot
@@ -28,14 +29,14 @@ import com.pavex.shipment.exception.ShipmentConflictException
 import com.pavex.shipment.exception.ShipmentForbiddenException
 import com.pavex.shipment.exception.ShipmentGoneException
 import com.pavex.shipment.exception.ShipmentUnavailableException
-import org.springframework.dao.DataIntegrityViolationException
-import org.springframework.stereotype.Service
-import tools.jackson.databind.ObjectMapper
 import java.math.BigDecimal
 import java.security.MessageDigest
 import java.time.Instant
 import java.util.HexFormat
 import java.util.UUID
+import org.springframework.dao.DataIntegrityViolationException
+import org.springframework.stereotype.Service
+import tools.jackson.databind.ObjectMapper
 
 @Service
 class CreateShipmentService(
@@ -54,10 +55,9 @@ class CreateShipmentService(
         request: CreateShipmentRequest,
     ): CreateShipmentResult {
         val idempotencyKey = validateIdempotencyKey(idempotencyKeyHeader)
-        val senderInput = normalizeAddress(request.sender)
         val recipientInput = normalizeAddress(request.recipient)
         val parcelInputs = normalizeParcels(request.parcels)
-        val fingerprint = fingerprint(request, senderInput, recipientInput, parcelInputs)
+        val fingerprint = fingerprint(request, recipientInput, parcelInputs)
 
         writer.findExisting(actorUserId, idempotencyKey)?.let {
             return replayOrConflict(it, fingerprint)
@@ -66,11 +66,11 @@ class CreateShipmentService(
         val capability = partners.orderCapability(actorUserId)
         val merchantId = capability.merchantId
         if (!capability.canCreateOrders || merchantId == null) {
-            throw ShipmentForbiddenException(
-                "merchant_not_active",
-                "An active merchant profile is required to create shipments.",
-            )
+            throw orderRestriction(capability.restrictions)
         }
+        val merchantReference = request.merchantReference?.trim()?.takeIf { it.isNotEmpty() }
+        merchantReference?.let { requireUnusedMerchantReference(merchantId, it) }
+        val senderInput = pickupSender(merchantId, request.pickupAddressId)
 
         val now = Instant.now()
         val quote = pricing.getValid(request.quoteId)
@@ -146,6 +146,7 @@ class CreateShipmentService(
                     idempotencyKey = idempotencyKey,
                     requestFingerprint = fingerprint,
                     merchantReference = request.merchantReference,
+                    pickupAddressId = request.pickupAddressId,
                     sender = sender,
                     recipient = recipient,
                     shippingFeePayer = request.shippingFeePayer,
@@ -183,6 +184,10 @@ class CreateShipmentService(
                     compensateIfNeeded(reservation, operationsPlanned, shipmentId, actorUserId, "Quote already used.")
                     throw quoteAlreadyUsed()
                 }
+                if (merchantReference != null && writer.shipmentWithMerchantReference(merchantId, merchantReference) != null) {
+                    compensateIfNeeded(reservation, operationsPlanned, shipmentId, actorUserId, "Merchant reference already used.")
+                    requireUnusedMerchantReference(merchantId, merchantReference)
+                }
                 // Otherwise the random tracking code collided; retry with a new one.
             } catch (exception: RuntimeException) {
                 compensateIfNeeded(reservation, operationsPlanned, shipmentId, actorUserId, "Shipment persistence failed.")
@@ -195,6 +200,19 @@ class CreateShipmentService(
             "tracking_code_allocation_failed",
             "A unique PAVEX tracking code could not be allocated. Please retry the request.",
         )
+    }
+
+    /** Names the reason a merchant cannot create orders, most fundamental first, so it can be fixed. */
+    private fun orderRestriction(restrictions: List<String>): ShipmentForbiddenException {
+        val (code, message) = when {
+            "MERCHANT_REQUIRED" in restrictions -> "merchant_required" to "A merchant profile is required to create shipments."
+            "MERCHANT_SUSPENDED" in restrictions -> "merchant_suspended" to "The merchant is suspended and cannot create shipments."
+            "MERCHANT_NOT_ACTIVE" in restrictions -> "merchant_not_active" to "The merchant profile is not active yet."
+            "IDENTITY_NOT_ELIGIBLE" in restrictions -> "identity_not_eligible" to "The account is not eligible to create shipments."
+            "DEFAULT_PICKUP_REQUIRED" in restrictions -> "pickup_address_required" to "Set up a default pickup address before creating shipments."
+            else -> "merchant_not_active" to "An active merchant profile is required to create shipments."
+        }
+        return ShipmentForbiddenException(code, message)
     }
 
     private fun compensateIfNeeded(
@@ -220,6 +238,47 @@ class CreateShipmentService(
             )
         }
         return CreateShipmentResult(existing.response, replayed = true)
+    }
+
+    /**
+     * A merchant reference identifies one live order, so re-submitting the same order (for example
+     * after reloading the page) does not create a second shipment. Cancelled shipments free it.
+     */
+    private fun requireUnusedMerchantReference(merchantId: UUID, reference: String) {
+        writer.shipmentWithMerchantReference(merchantId, reference)?.let { trackingCode ->
+            throw ShipmentConflictException(
+                "merchant_reference_duplicate",
+                "Merchant reference '$reference' is already used by shipment $trackingCode.",
+            )
+        }
+    }
+
+    /**
+     * The sender is the merchant's own saved pickup address, never an address typed into the
+     * request: Partners only returns addresses that belong to [merchantId].
+     */
+    private fun pickupSender(merchantId: UUID, pickupAddressId: UUID): NormalizedAddress {
+        val pickup = partners.pickupAddress(merchantId, pickupAddressId)
+            ?: throw InvalidShipmentRequestException(
+                "pickup_address_not_found",
+                "The pickup address was not found among this merchant's pickup addresses.",
+            )
+        return try {
+            normalizeAddress(
+                ShipmentAddressRequest(
+                    contactName = pickup.contactName,
+                    contactPhone = pickup.contactPhone,
+                    addressLine = pickup.addressLine,
+                    provinceCode = pickup.provinceCode,
+                    wardCode = pickup.wardCode,
+                ),
+            )
+        } catch (_: InvalidShipmentRequestException) {
+            throw InvalidShipmentRequestException(
+                "pickup_address_invalid",
+                "The pickup address cannot be used as a sender; update its contact phone or address.",
+            )
+        }
     }
 
     private fun validateQuoteLocations(
@@ -319,7 +378,6 @@ class CreateShipmentService(
 
     private fun fingerprint(
         request: CreateShipmentRequest,
-        sender: NormalizedAddress,
         recipient: NormalizedAddress,
         parcels: List<NormalizedParcel>,
     ): String {
@@ -327,7 +385,7 @@ class CreateShipmentService(
             ShipmentRequestFingerprint(
                 quoteId = request.quoteId,
                 merchantReference = request.merchantReference?.trim(),
-                sender = sender,
+                pickupAddressId = request.pickupAddressId,
                 recipient = recipient,
                 shippingFeePayer = request.shippingFeePayer,
                 parcels = parcels,
@@ -350,14 +408,9 @@ class CreateShipmentService(
         return value
     }
 
-    private fun normalizeVietnamesePhone(value: String): String {
-        var normalized = value.filter { it.isDigit() || it == '+' }
-        if (normalized.startsWith("+84")) normalized = "0${normalized.drop(3)}"
-        if (normalized.length != 10 || !normalized.startsWith('0') || !normalized.all(Char::isDigit)) {
-            throw InvalidShipmentRequestException("invalid_address", "contactPhone must be a valid Vietnamese phone number.")
-        }
-        return normalized
-    }
+    private fun normalizeVietnamesePhone(value: String): String =
+        VietnamesePhone.normalize(value)
+            ?: throw InvalidShipmentRequestException("invalid_address", "contactPhone must be a valid Vietnamese phone number.")
 
     private fun requireText(value: String, maxLength: Int, field: String): String {
         val normalized = value.trim()
@@ -399,7 +452,7 @@ class CreateShipmentService(
             PricingQuoteServiceLevel.EXPRESS -> ShipmentServiceLevel.EXPRESS
         },
         pricingZone = when (pricingZone) {
-            PricingQuoteZone.SAME_SERVICE_AREA -> ShipmentPricingZone.SAME_SERVICE_AREA
+            PricingQuoteZone.SAME_PROVINCE -> ShipmentPricingZone.SAME_PROVINCE
             PricingQuoteZone.SAME_REGION -> ShipmentPricingZone.SAME_REGION
             PricingQuoteZone.CROSS_REGION -> ShipmentPricingZone.CROSS_REGION
         },
@@ -469,7 +522,7 @@ private data class NormalizedParcel(
 private data class ShipmentRequestFingerprint(
     val quoteId: UUID,
     val merchantReference: String?,
-    val sender: NormalizedAddress,
+    val pickupAddressId: UUID,
     val recipient: NormalizedAddress,
     val shippingFeePayer: ShippingFeePayer,
     val parcels: List<NormalizedParcel>,

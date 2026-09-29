@@ -1,6 +1,7 @@
 package com.pavex.shipment.client
 
 import com.pavex.contracts.partners.MerchantOrderCapabilitySnapshot
+import com.pavex.contracts.partners.MerchantPickupAddressSnapshot
 import com.pavex.contracts.partners.PartnerLocationResolutionRequest
 import com.pavex.contracts.partners.PartnerLocationSnapshot
 import com.pavex.shipment.exception.InvalidShipmentRequestException
@@ -32,6 +33,19 @@ class PartnerShipmentClient(
             .retrieve()
             .body(MerchantOrderCapabilitySnapshot::class.java)
     } ?: throw unavailable("partners_invalid_response", "Partners returned an empty merchant capability response.")
+
+    /** The merchant's saved pickup address, or null when it does not exist or belongs to another merchant. */
+    fun pickupAddress(merchantId: UUID, pickupAddressId: UUID): MerchantPickupAddressSnapshot? = try {
+        call(operation = "read the merchant pickup address") {
+            client.get()
+                .uri("/internal/v1/merchants/{merchantId}/pickup-addresses/{pickupAddressId}", merchantId, pickupAddressId)
+                .header(HttpHeaders.AUTHORIZATION, "Bearer ${serviceJwtIssuer.issueForPartners()}")
+                .retrieve()
+                .body(MerchantPickupAddressSnapshot::class.java)
+        } ?: throw unavailable("partners_invalid_response", "Partners returned an empty pickup address response.")
+    } catch (_: HttpClientErrorException.NotFound) {
+        null
+    }
 
     fun resolveLocation(provinceCode: String, wardCode: String): PartnerLocationSnapshot {
         val response = try {

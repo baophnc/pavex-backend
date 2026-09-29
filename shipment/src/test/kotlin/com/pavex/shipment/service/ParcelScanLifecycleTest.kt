@@ -101,6 +101,7 @@ class ParcelScanLifecycleTest {
             idempotencyKey = "shipment-scan-001",
             requestFingerprint = "C".repeat(64),
             merchantReference = null,
+            pickupAddressId = null,
             sender = ShipmentAddressSnapshot.create("A", "0901234567", "A", "48", "Đà Nẵng", "20410", "Hội An"),
             recipient = ShipmentAddressSnapshot.create("B", "0912345678", "B", "79", "Hồ Chí Minh", "26740", "Sài Gòn"),
             shippingFeePayer = ShippingFeePayer.SENDER,

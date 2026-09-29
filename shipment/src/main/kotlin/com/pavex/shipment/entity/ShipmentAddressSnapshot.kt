@@ -1,5 +1,6 @@
 package com.pavex.shipment.entity
 
+import com.pavex.common.contact.VietnamesePhone
 import jakarta.persistence.Column
 import jakarta.persistence.Embeddable
 
@@ -39,14 +40,8 @@ class ShipmentAddressSnapshot(
             wardName = requireText(wardName, 160, "wardName"),
         )
 
-        private fun normalizeVietnamesePhone(value: String): String {
-            var normalized = value.filter { it.isDigit() || it == '+' }
-            if (normalized.startsWith("+84")) normalized = "0${normalized.drop(3)}"
-            require(normalized.length == 10 && normalized.startsWith('0') && normalized.all(Char::isDigit)) {
-                "contactPhone must be a valid Vietnamese phone number."
-            }
-            return normalized
-        }
+        private fun normalizeVietnamesePhone(value: String): String =
+            requireNotNull(VietnamesePhone.normalize(value)) { "contactPhone must be a valid Vietnamese phone number." }
 
         private fun requireText(value: String, maxLength: Int, field: String): String {
             val normalized = value.trim()

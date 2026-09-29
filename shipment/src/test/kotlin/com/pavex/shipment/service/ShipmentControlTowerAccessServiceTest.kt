@@ -20,7 +20,7 @@ class ShipmentControlTowerAccessServiceTest {
 
     @Test
     fun `operations manager control tower permission grants global scope`() {
-        val auth = authentication(setOf("ROLE_OPERATIONS_MANAGER", "shipments.control-tower.read"))
+        val auth = authentication(setOf("scope.all-hubs", "shipments.control-tower.read"))
         val scope = service.resolve(auth)
         assertTrue(scope.global)
         verifyNoInteractions(operations)

@@ -5,7 +5,10 @@ import com.pavex.shipment.dto.AdminShipmentDetailResponse
 import com.pavex.shipment.dto.AdminShipmentEventResponse
 import com.pavex.shipment.dto.AdminShipmentPageResponse
 import com.pavex.shipment.dto.AdminShipmentSummaryResponse
+import com.pavex.common.security.HubAccessScope
+import com.pavex.shipment.entity.Parcel
 import com.pavex.shipment.entity.Shipment
+import com.pavex.shipment.entity.ShipmentEvent
 import com.pavex.shipment.entity.ShipmentLifecycleStatus
 import com.pavex.shipment.entity.ShipmentStatus
 import com.pavex.shipment.exception.InvalidShipmentRequestException
@@ -13,6 +16,7 @@ import com.pavex.shipment.exception.ShipmentNotFoundException
 import com.pavex.shipment.repository.DeliveryAttemptRepository
 import com.pavex.shipment.repository.ShipmentRepository
 import jakarta.persistence.EntityManager
+import jakarta.persistence.criteria.AbstractQuery
 import jakarta.persistence.criteria.CriteriaBuilder
 import jakarta.persistence.criteria.Predicate
 import jakarta.persistence.criteria.Root
@@ -29,6 +33,7 @@ class AdminShipmentQueryService(
 ) {
     @Transactional(readOnly = true)
     fun list(
+        scope: HubAccessScope,
         rawStatus: String?,
         rawLifecycleStatus: String?,
         merchantId: UUID?,
@@ -56,14 +61,14 @@ class AdminShipmentQueryService(
         val totalCount = run {
             val countQuery = cb.createQuery(Long::class.java)
             val root = countQuery.from(Shipment::class.java)
-            val predicates = filters(cb, root, status, lifecycleStatus, merchantId, search)
+            val predicates = filters(cb, countQuery, root, scope, status, lifecycleStatus, merchantId, search)
             countQuery.select(cb.count(root)).where(*predicates.toTypedArray())
             entityManager.createQuery(countQuery).singleResult
         }
 
         val query = cb.createQuery(Shipment::class.java)
         val root = query.from(Shipment::class.java)
-        val predicates = filters(cb, root, status, lifecycleStatus, merchantId, search).toMutableList()
+        val predicates = filters(cb, query, root, scope, status, lifecycleStatus, merchantId, search).toMutableList()
         if (cursor != null) {
             val createdAt = root.get<Instant>("createdAt")
             val trackingCode = root.get<String>("trackingCode")
@@ -105,11 +110,13 @@ class AdminShipmentQueryService(
     }
 
     @Transactional(readOnly = true)
-    fun get(rawTrackingCode: String): AdminShipmentDetailResponse {
+    fun get(scope: HubAccessScope, rawTrackingCode: String): AdminShipmentDetailResponse {
         val trackingCode = ShipmentCodeNormalizer.normalizeOrNull(rawTrackingCode)
             ?.takeIf { !it.contains('-') }
             ?: throw notFound()
-        val shipment = shipments.findByTrackingCodeIgnoreCase(trackingCode) ?: throw notFound()
+        val shipment = shipments.findByTrackingCodeIgnoreCase(trackingCode)
+            ?.takeIf { scope.isGlobal || touchesHubs(it, scope.hubIds) }
+            ?: throw notFound()
         val parcelCodes = shipment.parcels.associate { it.id to it.code }
         val attempts = deliveryAttempts.findAllByShipment_IdOrderByOccurredAtAscCreatedAtAsc(shipment.id)
 
@@ -170,12 +177,15 @@ class AdminShipmentQueryService(
 
     private fun filters(
         cb: CriteriaBuilder,
+        query: AbstractQuery<*>,
         root: Root<Shipment>,
+        scope: HubAccessScope,
         status: ShipmentStatus?,
         lifecycleStatus: ShipmentLifecycleStatus?,
         merchantId: UUID?,
         search: String?,
     ): List<Predicate> = buildList {
+        if (!scope.isGlobal) add(touchesHubs(cb, query, root, scope.hubIds))
         if (status != null) add(cb.equal(root.get<ShipmentStatus>("status"), status))
         if (lifecycleStatus != null) {
             add(cb.equal(root.get<ShipmentLifecycleStatus>("lifecycleStatus"), lifecycleStatus))
@@ -191,6 +201,34 @@ class AdminShipmentQueryService(
             )
         }
     }
+
+    /** Starts, ends, currently sits, or was handled at one of [hubIds]. */
+    private fun touchesHubs(cb: CriteriaBuilder, query: AbstractQuery<*>, root: Root<Shipment>, hubIds: Set<UUID>): Predicate {
+        val parcels = query.subquery(Int::class.java)
+        val parcel = parcels.from(Parcel::class.java)
+        parcels.select(cb.literal(1)).where(
+            cb.equal(parcel.get<Shipment>("shipment"), root),
+            parcel.get<UUID>("currentHubId").`in`(hubIds),
+        )
+        val events = query.subquery(Int::class.java)
+        val event = events.from(ShipmentEvent::class.java)
+        events.select(cb.literal(1)).where(
+            cb.equal(event.get<Shipment>("shipment"), root),
+            event.get<UUID>("hubId").`in`(hubIds),
+        )
+        return cb.or(
+            root.get<UUID>("originHubId").`in`(hubIds),
+            root.get<UUID>("destinationHubId").`in`(hubIds),
+            cb.exists(parcels),
+            cb.exists(events),
+        )
+    }
+
+    private fun touchesHubs(shipment: Shipment, hubIds: Set<UUID>): Boolean =
+        shipment.originHubId in hubIds ||
+            shipment.destinationHubId in hubIds ||
+            shipment.parcels.any { it.currentHubId in hubIds } ||
+            shipment.events.any { it.hubId in hubIds }
 
     private fun parseStatus(rawStatus: String?): ShipmentStatus? =
         rawStatus?.trim()?.takeIf(String::isNotEmpty)?.let { value ->
@@ -221,6 +259,7 @@ class AdminShipmentQueryService(
         serviceLevel = shipment.serviceLevel,
         shippingFee = shipment.shippingFee,
         codAmount = shipment.codAmount,
+        amountToCollect = shipment.recipientCollectAmount,
         destinationProvinceCode = shipment.recipient.provinceCode,
         destinationProvinceName = shipment.recipient.provinceName,
         destinationWardCode = shipment.recipient.wardCode,

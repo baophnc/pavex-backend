@@ -28,6 +28,11 @@ class ShipmentCreationWriter(
     @Transactional(readOnly = true)
     fun isQuoteUsed(quoteId: UUID): Boolean = shipments.existsByQuoteId(quoteId)
 
+    /** The active shipment already using this merchant reference, if any. */
+    @Transactional(readOnly = true)
+    fun shipmentWithMerchantReference(merchantId: UUID, reference: String): String? =
+        shipments.findActiveTrackingCodesByMerchantReference(merchantId, reference).firstOrNull()
+
     @Transactional
     fun persist(shipment: Shipment): ShipmentCreatedResponse {
         val saved = shipments.saveAndFlush(shipment)

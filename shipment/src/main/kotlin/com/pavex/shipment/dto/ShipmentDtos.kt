@@ -2,6 +2,7 @@ package com.pavex.shipment.dto
 
 import com.pavex.shipment.entity.GoodsCategory
 import com.pavex.shipment.entity.ParcelStatus
+import com.pavex.shipment.entity.ShipmentCollectionStatus
 import com.pavex.shipment.entity.ShipmentCoverageTier
 import com.pavex.shipment.entity.ShipmentPricingZone
 import com.pavex.shipment.entity.ShipmentRoutingStatus
@@ -21,8 +22,8 @@ data class CreateShipmentRequest(
     val quoteId: UUID,
     @field:Size(max = 100)
     val merchantReference: String? = null,
-    @field:Valid
-    val sender: ShipmentAddressRequest,
+    /** The sender is always one of the merchant's saved pickup addresses. */
+    val pickupAddressId: UUID,
     @field:Valid
     val recipient: ShipmentAddressRequest,
     val shippingFeePayer: ShippingFeePayer,
@@ -59,14 +60,56 @@ data class ShipmentCreatedResponse(
     val trackingCode: String,
     val merchantReference: String?,
     val status: ShipmentStatus,
+    val pickupAddressId: UUID?,
     val sender: ShipmentAddressResponse,
     val recipient: ShipmentAddressResponse,
     val shippingFeePayer: ShippingFeePayer,
     val pricing: ShipmentPricingResponse,
+    val collection: ShipmentCollectionResponse,
     val routing: ShipmentRoutingResponse,
     val parcels: List<ParcelResponse>,
     val note: String?,
     val createdAt: Instant,
+)
+
+/**
+ * Money around the shipment: what the courier collects from the recipient (COD plus the shipping
+ * fee when the recipient pays) and the shipping fee charged to the merchant.
+ */
+data class ShipmentCollectionResponse(
+    val status: ShipmentCollectionStatus,
+    val amountToCollect: Long,
+    val codAmount: Long,
+    val recipientShippingFee: Long,
+    val merchantShippingFee: Long,
+    val collectedAmount: Long?,
+    val collectedAt: Instant?,
+)
+
+/** Printable labels, one per parcel. The amount is collected once for the whole shipment. */
+data class ShipmentLabelsResponse(
+    val trackingCode: String,
+    val parcelCount: Int,
+    val amountToCollect: Long,
+    val parcels: List<ParcelLabelResponse>,
+)
+
+data class ParcelLabelResponse(
+    val parcelCode: String,
+    val sequence: Int,
+    val serviceLevel: ShipmentServiceLevel,
+    val senderName: String,
+    val senderPhone: String,
+    val senderAddress: String,
+    val recipientName: String,
+    val recipientPhone: String,
+    val recipientAddress: String,
+    val destinationHubCode: String,
+    val chargeableWeightKg: BigDecimal,
+    val isFragile: Boolean,
+    val amountToCollect: Long,
+    val note: String?,
+    val qrPayload: String,
 )
 
 data class ShipmentAddressResponse(

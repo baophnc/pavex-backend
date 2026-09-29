@@ -1,13 +1,16 @@
 package com.pavex.shipment.controller
 
+import com.pavex.shipment.dto.CourierDeliveryResponse
 import com.pavex.shipment.dto.DeliveryAttemptRecordedResponse
 import com.pavex.shipment.dto.RecordDeliveryAttemptRequest
+import com.pavex.shipment.service.CourierDeliveryQueryService
 import com.pavex.shipment.service.RecordDeliveryAttemptService
 import jakarta.validation.Valid
 import org.springframework.http.ResponseEntity
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.security.oauth2.jwt.Jwt
+import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
@@ -18,7 +21,13 @@ import java.util.UUID
 @RequestMapping("/api/v1/deliveries")
 class DeliveryController(
     private val attempts: RecordDeliveryAttemptService,
+    private val courierDeliveries: CourierDeliveryQueryService,
 ) {
+    @GetMapping("/mine")
+    @PreAuthorize("hasAuthority('deliveries.complete-own')")
+    fun mine(@AuthenticationPrincipal jwt: Jwt): List<CourierDeliveryResponse> =
+        courierDeliveries.mine(UUID.fromString(jwt.subject))
+
     @PostMapping("/attempts")
     @PreAuthorize("hasAuthority('deliveries.complete-own')")
     fun recordAttempt(

@@ -132,6 +132,7 @@ class ParcelScanWriter(
     private val parcels: ParcelRepository,
     private val shipments: ShipmentRepository,
     private val outbox: ShipmentOutboxService,
+    private val financialEvents: ShipmentFinancialEvents,
     private val objectMapper: ObjectMapper,
 ) {
     @Transactional
@@ -163,6 +164,7 @@ class ParcelScanWriter(
         }
 
         val previousStatus = parcel.status
+        val lifecycleBefore = shipment.lifecycleStatus
         val checkpoint = nextStatus == null || nextStatus == previousStatus
         try {
             if (checkpoint) {
@@ -230,6 +232,7 @@ class ParcelScanWriter(
             ),
             occurredAt = occurredAt,
         )
+        financialEvents.closedIfChanged(shipment, lifecycleBefore)
         return ShipmentResponseMapper.detail(shipment)
     }
 

@@ -46,6 +46,9 @@ class Shipment(
     var requestFingerprint: String = "",
     @Column(name = "merchant_reference", length = 100)
     var merchantReference: String? = null,
+    /** The merchant pickup address the sender was taken from; null for shipments created before it was recorded. */
+    @Column(name = "pickup_address_id")
+    var pickupAddressId: UUID? = null,
     @Embedded
     @AttributeOverrides(
         AttributeOverride(name = "contactName", column = Column(name = "sender_contact_name", nullable = false, length = 120)),
@@ -90,7 +93,7 @@ class Shipment(
     var serviceLevel: ShipmentServiceLevel = ShipmentServiceLevel.STANDARD,
     @Enumerated(EnumType.STRING)
     @Column(name = "pricing_zone", nullable = false, length = 30)
-    var pricingZone: ShipmentPricingZone = ShipmentPricingZone.SAME_SERVICE_AREA,
+    var pricingZone: ShipmentPricingZone = ShipmentPricingZone.SAME_PROVINCE,
     @Column(name = "base_fee", nullable = false)
     var baseFee: Long = 0,
     @Column(name = "additional_weight_fee", nullable = false)
@@ -107,6 +110,16 @@ class Shipment(
     var codAmount: Long = 0,
     @Column(name = "declared_value", nullable = false)
     var declaredValue: Long = 0,
+    @Column(name = "recipient_collect_amount", nullable = false)
+    var recipientCollectAmount: Long = 0,
+    @Column(name = "collected_amount")
+    var collectedAmount: Long? = null,
+    @Column(name = "collected_at")
+    var collectedAt: Instant? = null,
+    @Column(name = "collected_by_user_id")
+    var collectedByUserId: UUID? = null,
+    @Column(name = "collection_attempt_id")
+    var collectionAttemptId: UUID? = null,
     @Column(name = "estimated_min_days", nullable = false)
     var estimatedMinDays: Int = 0,
     @Column(name = "estimated_max_days", nullable = false)
@@ -170,6 +183,9 @@ class Shipment(
     var cancellationReason: String? = null,
     @Column(name = "cancelled_at")
     var cancelledAt: Instant? = null,
+    /** Set when a cancellation completes after Pavex already picked the parcels up. */
+    @Column(name = "cancelled_after_pickup", nullable = false)
+    var cancelledAfterPickup: Boolean = false,
     @Column(name = "is_on_hold", nullable = false)
     var isOnHold: Boolean = false,
     @Column(name = "hold_reason", length = 1000)
@@ -200,6 +216,65 @@ class Shipment(
     @OneToMany(mappedBy = "shipment", cascade = [CascadeType.ALL], orphanRemoval = true, fetch = FetchType.LAZY)
     @OrderBy("occurredAt ASC")
     val events: MutableList<ShipmentEvent> = mutableListOf()
+
+    /** The part of [recipientCollectAmount] that is the shipping fee, when the recipient pays it. */
+    fun recipientShippingFee(): Long = if (shippingFeePayer == ShippingFeePayer.RECIPIENT) shippingFee else 0
+
+    /**
+     * The shipping fee the merchant is charged: always when the sender pays, and also when a
+     * recipient-paid shipment comes back returned or is cancelled after pickup (the recipient
+     * never paid). Only a cancellation before pickup is free.
+     */
+    fun merchantShippingFee(): Long = when {
+        status == ShipmentStatus.CANCELLED -> if (cancelledAfterPickup) shippingFee else 0
+        status == ShipmentStatus.RETURNED -> shippingFee
+        shippingFeePayer == ShippingFeePayer.SENDER -> shippingFee
+        else -> 0
+    }
+
+    fun collectionStatus(): ShipmentCollectionStatus = when {
+        collectedAmount != null -> ShipmentCollectionStatus.COLLECTED
+        recipientCollectAmount == 0L -> ShipmentCollectionStatus.NOT_REQUIRED
+        lifecycleStatus != ShipmentLifecycleStatus.ACTIVE -> ShipmentCollectionStatus.VOIDED
+        else -> ShipmentCollectionStatus.PENDING
+    }
+
+    /**
+     * Records the money the courier collected from the recipient. It happens once per shipment,
+     * for the full amount, on the first parcel delivered successfully.
+     */
+    fun recordCollection(
+        amount: Long,
+        courierUserId: UUID,
+        attemptId: UUID,
+        parcelId: UUID,
+        hubId: UUID,
+        locationName: String,
+        occurredAt: Instant,
+        recordedAt: Instant,
+    ) {
+        check(lifecycleStatus == ShipmentLifecycleStatus.ACTIVE) { "Shipment lifecycle is already closed." }
+        check(collectionStatus() == ShipmentCollectionStatus.PENDING) { "This shipment has nothing left to collect." }
+        require(amount == recipientCollectAmount) { "The courier must collect exactly $recipientCollectAmount VND." }
+        require(!recordedAt.isBefore(occurredAt)) { "Recorded time cannot precede occurrence time." }
+        collectedAmount = amount
+        collectedAt = occurredAt
+        collectedByUserId = courierUserId
+        collectionAttemptId = attemptId
+        updatedAt = recordedAt
+        events += ShipmentEvent(
+            shipment = this,
+            parcelId = parcelId,
+            status = status,
+            code = "shipment.cash-collected",
+            description = "Bưu tá đã thu tiền của người nhận.",
+            actorUserId = courierUserId,
+            hubId = hubId,
+            locationName = locationName.trim().takeIf { it.isNotEmpty() }?.take(200),
+            occurredAt = occurredAt,
+            recordedAt = recordedAt,
+        )
+    }
 
     fun assignReservedRoute(
         routeRevision: Int,
@@ -351,6 +426,7 @@ class Shipment(
             "Cancellation cannot complete until every parcel is recovered at a hub, awaiting pickup, or already returned."
         }
         val normalized = requireEventText(reason, 500, "reason")
+        cancelledAfterPickup = parcels.any { it.stage != ParcelStage.AWAITING_PICKUP }
         parcels.forEach { it.cancelRecovered(now) }
         status = ShipmentStatus.CANCELLED
         lifecycleStatus = ShipmentLifecycleStatus.CANCELLED
@@ -411,8 +487,12 @@ class Shipment(
         completeIfTerminal(actorUserId, recordedAt)
     }
 
+    /**
+     * Closes the shipment once every parcel is delivered or back with the sender, including a mix
+     * of both (PARTIALLY_DELIVERED); only a closed shipment is settled with the merchant.
+     */
     private fun completeIfTerminal(actorUserId: UUID, completedAt: Instant) {
-        if (status != ShipmentStatus.DELIVERED && status != ShipmentStatus.RETURNED) return
+        if (!parcels.all { it.status == ParcelStatus.DELIVERED || it.status == ParcelStatus.RETURNED }) return
         if (lifecycleStatus != ShipmentLifecycleStatus.ACTIVE) return
 
         lifecycleStatus = ShipmentLifecycleStatus.COMPLETED
@@ -499,6 +579,7 @@ class Shipment(
             idempotencyKey: String,
             requestFingerprint: String,
             merchantReference: String?,
+            pickupAddressId: UUID?,
             sender: ShipmentAddressSnapshot,
             recipient: ShipmentAddressSnapshot,
             shippingFeePayer: ShippingFeePayer,
@@ -543,6 +624,7 @@ class Shipment(
                 idempotencyKey = normalizedIdempotencyKey,
                 requestFingerprint = normalizedFingerprint,
                 merchantReference = optionalText(merchantReference, 100),
+                pickupAddressId = pickupAddressId,
                 sender = sender,
                 recipient = recipient,
                 shippingFeePayer = shippingFeePayer,
@@ -563,6 +645,10 @@ class Shipment(
                 shippingFee = requireMoney(price.shippingFee, "shippingFee"),
                 codAmount = requireMoney(price.codAmount, "codAmount"),
                 declaredValue = requireMoney(price.declaredValue, "declaredValue"),
+                recipientCollectAmount = Math.addExact(
+                    price.codAmount,
+                    if (shippingFeePayer == ShippingFeePayer.RECIPIENT) price.shippingFee else 0,
+                ),
                 estimatedMinDays = price.estimatedMinDays,
                 estimatedMaxDays = price.estimatedMaxDays,
                 quoteExpiresAt = price.quoteExpiresAt,
