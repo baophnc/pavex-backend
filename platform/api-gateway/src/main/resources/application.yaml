@@ -126,6 +126,14 @@ spring:
               filters:
                 - SetPath=/v3/api-docs
 
+            - id: fleet-openapi
+              order: -992
+              uri: lb://fleet-service
+              predicates:
+                - Path=/openapi/fleet
+              filters:
+                - SetPath=/v3/api-docs
+
             # /api/v1/auth/** is mostly owned by Auth, but the current-user
             # profile endpoints are Identity-owned. Give these exact routes a
             # lower order value so they win before the Auth wildcard route.
@@ -336,6 +344,20 @@ spring:
                     redis-rate-limiter.burstCapacity: ${GATEWAY_BILLING_BURST_CAPACITY:40}
                     redis-rate-limiter.requestedTokens: 1
 
+            # Line-haul trip tracking. The driver app sends a GPS batch about every 30 s; limit per
+            # user so drivers behind the same carrier NAT do not throttle each other.
+            - id: fleet-api
+              uri: lb://fleet-service
+              predicates:
+                - Path=/api/v1/fleet/**
+              filters:
+                - name: RequestRateLimiter
+                  args:
+                    key-resolver: "#{@userOrClientIpKeyResolver}"
+                    redis-rate-limiter.replenishRate: ${GATEWAY_FLEET_REPLENISH_RATE:5}
+                    redis-rate-limiter.burstCapacity: ${GATEWAY_FLEET_BURST_CAPACITY:20}
+                    redis-rate-limiter.requestedTokens: 1
+
 springdoc:
   api-docs:
     enabled: ${SPRINGDOC_API_DOCS_ENABLED:true}
@@ -361,6 +383,8 @@ springdoc:
         url: /openapi/operations
       - name: Billing API
         url: /openapi/billing
+      - name: Fleet API
+        url: /openapi/fleet
     operations-sorter: method
     tags-sorter: alpha
     display-request-duration: true
