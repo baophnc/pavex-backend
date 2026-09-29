@@ -37,7 +37,7 @@ Shipment calls the internal order-capability endpoint with its own service JWT:
 - scopes: `partners.orders.evaluate`, `partners.locations.read`
 
 The local YAML trusts Shipment's dedicated public key. Production configuration
-is deferred; see [local security configuration](../docs/security-keys.md).
+is deferred; see [section 1.4 of the project guide](../docs/PAVEX-TAI-LIEU-TONG-HOP.md#14-nguyên-tắc-kỹ-thuật-chung).
 
 ## API surface
 

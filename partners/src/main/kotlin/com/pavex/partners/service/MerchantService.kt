@@ -80,6 +80,9 @@ class MerchantService(
     @Transactional(readOnly = true)
     fun getMine(userId: UUID): MerchantProfileResponse = findByUser(userId).toResponse()
 
+    @Transactional(readOnly = true)
+    fun findAccountByUser(userId: UUID): Merchant? = merchants.findByUserId(userId)
+
     @Transactional
     fun updateMine(userId: UUID, request: MerchantProfileRequest): MerchantProfileResponse {
         val merchant = findByUser(userId)
@@ -253,20 +256,29 @@ class MerchantService(
             ?: return OrderCapabilityResponse(
                 null, null, userId, null, false, null, listOf("MERCHANT_REQUIRED"),
             )
+        val eligibility = identityClient.findMerchantEligibility(userId)
+        return capabilityOf(merchant, identityEligible = eligibility?.eligible == true)
+    }
+
+    /**
+     * What stops [merchant] from creating orders. [identityEligible] is null when Identity could
+     * not be asked; the identity restriction is then left out and the caller must say so.
+     */
+    @Transactional(readOnly = true)
+    fun capabilityOf(merchant: Merchant, identityEligible: Boolean?): OrderCapabilityResponse {
         val restrictions = linkedSetOf<String>()
         when (merchant.status) {
             MerchantStatus.ACTIVE -> Unit
             MerchantStatus.SUSPENDED -> restrictions += "MERCHANT_SUSPENDED"
             else -> restrictions += "MERCHANT_NOT_ACTIVE"
         }
-        val eligibility = identityClient.findMerchantEligibility(userId)
-        if (eligibility == null || !eligibility.eligible) restrictions += "IDENTITY_NOT_ELIGIBLE"
+        if (identityEligible == false) restrictions += "IDENTITY_NOT_ELIGIBLE"
         val defaultPickup = pickupAddresses.findFirstByMerchantIdAndIsDefaultTrue(merchant.id)
         if (defaultPickup == null) restrictions += "DEFAULT_PICKUP_REQUIRED"
         return OrderCapabilityResponse(
             merchant.id,
             merchant.merchantCode,
-            userId,
+            merchant.userId,
             merchant.status,
             restrictions.isEmpty(),
             defaultPickup?.id,

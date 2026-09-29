@@ -19,6 +19,24 @@ spring:
   flyway:
     enabled: true
 
+  # Claim evidence: up to five files of 5 MB plus the form itself.
+  servlet:
+    multipart:
+      max-file-size: 5MB
+      max-request-size: 27MB
+
+  mail:
+    host: ${MAIL_HOST:localhost}
+    port: ${MAIL_PORT:1025}
+    username: ${MAIL_USERNAME:}
+    password: ${MAIL_PASSWORD:}
+    properties:
+      mail:
+        smtp:
+          auth: ${MAIL_SMTP_AUTH:false}
+          starttls:
+            enable: ${MAIL_STARTTLS:false}
+
 server:
   port: ${PARTNERS_SERVER_PORT:8083}
 
@@ -42,10 +60,17 @@ security:
       # Trust Shipment's dedicated local key, never Auth's private key.
       issuer: ${SHIPMENT_SERVICE_JWT_ISSUER:http://localhost:8084}
       public-key: file:${pavex.keys-dir}/shipment/public.pem
+    billing:
+      issuer: ${BILLING_SERVICE_JWT_ISSUER:http://localhost:8088}
+      public-key: file:${pavex.keys-dir}/billing/public.pem
 
 partners:
   identity:
     service-url: ${IDENTITY_SERVICE_URL:http://identity-service}
+  support:
+    mail:
+      enabled: ${SUPPORT_MAIL_ENABLED:true}
+      from: ${MAIL_FROM:no-reply@pavex.local}
 
 pavex:
   keys-dir: ${user.home}/.pavex/keys

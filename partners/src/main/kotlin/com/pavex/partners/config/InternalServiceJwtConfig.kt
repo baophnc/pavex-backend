@@ -20,7 +20,39 @@ class InternalServiceJwtConfig(
     private val shipmentPublicKey: Resource,
     @Value("\${security.trusted-services.shipment.issuer}")
     private val shipmentIssuer: String,
+    @Value("\${security.trusted-services.billing.public-key}")
+    private val billingPublicKey: Resource,
+    @Value("\${security.trusted-services.billing.issuer}")
+    private val billingIssuer: String,
 ) {
+    /**
+     * Internal endpoints accept tokens from each trusted service, verified with that service's own
+     * key. What a caller may do is then limited by the scopes on its token.
+     */
+    @Bean("internalServiceJwtDecoder")
+    fun internalServiceJwtDecoder(): JwtDecoder = IssuerRoutingJwtDecoder(
+        mapOf(
+            shipmentIssuer to shipmentServiceJwtDecoder(),
+            billingIssuer to billingServiceJwtDecoder(),
+        ),
+    )
+
+    private fun billingServiceJwtDecoder(): JwtDecoder {
+        val publicKey = billingPublicKey.inputStream.use {
+            requireNotNull(RsaKeyConverters.x509().convert(it))
+        }
+        val decoder = NimbusJwtDecoder.withPublicKey(publicKey).build()
+        decoder.setJwtValidator(
+            DelegatingOAuth2TokenValidator(
+                JwtValidators.createDefaultWithIssuer(billingIssuer),
+                exactClaim("sub", "billing-service"),
+                exactClaim("typ", "service"),
+                audience("partners-service"),
+            ),
+        )
+        return decoder
+    }
+
     @Bean("shipmentServiceJwtDecoder")
     fun shipmentServiceJwtDecoder(): JwtDecoder {
         val publicKey = shipmentPublicKey.inputStream.use {

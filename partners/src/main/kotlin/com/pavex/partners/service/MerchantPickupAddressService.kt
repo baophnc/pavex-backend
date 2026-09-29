@@ -1,15 +1,16 @@
 package com.pavex.partners.service
 
+import com.pavex.common.contact.VietnamesePhone
 import com.pavex.partners.dto.PickupAddressRequest
 import com.pavex.partners.dto.PickupAddressResponse
 import com.pavex.partners.entity.MerchantPickupAddress
 import com.pavex.partners.exception.ApiException
 import com.pavex.partners.repository.MerchantPickupAddressRepository
+import java.time.Instant
+import java.util.UUID
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
-import java.time.Instant
-import java.util.UUID
 
 @Service
 class MerchantPickupAddressService(
@@ -21,6 +22,7 @@ class MerchantPickupAddressService(
     fun create(userId: UUID, request: PickupAddressRequest): PickupAddressResponse {
         val merchant = merchants.findActiveByUser(userId)
         validateLocation(request)
+        val contactPhone = requireShipmentContactPhone(request.contactPhone)
         val currentDefault = pickupAddresses.findFirstByMerchantIdAndIsDefaultTrue(merchant.id)
         val now = Instant.now()
         if (request.isDefault && currentDefault != null) {
@@ -33,7 +35,7 @@ class MerchantPickupAddressService(
                 merchantId = merchant.id,
                 name = request.name.trim(),
                 contactName = request.contactName.trim(),
-                contactPhone = request.contactPhone.trim(),
+                contactPhone = contactPhone,
                 addressLine = request.addressLine.trim(),
                 provinceCode = request.provinceCode.trim(),
                 wardCode = request.wardCode.trim(),
@@ -57,11 +59,17 @@ class MerchantPickupAddressService(
         return findOwned(merchant.id, id).toResponse()
     }
 
+    /** For internal callers that already know the merchant; another merchant's address is not found. */
+    @Transactional(readOnly = true)
+    fun findForMerchant(merchantId: UUID, id: UUID): MerchantPickupAddress? =
+        pickupAddresses.findByIdAndMerchantId(id, merchantId)
+
     @Transactional
     fun update(userId: UUID, id: UUID, request: PickupAddressRequest): PickupAddressResponse {
         val merchant = merchants.findActiveByUser(userId)
         val address = findOwned(merchant.id, id)
         validateLocation(request)
+        val contactPhone = requireShipmentContactPhone(request.contactPhone)
         val now = Instant.now()
         if (request.isDefault && !address.isDefault) {
             pickupAddresses.findFirstByMerchantIdAndIsDefaultTrue(merchant.id)?.let {
@@ -73,7 +81,7 @@ class MerchantPickupAddressService(
         }
         address.name = request.name.trim()
         address.contactName = request.contactName.trim()
-        address.contactPhone = request.contactPhone.trim()
+        address.contactPhone = contactPhone
         address.addressLine = request.addressLine.trim()
         address.provinceCode = request.provinceCode.trim()
         address.wardCode = request.wardCode.trim()
@@ -122,6 +130,13 @@ class MerchantPickupAddressService(
             )
         }
     }
+
+    private fun requireShipmentContactPhone(value: String): String =
+        VietnamesePhone.normalize(value) ?: throw ApiException(
+            HttpStatus.BAD_REQUEST,
+            "invalid_contact_phone",
+            "Pickup contact phone must be a 10-digit Vietnamese phone number.",
+        )
 
     private fun findOwned(merchantId: UUID, id: UUID): MerchantPickupAddress =
         pickupAddresses.findByIdAndMerchantId(id, merchantId)

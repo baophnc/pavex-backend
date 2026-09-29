@@ -1,10 +1,12 @@
 package com.pavex.partners.controller
 
+import com.pavex.partners.dto.AdminMerchantReadinessResponse
 import com.pavex.partners.dto.AdminMerchantResponse
 import com.pavex.partners.dto.ChangeMerchantStatusRequest
 import com.pavex.partners.dto.MerchantListResponse
 import com.pavex.partners.entity.MerchantStatus
 import com.pavex.partners.exception.ApiException
+import com.pavex.partners.service.AdminMerchantReadinessService
 import com.pavex.partners.service.MerchantService
 import jakarta.validation.Valid
 import org.springframework.http.HttpStatus
@@ -25,6 +27,7 @@ import java.util.UUID
 @RequestMapping("/api/v1/admin/merchants")
 class AdminMerchantController(
     private val merchants: MerchantService,
+    private val readiness: AdminMerchantReadinessService,
 ) {
     @GetMapping
     @PreAuthorize("hasAuthority('partners.merchants.read')")
@@ -38,6 +41,10 @@ class AdminMerchantController(
     @GetMapping("/{merchantId}")
     @PreAuthorize("hasAuthority('partners.merchants.read')")
     fun get(@PathVariable merchantId: UUID): AdminMerchantResponse = merchants.getAdmin(merchantId)
+
+    @GetMapping("/{merchantId}/readiness")
+    @PreAuthorize("hasAuthority('partners.merchants.read')")
+    fun readiness(@PathVariable merchantId: UUID): AdminMerchantReadinessResponse = readiness.readiness(merchantId)
 
     @PatchMapping("/{merchantId}/status")
     @PreAuthorize("hasAuthority('partners.merchants.manage-status')")
