@@ -51,7 +51,8 @@ network:
     expiry-batch-size: ${NETWORK_CAPACITY_EXPIRY_BATCH_SIZE:50}
   seed:
     demo:
-      enabled: ${NETWORK_DEMO_SEED_ENABLED:true}
+      # Off by default: scripts/seed-nationwide builds the real network (one post office per ward).
+      enabled: ${NETWORK_DEMO_SEED_ENABLED:false}
 
 pavex:
   keys-dir: ${user.home}/.pavex/keys
