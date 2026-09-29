@@ -7,6 +7,9 @@ enum class OperationsCapability {
     PICKUP,
     LAST_MILE_DELIVERY,
     LINE_HAUL,
+
+    /** Receiving and reviewing courier cash at a hub (billing). */
+    CASH_HANDLING,
 }
 
 enum class OperationsAssignmentType {
@@ -92,4 +95,20 @@ data class ShipmentAssignmentCompletionRequest(
 data class ShipmentCaseAdminScopeSnapshot(
     val userId: UUID,
     val hubIds: Set<UUID> = emptySet(),
+)
+
+/** An open assignment of one worker, as the field app lists it. */
+data class WorkforceAssignmentSnapshot(
+    val id: UUID,
+    val code: String,
+    val shipmentId: UUID,
+    val sequence: Int,
+    val routeLegId: UUID?,
+    val type: OperationsAssignmentType,
+    val hubId: UUID,
+    val status: OperationsAssignmentStatus,
+    val priority: Int,
+    val assignedAt: java.time.Instant?,
+    val acceptedAt: java.time.Instant?,
+    val startedAt: java.time.Instant?,
 )
