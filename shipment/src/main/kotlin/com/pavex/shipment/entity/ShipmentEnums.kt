@@ -23,11 +23,14 @@ enum class ShipmentLifecycleStatus {
 
 enum class ShippingFeePayer { SENDER, RECIPIENT }
 
+/** Whether the courier still has money to collect from the recipient for this shipment. */
+enum class ShipmentCollectionStatus { NOT_REQUIRED, PENDING, COLLECTED, VOIDED }
+
 enum class ShipmentRoutingStatus { UNPLANNED, RESERVED, IN_TRANSIT, CONSUMED, RELEASED }
 
 enum class ShipmentServiceLevel { STANDARD, EXPRESS }
 
-enum class ShipmentPricingZone { SAME_SERVICE_AREA, SAME_REGION, CROSS_REGION }
+enum class ShipmentPricingZone { SAME_PROVINCE, SAME_REGION, CROSS_REGION }
 
 enum class ShipmentCoverageTier { STANDARD, REMOTE, ISLAND }
 

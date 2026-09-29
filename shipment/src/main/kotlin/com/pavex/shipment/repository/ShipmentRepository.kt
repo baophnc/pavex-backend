@@ -45,6 +45,19 @@ interface ShipmentRepository : JpaRepository<Shipment, UUID> {
     fun findByQuoteId(quoteId: UUID): Shipment?
     fun findByCreatedByUserIdAndIdempotencyKey(createdByUserId: UUID, idempotencyKey: String): Shipment?
     fun existsByQuoteId(quoteId: UUID): Boolean
+
+    /** Shipments of a merchant that still use a merchant reference; cancelled ones free it. */
+    @Query(
+        """
+        select s.trackingCode from Shipment s
+        where s.merchantId = :merchantId and s.merchantReference = :reference
+          and s.lifecycleStatus <> com.pavex.shipment.entity.ShipmentLifecycleStatus.CANCELLED
+        """,
+    )
+    fun findActiveTrackingCodesByMerchantReference(
+        @Param("merchantId") merchantId: UUID,
+        @Param("reference") reference: String,
+    ): List<String>
 }
 
 interface PendingNetworkConfirmation {

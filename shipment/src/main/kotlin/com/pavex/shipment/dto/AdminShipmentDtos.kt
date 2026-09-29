@@ -27,6 +27,7 @@ data class AdminShipmentSummaryResponse(
     val serviceLevel: ShipmentServiceLevel,
     val shippingFee: Long,
     val codAmount: Long,
+    val amountToCollect: Long,
     val destinationProvinceCode: String,
     val destinationProvinceName: String,
     val destinationWardCode: String,

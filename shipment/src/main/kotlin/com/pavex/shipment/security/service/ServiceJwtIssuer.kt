@@ -31,7 +31,7 @@ class ServiceJwtIssuer(
 
     fun issueForPartners(now: Instant = Instant.now()): String = issue(
         audience = PARTNERS_SERVICE,
-        scopes = listOf(PARTNERS_ORDER_SCOPE, PARTNERS_LOCATION_SCOPE),
+        scopes = listOf(PARTNERS_ORDER_SCOPE, PARTNERS_LOCATION_SCOPE, PARTNERS_PICKUP_ADDRESS_SCOPE),
         now = now,
     )
 
@@ -75,6 +75,7 @@ class ServiceJwtIssuer(
         private const val PRICING_QUOTE_READ_SCOPE = "pricing.quote.read"
         private const val PARTNERS_ORDER_SCOPE = "partners.orders.evaluate"
         private const val PARTNERS_LOCATION_SCOPE = "partners.locations.read"
+        private const val PARTNERS_PICKUP_ADDRESS_SCOPE = "partners.pickup-addresses.read"
         private const val NETWORK_SHIPMENT_RESERVE_SCOPE = "network.shipments.reserve"
         private const val OPERATIONS_SHIPMENT_SCOPE = "operations.shipments.execute"
     }

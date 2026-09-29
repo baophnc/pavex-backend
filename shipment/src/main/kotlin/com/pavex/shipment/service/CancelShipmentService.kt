@@ -50,6 +50,7 @@ class CancelShipmentService(
 class ShipmentCancellationStore(
     private val shipments: ShipmentRepository,
     private val outbox: ShipmentOutboxService,
+    private val financialEvents: ShipmentFinancialEvents,
     private val objectMapper: ObjectMapper,
 ) {
     @Transactional
@@ -95,6 +96,7 @@ class ShipmentCancellationStore(
                 ),
                 occurredAt = requireNotNull(shipment.cancelledAt),
             )
+            financialEvents.closedIfChanged(shipment, ShipmentLifecycleStatus.ACTIVE)
         }
 
         return shipment.toCancellationState()

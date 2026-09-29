@@ -20,7 +20,7 @@ class ShipmentExceptionAccessServiceTest {
 
     @Test
     fun `admin exception manage is global`() {
-        val scope = service.resolveManage(authentication(setOf("ROLE_ADMIN", "shipments.exceptions.manage")))
+        val scope = service.resolveManage(authentication(setOf("scope.all-hubs", "shipments.exceptions.manage")))
         assertTrue(scope.isGlobal)
         verifyNoInteractions(operations)
     }

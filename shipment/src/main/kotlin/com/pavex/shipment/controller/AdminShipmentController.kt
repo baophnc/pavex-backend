@@ -2,9 +2,11 @@ package com.pavex.shipment.controller
 
 import com.pavex.shipment.dto.AdminShipmentDetailResponse
 import com.pavex.shipment.dto.AdminShipmentPageResponse
+import com.pavex.shipment.service.AdminShipmentAccessService
 import com.pavex.shipment.service.AdminShipmentQueryService
 import org.springframework.http.ResponseEntity
 import org.springframework.security.access.prepost.PreAuthorize
+import org.springframework.security.core.Authentication
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.RequestMapping
@@ -16,10 +18,12 @@ import java.util.UUID
 @RequestMapping("/api/v1/admin/shipments")
 class AdminShipmentController(
     private val queries: AdminShipmentQueryService,
+    private val access: AdminShipmentAccessService,
 ) {
     @GetMapping
-    @PreAuthorize("hasAuthority('shipments.admin.read')")
+    @PreAuthorize("hasAnyAuthority('shipments.admin.read','shipments.read-hub')")
     fun list(
+        authentication: Authentication,
         @RequestParam(required = false) status: String?,
         @RequestParam(required = false) lifecycleStatus: String?,
         @RequestParam(required = false) merchantId: UUID?,
@@ -27,11 +31,11 @@ class AdminShipmentController(
         @RequestParam(required = false) cursor: String?,
         @RequestParam(required = false) limit: Int?,
     ): ResponseEntity<AdminShipmentPageResponse> = ResponseEntity.ok(
-        queries.list(status, lifecycleStatus, merchantId, query, cursor, limit),
+        queries.list(access.resolve(authentication), status, lifecycleStatus, merchantId, query, cursor, limit),
     )
 
     @GetMapping("/{trackingCode}")
-    @PreAuthorize("hasAuthority('shipments.admin.read')")
-    fun get(@PathVariable trackingCode: String): ResponseEntity<AdminShipmentDetailResponse> =
-        ResponseEntity.ok(queries.get(trackingCode))
+    @PreAuthorize("hasAnyAuthority('shipments.admin.read','shipments.read-hub')")
+    fun get(authentication: Authentication, @PathVariable trackingCode: String): ResponseEntity<AdminShipmentDetailResponse> =
+        ResponseEntity.ok(queries.get(access.resolve(authentication), trackingCode))
 }

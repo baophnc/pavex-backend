@@ -9,6 +9,7 @@ import com.pavex.contracts.operations.ShipmentAssignmentAccessRequest
 import com.pavex.contracts.operations.ShipmentAssignmentCompletionRequest
 import com.pavex.contracts.operations.ShipmentCaseAdminScopeSnapshot
 import com.pavex.contracts.operations.ShipmentOperationsAssignmentSnapshot
+import com.pavex.contracts.operations.WorkforceAssignmentSnapshot
 import com.pavex.contracts.operations.ShipmentOperationsPlanResponse
 import com.pavex.contracts.operations.ShipmentOperationsRouteLeg
 import com.pavex.contracts.network.ShipmentNetworkReservationSnapshot
@@ -20,6 +21,7 @@ import com.pavex.shipment.security.service.ServiceJwtIssuer
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.beans.factory.annotation.Value
+import org.springframework.core.ParameterizedTypeReference
 import org.springframework.http.HttpHeaders
 import org.springframework.stereotype.Component
 import org.springframework.web.client.HttpClientErrorException
@@ -181,6 +183,17 @@ class OperationsShipmentClient(
             throw unavailable(exception)
         }
         return response ?: throw ShipmentUnavailableException("operations_invalid_response", "Operations returned an empty completion response.")
+    }
+
+    fun workforceAssignments(userId: UUID): List<WorkforceAssignmentSnapshot> = try {
+        client.get()
+            .uri("/internal/v1/operations/shipments/assignments/by-user/{userId}", userId)
+            .serviceAuthHeaders()
+            .retrieve()
+            .body(object : ParameterizedTypeReference<List<WorkforceAssignmentSnapshot>>() {})
+            .orEmpty()
+    } catch (exception: RestClientException) {
+        throw unavailable(exception)
     }
 
     fun findRouteLegAssignment(shipmentId: UUID, routeLegId: UUID): ShipmentOperationsAssignmentSnapshot? = try {

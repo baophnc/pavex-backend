@@ -38,6 +38,7 @@ class ShipmentExceptionWorkflowService(
     private val operations: OperationsShipmentClient,
     private val network: NetworkShipmentClient,
     private val outbox: ShipmentOutboxService,
+    private val financialEvents: ShipmentFinancialEvents,
     private val objectMapper: ObjectMapper,
 ) {
     @Transactional(readOnly = true)
@@ -106,6 +107,7 @@ class ShipmentExceptionWorkflowService(
             )
         }
         val now = Instant.now()
+        val lifecycleBefore = shipment.lifecycleStatus
 
         try {
             request.review(approve, actor, note, now)
@@ -173,6 +175,7 @@ class ShipmentExceptionWorkflowService(
             requests.save(request)
             shipments.saveAndFlush(shipment)
             publish(shipment, "$prefix.${request.status.name.lowercase().replace('_', '-')}", actor, now, requestResponse(request))
+            financialEvents.closedIfChanged(shipment, lifecycleBefore)
             return state(shipment)
         } catch (exception: IllegalStateException) {
             throw conflict("exception_review_invalid", exception)
@@ -194,11 +197,13 @@ class ShipmentExceptionWorkflowService(
             }
             operations.cancel(shipment.id, "Cancellation completed after parcel recovery.")
             releaseNetwork(shipment, actor, "Cancellation completed after parcel recovery.")
+            val lifecycleBefore = shipment.lifecycleStatus
             shipment.cancelRecovered(request.reason, actor, now, payload(request, note))
             request.complete(actor, now)
             requests.save(request)
             shipments.saveAndFlush(shipment)
             publish(shipment, "shipment.cancellation.completed", actor, now, requestResponse(request))
+            financialEvents.closedIfChanged(shipment, lifecycleBefore)
             return state(shipment)
         } catch (exception: IllegalStateException) {
             throw conflict("cancellation_recovery_incomplete", exception)

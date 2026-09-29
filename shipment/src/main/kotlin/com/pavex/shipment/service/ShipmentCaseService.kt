@@ -195,7 +195,7 @@ class ShipmentCaseService(
         val shipment = shipments.findByTrackingCodeIgnoreCase(trackingCode)
             ?: throw ShipmentNotFoundException("shipment_not_found", "Shipment was not found.")
         if (!scope.isGlobal && currentHubIds(shipment).none(scope.hubIds::contains)) forbidden()
-        return adminShipmentQueries.get(shipment.trackingCode)
+        return adminShipmentQueries.get(scope, shipment.trackingCode)
     }
 
     @Transactional

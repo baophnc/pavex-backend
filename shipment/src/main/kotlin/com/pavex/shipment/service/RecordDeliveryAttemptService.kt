@@ -109,21 +109,22 @@ class RecordDeliveryAttemptService(
     }
 
     private fun fingerprint(request: RecordDeliveryAttemptRequest, occurredAt: Instant): String {
-        val payload = objectMapper.writeValueAsString(
-            linkedMapOf(
-                "assignmentId" to request.assignmentId,
-                "parcelCode" to request.parcelCode.trim().uppercase(),
-                "outcome" to request.outcome,
-                "failureReason" to request.failureReason,
-                "proofMethod" to request.proofMethod,
-                "recipientName" to request.recipientName?.trim(),
-                "evidenceReference" to request.evidenceReference?.trim(),
-                "note" to request.note?.trim(),
-                "latitude" to request.latitude,
-                "longitude" to request.longitude,
-                "occurredAt" to occurredAt,
-            ),
+        val fields = linkedMapOf<String, Any?>(
+            "assignmentId" to request.assignmentId,
+            "parcelCode" to request.parcelCode.trim().uppercase(),
+            "outcome" to request.outcome,
+            "failureReason" to request.failureReason,
+            "proofMethod" to request.proofMethod,
+            "recipientName" to request.recipientName?.trim(),
+            "evidenceReference" to request.evidenceReference?.trim(),
+            "note" to request.note?.trim(),
+            "latitude" to request.latitude,
+            "longitude" to request.longitude,
+            "occurredAt" to occurredAt,
         )
+        // Added after launch: omitted when absent so replays of earlier requests keep their fingerprint.
+        request.collectedAmount?.let { fields["collectedAmount"] = it }
+        val payload = objectMapper.writeValueAsString(fields)
         return HexFormat.of().withUpperCase().formatHex(MessageDigest.getInstance("SHA-256").digest(payload.toByteArray()))
     }
 
@@ -177,6 +178,7 @@ class DeliveryAttemptWriter(
     private val attempts: DeliveryAttemptRepository,
     private val shipments: ShipmentRepository,
     private val outbox: ShipmentOutboxService,
+    private val financialEvents: ShipmentFinancialEvents,
     private val objectMapper: ObjectMapper,
 ) {
     @Transactional
@@ -240,7 +242,22 @@ class DeliveryAttemptWriter(
         }
 
         val delivered = attempt.outcome == DeliveryAttemptOutcome.DELIVERED
+        val collectedAmount = DeliveryCollectionPolicy.resolve(shipment, attempt.outcome, request.collectedAmount)
+        val lifecycleBefore = shipment.lifecycleStatus
         try {
+            // Collected before the parcel transition: delivering the last parcel closes the shipment.
+            if (collectedAmount != null) {
+                shipment.recordCollection(
+                    amount = collectedAmount,
+                    courierUserId = actorUserId,
+                    attemptId = attempt.id,
+                    parcelId = parcel.id,
+                    hubId = shipment.destinationHubId,
+                    locationName = shipment.recipient.wardName,
+                    occurredAt = occurredAt,
+                    recordedAt = recordedAt,
+                )
+            }
             shipment.transitionParcel(
                 parcelId = parcel.id,
                 nextStatus = if (delivered) ParcelStatus.DELIVERED else ParcelStatus.DELIVERY_FAILED,
@@ -277,12 +294,15 @@ class DeliveryAttemptWriter(
                     "outcome" to attempt.outcome,
                     "failureReason" to attempt.failureReason,
                     "proofMethod" to attempt.proofMethod,
+                    "collectedAmount" to collectedAmount,
                     "actorUserId" to actorUserId,
                     "occurredAt" to occurredAt,
                 ),
             ),
             occurredAt = occurredAt,
         )
+        if (collectedAmount != null) financialEvents.cashCollected(shipment)
+        financialEvents.closedIfChanged(shipment, lifecycleBefore)
         return DeliveryAttemptWriteResult(
             DeliveryAttemptMapper.response(attempt, shipment),
             replayed = false,
@@ -306,6 +326,7 @@ private object DeliveryAttemptMapper {
                 latitude = attempt.latitude,
                 longitude = attempt.longitude,
                 occurredAt = attempt.occurredAt,
+                collectedAmount = shipment.collectedAmount.takeIf { shipment.collectionAttemptId == attempt.id },
             ),
             shipment = ShipmentResponseMapper.detail(shipment),
         )

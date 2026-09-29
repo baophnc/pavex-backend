@@ -27,10 +27,8 @@ class ShipmentExceptionAccessService(
         if (acceptedAuthorities.none(actor::hasAuthority)) {
             throw AccessDeniedException("Shipment exception access is not allowed.")
         }
-        if (actor.hasAnyRole(ADMIN_ROLE, PLATFORM_SUPER_ADMIN_ROLE, OPERATIONS_MANAGER_ROLE)) {
-            return HubAccessScope.global(actor.userId)
-        }
-        if (!actor.hasAuthority(HUB_READ)) {
+        if (actor.seesAllHubs) return HubAccessScope.global(actor.userId)
+        if (!actor.hasAnyAuthority(HUB_READ, HUB_MANAGE)) {
             throw AccessDeniedException("Shipment exception access is not allowed.")
         }
         val scope = operations.caseAdminScope(actor.userId)
@@ -45,8 +43,6 @@ class ShipmentExceptionAccessService(
         const val EXCEPTIONS_MANAGE = "shipments.exceptions.manage"
         const val WEIGHT_ADJUST = "shipments.weight.adjust"
         const val HUB_READ = "operations.hub.read"
-        const val ADMIN_ROLE = "ADMIN"
-        const val PLATFORM_SUPER_ADMIN_ROLE = "PLATFORM_SUPER_ADMIN"
-        const val OPERATIONS_MANAGER_ROLE = "OPERATIONS_MANAGER"
+        const val HUB_MANAGE = "operations.hub.manage"
     }
 }

@@ -5,6 +5,7 @@ import com.pavex.shipment.dto.CancelShipmentRequest
 import com.pavex.shipment.dto.CreateShipmentRequest
 import com.pavex.shipment.dto.ShipmentCreatedResponse
 import com.pavex.shipment.dto.ShipmentDetailResponse
+import com.pavex.shipment.dto.ShipmentLabelsResponse
 import com.pavex.shipment.dto.ShipmentPageResponse
 import com.pavex.shipment.service.CancelShipmentService
 import com.pavex.shipment.service.CreateShipmentService
@@ -59,8 +60,9 @@ class ShipmentController(
         @RequestParam(required = false) status: String?,
         @RequestParam(required = false) cursor: String?,
         @RequestParam(required = false) limit: Int?,
+        @RequestParam(required = false) q: String?,
     ): ResponseEntity<ShipmentPageResponse> = ResponseEntity.ok(
-        queries.listOwned(UUID.fromString(jwt.subject), status, cursor, limit),
+        queries.listOwned(UUID.fromString(jwt.subject), status, cursor, limit, q),
     )
 
     @GetMapping("/{trackingCode}")
@@ -71,6 +73,15 @@ class ShipmentController(
     ): ResponseEntity<ShipmentDetailResponse> = ResponseEntity.ok(
         queries.getOwned(UUID.fromString(jwt.subject), trackingCode),
     )
+
+    @GetMapping("/{trackingCode}/labels")
+    @PreAuthorize("hasAuthority('shipments.read-own')")
+    fun labels(
+        @AuthenticationPrincipal jwt: Jwt,
+        @PathVariable trackingCode: String,
+    ): ResponseEntity<ShipmentLabelsResponse> = ResponseEntity.ok()
+        .header(HttpHeaders.CACHE_CONTROL, "no-store")
+        .body(queries.labelsOwned(UUID.fromString(jwt.subject), trackingCode))
 
     @PostMapping("/{trackingCode}/cancel")
     @PreAuthorize("hasAuthority('shipments.cancel-own')")

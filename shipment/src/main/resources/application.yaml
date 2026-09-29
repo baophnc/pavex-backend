@@ -3,6 +3,12 @@ spring:
   application:
     name: shipment-service
 
+  # Proof-of-delivery photos from the courier app (the service caps them at 3 MB).
+  servlet:
+    multipart:
+      max-file-size: 4MB
+      max-request-size: 5MB
+
   datasource:
     url: ${SHIPMENT_DB_URL:jdbc:postgresql://localhost:5438/pavex_shipments}
     username: ${SHIPMENT_DB_USERNAME:pavex}
@@ -18,6 +24,15 @@ spring:
 
   flyway:
     enabled: true
+
+  rabbitmq:
+    host: ${RABBITMQ_HOST:localhost}
+    port: ${RABBITMQ_PORT:5672}
+    username: ${RABBITMQ_USERNAME:pavex}
+    password: ${RABBITMQ_PASSWORD:pavex}
+    virtual-host: ${RABBITMQ_VHOST:pavex}
+    publisher-confirm-type: correlated
+    publisher-returns: true
 
 server:
   port: ${SHIPMENT_SERVER_PORT:8084}
@@ -61,6 +76,19 @@ shipment:
     poll-interval: ${SHIPMENT_NETWORK_CONFIRMATION_POLL_INTERVAL:PT30S}
     lookback: ${SHIPMENT_NETWORK_CONFIRMATION_LOOKBACK:PT24H}
     batch-size: ${SHIPMENT_NETWORK_CONFIRMATION_BATCH_SIZE:50}
+  # Publishes shipments.outbox_events to RabbitMQ (routing key = event type), e.g. the
+  # shipment.cash-collected and shipment.closed events money settlement is built from.
+  messaging:
+    exchange: ${SHIPMENT_MESSAGING_EXCHANGE:pavex.events}
+  outbox:
+    enabled: ${SHIPMENT_OUTBOX_ENABLED:true}
+    batch-size: ${SHIPMENT_OUTBOX_BATCH_SIZE:50}
+    poll-interval-ms: ${SHIPMENT_OUTBOX_POLL_INTERVAL_MS:2000}
+    lock-duration: ${SHIPMENT_OUTBOX_LOCK_DURATION:PT30S}
+    base-retry-delay: ${SHIPMENT_OUTBOX_BASE_RETRY_DELAY:PT5S}
+    max-retry-delay: ${SHIPMENT_OUTBOX_MAX_RETRY_DELAY:PT5M}
+    max-attempts: ${SHIPMENT_OUTBOX_MAX_ATTEMPTS:8}
+    confirm-timeout: ${SHIPMENT_OUTBOX_CONFIRM_TIMEOUT:PT5S}
 
 pavex:
   keys-dir: ${user.home}/.pavex/keys

@@ -1,12 +1,15 @@
 package com.pavex.shipment.service
 
+import com.pavex.shipment.dto.ParcelLabelResponse
 import com.pavex.shipment.dto.ParcelResponse
 import com.pavex.shipment.dto.PublicTrackingEvent
 import com.pavex.shipment.dto.PublicTrackingLocation
 import com.pavex.shipment.dto.PublicTrackingResponse
 import com.pavex.shipment.dto.ShipmentAddressResponse
+import com.pavex.shipment.dto.ShipmentCollectionResponse
 import com.pavex.shipment.dto.ShipmentCreatedResponse
 import com.pavex.shipment.dto.ShipmentDetailResponse
+import com.pavex.shipment.dto.ShipmentLabelsResponse
 import com.pavex.shipment.dto.ShipmentPricingResponse
 import com.pavex.shipment.dto.ShipmentRoutingResponse
 import com.pavex.shipment.dto.ShipmentSummaryResponse
@@ -21,10 +24,12 @@ object ShipmentResponseMapper {
         trackingCode = shipment.trackingCode,
         merchantReference = shipment.merchantReference,
         status = shipment.status,
+        pickupAddressId = shipment.pickupAddressId,
         sender = address(shipment.sender),
         recipient = address(shipment.recipient),
         shippingFeePayer = shipment.shippingFeePayer,
         pricing = pricing(shipment),
+        collection = collection(shipment),
         routing = routing(shipment),
         parcels = parcels(shipment),
         note = shipment.note,
@@ -38,6 +43,7 @@ object ShipmentResponseMapper {
         serviceLevel = shipment.serviceLevel,
         shippingFee = shipment.shippingFee,
         codAmount = shipment.codAmount,
+        amountToCollect = shipment.recipientCollectAmount,
         destinationProvinceCode = shipment.recipient.provinceCode,
         destinationProvinceName = shipment.recipient.provinceName,
         destinationWardCode = shipment.recipient.wardCode,
@@ -58,10 +64,12 @@ object ShipmentResponseMapper {
             merchantReference = shipment.merchantReference,
             status = shipment.status,
             lifecycleStatus = shipment.lifecycleStatus,
+            pickupAddressId = shipment.pickupAddressId,
             sender = address(shipment.sender),
             recipient = address(shipment.recipient),
             shippingFeePayer = shipment.shippingFeePayer,
             pricing = pricing(shipment),
+            collection = collection(shipment),
             routing = routing(shipment),
             parcels = parcels(shipment),
             timeline = shipment.events
@@ -130,7 +138,45 @@ object ShipmentResponseMapper {
         )
     }
 
-    private fun address(snapshot: ShipmentAddressSnapshot) = ShipmentAddressResponse(
+    fun labels(shipment: Shipment): ShipmentLabelsResponse = ShipmentLabelsResponse(
+        trackingCode = shipment.trackingCode,
+        parcelCount = shipment.parcels.size,
+        amountToCollect = shipment.recipientCollectAmount,
+        parcels = shipment.parcels.sortedBy { it.sequence }.map { parcel ->
+            ParcelLabelResponse(
+                parcelCode = parcel.code,
+                sequence = parcel.sequence,
+                serviceLevel = shipment.serviceLevel,
+                senderName = shipment.sender.contactName,
+                senderPhone = shipment.sender.contactPhone,
+                senderAddress = fullAddress(shipment.sender),
+                recipientName = shipment.recipient.contactName,
+                recipientPhone = shipment.recipient.contactPhone,
+                recipientAddress = fullAddress(shipment.recipient),
+                destinationHubCode = shipment.destinationHubCode,
+                chargeableWeightKg = parcel.chargeableWeightKg,
+                isFragile = parcel.isFragile,
+                amountToCollect = shipment.recipientCollectAmount,
+                note = shipment.note,
+                qrPayload = parcel.code,
+            )
+        },
+    )
+
+    private fun collection(shipment: Shipment) = ShipmentCollectionResponse(
+        status = shipment.collectionStatus(),
+        amountToCollect = shipment.recipientCollectAmount,
+        codAmount = shipment.codAmount,
+        recipientShippingFee = shipment.recipientShippingFee(),
+        merchantShippingFee = shipment.merchantShippingFee(),
+        collectedAmount = shipment.collectedAmount,
+        collectedAt = shipment.collectedAt,
+    )
+
+    private fun fullAddress(snapshot: ShipmentAddressSnapshot) =
+        "${snapshot.addressLine}, ${snapshot.wardName}, ${snapshot.provinceName}"
+
+    fun address(snapshot: ShipmentAddressSnapshot) = ShipmentAddressResponse(
         contactName = snapshot.contactName,
         contactPhone = snapshot.contactPhone,
         addressLine = snapshot.addressLine,
