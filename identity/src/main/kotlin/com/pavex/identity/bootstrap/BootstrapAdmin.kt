@@ -112,7 +112,7 @@ class BootstrapAdmin(
         profiles.save(profile)
 
         val addedAdminPermissions = roleService.synchronizeSystemAdminPermissions(now)
-        roleService.assignBootstrapPlatformRole(
+        roleService.assignBootstrapAdminRole(
             actorUserId = adminId,
             targetUserId = adminId,
         )

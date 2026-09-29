@@ -29,7 +29,7 @@ class UserRoleController(
 ) {
 
     @PreAuthorize(
-        "hasAuthority('${AuthorizationPermissions.Identity.ASSIGN_ROLE}') and hasAnyRole('ADMIN','PLATFORM_SUPER_ADMIN','IAM_ADMIN')"
+        "hasAuthority('${AuthorizationPermissions.Identity.ASSIGN_ROLE}') and hasRole('ADMIN')"
     )
     @PostMapping(
         "/{userId}/roles"
@@ -66,7 +66,7 @@ class UserRoleController(
 
 
     @PreAuthorize(
-        "hasAuthority('${AuthorizationPermissions.Identity.ASSIGN_ROLE}') and hasAnyRole('ADMIN','PLATFORM_SUPER_ADMIN','IAM_ADMIN')"
+        "hasAuthority('${AuthorizationPermissions.Identity.ASSIGN_ROLE}') and hasRole('ADMIN')"
     )
     @DeleteMapping(
         "/{userId}/roles/{roleCode}"

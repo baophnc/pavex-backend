@@ -271,8 +271,7 @@ class RoleService(
 
     @Transactional
     fun createRoleAuthorized(actorUserId: UUID, request: CreateRoleRequest): RoleResponse {
-        val permissions = resolvePermissions(request.permissionCodes)
-        ensureCanDelegatePermissions(actorUserId, permissions.map { it.code }.toSet())
+        ensureAdmin(actorUserId)
         return createRole(request)
     }
 
@@ -330,8 +329,7 @@ class RoleService(
         roleId: UUID,
         request: ReplaceRolePermissionsRequest,
     ): RoleResponse {
-        val permissions = resolvePermissions(request.permissionCodes)
-        ensureCanDelegatePermissions(actorUserId, permissions.map { it.code }.toSet())
+        ensureAdmin(actorUserId)
         return replacePermissions(roleId, request)
     }
 
@@ -395,8 +393,8 @@ class RoleService(
     }
 
     @Transactional
-    fun assignBootstrapPlatformRole(actorUserId: UUID, targetUserId: UUID) {
-        assignRole(actorUserId, targetUserId, PLATFORM_SUPER_ADMIN_ROLE)
+    fun assignBootstrapAdminRole(actorUserId: UUID, targetUserId: UUID) {
+        assignRole(actorUserId, targetUserId, ADMIN_ROLE)
     }
 
     @Transactional
@@ -509,28 +507,14 @@ class RoleService(
             .sortedBy { it.code }
     }
 
+    /** Only an administrator hands out roles; workforce roles still come from Operations onboarding. */
     private fun ensureCanDelegateRole(actorUserId: UUID, role: Role) {
-        val actor = getAuthorization(actorUserId)
-        if (actor.roles.any(PLATFORM_SUPERUSER_ROLES::contains)) return
-        if (IAM_ADMIN_ROLE !in actor.roles) throw RoleDelegationForbiddenException()
-        if (role.code in SENSITIVE_ASSIGNMENT_ROLES) {
-            throw RoleDelegationForbiddenException(
-                "Only a platform super administrator can change privileged administrator roles."
-            )
-        }
+        ensureAdmin(actorUserId)
         if (role.code in WORKFORCE_MANAGED_ROLES) throw WorkforceRoleManagedByOperationsException()
-        if (role.code in IAM_ASSIGNABLE_SYSTEM_ROLES) return
-
-        val rolePermissions = loadPermissions(role.id).map { it.code }.toSet()
-        if (!actor.permissions.containsAll(rolePermissions)) throw RoleDelegationForbiddenException()
     }
 
-    private fun ensureCanDelegatePermissions(actorUserId: UUID, permissionCodes: Set<String>) {
-        val actor = getAuthorization(actorUserId)
-        if (actor.roles.any(PLATFORM_SUPERUSER_ROLES::contains)) return
-        if (IAM_ADMIN_ROLE !in actor.roles || !actor.permissions.containsAll(permissionCodes)) {
-            throw RoleDelegationForbiddenException()
-        }
+    private fun ensureAdmin(actorUserId: UUID) {
+        if (ADMIN_ROLE !in getAuthorization(actorUserId).roles) throw RoleDelegationForbiddenException()
     }
 
     private fun Role.toResponse(permissions: List<Permission>): RoleResponse =
@@ -574,18 +558,12 @@ class RoleService(
     companion object {
         const val CUSTOMER_ROLE = "CUSTOMER"
         const val ADMIN_ROLE = "ADMIN"
-        const val PLATFORM_SUPER_ADMIN_ROLE = "PLATFORM_SUPER_ADMIN"
-        const val IAM_ADMIN_ROLE = "IAM_ADMIN"
         const val MERCHANT_ROLE = "MERCHANT"
-        val PLATFORM_SUPERUSER_ROLES = setOf(ADMIN_ROLE, PLATFORM_SUPER_ADMIN_ROLE)
-        val SENSITIVE_ASSIGNMENT_ROLES = setOf(ADMIN_ROLE, PLATFORM_SUPER_ADMIN_ROLE, IAM_ADMIN_ROLE)
-        val IAM_ASSIGNABLE_SYSTEM_ROLES = setOf(CUSTOMER_ROLE, MERCHANT_ROLE)
+        val PLATFORM_SUPERUSER_ROLES = setOf(ADMIN_ROLE)
+
+        /** Hub roles are granted with a hub membership, so only Operations onboarding assigns them. */
         val WORKFORCE_MANAGED_ROLES = setOf(
-            "DRIVER",
-            "WAREHOUSE_STAFF",
             "HUB_MANAGER",
-            "OPERATIONS_MANAGER",
-            "HUB_DISPATCHER",
             "WAREHOUSE_OPERATOR",
             "LINE_HAUL_DRIVER",
             "COURIER",

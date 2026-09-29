@@ -150,7 +150,7 @@ class RoleServiceTest {
         val service = service(role = null)
 
         assertThrows(WorkforceRoleManagedByOperationsException::class.java) {
-            service.assignRole(UUID.randomUUID(), UUID.randomUUID(), "DRIVER")
+            service.assignRole(UUID.randomUUID(), UUID.randomUUID(), "COURIER")
         }
     }
 

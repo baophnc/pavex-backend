@@ -74,15 +74,6 @@ class WorkforceIdentityProvisionService(
         ?: throw ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "$field is required")
 
     companion object {
-        private val ALLOWED_WORKFORCE_ROLES = setOf(
-            "COURIER",
-            "LINE_HAUL_DRIVER",
-            "WAREHOUSE_OPERATOR",
-            "HUB_DISPATCHER",
-            "DRIVER",
-            "WAREHOUSE_STAFF",
-            "HUB_MANAGER",
-            "OPERATIONS_MANAGER",
-        )
+        private val ALLOWED_WORKFORCE_ROLES = RoleService.WORKFORCE_MANAGED_ROLES
     }
 }
