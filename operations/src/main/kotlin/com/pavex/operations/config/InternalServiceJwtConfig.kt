@@ -22,7 +22,30 @@ class InternalServiceJwtConfig(
     private val shipmentPublicKey: Resource,
     @Value("\${security.trusted-services.shipment.issuer}")
     private val shipmentIssuer: String,
+    @Value("\${security.trusted-services.billing.public-key}")
+    private val billingPublicKey: Resource,
+    @Value("\${security.trusted-services.billing.issuer}")
+    private val billingIssuer: String,
 ) {
+    /** Billing may only ask whether a user can handle cash at a hub. */
+    @Bean("billingServiceJwtDecoder")
+    fun billingServiceJwtDecoder(): JwtDecoder {
+        val publicKey = billingPublicKey.inputStream.use {
+            requireNotNull(RsaKeyConverters.x509().convert(it))
+        }
+        val decoder = NimbusJwtDecoder.withPublicKey(publicKey).build()
+        decoder.setJwtValidator(
+            DelegatingOAuth2TokenValidator(
+                JwtValidators.createDefaultWithIssuer(billingIssuer),
+                exactClaim("sub", BILLING_SERVICE),
+                exactClaim(PavexJwtClaims.TOKEN_TYPE, PavexTokenTypes.SERVICE),
+                audience(OPERATIONS_SERVICE),
+                scope(OPERATIONS_ACCESS_CHECK_SCOPE),
+            ),
+        )
+        return decoder
+    }
+
     @Bean("shipmentServiceJwtDecoder")
     fun shipmentServiceJwtDecoder(): JwtDecoder {
         val publicKey = shipmentPublicKey.inputStream.use {
@@ -61,5 +84,7 @@ class InternalServiceJwtConfig(
         private const val SHIPMENT_SERVICE = "shipment-service"
         private const val OPERATIONS_SERVICE = "operations-service"
         private const val OPERATIONS_SHIPMENT_SCOPE = "operations.shipments.execute"
+        private const val BILLING_SERVICE = "billing-service"
+        private const val OPERATIONS_ACCESS_CHECK_SCOPE = "operations.access.check"
     }
 }

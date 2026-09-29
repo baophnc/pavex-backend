@@ -5,7 +5,6 @@ import com.pavex.operations.client.IdentityWorkforceClient
 import com.pavex.operations.client.NetworkHubClient
 import com.pavex.operations.dto.AssignWorkforceHubRequest
 import com.pavex.operations.dto.CreateWorkforceMemberRequest
-import com.pavex.operations.dto.DispatcherAccessLevel
 import com.pavex.operations.dto.OnboardWorkforceMemberRequest
 import com.pavex.operations.dto.SetWorkforceCapacityRequest
 import com.pavex.operations.dto.WorkforceMemberResponse
@@ -52,14 +51,12 @@ class WorkforceOnboardingService(
             scope,
             CreateWorkforceMemberRequest(provisioned.userId, request.kind),
         )
-        request.hubId?.let { hubId ->
-            member = workforce.assignHub(
-                actorUserId,
-                scope,
-                member.id,
-                AssignWorkforceHubRequest(hubId = hubId, isPrimary = true, reason = "Initial workforce onboarding"),
-            )
-        }
+        member = workforce.assignHub(
+            actorUserId,
+            scope,
+            member.id,
+            AssignWorkforceHubRequest(hubId = request.hubId, isPrimary = true, reason = "Initial workforce onboarding"),
+        )
         request.maxConcurrentAssignments?.let { capacity ->
             member = workforce.setCapacity(
                 actorUserId,
@@ -84,34 +81,16 @@ class WorkforceOnboardingService(
         if (request.maxConcurrentAssignments != null && request.maxConcurrentAssignments !in 1..100) {
             throw InvalidOperationsRequestException("invalid_capacity", "Maximum concurrent assignments must be between 1 and 100.")
         }
-        val hubRequired = request.kind != WorkforceMemberKind.DISPATCHER || request.dispatcherAccessLevel != DispatcherAccessLevel.GLOBAL
-        if (hubRequired && request.hubId == null) {
-            throw InvalidOperationsRequestException("workforce_hub_required", "A primary hub is required for this workforce role.")
-        }
-        if (request.kind == WorkforceMemberKind.DISPATCHER && request.dispatcherAccessLevel == null) {
-            throw InvalidOperationsRequestException(
-                "dispatcher_access_required",
-                "Choose HUB, HUB_MANAGER or GLOBAL dispatcher access.",
-            )
-        }
     }
 
     private fun validateHub(request: OnboardWorkforceMemberRequest) {
-        val hubId = request.hubId ?: return
-        val hub = network.find(hubId)
+        val hub = network.find(request.hubId)
             ?: throw InvalidOperationsRequestException("workforce_hub_not_found", "The selected workforce hub does not exist.")
         if (hub.status != "ACTIVE") {
             throw InvalidOperationsRequestException("workforce_hub_inactive", "The selected workforce hub is not active.")
         }
     }
 
-    private fun workforceRole(request: OnboardWorkforceMemberRequest): String {
-        if (request.kind == WorkforceMemberKind.DISPATCHER && request.dispatcherAccessLevel == null) {
-            throw InvalidOperationsRequestException(
-                "dispatcher_access_required",
-                "Choose HUB, HUB_MANAGER or GLOBAL dispatcher access.",
-            )
-        }
-        return WorkforceRolePolicy.onboardingRole(request.kind, request.dispatcherAccessLevel)
-    }
+    private fun workforceRole(request: OnboardWorkforceMemberRequest): String =
+        WorkforceRolePolicy.onboardingRole(request.kind)
 }

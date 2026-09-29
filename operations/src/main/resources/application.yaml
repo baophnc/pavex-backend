@@ -44,6 +44,9 @@ security:
     shipment:
       issuer: ${SHIPMENT_SERVICE_JWT_ISSUER:http://localhost:8084}
       public-key: file:${pavex.keys-dir}/shipment/public.pem
+    billing:
+      issuer: ${BILLING_SERVICE_JWT_ISSUER:http://localhost:8088}
+      public-key: file:${pavex.keys-dir}/billing/public.pem
 
 operations:
   dispatch:

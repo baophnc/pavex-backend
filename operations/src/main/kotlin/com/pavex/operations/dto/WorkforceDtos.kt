@@ -150,7 +150,6 @@ data class WorkforceAuditResponse(
 )
 
 enum class WorkforceOnboardingGender { MALE, FEMALE, OTHER }
-enum class DispatcherAccessLevel { HUB, HUB_MANAGER, GLOBAL }
 
 data class OnboardWorkforceMemberRequest(
     @field:NotBlank @field:Email @field:Size(max = 320) val email: String,
@@ -161,7 +160,24 @@ data class OnboardWorkforceMemberRequest(
     @field:Past val dateOfBirth: LocalDate,
     @field:Size(max = 2048) val avatarUrl: String? = null,
     val kind: WorkforceMemberKind,
-    val dispatcherAccessLevel: DispatcherAccessLevel? = null,
-    val hubId: UUID? = null,
+    val hubId: UUID,
     @field:Min(1) @field:Max(100) val maxConcurrentAssignments: Int? = null,
+)
+
+/** The hubs the signed-in user's screens cover; [allHubs] means every hub (head office). */
+data class MyHubScopeResponse(
+    val allHubs: Boolean,
+    val workforceKind: WorkforceMemberKind?,
+    val hubs: List<MyHubResponse>,
+)
+
+data class MyHubResponse(
+    val id: UUID,
+    val code: String,
+    val name: String,
+    val type: String,
+    val status: String,
+    val provinceCode: String,
+    val wardCode: String,
+    val primary: Boolean,
 )

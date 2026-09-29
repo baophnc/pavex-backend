@@ -166,6 +166,16 @@ class OperationalAssignmentService(
         ).map(OperationalAssignmentResponse::from)
     }
 
+    @Transactional(readOnly = true)
+    fun myAvailability(userId: UUID): MyAvailabilityResponse {
+        val member = activeMember(userId)
+            ?: throw OperationsNotFoundException("workforce_member_not_found", "An active workforce member was not found.")
+        val availability = availabilities.findById(member.id).orElseThrow {
+            OperationsConflictException("workforce_availability_not_found", "Workforce availability is not configured for this member.")
+        }
+        return availabilityResponse(member.id, availability.status, availability.maxConcurrentAssignments, availability.updatedAt)
+    }
+
     @Transactional
     fun setMyAvailability(userId: UUID, status: WorkforceAvailabilityStatus): MyAvailabilityResponse {
         val member = activeMember(userId)
