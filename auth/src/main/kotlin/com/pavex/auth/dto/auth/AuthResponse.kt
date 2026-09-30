@@ -5,4 +5,6 @@ data class AuthResponse(
     val refreshToken: String,
     val tokenType: String = "Bearer",
     val expiresIn: Long,
+    /** The account still has the temporary password an administrator issued; ask for a new one. */
+    val passwordChangeRequired: Boolean = false,
 )

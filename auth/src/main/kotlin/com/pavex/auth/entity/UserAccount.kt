@@ -57,6 +57,16 @@ class UserAccount(
     @Column(name = "last_login_at")
     var lastLoginAt: Instant? = null,
 
+    /** Set for accounts created by an administrator with the temporary password. */
+    @Column(
+        name = "must_change_password",
+        nullable = false,
+    )
+    var mustChangePassword: Boolean = false,
+
+    @Column(name = "temporary_password_expires_at")
+    var temporaryPasswordExpiresAt: Instant? = null,
+
     @Column(
         name = "created_at",
         nullable = false,

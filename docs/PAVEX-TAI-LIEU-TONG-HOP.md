@@ -645,11 +645,19 @@ chỉ văn phòng thấy (an toàn là mặc định). Không tạo quyền ki�
 
 - **Khách tự đăng ký** bằng email và mật khẩu, bấm link trong email để xác thực (ở local, email vào Mailpit), rồi hoàn
   thiện hồ sơ (họ tên, SĐT…) ở `/complete-profile`. Có thể đăng nhập bằng Google.
-- **Nhân viên không tự đăng ký.** Quản trị tạo tài khoản, gán vai trò và gửi lời mời; nhân viên bấm link trong email để
-  đặt mật khẩu. Tài khoản seed đã được kích hoạt sẵn.
+- **Nhân viên không tự đăng ký.** Quản trị tạo tài khoản ở **Tài khoản → Tạo tài khoản** hoặc **Nhân sự bưu cục**.
+  - Tài khoản mới có **mật khẩu tạm** (mặc định `123456`, đổi bằng biến `STAFF_TEMPORARY_PASSWORD`). Email do công ty
+    cấp nên được coi là đã xác thực.
+  - Lần đăng nhập đầu, trang quản lý và app hiện trường **bắt đặt mật khẩu riêng** trước khi làm việc; mọi trang khác
+    đều chuyển về màn đặt mật khẩu.
+  - Mật khẩu tạm **hết hạn sau 72 giờ** (`STAFF_TEMPORARY_PASSWORD_TTL`). Quá hạn thì nhân viên dùng Quên mật khẩu.
+  - Tài khoản seed đã được kích hoạt sẵn với mật khẩu dev.
 - **Phiên đăng nhập:** access token ngắn hạn và refresh token xoay vòng; mỗi phiên có thời hạn tuyệt đối. Có đăng xuất
   và đăng xuất mọi thiết bị. Đăng nhập sai nhiều lần thì tài khoản bị khoá tạm.
-- **Quên mật khẩu** gửi link đặt lại. Khách và nhân viên dùng link khác nhau: client portal và management portal.
+- **Quên mật khẩu** gửi link đặt lại (hiệu lực 1 giờ). Khách dùng link của client portal, nhân viên dùng link của
+  management portal.
+  - App hiện trường có "Quên mật khẩu?" ở màn đăng nhập: gửi email, rồi dán liên kết trong thư vào app để đặt mật khẩu
+    mới ngay trên điện thoại. Vì vậy không cần mở được trang web trên điện thoại.
 - Mọi sự kiện bảo mật (đăng nhập, đổi mật khẩu, thu hồi phiên) được ghi nhật ký.
 - Quản trị viên khởi tạo `admin@pavex.com` do Auth và Identity tự tạo khi khởi động. Mật khẩu nằm trong YAML, chỉ dùng ở local.
 

@@ -5,9 +5,11 @@ import com.pavex.auth.exception.CredentialProvisionConflictException
 import com.pavex.auth.repository.UserAccountRepository
 import com.pavex.auth.security.OpaqueTokenService
 import com.pavex.contracts.identity.CredentialInvitationRequest
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
+import java.time.Duration
 import java.time.Instant
 import java.util.UUID
 
@@ -19,6 +21,10 @@ class InternalCredentialService(
     private val invitationService: InvitationService,
     private val sessionService: SessionService,
     private val advisoryLockService: AdvisoryLockService,
+    @Value("\${auth.staff-credentials.temporary-password}")
+    private val temporaryPassword: String,
+    @Value("\${auth.staff-credentials.temporary-password-ttl}")
+    private val temporaryPasswordTtl: Duration,
 ) {
 
     /**
@@ -50,9 +56,10 @@ class InternalCredentialService(
             throw CredentialProvisionConflictException()
         }
 
+        // Staff an administrator creates sign in with the temporary password (the email was given
+        // to them by the company, so it counts as verified) and must choose their own at once.
         val now = Instant.now()
-        val internalPassword = opaqueTokenService.issue().raw
-        val passwordHash = requireNotNull(passwordEncoder.encode(internalPassword)) {
+        val passwordHash = requireNotNull(passwordEncoder.encode(temporaryPassword)) {
             "Password encoder returned null"
         }
 
@@ -61,8 +68,10 @@ class InternalCredentialService(
                 id = request.userId,
                 email = email,
                 passwordHash = passwordHash,
-                emailVerified = false,
+                emailVerified = true,
                 identityProvisioned = true,
+                mustChangePassword = true,
+                temporaryPasswordExpiresAt = now.plus(temporaryPasswordTtl),
                 createdAt = now,
                 updatedAt = now,
             )

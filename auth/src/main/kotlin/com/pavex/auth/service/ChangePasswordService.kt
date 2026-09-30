@@ -81,6 +81,8 @@ class ChangePasswordService(
         account.failedLoginAttempts = 0
         account.lockoutEndAt = null
         account.updatedAt = now
+        account.mustChangePassword = false
+        account.temporaryPasswordExpiresAt = null
 
         userAccountRepository.save(
             account

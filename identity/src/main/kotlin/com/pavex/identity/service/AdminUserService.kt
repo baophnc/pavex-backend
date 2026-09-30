@@ -69,7 +69,9 @@ class AdminUserService(
         val role = roles.findByCode(request.roleCode.trim().uppercase()) ?: throw RoleNotFoundException()
         validateAvatarUrl(request.avatarUrl)
         val now = Instant.now()
-        val account = accounts.save(UserAccount(email = email, createdAt = now, updatedAt = now))
+        // The company issued this email to the employee, and Auth gives the account a temporary
+        // password that must be changed at the first sign-in, so no verification mail is needed.
+        val account = accounts.save(UserAccount(email = email, emailVerified = true, createdAt = now, updatedAt = now))
         val firstName = normalize(request.firstName)
         val lastName = normalize(request.lastName)
         val displayName = normalize(request.displayName)

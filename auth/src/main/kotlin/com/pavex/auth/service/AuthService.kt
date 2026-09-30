@@ -10,6 +10,7 @@ import com.pavex.auth.entity.UserAccount
 import com.pavex.auth.exception.AccountLockedException
 import com.pavex.auth.exception.EmailAlreadyExistsException
 import com.pavex.auth.exception.EmailNotVerifiedException
+import com.pavex.auth.exception.TemporaryPasswordExpiredException
 import com.pavex.auth.exception.InvalidCredentialsException
 import com.pavex.auth.exception.InvalidRefreshTokenException
 import com.pavex.auth.exception.RefreshTokenReuseDetectedException
@@ -204,6 +205,10 @@ class AuthService(
 
         if (!account.emailVerified) {
             throw EmailNotVerifiedException()
+        }
+
+        if (account.mustChangePassword && account.temporaryPasswordExpiresAt?.isBefore(now) == true) {
+            throw TemporaryPasswordExpiredException()
         }
 
         // Authenticate the credential first. An invalid password must not

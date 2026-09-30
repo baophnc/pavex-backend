@@ -205,6 +205,8 @@ class PasswordResetService(
 
         account.failedLoginAttempts = 0
         account.lockoutEndAt = null
+        account.mustChangePassword = false
+        account.temporaryPasswordExpiresAt = null
         // Possession of the emailed, single-use token proves mailbox ownership.
         // This also enables first-time password setup for admin-created users.
         // Identity account status and roles are deliberately left unchanged.
