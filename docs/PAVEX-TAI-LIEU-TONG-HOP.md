@@ -489,7 +489,9 @@ Nên dừng các service trước khi khôi phục.
 
 ### 2.7 Thử nhanh theo từng vai trò
 
-Danh sách tài khoản thử ở mục 2.5.8. Tất cả dùng mật khẩu ở mục 2.5.2. Một luồng đầy đủ nên thử theo thứ tự:
+**Kịch bản kiểm thử chi tiết từng bước trên cả 3 app:** [KIEM-THU-LUONG-TREN-3-APP.md](KIEM-THU-LUONG-TREN-3-APP.md).
+
+Danh sách tài khoản thử ở mục 2.5.8. Tất cả dùng mật khẩu ở mục 2.5.2. Tóm tắt một luồng đầy đủ:
 
 1. **Tạo shop:** đăng ký một tài khoản ở client portal :3000, gửi hồ sơ shop. Đăng nhập tài khoản Kinh doanh & CSKH
    ở management :3001 để duyệt shop.
