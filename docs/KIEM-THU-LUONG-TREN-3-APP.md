@@ -68,6 +68,9 @@ Danh sách đầy đủ nằm ở `.local/seed/nationwide/staff.csv`: lọc theo
 
 1. **Chỉ người đã "Vào ca" và bật "Sẵn sàng nhận việc" mới được giao việc.** Không ai tự vào ca, nên việc sẽ chỉ rơi vào
    đúng các tài khoản bạn đang dùng. Chưa có ai vào ca thì việc chờ; ai đó vào ca là hệ thống giao trong vài giây.
+   - Việc được giao mà 15 phút chưa bấm **Nhận việc**, hoặc người đó ra ca, thì việc chuyển cho người khác đang trong ca.
+   - Nhân viên kho và trưởng bưu cục **không cần Nhận việc**: quét **Nhập kho** là tự nhận việc khai thác của đơn.
+     Bưu cục không có nhân viên kho thì trưởng bưu cục nhận việc khai thác.
 2. **Mỗi người nghỉ 1 ngày trong tuần.** Nếu hôm nay là ngày nghỉ của người trong bảng, dùng người dự phòng hoặc tìm
    người khác cùng mã hub trong `staff.csv`.
 3. **Chỉ vào ca được trong giờ ca.**
@@ -133,7 +136,9 @@ BC-HN-BADINH → xe tuyến → KHO-HN → xe tuyến → BC-HN-NGOCHA. Mỗi b�
 ### Bước 6 — Nhập kho bưu cục gửi *(App, `thanh.hoangbao.nvbc`)*
 
 - [ ] **Vào ca** ở tab Hôm nay.
-- [ ] **Nhập kho:** tab **Quét** → **Nhập kho**, quét mã. → "Đã đến bưu cục gửi".
+- [ ] **Nhập kho:** tab **Quét** → **Nhập kho**, quét mã, không cần bấm Nhận việc trước. → "Đã đến bưu cục gửi".
+  Management **Vận hành → Phân công**: việc khai thác bưu cục gửi thuộc người vừa quét, trạng thái Hoàn thành; việc
+  **Chuyến xe** chặng 1 đã có tài xế nếu tài xế đang trong ca.
 - [ ] **Kiểm kho:** thử **Kiểm kho** với cùng mã. → Xác nhận kiện đang trên kệ.
 - [ ] **Thử quét sai chỗ:** nhân viên bưu cục khác (không phải Ba Đình) quét Nhập kho mã này.
   → App báo kiện không thuộc bưu cục này.
@@ -162,7 +167,8 @@ BC-HN-BADINH → xe tuyến → KHO-HN → xe tuyến → BC-HN-NGOCHA. Mỗi b�
 
 ### Bước 9 — Nhập kho tỉnh *(App, `quang.nguyenthanh.nvkt4`)*
 
-- [ ] **Nhập kho:** vào ca KHO-HN, **Quét → Nhập kho**. → Kiện "Đã đến bưu cục trung chuyển".
+- [ ] **Nhập kho:** vào ca KHO-HN, **Quét → Nhập kho**. → Kiện "Đã đến bưu cục trung chuyển". Việc khai thác KHO-HN
+  tự hoàn tất theo người quét, và chặng 2 KHO-HN → BC-HN-NGOCHA được giao cho tài xế đang trong ca.
 - [ ] **Chuyến tự kết thúc:** trong khoảng 1 phút, chuyến của tài xế chuyển **Đã tới** (lý do "Hub đến đã nhập đủ kiện")
   và app tài xế ngừng gửi vị trí. Nếu chờ không muốn, tài xế có thể bấm **Đã tới nơi**.
 
@@ -175,6 +181,7 @@ BC-HN-BADINH → xe tuyến → KHO-HN → xe tuyến → BC-HN-NGOCHA. Mỗi b�
 ### Bước 11 — Nhập kho bưu cục phát *(App, `chau.buikim.nvbc`)*
 
 - [ ] **Nhập kho:** vào ca BC-HN-NGOCHA, **Quét → Nhập kho**. → "Đã đến bưu cục phát". Chuyến chặng 2 tự kết thúc.
+  Việc khai thác bưu cục phát tự hoàn tất, và việc **Giao hàng** được giao cho bưu tá Ngọc Hà đang trong ca.
 
 ### Bước 12 — Giao hàng và thu tiền *(App, `dung.phamxuan.bt`)*
 
@@ -283,7 +290,13 @@ Mỗi nhóm chạy độc lập được, trừ khi ghi cần một vận đơn 
 - [ ] App **Hôm nay** hiện ca hôm nay. Người nghỉ hôm nay thấy "Hôm nay bạn chưa được xếp ca".
 - [ ] Management **Vận hành → Ca làm việc**: ca 7 ngày tới đã có sẵn, không cần tạo.
 - [ ] **Vào ca** rồi không **Ra ca**. → Khoảng 1 giờ sau khi ca kết thúc, hệ thống tự ra ca; hôm sau vào ca mới bình thường.
-- [ ] Tắt **Sẵn sàng nhận việc**. → Không nhận thêm việc mới.
+- [ ] Tắt **Sẵn sàng nhận việc**. → Không nhận thêm việc mới; việc đã được giao mà chưa nhận chuyển cho người khác.
+- [ ] **Việc chưa nhận khi ra ca:** bưu tá A có việc Lấy hàng chưa bấm Nhận việc, bấm **Ra ca**. → Trong vài giây việc
+  chuyển cho bưu tá B đang trong ca (hoặc về hàng chờ nếu không còn ai). Lịch sử việc có dòng "Đưa lại hàng đợi".
+- [ ] **Quá 15 phút chưa nhận:** để một việc được giao tự động 15 phút không bấm Nhận việc. → Việc chuyển cho người
+  khác đang trong ca. Việc trưởng bưu cục phân công tay thì giữ nguyên người được chọn.
+- [ ] **Bưu cục không có nhân viên kho** (ví dụ BC-HN-DONGANH): trưởng bưu cục vào ca. → Nhận việc khai thác của đơn
+  gửi từ đó; quét Nhập kho là xong. Ở Phân công, trưởng bưu cục cũng có trong danh sách chọn người cho việc khai thác.
 
 ### 3.8 Hỗ trợ khách hàng
 

@@ -162,22 +162,24 @@ EOF
   fi
 }
 
-start_app discovery-server platform/discovery-server/target/discovery-server-0.0.1-SNAPSHOT.jar http://localhost:8761/actuator/health
+# Wait on readiness, not the full health: with real SMTP in .env the mail check of auth and partners
+# can take longer than the probe timeout although the service is up.
+start_app discovery-server platform/discovery-server/target/discovery-server-0.0.1-SNAPSHOT.jar http://localhost:8761/actuator/health/readiness
 
 # Start Identity before Auth. This guarantees Identity Flyway V1-V3 is ready
 # before a legacy Auth database is allowed to cross the destructive V15 cutover.
-start_app identity-service identity/target/identity-service-0.0.1-SNAPSHOT.jar http://localhost:8082/actuator/health
+start_app identity-service identity/target/identity-service-0.0.1-SNAPSHOT.jar http://localhost:8082/actuator/health/readiness
 preflight_auth_identity_cutover
 
-start_app auth-service auth/target/auth-service-0.0.1-SNAPSHOT.jar http://localhost:8081/actuator/health
-start_app partners-service partners/target/partners-service-0.0.1-SNAPSHOT.jar http://localhost:8083/actuator/health
-start_app network-service network/target/network-service-0.0.1-SNAPSHOT.jar http://localhost:8085/actuator/health
-start_app pricing-service pricing/target/pricing-service-0.0.1-SNAPSHOT.jar http://localhost:8086/actuator/health
-start_app operations-service operations/target/operations-service-0.0.1-SNAPSHOT.jar http://localhost:8087/actuator/health
-start_app shipment-service shipment/target/shipment-service-0.0.1-SNAPSHOT.jar http://localhost:8084/actuator/health
-start_app billing-service billing/target/billing-service-0.0.1-SNAPSHOT.jar http://localhost:8088/actuator/health
-start_app fleet-service fleet/target/fleet-service-0.0.1-SNAPSHOT.jar http://localhost:8089/actuator/health
-start_app api-gateway platform/api-gateway/target/api-gateway-0.0.1-SNAPSHOT.jar http://localhost:8080/actuator/health
+start_app auth-service auth/target/auth-service-0.0.1-SNAPSHOT.jar http://localhost:8081/actuator/health/readiness
+start_app partners-service partners/target/partners-service-0.0.1-SNAPSHOT.jar http://localhost:8083/actuator/health/readiness
+start_app network-service network/target/network-service-0.0.1-SNAPSHOT.jar http://localhost:8085/actuator/health/readiness
+start_app pricing-service pricing/target/pricing-service-0.0.1-SNAPSHOT.jar http://localhost:8086/actuator/health/readiness
+start_app operations-service operations/target/operations-service-0.0.1-SNAPSHOT.jar http://localhost:8087/actuator/health/readiness
+start_app shipment-service shipment/target/shipment-service-0.0.1-SNAPSHOT.jar http://localhost:8084/actuator/health/readiness
+start_app billing-service billing/target/billing-service-0.0.1-SNAPSHOT.jar http://localhost:8088/actuator/health/readiness
+start_app fleet-service fleet/target/fleet-service-0.0.1-SNAPSHOT.jar http://localhost:8089/actuator/health/readiness
+start_app api-gateway platform/api-gateway/target/api-gateway-0.0.1-SNAPSHOT.jar http://localhost:8080/actuator/health/readiness
 
 trap - ERR
 echo "Pavex local stack is running. Logs: $local_dir/logs"

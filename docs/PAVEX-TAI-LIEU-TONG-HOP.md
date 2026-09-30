@@ -498,9 +498,9 @@ Danh sách tài khoản thử ở mục 2.5.8. Tất cả dùng mật khẩu ở
 2. **Tạo vận đơn:** đăng nhập lại shop, khai báo điểm lấy hàng (chọn phường Ba Đình, Hà Nội để khớp tài khoản thử),
    tạo vận đơn có COD, in nhãn.
 3. **Lấy hàng và nhập kho:** bưu tá Ba Đình check-in ca trong app, nhận việc lấy hàng rồi quét Lấy hàng. Nhân viên
-   hoặc trưởng bưu cục Ba Đình quét Nhập kho.
+   hoặc trưởng bưu cục Ba Đình quét Nhập kho, không cần bấm Nhận việc trước.
 4. **Trung chuyển:** tài xế tuyến check-in ca ở KHO-HN, nhận việc trung chuyển, quét Lên xe (chuyến tự bắt đầu và gửi
-   GPS). Nhân viên khai thác KHO-HN quét Nhập kho.
+   GPS). Nhân viên khai thác KHO-HN quét Nhập kho, chặng tiếp theo được mở ngay.
 5. **Giao và tiền:** tiếp tục tới bưu cục phát; bưu tá giao, thu tiền, nộp tiền; kế toán duyệt và đối soát.
 
 Email phát sinh khi thử (xác thực, xác nhận yêu cầu hỗ trợ…) xem ở Mailpit: http://localhost:8025.
@@ -776,6 +776,18 @@ Chưa có phí hoàn hàng riêng.
 - **Phân công việc:** mỗi vận đơn sinh các việc lấy hàng, khai thác, trung chuyển, giao. Việc được giao cho người phù
   hợp; người nhận việc chấp nhận rồi thực hiện. Mỗi việc có lịch sử. Trưởng bưu cục điều phối trong bưu cục của mình;
   vận hành miền điều phối toàn mạng (`/operations/dispatch`, có cả hàng sự kiện lỗi để gửi lại).
+  - **Việc khai thác kho** ưu tiên nhân viên kho. Bưu cục không có nhân viên kho (phần lớn bưu cục nhỏ) thì trưởng bưu
+    cục nhận thay, cả khi giao tự động lẫn khi phân công tay.
+  - **Quét "Nhập kho" là nhận việc khai thác.** Nhân viên kho hoặc trưởng bưu cục quét thì tự nhận việc khai thác của
+    đơn ở bưu cục đó nếu chưa ai chấp nhận, không cần bấm "Nhận việc". Ở kho trung chuyển và bưu cục phát, quét Nhập
+    kho đủ kiện là xong bước khai thác và mở chặng xe tiếp theo hoặc việc giao hàng. Việc đã có người chấp nhận thì
+    vẫn là của người đó.
+  - **Trả việc chưa nhận:** người ra ca (tự ra ca, hệ thống tự ra ca, bị huỷ ca hoặc đánh vắng) hay tắt Sẵn sàng thì các
+    việc được giao mà chưa chấp nhận quay về hàng chờ. Việc giao tự động mà 15 phút không ai chấp nhận
+    (`OPERATIONS_ACCEPT_TIMEOUT`) cũng được thu lại và giao người khác; việc trưởng bưu cục phân công tay thì giữ nguyên.
+  - **Hàng chờ công bằng:** mỗi 5 giây hệ thống thử giao 25 việc đã lâu chưa được thử nhất, nên việc tồn nhiều cũng
+    không che mất việc khác. Ai vừa vào ca hoặc bật Sẵn sàng thì việc chờ ở bưu cục của họ được thử ngay trong lượt kế
+    tiếp. Người vừa bị thu việc được hỏi sau cùng.
 
 ### 4.7 Thu tiền, nộp tiền, đối soát, hoá đơn (Billing)
 
@@ -2053,6 +2065,9 @@ Danh mục hành chính, sổ địa chỉ, shop, điểm lấy hàng, yêu cầ
 | `updatedAt` | `updated_at` | `Instant` | bắt buộc |
 | `version` | `version` | `Long` | khoá lạc quan (@Version), bắt buộc |
 
+Cột `last_dispatch_attempt_at` (V10) không có trong entity: chỉ hàng chờ giao việc đọc và ghi nó bằng SQL, để việc thử
+giao lâu nhất được thử trước.
+
 </details>
 
 <details>
@@ -2255,6 +2270,7 @@ Danh mục hành chính, sổ địa chỉ, shop, điểm lấy hàng, yêu cầ
 | `GET` | `/internal/v1/operations/shipments/assignments/by-user/{userId}` | Nội bộ (JWT dịch vụ) |
 | `GET` | `/internal/v1/operations/shipments/case-admin-scope/{userId}` | Nội bộ (JWT dịch vụ) |
 | `POST` | `/internal/v1/operations/shipments/{shipmentId}/assignments/{assignmentId}/authorize` | Nội bộ (JWT dịch vụ) |
+| `POST` | `/internal/v1/operations/shipments/{shipmentId}/assignments/{assignmentId}/claim-handling` | Nội bộ (JWT dịch vụ): lượt quét tại kho nhận việc khai thác chưa ai chấp nhận |
 | `POST` | `/internal/v1/operations/shipments/{shipmentId}/assignments/{assignmentId}/complete` | Nội bộ (JWT dịch vụ) |
 | `POST` | `/internal/v1/operations/shipments/{shipmentId}/cancel` | Nội bộ (JWT dịch vụ) |
 | `POST` | `/internal/v1/operations/shipments/{shipmentId}/plan` | Nội bộ (JWT dịch vụ) |
@@ -3102,14 +3118,14 @@ Mỗi dòng gồm: chuyến, số thứ tự trên máy, thời điểm ghi, th�
 
 Flyway tự áp migration còn thiếu khi service khởi động. File nằm ở `<service>/src/main/resources/db/migration/`.
 
-| Service | Số migration | Mới nhất | Mới thêm 27–29/09/2026 |
+| Service | Số migration | Mới nhất | Mới thêm 27/09–01/10/2026 |
 |---|---:|---|---|
 | Auth | 17 | `V19__add_refresh_session_absolute_lifetime.sql` | — |
 | Identity | 15 | `V16__fleet_trip_permissions.sql` | `V15`, `V16` |
 | Partners | 7 | `V7__create_support_requests.sql` | `V7` |
 | Network | 5 | `V5__expire_unconfirmed_shipment_reservations.sql` | — |
 | Pricing | 5 | `V5__province_pricing_zones.sql` | — |
-| Operations | 9 | `V9__hub_manager_workforce_kind.sql` | — |
+| Operations | 10 | `V10__fair_dispatch_queue.sql` | `V10` |
 | Shipment | 15 | `V16__charge_cancellation_after_pickup.sql` | `V16` |
 | Billing | 1 | `V1__create_billing.sql` | — |
 | Fleet | 1 | `V1__create_fleet.sql` | `V1` (service mới) |

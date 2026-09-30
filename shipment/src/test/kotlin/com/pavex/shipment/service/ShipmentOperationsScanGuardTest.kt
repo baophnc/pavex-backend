@@ -49,6 +49,65 @@ class ShipmentOperationsScanGuardTest {
     }
 
     @Test
+    fun `origin receipt takes over handling nobody accepted yet`() {
+        val target = target(ParcelStatus.PICKED_UP, null)
+        val hub = hub(originHubId)
+        val waiting = assignment(OperationsAssignmentType.ORIGIN_HUB_HANDLING, originHubId)
+            .copy(assigneeWorkforceMemberId = null, status = OperationsAssignmentStatus.READY)
+        val claimed = waiting.copy(assigneeWorkforceMemberId = UUID.randomUUID(), status = OperationsAssignmentStatus.IN_PROGRESS)
+        allowScanning(hub)
+        `when`(operations.findTypeAssignment(shipmentId, OperationsAssignmentType.ORIGIN_HUB_HANDLING, originHubId))
+            .thenReturn(waiting)
+        `when`(
+            operations.claimHubHandling(
+                shipmentId,
+                waiting.id,
+                actorUserId,
+                OperationsAssignmentType.ORIGIN_HUB_HANDLING,
+                originHubId,
+                null,
+            ),
+        ).thenReturn(claimed)
+
+        val context = guard.validate(
+            actorUserId,
+            target,
+            hub,
+            RecordParcelScanRequest(target.parcelCode, originHubId, ParcelStatus.AT_ORIGIN_HUB),
+        )
+
+        assertEquals(claimed, context.handlingAssignment)
+    }
+
+    @Test
+    fun `accepted handling is used as it is without taking it over`() {
+        val target = target(ParcelStatus.PICKED_UP, null)
+        val hub = hub(originHubId)
+        val accepted = assignment(OperationsAssignmentType.ORIGIN_HUB_HANDLING, originHubId)
+            .copy(status = OperationsAssignmentStatus.ACCEPTED)
+        allowScanning(hub)
+        `when`(operations.findTypeAssignment(shipmentId, OperationsAssignmentType.ORIGIN_HUB_HANDLING, originHubId))
+            .thenReturn(accepted)
+
+        val context = guard.validate(
+            actorUserId,
+            target,
+            hub,
+            RecordParcelScanRequest(target.parcelCode, originHubId, ParcelStatus.AT_ORIGIN_HUB),
+        )
+
+        assertEquals(accepted, context.handlingAssignment)
+        verify(operations, never()).claimHubHandling(
+            shipmentId,
+            accepted.id,
+            actorUserId,
+            OperationsAssignmentType.ORIGIN_HUB_HANDLING,
+            originHubId,
+            null,
+        )
+    }
+
+    @Test
     fun `transit arrival completes line haul without requiring blocked handling`() {
         val routeLegId = UUID.randomUUID()
         val target = target(ParcelStatus.IN_TRANSIT, null)

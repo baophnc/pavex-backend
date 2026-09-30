@@ -3,6 +3,7 @@ package com.pavex.shipment.service
 import com.pavex.common.security.PavexActor
 import com.pavex.contracts.operations.OperationsAssignmentType
 import com.pavex.contracts.operations.WorkforceAssignmentSnapshot
+import com.pavex.shipment.client.NetworkShipmentClient
 import com.pavex.shipment.client.OperationsShipmentClient
 import com.pavex.shipment.dto.WorkforceLookupResponse
 import com.pavex.shipment.dto.WorkforceParcelResponse
@@ -13,6 +14,7 @@ import com.pavex.shipment.dto.WorkforceTimelineEvent
 import com.pavex.shipment.entity.ParcelCustodyType
 import com.pavex.shipment.entity.ParcelStatus
 import com.pavex.shipment.entity.Shipment
+import com.pavex.shipment.exception.InvalidShipmentRequestException
 import com.pavex.shipment.exception.ShipmentNotFoundException
 import com.pavex.shipment.repository.ParcelRepository
 import com.pavex.shipment.repository.ShipmentRepository
@@ -29,6 +31,7 @@ class WorkforceViewService(
     private val shipments: ShipmentRepository,
     private val parcels: ParcelRepository,
     private val operations: OperationsShipmentClient,
+    private val network: NetworkShipmentClient,
 ) {
     @Transactional(readOnly = true)
     fun tasks(actor: PavexActor): List<WorkforceTaskResponse> {
@@ -86,15 +89,31 @@ class WorkforceViewService(
         } ?: throw notFound()
     }
 
-    fun requireVisible(actor: PavexActor, shipment: Shipment, ownAssignments: List<WorkforceAssignmentSnapshot>) {
+    /**
+     * [scanHubId] is the hub a worker is scanning at. A parcel on its way to a transit or destination
+     * hub has not touched that hub yet, so its staff see it only when the hub is on the shipment's route.
+     */
+    fun requireVisible(
+        actor: PavexActor,
+        shipment: Shipment,
+        ownAssignments: List<WorkforceAssignmentSnapshot>,
+        scanHubId: UUID? = null,
+    ) {
         if (actor.seesAllHubs && actor.hasAuthority(ADMIN_READ)) return
         if (ownAssignments.isNotEmpty()) return
         if (shipment.parcels.any { it.custodyType == ParcelCustodyType.COURIER && it.custodyReferenceId == actor.userId }) return
         if (actor.hasAuthority(HUB_READ)) {
             val hubs = operations.caseAdminScope(actor.userId).hubIds
             if (touchesHubs(shipment, hubs)) return
+            if (scanHubId != null && scanHubId in hubs && onRoute(shipment, scanHubId)) return
         }
         throw notFound()
+    }
+
+    private fun onRoute(shipment: Shipment, hubId: UUID): Boolean = shipment.routeRevision > 0 && try {
+        network.resolveOperationalHub(shipment.id, shipment.routeRevision, hubId).onReservedRoute
+    } catch (_: InvalidShipmentRequestException) {
+        false
     }
 
     fun view(shipment: Shipment) = WorkforceShipmentResponse(

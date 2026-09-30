@@ -153,6 +153,38 @@ class OperationsShipmentClient(
         return response ?: throw ShipmentUnavailableException("operations_invalid_response", "Operations returned an empty assignment response.")
     }
 
+    /** Hands hub handling to the hub staff member scanning the parcel when nobody accepted it yet. */
+    fun claimHubHandling(
+        shipmentId: UUID,
+        assignmentId: UUID,
+        actorUserId: UUID,
+        expectedType: OperationsAssignmentType,
+        hubId: UUID,
+        routeLegId: UUID? = null,
+    ): ShipmentOperationsAssignmentSnapshot {
+        val response = try {
+            client.post()
+                .uri(
+                    "/internal/v1/operations/shipments/{shipmentId}/assignments/{assignmentId}/claim-handling",
+                    shipmentId,
+                    assignmentId,
+                )
+                .serviceAuth()
+                .body(ShipmentAssignmentAccessRequest(actorUserId, expectedType, hubId, routeLegId))
+                .retrieve()
+                .body(ShipmentOperationsAssignmentSnapshot::class.java)
+        } catch (_: HttpClientErrorException.NotFound) {
+            throw ShipmentForbiddenException("scan_hub_forbidden", "The current user cannot handle parcels at this hub.")
+        } catch (_: HttpClientErrorException.BadRequest) {
+            throw ShipmentForbiddenException("scan_hub_forbidden", "The current user cannot handle parcels at this hub.")
+        } catch (_: HttpClientErrorException.Conflict) {
+            throw ShipmentConflictException("assignment_not_ready", "Hub handling for this shipment is not open yet.")
+        } catch (exception: RestClientException) {
+            throw unavailable(exception)
+        }
+        return response ?: throw ShipmentUnavailableException("operations_invalid_response", "Operations returned an empty assignment response.")
+    }
+
     fun completeAssignment(
         shipmentId: UUID,
         assignmentId: UUID,

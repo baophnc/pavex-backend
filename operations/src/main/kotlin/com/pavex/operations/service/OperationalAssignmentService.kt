@@ -7,6 +7,7 @@ import com.pavex.operations.dto.MyAvailabilityResponse
 import com.pavex.operations.dto.OperationalAssignmentResponse
 import com.pavex.operations.dto.ShipmentAssignmentPlan
 import com.pavex.operations.entity.OperationalAssignment
+import com.pavex.operations.entity.OperationalAssignmentEventType
 import com.pavex.operations.entity.OperationalAssignmentStatus
 import com.pavex.operations.entity.OperationalAssignmentType
 import com.pavex.operations.entity.WorkShiftStatus
@@ -47,6 +48,7 @@ class OperationalAssignmentService(
     private val shifts: WorkShiftRepository,
     private val identity: IdentityWorkforceClient,
     private val locks: AssignmentLockService,
+    private val queue: AssignmentDispatchQueue,
     private val clock: Clock,
     @Value("\${operations.dispatch.auto-assign-enabled:true}")
     private val autoAssignEnabled: Boolean = true,
@@ -104,13 +106,9 @@ class OperationalAssignmentService(
         if (assignment.status !in REDISPATCHABLE_STATUSES) return false
 
         locks.pool("${assignment.hubId}:${assignment.requiredKind}")
-        val rejectedMembers = assignmentEvents
-            .findAllByAssignmentIdAndEventTypeAndWorkforceMemberIdIsNotNull(
-                assignment.id,
-                com.pavex.operations.entity.OperationalAssignmentEventType.REJECTED,
-            )
-            .mapNotNull { it.workforceMemberId }
-            .toSet()
+        val rejectedMembers = previousMembers(assignment.id, OperationalAssignmentEventType.REJECTED)
+        // People it was taken back from (they left, or did not accept in time) are asked last.
+        val releasedFrom = previousMembers(assignment.id, OperationalAssignmentEventType.REQUEUED)
         val now = Instant.now(clock)
         val memberId = selectCandidate(
             assignment.hubId,
@@ -118,7 +116,13 @@ class OperationalAssignmentService(
             emptyMap(),
             now,
             rejectedMembers,
-        ) ?: return false
+            releasedFrom,
+        )
+        if (memberId == null) {
+            // Nobody free: go behind the jobs not tried yet, so a backlog cannot starve them.
+            assignments.markDispatchAttempt(assignment.id, now)
+            return false
+        }
 
         return try {
             assignment.assign(memberId, null, now)
@@ -128,6 +132,11 @@ class OperationalAssignmentService(
             false
         }
     }
+
+    private fun previousMembers(assignmentId: UUID, type: OperationalAssignmentEventType): Set<UUID> =
+        assignmentEvents.findAllByAssignmentIdAndEventTypeAndWorkforceMemberIdIsNotNull(assignmentId, type)
+            .mapNotNull { it.workforceMemberId }
+            .toSet()
 
     @Transactional(readOnly = true)
     fun search(
@@ -183,8 +192,14 @@ class OperationalAssignmentService(
         val availability = availabilities.findById(member.id).orElseThrow {
             OperationsConflictException("workforce_availability_not_found", "Workforce availability is not configured for this member.")
         }
-        availability.setStatus(status, Instant.now(clock))
+        val now = Instant.now(clock)
+        availability.setStatus(status, now)
         availabilities.saveAndFlush(availability)
+        if (status == WorkforceAvailabilityStatus.AVAILABLE) {
+            queue.wake(member.id)
+        } else {
+            queue.releaseUnaccepted(listOf(member.id), now)
+        }
         return availabilityResponse(member.id, availability.status, availability.maxConcurrentAssignments, availability.updatedAt)
     }
 
@@ -257,6 +272,39 @@ class OperationalAssignmentService(
             )
         }
         return OperationalAssignmentResponse.from(assignment)
+    }
+
+    /**
+     * Hub handling belongs to whoever at the hub scans the parcel in. A clerk or the hub manager who
+     * scans takes the job over when nobody has accepted it yet, so scanning never waits on "Nhận việc".
+     * Work someone already accepted or started stays theirs and the scan simply goes through.
+     */
+    @Transactional
+    fun claimHubHandlingFromShipment(
+        shipmentId: UUID,
+        assignmentId: UUID,
+        request: ShipmentAssignmentAccessRequest,
+    ): OperationalAssignmentResponse {
+        locks.assignment(assignmentId.toString().replace("-", ""))
+        val assignment = findAssignment(assignmentId)
+        validateShipmentAssignmentReference(shipmentId, assignment, request.expectedType.name, request.hubId, request.routeLegId)
+        if (assignment.type !in HUB_HANDLING_TYPES) {
+            throw OperationsConflictException("assignment_not_claimable", "Only hub handling is taken over by a scan.")
+        }
+        if (assignment.status in CLAIMED_STATUSES) return OperationalAssignmentResponse.from(assignment)
+        if (assignment.status !in CLAIMABLE_STATUSES) {
+            throw OperationsConflictException(
+                "assignment_not_ready",
+                "Hub handling for this shipment has not started or was cancelled.",
+            )
+        }
+        val member = activeMember(request.actorUserId)
+            ?: throw OperationsNotFoundException("assignment_not_found", "An active workforce member was not found.")
+        ensureExecutionAccess(member, assignment)
+        // One save per step, each with its own time, so the history reads taken over, accepted, started.
+        mutate(assignment) { assignment.assign(member.id, request.actorUserId, Instant.now(clock)) }
+        mutate(assignment) { assignment.accept(member.id, Instant.now(clock)) }
+        return mutate(assignment) { assignment.start(member.id, Instant.now(clock)) }
     }
 
     @Transactional(readOnly = true)
@@ -407,6 +455,7 @@ class OperationalAssignmentService(
         plannedLoads: Map<UUID, Int>,
         now: Instant,
         excludedMemberIds: Set<UUID> = emptySet(),
+        avoidedMemberIds: Set<UUID> = emptySet(),
     ): UUID? {
         // Applies to initial planning, next-leg activation and background redispatch.
         // Manual assign() still performs the full scope/shift/capacity checks.
@@ -421,10 +470,10 @@ class OperationalAssignmentService(
         return candidates
             .map { candidate ->
                 val load = activeLoads.getOrDefault(candidate.member.id, 0) + plannedLoads.getOrDefault(candidate.member.id, 0)
-                CandidateLoad(candidate.member.id, load, candidate.maximum)
+                CandidateLoad(candidate.member.id, load, candidate.maximum, candidate.fallback, candidate.member.id in avoidedMemberIds)
             }
             .filter { it.load < it.maximum }
-            .sortedWith(compareBy<CandidateLoad>({ it.load.toDouble() / it.maximum }, { it.load }, { it.memberId }))
+            .sortedWith(CANDIDATE_ORDER)
             .firstOrNull()
             ?.memberId
     }
@@ -439,19 +488,18 @@ class OperationalAssignmentService(
     }
 
     private fun eligibleBaseCandidates(hubId: UUID, kind: WorkforceMemberKind, now: Instant): List<Candidate> {
-        val memberCandidates = members.findAllByStatusAndKind(WorkforceMemberStatus.ACTIVE, kind)
-        if (memberCandidates.isEmpty()) return emptyList()
-        val ids = memberCandidates.map { it.id }
-        val activeMemberships = memberships.findAllByWorkforceMemberIdIn(ids).filter { it.isActive }
-        val hubsByMember = activeMemberships.groupBy({ it.workforceMemberId }, { it.hubId })
-        val activeHubMembers = activeMemberships
-            .filter { it.hubId == hubId }
-            .map { it.workforceMemberId }
-            .toSet()
-        val hubCandidates = memberCandidates.filter { it.id in activeHubMembers }
+        val hubMemberIds = memberships.findAllByHubIdAndIsActiveTrue(hubId).map { it.workforceMemberId }.distinct()
+        if (hubMemberIds.isEmpty()) return emptyList()
+        val kinds = eligibleKinds(kind)
+        val hubCandidates = members.findAllById(hubMemberIds)
+            .filter { it.status == WorkforceMemberStatus.ACTIVE && it.kind in kinds }
         if (hubCandidates.isEmpty()) return emptyList()
         val hubCandidateIds = hubCandidates.map { it.id }
+        val hubsByMember = memberships.findAllByWorkforceMemberIdIn(hubCandidateIds)
+            .filter { it.isActive }
+            .groupBy({ it.workforceMemberId }, { it.hubId })
         val availabilityByMember = availabilities.findAllByWorkforceMemberIdIn(hubCandidateIds).associateBy { it.workforceMemberId }
+        val kindByMember = hubCandidates.associate { it.id to it.kind }
 
         val checkedInRoster = shiftAssignments.findAllByWorkforceMemberIdInAndStatusIn(
             hubCandidateIds,
@@ -460,9 +508,10 @@ class OperationalAssignmentService(
         val shiftById = shifts.findAllByIdIn(checkedInRoster.map { it.shiftId }.distinct()).associateBy { it.id }
         val checkedInAtHub = checkedInRoster.filter { roster ->
             val shift = shiftById[roster.shiftId]
-            shift != null &&
+            val memberKind = kindByMember[roster.workforceMemberId]
+            shift != null && memberKind != null &&
                 shift.status == WorkShiftStatus.SCHEDULED &&
-                ShiftCoverage.covers(kind, hubId, shift.hubId, hubsByMember[roster.workforceMemberId].orEmpty()) &&
+                ShiftCoverage.covers(memberKind, hubId, shift.hubId, hubsByMember[roster.workforceMemberId].orEmpty()) &&
                 !now.isBefore(shift.startsAt) &&
                 now < shift.endsAt
         }.map { it.workforceMemberId }.toSet()
@@ -476,13 +525,13 @@ class OperationalAssignmentService(
         return locallyEligible.mapNotNull { member ->
             val availability = availabilityByMember[member.id] ?: return@mapNotNull null
             val identitySnapshot = identityByUser[member.userId] ?: return@mapNotNull null
-            if (identitySnapshot.accountStatus != "ACTIVE" || !WorkforceRolePolicy.isCompatible(kind, identitySnapshot.roles)) return@mapNotNull null
-            Candidate(member, availability.maxConcurrentAssignments)
+            if (identitySnapshot.accountStatus != "ACTIVE" || !WorkforceRolePolicy.isCompatible(member.kind, identitySnapshot.roles)) return@mapNotNull null
+            Candidate(member, availability.maxConcurrentAssignments, fallback = member.kind != kind)
         }
     }
 
     private fun ensureExecutionAccess(member: WorkforceMember, assignment: OperationalAssignment) {
-        if (member.kind != assignment.requiredKind) {
+        if (member.kind !in eligibleKinds(assignment.requiredKind)) {
             throw InvalidOperationsRequestException("assignee_not_eligible", "The workforce kind no longer matches this assignment.")
         }
         val atHub = memberships.findByWorkforceMemberIdAndHubId(member.id, assignment.hubId)?.isActive == true
@@ -590,8 +639,14 @@ class OperationalAssignmentService(
         val hubId: UUID,
     )
 
-    private data class Candidate(val member: WorkforceMember, val maximum: Int)
-    private data class CandidateLoad(val memberId: UUID, val load: Int, val maximum: Int)
+    private data class Candidate(val member: WorkforceMember, val maximum: Int, val fallback: Boolean)
+    internal data class CandidateLoad(
+        val memberId: UUID,
+        val load: Int,
+        val maximum: Int,
+        val fallback: Boolean = false,
+        val avoided: Boolean = false,
+    )
 
     companion object {
         private val ZERO_UUID = UUID(0, 0)
@@ -608,5 +663,39 @@ class OperationalAssignmentService(
             OperationalAssignmentStatus.REJECTED,
         )
         private const val MAX_ADMIN_RESULTS = 500
+        private val HUB_HANDLING_TYPES = setOf(
+            OperationalAssignmentType.ORIGIN_HUB_HANDLING,
+            OperationalAssignmentType.TRANSIT_HUB_HANDLING,
+            OperationalAssignmentType.DESTINATION_HUB_HANDLING,
+        )
+        private val CLAIMED_STATUSES = setOf(
+            OperationalAssignmentStatus.ACCEPTED,
+            OperationalAssignmentStatus.IN_PROGRESS,
+            OperationalAssignmentStatus.COMPLETED,
+        )
+        private val CLAIMABLE_STATUSES = setOf(
+            OperationalAssignmentStatus.PENDING,
+            OperationalAssignmentStatus.READY,
+            OperationalAssignmentStatus.ASSIGNED,
+            OperationalAssignmentStatus.REJECTED,
+        )
+
+        /**
+         * Own-kind staff first, then hub managers standing in for a missing clerk; within each group
+         * people it was not taken back from, then the least loaded.
+         */
+        internal val CANDIDATE_ORDER = compareBy<CandidateLoad>(
+            { it.fallback },
+            { it.avoided },
+            { it.load.toDouble() / it.maximum },
+            { it.load },
+            { it.memberId },
+        )
+
+        /** Most post offices have no clerk; the hub manager takes the sorting work there. */
+        fun eligibleKinds(requiredKind: WorkforceMemberKind): Set<WorkforceMemberKind> = when (requiredKind) {
+            WorkforceMemberKind.WAREHOUSE_OPERATOR -> setOf(WorkforceMemberKind.WAREHOUSE_OPERATOR, WorkforceMemberKind.HUB_MANAGER)
+            else -> setOf(requiredKind)
+        }
     }
 }

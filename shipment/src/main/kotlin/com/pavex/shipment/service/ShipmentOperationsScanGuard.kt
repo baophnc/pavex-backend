@@ -10,8 +10,10 @@ import com.pavex.shipment.dto.RecordParcelScanRequest
 import com.pavex.shipment.dto.ShipmentDetailResponse
 import com.pavex.shipment.entity.ParcelStatus
 import com.pavex.shipment.exception.InvalidShipmentRequestException
+import com.pavex.shipment.exception.ShipmentApiException
 import com.pavex.shipment.exception.ShipmentConflictException
 import com.pavex.shipment.exception.ShipmentForbiddenException
+import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import java.util.UUID
 
@@ -97,12 +99,24 @@ class ShipmentOperationsScanGuard(
             else -> null
         }
         val handlingAssignment = handlingType?.let { type ->
-            operations.findTypeAssignment(target.shipmentId, type, hub.hubId)
-                ?.also(::requireCompletable)
+            val assignment = operations.findTypeAssignment(target.shipmentId, type, hub.hubId)
                 ?: throw ShipmentConflictException(
                     "hub_handling_assignment_missing",
-                    "Hub handling must be assigned and accepted before confirming this checkpoint.",
+                    "This hub has no handling step for the shipment.",
                 )
+            // Whoever at the hub scans the parcel in takes the handling over; no separate "accept" first.
+            if (assignment.status in COMPLETABLE_STATUSES) {
+                assignment
+            } else {
+                operations.claimHubHandling(
+                    shipmentId = target.shipmentId,
+                    assignmentId = assignment.id,
+                    actorUserId = actorUserId,
+                    expectedType = type,
+                    hubId = hub.hubId,
+                    routeLegId = assignment.routeLegId,
+                ).also(::requireCompletable)
+            }
         }
 
         return ShipmentScanOperationsContext(ownedAssignment, arrivingLineHaul, handlingAssignment)
@@ -156,7 +170,52 @@ class ShipmentOperationsScanGuard(
                     assignment.routeLegId,
                     "Reserved route leg was received at the destination hub.",
                 )
+                handleOnArrival(actorUserId, target, request, response)
             }
+        }
+    }
+
+    /**
+     * Receiving the truck is the hub's handling step, as receiving from the courier is at the origin:
+     * the person who scans it in takes the handling and it completes once every parcel is in, which
+     * releases the next leg or the last-mile delivery. Best effort, because the scan itself is already
+     * saved; a later "Kiểm kho" scan takes over and completes the handling the same way.
+     */
+    private fun handleOnArrival(
+        actorUserId: UUID,
+        target: ParcelScanTarget,
+        request: RecordParcelScanRequest,
+        response: ShipmentDetailResponse,
+    ) {
+        val type = when (request.nextStatus) {
+            ParcelStatus.AT_TRANSIT_HUB -> OperationsAssignmentType.TRANSIT_HUB_HANDLING
+            ParcelStatus.AT_DESTINATION_HUB -> OperationsAssignmentType.DESTINATION_HUB_HANDLING
+            else -> return
+        }
+        try {
+            val handling = operations.findTypeAssignment(target.shipmentId, type, request.hubId) ?: return
+            val claimed = if (handling.status in COMPLETABLE_STATUSES) {
+                handling
+            } else {
+                operations.claimHubHandling(target.shipmentId, handling.id, actorUserId, type, request.hubId, handling.routeLegId)
+            }
+            if (claimed.status != OperationsAssignmentStatus.COMPLETED && allParcelsHandled(response, claimed)) {
+                complete(
+                    target,
+                    claimed,
+                    actorUserId,
+                    type,
+                    claimed.hubId,
+                    claimed.routeLegId,
+                    "Parcels were received at the hub.",
+                )
+            }
+        } catch (exception: ShipmentApiException) {
+            log.warn(
+                "Hub handling of shipment {} was not taken over on arrival ({}); a stock check scan can finish it.",
+                target.shipmentId,
+                exception.code,
+            )
         }
     }
 
@@ -244,6 +303,7 @@ class ShipmentOperationsScanGuard(
     }
 
     companion object {
+        private val log = LoggerFactory.getLogger(ShipmentOperationsScanGuard::class.java)
         private val WAREHOUSE_STATUSES = setOf(
             ParcelStatus.AT_ORIGIN_HUB,
             ParcelStatus.AT_TRANSIT_HUB,
