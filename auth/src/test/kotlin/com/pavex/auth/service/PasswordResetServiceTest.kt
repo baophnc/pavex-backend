@@ -58,6 +58,15 @@ class PasswordResetServiceTest {
     }
 
     @Test
+    fun `resetting ends the temporary password an administrator issued`() {
+        account.mustChangePassword = true
+        account.temporaryPasswordExpiresAt = Instant.now().plusSeconds(3600)
+        service.resetPassword("valid-token", "MatKhauMoi@123")
+        assertFalse(account.mustChangePassword)
+        assertNull(account.temporaryPasswordExpiresAt)
+    }
+
+    @Test
     fun `token cannot be reused to change password again`() {
         service.resetPassword("valid-token", "MatKhauMoi@123")
         val hash = account.passwordHash

@@ -61,6 +61,9 @@ class AuthSessionService(
 
             expiresIn =
                 accessToken.expiresIn,
+
+            passwordChangeRequired =
+                account.mustChangePassword,
         )
     }
 }

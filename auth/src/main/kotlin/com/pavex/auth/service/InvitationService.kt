@@ -203,6 +203,8 @@ class InvitationService(
 
         user.emailVerified = true
         user.failedLoginAttempts = 0
+        user.mustChangePassword = false
+        user.temporaryPasswordExpiresAt = null
         user.lockoutEndAt = null
         user.updatedAt = now
 

@@ -91,6 +91,12 @@ auth:
   google:
     client-ids: ${GOOGLE_CLIENT_IDS:${GOOGLE_CLIENT_ID:}}
 
+  staff-credentials:
+    # Accounts an administrator creates start with this password; the holder must change it at the
+    # first sign-in, and it stops working after the TTL (then: forgot password). Local default only.
+    temporary-password: ${STAFF_TEMPORARY_PASSWORD:123456}
+    temporary-password-ttl: ${STAFF_TEMPORARY_PASSWORD_TTL:PT72H}
+
   security:
     # Local development secret only; do not deploy this configuration.
     verification-token-ttl: PT24H

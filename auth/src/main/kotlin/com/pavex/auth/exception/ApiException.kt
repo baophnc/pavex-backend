@@ -27,6 +27,14 @@ class InvalidCredentialsException :
     )
 
 
+class TemporaryPasswordExpiredException :
+    ApiException(
+        status = HttpStatus.UNAUTHORIZED,
+        code = "temporary_password_expired",
+        message = "The temporary password has expired. Use forgot password to set a new one.",
+    )
+
+
 class EmailNotVerifiedException :
     ApiException(
         status = HttpStatus.PRECONDITION_REQUIRED,
