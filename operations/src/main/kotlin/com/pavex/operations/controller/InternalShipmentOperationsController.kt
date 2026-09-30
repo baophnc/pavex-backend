@@ -101,6 +101,16 @@ class InternalShipmentOperationsController(
         assignments.authorizeFromShipment(shipmentId, assignmentId, request),
     )
 
+    /** A hub scan takes over hub handling that nobody accepted yet; see the service for the rules. */
+    @PostMapping("/{shipmentId}/assignments/{assignmentId}/claim-handling")
+    fun claimHandling(
+        @PathVariable shipmentId: UUID,
+        @PathVariable assignmentId: UUID,
+        @RequestBody request: ShipmentAssignmentAccessRequest,
+    ): ShipmentOperationsAssignmentSnapshot = snapshot(
+        assignments.claimHubHandlingFromShipment(shipmentId, assignmentId, request),
+    )
+
     @PostMapping("/{shipmentId}/assignments/{assignmentId}/complete")
     fun complete(
         @PathVariable shipmentId: UUID,

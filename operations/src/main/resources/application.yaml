@@ -54,6 +54,8 @@ security:
 operations:
   dispatch:
     auto-assign-enabled: ${OPERATIONS_AUTO_ASSIGN_ENABLED:true}
+    # A job assigned automatically but not accepted within this time goes to someone else.
+    accept-timeout: ${OPERATIONS_ACCEPT_TIMEOUT:PT15M}
   messaging:
     exchange: ${OPERATIONS_MESSAGING_EXCHANGE:pavex.events}
   outbox:

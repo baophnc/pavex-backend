@@ -27,7 +27,8 @@ class ManualDispatchModeTest {
             mock(OperationalAssignmentEventLogRepository::class.java), members,
             mock(HubMembershipRepository::class.java), mock(WorkforceAvailabilityRepository::class.java),
             mock(WorkforceShiftAssignmentRepository::class.java), mock(WorkShiftRepository::class.java),
-            identity, mock(AssignmentLockService::class.java), Clock.systemUTC(), autoAssignEnabled = false)
+            identity, mock(AssignmentLockService::class.java), mock(AssignmentDispatchQueue::class.java),
+            Clock.systemUTC(), autoAssignEnabled = false)
         val hubs = List(4) { UUID.randomUUID() }
         val plan = ShipmentAssignmentPlan(UUID.randomUUID(), hubs.first(), hubs.last(),
             (0..2).map { ShipmentAssignmentRouteLeg(UUID.randomUUID(), it + 1, hubs[it], hubs[it + 1]) })

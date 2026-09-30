@@ -8,5 +8,6 @@ interface HubMembershipRepository : JpaRepository<HubMembership, UUID> {
     fun findAllByWorkforceMemberId(workforceMemberId: UUID): List<HubMembership>
     fun findAllByWorkforceMemberIdIn(workforceMemberIds: Collection<UUID>): List<HubMembership>
     fun findAllByWorkforceMemberIdAndIsActiveTrue(workforceMemberId: UUID): List<HubMembership>
+    fun findAllByHubIdAndIsActiveTrue(hubId: UUID): List<HubMembership>
     fun findByWorkforceMemberIdAndHubId(workforceMemberId: UUID, hubId: UUID): HubMembership?
 }

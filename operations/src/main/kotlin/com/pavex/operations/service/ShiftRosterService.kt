@@ -47,6 +47,7 @@ class ShiftRosterService(
     private val network: NetworkHubClient,
     private val properties: ShiftRosterProperties,
     private val transactions: TransactionTemplate,
+    private val dispatchQueue: AssignmentDispatchQueue,
     private val clock: Clock,
 ) {
     private val log = LoggerFactory.getLogger(javaClass)
@@ -104,6 +105,7 @@ class ShiftRosterService(
             Timestamp.from(now),
             Timestamp.from(now),
         )
+        dispatchQueue.releaseUnaccepted(members, now)
         return members.size
     }
 

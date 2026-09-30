@@ -48,6 +48,7 @@ class WorkShiftService(
     private val availabilities: WorkforceAvailabilityRepository,
     private val identity: IdentityWorkforceClient,
     private val network: NetworkHubClient,
+    private val dispatchQueue: AssignmentDispatchQueue,
     private val clock: Clock,
 ) {
     @Transactional(readOnly = true)
@@ -378,6 +379,7 @@ class WorkShiftService(
             roster.save(assignment)
             availabilities.save(availability)
             roster.flush()
+            dispatchQueue.wake(member.id)
         } catch (exception: IllegalStateException) {
             throw InvalidOperationsRequestException("invalid_check_in", exception.message ?: "Check-in is invalid.")
         } catch (_: ObjectOptimisticLockingFailureException) {
@@ -400,6 +402,7 @@ class WorkShiftService(
                 availabilities.save(availability)
             }
             roster.saveAndFlush(assignment)
+            dispatchQueue.releaseUnaccepted(listOf(member.id), now)
         } catch (exception: IllegalStateException) {
             throw InvalidOperationsRequestException("invalid_check_out", exception.message ?: "Check-out is invalid.")
         } catch (_: ObjectOptimisticLockingFailureException) {
@@ -443,6 +446,8 @@ class WorkShiftService(
                 availabilities.save(availability)
             }
         }
+        // Work they had not accepted yet goes to whoever is still on shift.
+        dispatchQueue.releaseUnaccepted(memberIds, now)
     }
 
     private fun rosterCounts(shiftIds: Collection<UUID>): Map<UUID, Int> =

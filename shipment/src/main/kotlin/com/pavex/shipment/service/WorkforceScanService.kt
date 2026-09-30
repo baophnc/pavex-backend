@@ -38,7 +38,7 @@ class WorkforceScanService(
             throw InvalidShipmentRequestException("hub_required", "Chọn bưu cục đang làm việc trước khi quét.")
         }
         val assignments = operations.workforceAssignments(actor.userId)
-        val targets = readTargets(actor, request.code, assignments)
+        val targets = readTargets(actor, request.code, assignments, request.hubId.takeIf { request.action in HUB_ACTIONS })
         val shipmentAssignments = assignments.filter { it.shipmentId == targets.shipmentId }
 
         val results = targets.parcels.map { parcel ->
@@ -73,10 +73,15 @@ class WorkforceScanService(
         return WorkforceScanResponse(targets.trackingCode, results, shipment)
     }
 
-    private fun readTargets(actor: PavexActor, code: String, assignments: List<WorkforceAssignmentSnapshot>): ScanTargets =
+    private fun readTargets(
+        actor: PavexActor,
+        code: String,
+        assignments: List<WorkforceAssignmentSnapshot>,
+        scanHubId: UUID?,
+    ): ScanTargets =
         transactions.execute {
             val shipment = views.findShipment(code)
-            views.requireVisible(actor, shipment, assignments.filter { it.shipmentId == shipment.id })
+            views.requireVisible(actor, shipment, assignments.filter { it.shipmentId == shipment.id }, scanHubId)
             if (shipment.lifecycleStatus != ShipmentLifecycleStatus.ACTIVE) {
                 throw InvalidShipmentRequestException("shipment_closed", "Đơn hàng đã kết thúc (đã giao, đã hoàn hoặc đã hủy).")
             }
@@ -214,8 +219,8 @@ class WorkforceScanService(
 object WorkforceScanMessages {
     private val messages = mapOf(
         "scan_hub_forbidden" to "Bạn không thuộc bưu cục này nên không quét được.",
-        "hub_handling_assignment_missing" to "Kho chưa nhận việc xử lý đơn này. Trưởng bưu cục cần phân công trước.",
-        "assignment_not_ready" to "Việc xử lý đơn này chưa được nhận. Hãy nhận việc rồi quét lại.",
+        "hub_handling_assignment_missing" to "Bưu cục này không có bước xử lý nào của đơn.",
+        "assignment_not_ready" to "Đơn chưa tới bước này: bước trước (lấy hàng hoặc chuyến xe) chưa xong, hoặc việc của bạn chưa được nhận.",
         "assignment_not_in_progress" to "Bấm “Bắt đầu” việc này trước khi quét.",
         "assignment_not_found" to "Bạn không được giao việc này.",
         "linehaul_assignment_missing" to "Chuyến xe chở kiện này chưa có tài xế nhận.",

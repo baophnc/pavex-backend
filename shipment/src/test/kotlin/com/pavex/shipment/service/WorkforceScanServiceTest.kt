@@ -1,10 +1,12 @@
 package com.pavex.shipment.service
 
 import com.pavex.common.security.PavexActor
+import com.pavex.contracts.network.ShipmentOperationalHubSnapshot
 import com.pavex.contracts.operations.OperationsAssignmentStatus
 import com.pavex.contracts.operations.OperationsAssignmentType
 import com.pavex.contracts.operations.ShipmentCaseAdminScopeSnapshot
 import com.pavex.contracts.operations.WorkforceAssignmentSnapshot
+import com.pavex.shipment.client.NetworkShipmentClient
 import com.pavex.shipment.client.OperationsShipmentClient
 import com.pavex.shipment.dto.RecordParcelScanRequest
 import com.pavex.shipment.dto.WorkforceScanAction
@@ -61,7 +63,16 @@ class WorkforceScanServiceTest {
         recorded += invocation.getArgument<RecordParcelScanRequest>(1)
         ShipmentResponseMapper.detail(shipment)
     }
-    private val views = WorkforceViewService(shipments, parcels, operations)
+    private var routeHubs = emptySet<UUID>()
+    private val network = mock(NetworkShipmentClient::class.java) { invocation ->
+        if (invocation.method.name == "resolveOperationalHub") {
+            val hubId = invocation.getArgument<UUID>(2)
+            ShipmentOperationalHubSnapshot(hubId, "KHO", "Kho", true, hubId in routeHubs)
+        } else {
+            null
+        }
+    }
+    private val views = WorkforceViewService(shipments, parcels, operations, network)
     private val service = WorkforceScanService(
         views,
         shipments,
@@ -130,6 +141,33 @@ class WorkforceScanServiceTest {
         assertEquals(ParcelStatus.AT_DESTINATION_HUB, request.nextStatus)
         assertEquals(leg, request.routeLegId)
         assertNull(request.assignmentId)
+    }
+
+    @Test
+    fun `a transit hub on the route sees and receives a truck that has not reached it yet`() {
+        val transitHub = UUID.randomUUID()
+        parcel.status = ParcelStatus.IN_TRANSIT
+        parcel.currentRouteLegId = UUID.randomUUID()
+        shipment.routeRevision = 1
+        hubs = setOf(transitHub)
+        routeHubs = setOf(transitHub)
+
+        scan(hubStaff(), WorkforceScanAction.RECEIVE, transitHub)
+
+        assertEquals(ParcelStatus.AT_TRANSIT_HUB, recorded.single().nextStatus)
+    }
+
+    @Test
+    fun `a hub off the route still cannot look up the shipment by scanning it`() {
+        val otherHub = UUID.randomUUID()
+        parcel.status = ParcelStatus.IN_TRANSIT
+        shipment.routeRevision = 1
+        hubs = setOf(otherHub)
+
+        assertThrows(ShipmentNotFoundException::class.java) {
+            scan(hubStaff(), WorkforceScanAction.RECEIVE, otherHub)
+        }
+        assertTrue(recorded.isEmpty())
     }
 
     @Test
