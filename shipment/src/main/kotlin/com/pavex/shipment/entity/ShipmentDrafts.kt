@@ -48,3 +48,17 @@ data class ParcelDraft(
     val widthCm: BigDecimal,
     val heightCm: BigDecimal,
 )
+
+/**
+ * Edits that change neither the price nor the route. Null leaves a field as it is; an empty
+ * [note] or [merchantReference] clears it. [sender] replaces the pickup point in the same ward.
+ */
+data class ShipmentDetailsChange(
+    val recipientName: String? = null,
+    val recipientPhone: String? = null,
+    val recipientAddressLine: String? = null,
+    val note: String? = null,
+    val merchantReference: String? = null,
+    val pickupAddressId: UUID? = null,
+    val sender: ShipmentAddressSnapshot? = null,
+)

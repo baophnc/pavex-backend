@@ -7,9 +7,11 @@ import com.pavex.shipment.dto.ShipmentCreatedResponse
 import com.pavex.shipment.dto.ShipmentDetailResponse
 import com.pavex.shipment.dto.ShipmentLabelsResponse
 import com.pavex.shipment.dto.ShipmentPageResponse
+import com.pavex.shipment.dto.UpdateShipmentRequest
 import com.pavex.shipment.service.CancelShipmentService
 import com.pavex.shipment.service.CreateShipmentService
 import com.pavex.shipment.service.ShipmentQueryService
+import com.pavex.shipment.service.UpdateShipmentService
 import jakarta.validation.Valid
 import org.springframework.http.HttpHeaders
 import org.springframework.http.ResponseEntity
@@ -17,6 +19,7 @@ import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.security.oauth2.jwt.Jwt
 import org.springframework.web.bind.annotation.GetMapping
+import org.springframework.web.bind.annotation.PatchMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
@@ -33,6 +36,7 @@ class ShipmentController(
     private val createShipment: CreateShipmentService,
     private val queries: ShipmentQueryService,
     private val cancellations: CancelShipmentService,
+    private val updates: UpdateShipmentService,
 ) {
     @PostMapping
     @PreAuthorize("hasAuthority('shipments.create')")
@@ -82,6 +86,17 @@ class ShipmentController(
     ): ResponseEntity<ShipmentLabelsResponse> = ResponseEntity.ok()
         .header(HttpHeaders.CACHE_CONTROL, "no-store")
         .body(queries.labelsOwned(UUID.fromString(jwt.subject), trackingCode))
+
+    /** The merchant edits its own shipment before pickup; price and route stay as they are. */
+    @PatchMapping("/{trackingCode}")
+    @PreAuthorize("hasAuthority('shipments.create')")
+    fun update(
+        @AuthenticationPrincipal jwt: Jwt,
+        @PathVariable trackingCode: String,
+        @Valid @RequestBody request: UpdateShipmentRequest,
+    ): ResponseEntity<ShipmentDetailResponse> = ResponseEntity.ok(
+        updates.updateOwn(UUID.fromString(jwt.subject), trackingCode, request),
+    )
 
     @PostMapping("/{trackingCode}/cancel")
     @PreAuthorize("hasAuthority('shipments.cancel-own')")

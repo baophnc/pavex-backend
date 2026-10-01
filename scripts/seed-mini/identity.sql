@@ -19,20 +19,20 @@ CREATE TEMP TABLE seed_user (
 ) ON COMMIT DROP;
 
 INSERT INTO seed_user VALUES
-    ('5eed0010-0000-0000-0000-000000000001', 'admin@pavex.test',        'Quản Trị',  'Lê',     'MALE',   '1988-03-12', ARRAY['ADMIN']),
-    ('5eed0010-0000-0000-0000-000000000002', 'vanhanh@pavex.test',      'Văn Hành',  'Phạm',   'MALE',   '1985-07-21', ARRAY['OPERATIONS_MANAGER']),
-    ('5eed0010-0000-0000-0000-000000000003', 'taichinh@pavex.test',     'Thu Hà',    'Nguyễn', 'FEMALE', '1990-11-02', ARRAY['FINANCE_ACCOUNTANT']),
-    ('5eed0010-0000-0000-0000-000000000004', 'cskh@pavex.test',         'Minh Anh',  'Trần',   'FEMALE', '1995-01-30', ARRAY['COMMERCIAL_MANAGER']),
-    ('5eed0010-0000-0000-0000-000000000011', 'truongbc.hn@pavex.test',  'Đức Thắng', 'Hoàng',  'MALE',   '1982-05-09', ARRAY['HUB_MANAGER']),
-    ('5eed0010-0000-0000-0000-000000000012', 'nhanvien.hn@pavex.test',  'Thị Lan',   'Vũ',     'FEMALE', '1996-08-17', ARRAY['WAREHOUSE_OPERATOR']),
-    ('5eed0010-0000-0000-0000-000000000013', 'buuta.hn@pavex.test',     'Văn Nam',   'Đỗ',     'MALE',   '1998-02-25', ARRAY['COURIER']),
-    ('5eed0010-0000-0000-0000-000000000021', 'truongbc.hcm@pavex.test', 'Thanh Tâm', 'Huỳnh',  'FEMALE', '1984-09-14', ARRAY['HUB_MANAGER']),
-    ('5eed0010-0000-0000-0000-000000000022', 'nhanvien.hcm@pavex.test', 'Quốc Bảo',  'Võ',     'MALE',   '1997-12-03', ARRAY['WAREHOUSE_OPERATOR']),
-    ('5eed0010-0000-0000-0000-000000000023', 'buuta.hcm@pavex.test',    'Minh Tú',   'Trương', 'MALE',   '1999-04-19', ARRAY['COURIER']),
-    ('5eed0010-0000-0000-0000-000000000031', 'taixe@pavex.test',        'Văn Hùng',  'Lâm',    'MALE',   '1980-06-28', ARRAY['LINE_HAUL_DRIVER']),
-    ('5eed0010-0000-0000-0000-000000000041', 'shop.daduyet@pavex.test', 'Ngọc Mai',  'Bùi',    'FEMALE', '1993-10-10', ARRAY['CUSTOMER', 'MERCHANT']),
-    ('5eed0010-0000-0000-0000-000000000042', 'shop.choduyet@pavex.test','Hữu Phước', 'Đặng',   'MALE',   '1991-03-08', ARRAY['CUSTOMER']),
-    ('5eed0010-0000-0000-0000-000000000043', 'khach@pavex.test',        'Thu Trang', 'Phan',   'FEMALE', '2000-07-07', ARRAY['CUSTOMER']);
+    ('5eed0010-0000-4000-8000-000000000001', 'admin@pavex.test',        'Quản Trị',  'Lê',     'MALE',   '1988-03-12', ARRAY['ADMIN']),
+    ('5eed0010-0000-4000-8000-000000000002', 'vanhanh@pavex.test',      'Văn Hành',  'Phạm',   'MALE',   '1985-07-21', ARRAY['OPERATIONS_MANAGER']),
+    ('5eed0010-0000-4000-8000-000000000003', 'taichinh@pavex.test',     'Thu Hà',    'Nguyễn', 'FEMALE', '1990-11-02', ARRAY['FINANCE_ACCOUNTANT']),
+    ('5eed0010-0000-4000-8000-000000000004', 'cskh@pavex.test',         'Minh Anh',  'Trần',   'FEMALE', '1995-01-30', ARRAY['COMMERCIAL_MANAGER']),
+    ('5eed0010-0000-4000-8000-000000000011', 'truongbc.hn@pavex.test',  'Đức Thắng', 'Hoàng',  'MALE',   '1982-05-09', ARRAY['HUB_MANAGER']),
+    ('5eed0010-0000-4000-8000-000000000012', 'nhanvien.hn@pavex.test',  'Thị Lan',   'Vũ',     'FEMALE', '1996-08-17', ARRAY['WAREHOUSE_OPERATOR']),
+    ('5eed0010-0000-4000-8000-000000000013', 'buuta.hn@pavex.test',     'Văn Nam',   'Đỗ',     'MALE',   '1998-02-25', ARRAY['COURIER']),
+    ('5eed0010-0000-4000-8000-000000000021', 'truongbc.hcm@pavex.test', 'Thanh Tâm', 'Huỳnh',  'FEMALE', '1984-09-14', ARRAY['HUB_MANAGER']),
+    ('5eed0010-0000-4000-8000-000000000022', 'nhanvien.hcm@pavex.test', 'Quốc Bảo',  'Võ',     'MALE',   '1997-12-03', ARRAY['WAREHOUSE_OPERATOR']),
+    ('5eed0010-0000-4000-8000-000000000023', 'buuta.hcm@pavex.test',    'Minh Tú',   'Trương', 'MALE',   '1999-04-19', ARRAY['COURIER']),
+    ('5eed0010-0000-4000-8000-000000000031', 'taixe@pavex.test',        'Văn Hùng',  'Lâm',    'MALE',   '1980-06-28', ARRAY['LINE_HAUL_DRIVER']),
+    ('5eed0010-0000-4000-8000-000000000041', 'shop.daduyet@pavex.test', 'Ngọc Mai',  'Bùi',    'FEMALE', '1993-10-10', ARRAY['CUSTOMER', 'MERCHANT']),
+    ('5eed0010-0000-4000-8000-000000000042', 'shop.choduyet@pavex.test','Hữu Phước', 'Đặng',   'MALE',   '1991-03-08', ARRAY['CUSTOMER']),
+    ('5eed0010-0000-4000-8000-000000000043', 'khach@pavex.test',        'Thu Trang', 'Phan',   'FEMALE', '2000-07-07', ARRAY['CUSTOMER']);
 
 INSERT INTO identity.user_account (id, email, status, profile_status, email_verified, authorization_version,
                                    created_at, updated_at, version)
