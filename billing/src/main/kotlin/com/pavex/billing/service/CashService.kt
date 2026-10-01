@@ -34,6 +34,7 @@ class CashService(
     private val collections: CashCollectionRepository,
     private val remittances: CashRemittanceRepository,
     private val operations: OperationsClient,
+    private val counterCash: CounterCashService,
     transactionManager: PlatformTransactionManager,
     private val clock: Clock,
 ) {
@@ -131,6 +132,7 @@ class CashService(
             remittance.approve(actorUserId, now)
         }
         collections.saveAllAndFlush(items)
+        counterCash.onApproved(items, now)
         CashRemittanceResponse.from(remittances.saveAndFlush(remittance))
     }
 
@@ -164,7 +166,9 @@ class CashService(
                 collection.rejectToHub(hubId, actorUserId, reason?.trim()?.ifEmpty { null } ?: "Rejected by finance review.", now)
             }
         }
-        CashCollectionResponse.from(collections.saveAndFlush(collection))
+        val saved = collections.saveAndFlush(collection)
+        if (approve) counterCash.onApproved(listOf(saved), now)
+        CashCollectionResponse.from(saved)
     }
 
     private fun remittanceCollections(remittance: CashRemittance): List<CashCollection> {

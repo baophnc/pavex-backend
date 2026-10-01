@@ -4,6 +4,11 @@ import com.pavex.billing.entity.CashCollection
 import com.pavex.billing.entity.CashCollectionStatus
 import com.pavex.billing.entity.CashRemittance
 import com.pavex.billing.entity.CashRemittanceStatus
+import com.pavex.billing.entity.CashSource
+import com.pavex.billing.entity.CodPayee
+import com.pavex.billing.entity.CounterSettlement
+import com.pavex.billing.entity.CounterSettlementKind
+import com.pavex.billing.entity.CounterSettlementStatus
 import com.pavex.billing.entity.CustomerInvoice
 import com.pavex.billing.entity.InvoicePayment
 import com.pavex.billing.entity.InvoicePaymentMethod
@@ -141,7 +146,8 @@ data class CashCollectionResponse(
     val id: UUID,
     val shipmentId: UUID,
     val trackingCode: String,
-    val merchantId: UUID,
+    /** Null for a walk-in (counter) shipment. */
+    val merchantId: UUID?,
     val status: CashCollectionStatus,
     val amount: Long,
     val codAmount: Long,
@@ -161,13 +167,16 @@ data class CashCollectionResponse(
     val lastRejectionReason: String?,
     val statementId: UUID?,
     val updatedAt: Instant,
+    /** DELIVERY: taken by a courier; COUNTER: a walk-in sender paid it at the hub counter. */
+    val source: CashSource = CashSource.DELIVERY,
+    val codPayee: CodPayee = CodPayee.MERCHANT,
 ) {
     companion object {
         fun from(c: CashCollection) = CashCollectionResponse(
             c.id, c.shipmentId, c.trackingCode, c.merchantId, c.status, c.amount, c.codAmount, c.feeAmount,
             c.currency, c.reference, c.collectedByUserId, c.originHubId, c.currentCustodianUserId, c.currentHubId,
             c.currentRemittanceId, c.collectedAt, c.submittedAt, c.approvedAt, c.approvedByUserId, c.lastRejectedAt,
-            c.lastRejectionReason, c.statementId, c.updatedAt,
+            c.lastRejectionReason, c.statementId, c.updatedAt, c.source, c.codPayee,
         )
     }
 }
@@ -299,4 +308,37 @@ data class UpdatePayoutAccountRequest(
     val accountNumber: String,
     @field:NotBlank @field:Size(max = 200)
     val accountName: String,
+)
+
+/** Cash a counter owes a walk-in sender (their COD) or is owed by them (a return's fee). */
+data class CounterSettlementResponse(
+    val id: UUID,
+    val shipmentId: UUID,
+    val trackingCode: String,
+    val hubId: UUID,
+    val kind: CounterSettlementKind,
+    val amount: Long,
+    val senderName: String,
+    val senderPhone: String,
+    val status: CounterSettlementStatus,
+    val completedByUserId: UUID?,
+    val completedAt: Instant?,
+    val note: String?,
+    val createdAt: Instant,
+) {
+    companion object {
+        fun from(s: CounterSettlement) = CounterSettlementResponse(
+            s.id, s.shipmentId, s.trackingCode, s.hubId, s.kind, s.amount, s.senderName, s.senderPhone,
+            s.status, s.completedByUserId, s.completedAt, s.note, s.createdAt,
+        )
+    }
+}
+
+/** The phone the sender gives at the counter must be the one the shipment was booked with. */
+data class CompleteCounterSettlementRequest(
+    @field:NotBlank
+    @field:Size(max = 20)
+    val phone: String,
+    @field:Size(max = 500)
+    val note: String? = null,
 )

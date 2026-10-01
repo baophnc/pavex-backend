@@ -13,9 +13,16 @@ import java.util.UUID
 /** HELD by the courier → SUBMITTED to a hub in a remittance → APPROVED by finance. */
 enum class CashCollectionStatus { HELD, SUBMITTED, APPROVED }
 
+/** Where the cash was taken: from a recipient on delivery, or from a walk-in sender at a counter. */
+enum class CashSource { DELIVERY, COUNTER }
+
+/** Who the COD in the cash belongs to: a merchant (settled), or a walk-in sender (paid at the counter). */
+enum class CodPayee { MERCHANT, SENDER }
+
 /**
  * Money a courier collected from a recipient on delivery: the merchant's COD plus the shipping
  * fee when the recipient paid it. It stays in the courier's custody until a hub takes it over.
+ * Counter cash (a walk-in sender's fee) starts at the hub, with no courier holding it.
  */
 @Entity
 @Table(name = "cash_collections", schema = "billing")
@@ -26,10 +33,16 @@ class CashCollection(
     var shipmentId: UUID = UUID.randomUUID(),
     @Column(name = "tracking_code", nullable = false, length = 40)
     var trackingCode: String = "",
-    @Column(name = "merchant_id", nullable = false)
-    var merchantId: UUID = UUID.randomUUID(),
-    @Column(name = "delivery_attempt_id", nullable = false)
-    var deliveryAttemptId: UUID = UUID.randomUUID(),
+    @Column(name = "merchant_id")
+    var merchantId: UUID? = null,
+    @Column(name = "delivery_attempt_id")
+    var deliveryAttemptId: UUID? = null,
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 20)
+    var source: CashSource = CashSource.DELIVERY,
+    @Enumerated(EnumType.STRING)
+    @Column(name = "cod_payee", nullable = false, length = 20)
+    var codPayee: CodPayee = CodPayee.MERCHANT,
     @Column(nullable = false)
     var amount: Long = 0,
     @Column(name = "cod_amount", nullable = false)
@@ -130,7 +143,7 @@ class CashCollection(
         fun fromDelivery(
             shipmentId: UUID,
             trackingCode: String,
-            merchantId: UUID,
+            merchantId: UUID?,
             deliveryAttemptId: UUID,
             courierUserId: UUID,
             hubId: UUID,
@@ -147,6 +160,9 @@ class CashCollection(
                 trackingCode = code,
                 merchantId = merchantId,
                 deliveryAttemptId = deliveryAttemptId,
+                source = CashSource.DELIVERY,
+                // A shipment without a merchant was booked at a counter: its COD goes back to the sender.
+                codPayee = if (merchantId == null) CodPayee.SENDER else CodPayee.MERCHANT,
                 amount = amount,
                 codAmount = codAmount,
                 feeAmount = feeAmount,
@@ -158,6 +174,40 @@ class CashCollection(
                 collectedAt = collectedAt,
                 createdAt = collectedAt,
                 updatedAt = collectedAt,
+            )
+        }
+
+        /**
+         * Cash a walk-in sender paid at a hub counter: the shipping fee at booking, or the fee of a
+         * returned shipment. The hub holds it until it hands it to finance like any other cash.
+         */
+        fun fromCounter(
+            shipmentId: UUID,
+            trackingCode: String,
+            clerkUserId: UUID,
+            hubId: UUID,
+            feeAmount: Long,
+            reference: String,
+            paidAt: Instant,
+        ): CashCollection {
+            require(feeAmount > 0) { "Counter cash must be positive." }
+            val code = BillingText.required(trackingCode, 40, "trackingCode").uppercase()
+            return CashCollection(
+                shipmentId = shipmentId,
+                trackingCode = code,
+                source = CashSource.COUNTER,
+                codPayee = CodPayee.SENDER,
+                amount = feeAmount,
+                codAmount = 0,
+                feeAmount = feeAmount,
+                reference = BillingText.required(reference, 100, "reference"),
+                collectedByUserId = clerkUserId,
+                originHubId = hubId,
+                status = CashCollectionStatus.HELD,
+                currentHubId = hubId,
+                collectedAt = paidAt,
+                createdAt = paidAt,
+                updatedAt = paidAt,
             )
         }
     }

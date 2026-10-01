@@ -4,6 +4,11 @@ import com.pavex.billing.entity.CashCollection
 import com.pavex.billing.entity.CashCollectionStatus
 import com.pavex.billing.entity.CashRemittance
 import com.pavex.billing.entity.CashRemittanceStatus
+import com.pavex.billing.entity.CashSource
+import com.pavex.billing.entity.CounterSettlement
+import com.pavex.billing.entity.CounterSettlementKind
+import com.pavex.billing.entity.CounterSettlementStatus
+import com.pavex.billing.entity.CounterShipment
 import com.pavex.billing.entity.CustomerInvoice
 import com.pavex.billing.entity.InvoicePayment
 import com.pavex.billing.entity.InvoiceStatus
@@ -60,7 +65,7 @@ interface PaymentWebhookReceiptRepository : JpaRepository<PaymentWebhookReceipt,
 }
 
 interface CashCollectionRepository : JpaRepository<CashCollection, UUID> {
-    fun existsByShipmentId(shipmentId: UUID): Boolean
+    fun existsByShipmentIdAndSource(shipmentId: UUID, source: CashSource): Boolean
 
     fun findByCollectedByUserIdOrderByCollectedAtDesc(userId: UUID, pageable: Pageable): List<CashCollection>
 
@@ -97,6 +102,7 @@ interface CashCollectionRepository : JpaRepository<CashCollection, UUID> {
         select c from CashCollection c
         where c.status = com.pavex.billing.entity.CashCollectionStatus.APPROVED
           and c.statementId is null and c.codAmount > 0 and c.approvedAt <= :cutoff
+          and c.codPayee = com.pavex.billing.entity.CodPayee.MERCHANT
           and (:merchantId is null or c.merchantId = :merchantId)
         order by c.approvedAt asc
         """,
@@ -163,3 +169,28 @@ interface SettlementStatementRepository : JpaRepository<SettlementStatement, UUI
 interface MerchantPayoutAccountRepository : JpaRepository<MerchantPayoutAccount, UUID>
 
 interface ProcessedEventRepository : JpaRepository<ProcessedEvent, UUID>
+
+interface CounterShipmentRepository : JpaRepository<CounterShipment, UUID>
+
+interface CounterSettlementRepository : JpaRepository<CounterSettlement, UUID> {
+    fun existsByShipmentIdAndKind(shipmentId: UUID, kind: CounterSettlementKind): Boolean
+
+    /** A hub's counter list, optionally narrowed to one sender phone or tracking code. */
+    @Query(
+        """
+        select s from CounterSettlement s
+        where (:hubId is null or s.hubId = :hubId)
+          and (:status is null or s.status = :status)
+          and (:phone is null or s.senderPhone = :phone)
+          and (:trackingCode is null or s.trackingCode = :trackingCode)
+        order by s.createdAt desc
+        """,
+    )
+    fun search(
+        @Param("hubId") hubId: UUID?,
+        @Param("status") status: CounterSettlementStatus?,
+        @Param("phone") phone: String?,
+        @Param("trackingCode") trackingCode: String?,
+        pageable: Pageable,
+    ): List<CounterSettlement>
+}

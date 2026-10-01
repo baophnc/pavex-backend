@@ -61,7 +61,7 @@ class SettlementService(
         if (cutoff.isAfter(now)) throw InvalidBillingRequestException("invalid_cutoff", "The settlement cutoff cannot be in the future.")
         val merchants = inReadTx {
             (feeCharges.findUnsettled(merchantId, cutoff).map { it.merchantId } +
-                collections.findUnsettledCod(merchantId, cutoff).map { it.merchantId }).distinct()
+                collections.findUnsettledCod(merchantId, cutoff).mapNotNull { it.merchantId }).distinct()
         }
         return merchants.mapNotNull { merchant -> inTx { settleMerchant(merchant, cutoff, actorUserId) } }
     }
