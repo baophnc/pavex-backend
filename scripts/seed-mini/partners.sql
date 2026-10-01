@@ -26,6 +26,13 @@ INSERT INTO partners.merchant_status_history (id, merchant_id, from_status, to_s
     ('5eed0032-0000-4000-8000-000000000001', '5eed0030-0000-4000-8000-000000000001', 'PENDING_VERIFICATION', 'ACTIVE',
      NULL, 'Duyệt sẵn bởi seed-mini', '5eed0010-0000-4000-8000-000000000002', NOW());
 
+-- The pending shop's owner lives in Tân Sơn Hoà, so that hub's manager reviews the application.
+DELETE FROM partners.user_addresses WHERE user_id = '5eed0010-0000-4000-8000-000000000042';
+INSERT INTO partners.user_addresses (id, user_id, label, contact_name, contact_phone, address_line, province_code,
+                                     ward_code, is_default, created_at, updated_at) VALUES
+    ('5eed0033-0000-4000-8000-000000000001', '5eed0010-0000-4000-8000-000000000042', 'Nhà', 'Đặng Hữu Phước',
+     '0912000042', 'Số 8 Hoàng Hoa Thám', '79', '26977', TRUE, NOW(), NOW());
+
 SELECT setval('partners.merchant_code_seq', 2, true);
 
 COMMIT;
