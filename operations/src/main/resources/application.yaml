@@ -84,6 +84,8 @@ operations:
       days-ahead: ${OPERATIONS_SHIFT_ROSTER_DAYS_AHEAD:7}
       interval: ${OPERATIONS_SHIFT_ROSTER_INTERVAL:PT1H}
       auto-check-out-after: ${OPERATIONS_SHIFT_AUTO_CHECK_OUT_AFTER:PT1H}
+      # Testing: everyone gets a 00:00–24:00 shift every day, no day off.
+      full-day: ${OPERATIONS_SHIFT_FULL_DAY:false}
   integrations:
     identity:
       service-url: ${IDENTITY_SERVICE_URL:http://identity-service}
