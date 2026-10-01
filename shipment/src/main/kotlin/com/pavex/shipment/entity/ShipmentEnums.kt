@@ -15,6 +15,12 @@ enum class ShipmentStatus {
     CANCELLED,
 }
 
+/** Where the shipment was booked: by a shop on the web, or by hub staff for a walk-in customer. */
+enum class ShipmentChannel {
+    MERCHANT_WEB,
+    COUNTER,
+}
+
 enum class ShipmentLifecycleStatus {
     ACTIVE,
     COMPLETED,

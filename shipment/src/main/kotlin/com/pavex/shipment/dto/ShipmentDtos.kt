@@ -33,6 +33,28 @@ data class CreateShipmentRequest(
     val note: String? = null,
 )
 
+/**
+ * A walk-in customer's shipment booked at a hub counter. The sender is typed in; the quote is priced
+ * from the hub's own ward. [cashReceived] is the shipping fee taken in cash when the sender pays,
+ * and 0 when the recipient pays on delivery.
+ */
+data class CreateCounterShipmentRequest(
+    val hubId: UUID,
+    val quoteId: UUID,
+    @field:Valid
+    val sender: ShipmentAddressRequest,
+    @field:Valid
+    val recipient: ShipmentAddressRequest,
+    val shippingFeePayer: ShippingFeePayer,
+    @field:Size(min = 1, max = 20)
+    @field:Valid
+    val parcels: List<ParcelContentsRequest>,
+    @field:Size(max = 1000)
+    val note: String? = null,
+    @field:Min(0)
+    val cashReceived: Long,
+)
+
 data class ShipmentAddressRequest(
     @field:NotBlank @field:Size(max = 120)
     val contactName: String,

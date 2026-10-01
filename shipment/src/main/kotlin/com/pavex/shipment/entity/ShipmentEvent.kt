@@ -54,5 +54,18 @@ class ShipmentEvent(
                 occurredAt = occurredAt,
                 recordedAt = occurredAt,
             )
+
+        fun acceptedAtCounter(shipment: Shipment, actorUserId: UUID, occurredAt: Instant): ShipmentEvent =
+            ShipmentEvent(
+                shipment = shipment,
+                status = ShipmentStatus.AT_ORIGIN_HUB,
+                code = "shipment.counter-accepted",
+                description = "Đã nhận gửi hàng tại quầy bưu cục.",
+                actorUserId = actorUserId,
+                hubId = shipment.originHubId,
+                locationName = shipment.originHubName,
+                occurredAt = occurredAt,
+                recordedAt = occurredAt,
+            )
     }
 }

@@ -36,8 +36,12 @@ class Shipment(
     var id: UUID = UUID.randomUUID(),
     @Column(name = "tracking_code", nullable = false, length = 32)
     var trackingCode: String = "",
-    @Column(name = "merchant_id", nullable = false)
-    var merchantId: UUID = UUID.randomUUID(),
+    /** The shop that booked it; null for a walk-in customer's counter shipment. */
+    @Column(name = "merchant_id")
+    var merchantId: UUID? = null,
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 20)
+    var channel: ShipmentChannel = ShipmentChannel.MERCHANT_WEB,
     @Column(name = "created_by_user_id", nullable = false)
     var createdByUserId: UUID = UUID.randomUUID(),
     @Column(name = "idempotency_key", nullable = false, length = 100)
@@ -198,6 +202,11 @@ class Shipment(
     var heldAt: Instant? = null,
     @Column(name = "has_pending_weight_review", nullable = false)
     var hasPendingWeightReview: Boolean = false,
+    /** The cash the sender paid for the shipping fee at the counter, when the sender pays. */
+    @Column(name = "counter_fee_paid_amount")
+    var counterFeePaidAmount: Long? = null,
+    @Column(name = "counter_fee_paid_at")
+    var counterFeePaidAt: Instant? = null,
     @Column(name = "network_confirmed_at")
     var networkConfirmedAt: Instant? = null,
     @Column(name = "network_confirmation_error", length = 200)
@@ -223,13 +232,41 @@ class Shipment(
     /**
      * The shipping fee the merchant is charged: always when the sender pays, and also when a
      * recipient-paid shipment comes back returned or is cancelled after pickup (the recipient
-     * never paid). Only a cancellation before pickup is free.
+     * never paid). Only a cancellation before pickup is free. A counter shipment has no merchant.
      */
     fun merchantShippingFee(): Long = when {
+        channel == ShipmentChannel.COUNTER -> 0
         status == ShipmentStatus.CANCELLED -> if (cancelledAfterPickup) shippingFee else 0
         status == ShipmentStatus.RETURNED -> shippingFee
         shippingFeePayer == ShippingFeePayer.SENDER -> shippingFee
         else -> 0
+    }
+
+    /**
+     * What a walk-in sender still owes at the counter: the fee of a recipient-paid shipment that
+     * came back, or was stopped after it was handed in, since the recipient never paid it.
+     */
+    fun counterSenderFeeDue(): Long = when {
+        channel != ShipmentChannel.COUNTER || shippingFeePayer != ShippingFeePayer.RECIPIENT -> 0
+        status == ShipmentStatus.RETURNED -> shippingFee
+        status == ShipmentStatus.CANCELLED -> shippingFee
+        else -> 0
+    }
+
+    /** Puts every parcel in the origin hub's custody and records the fee the sender paid there. */
+    private fun acceptAtCounter(counter: CounterAcceptance, actorUserId: UUID, acceptedAt: Instant) {
+        if (shippingFeePayer == ShippingFeePayer.SENDER) {
+            require(counter.feePaidAmount == shippingFee) {
+                "The sender must pay exactly $shippingFee VND at the counter."
+            }
+            counterFeePaidAmount = shippingFee
+            counterFeePaidAt = acceptedAt
+        } else {
+            require(counter.feePaidAmount == 0L) { "The recipient pays this shipping fee on delivery." }
+        }
+        parcels.forEach { it.receiveAtCounter(originHubId, originHubName, acceptedAt) }
+        status = ShipmentStatus.AT_ORIGIN_HUB
+        events += ShipmentEvent.acceptedAtCounter(this, actorUserId, acceptedAt)
     }
 
     fun collectionStatus(): ShipmentCollectionStatus = when {
@@ -640,7 +677,7 @@ class Shipment(
         fun createFoundation(
             id: UUID,
             trackingCode: String,
-            merchantId: UUID,
+            merchantId: UUID?,
             createdByUserId: UUID,
             idempotencyKey: String,
             requestFingerprint: String,
@@ -655,10 +692,17 @@ class Shipment(
             parcelDrafts: List<ParcelDraft>,
             note: String?,
             createdAt: Instant,
+            counter: CounterAcceptance? = null,
         ): Shipment {
             require(id != UUID(0, 0)) { "shipment id is required." }
-            require(merchantId != UUID(0, 0) && createdByUserId != UUID(0, 0)) {
-                "Merchant and creator identifiers are required."
+            require(createdByUserId != UUID(0, 0)) { "Creator identifier is required." }
+            if (counter == null) {
+                require(merchantId != null && merchantId != UUID(0, 0)) { "A shop shipment requires its merchant." }
+            } else {
+                require(merchantId == null) { "A counter shipment does not belong to a merchant." }
+                require(pickupAddressId == null && merchantReference == null) {
+                    "A counter shipment has no pickup address or merchant reference."
+                }
             }
             require(price.quoteId != UUID(0, 0) && price.quoteRequestId != UUID(0, 0)) {
                 "A valid pricing quote is required."
@@ -686,6 +730,7 @@ class Shipment(
                 id = id,
                 trackingCode = normalizedTrackingCode,
                 merchantId = merchantId,
+                channel = if (counter == null) ShipmentChannel.MERCHANT_WEB else ShipmentChannel.COUNTER,
                 createdByUserId = createdByUserId,
                 idempotencyKey = normalizedIdempotencyKey,
                 requestFingerprint = normalizedFingerprint,
@@ -744,7 +789,11 @@ class Shipment(
                     createdAt = createdAt,
                 )
             }
-            shipment.events += ShipmentEvent.created(shipment, createdByUserId, createdAt)
+            if (counter == null) {
+                shipment.events += ShipmentEvent.created(shipment, createdByUserId, createdAt)
+            } else {
+                shipment.acceptAtCounter(counter, createdByUserId, createdAt)
+            }
             return shipment
         }
 
@@ -767,3 +816,8 @@ class Shipment(
             }
     }
 }
+
+/** A walk-in customer's parcels handed in at the origin hub's counter, and the fee paid there. */
+data class CounterAcceptance(
+    val feePaidAmount: Long,
+)

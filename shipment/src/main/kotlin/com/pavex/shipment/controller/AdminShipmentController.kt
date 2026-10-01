@@ -3,11 +3,13 @@ package com.pavex.shipment.controller
 import com.pavex.shipment.dto.AdminShipmentDetailResponse
 import com.pavex.shipment.dto.AdminShipmentPageResponse
 import com.pavex.shipment.dto.AdminUpdateShipmentRequest
+import com.pavex.shipment.dto.ShipmentLabelsResponse
+import com.pavex.shipment.security.requirePavexActor
 import com.pavex.shipment.service.AdminShipmentAccessService
 import com.pavex.shipment.service.AdminShipmentQueryService
 import com.pavex.shipment.service.UpdateShipmentService
-import com.pavex.shipment.security.requirePavexActor
 import jakarta.validation.Valid
+import org.springframework.http.HttpHeaders
 import org.springframework.http.ResponseEntity
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.security.core.Authentication
@@ -47,6 +49,13 @@ class AdminShipmentController(
             hubId, createdFrom, createdTo,
         ),
     )
+
+    @GetMapping("/{trackingCode}/labels")
+    @PreAuthorize("hasAnyAuthority('shipments.admin.read','shipments.read-hub')")
+    fun labels(authentication: Authentication, @PathVariable trackingCode: String): ResponseEntity<ShipmentLabelsResponse> =
+        ResponseEntity.ok()
+            .header(HttpHeaders.CACHE_CONTROL, "no-store")
+            .body(queries.labels(access.resolve(authentication), trackingCode))
 
     @GetMapping("/{trackingCode}")
     @PreAuthorize("hasAnyAuthority('shipments.admin.read','shipments.read-hub')")

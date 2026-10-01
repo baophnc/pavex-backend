@@ -5,6 +5,7 @@ import com.pavex.shipment.dto.AdminShipmentDetailResponse
 import com.pavex.shipment.dto.AdminShipmentEventResponse
 import com.pavex.shipment.dto.AdminShipmentPageResponse
 import com.pavex.shipment.dto.AdminShipmentSummaryResponse
+import com.pavex.shipment.dto.ShipmentLabelsResponse
 import com.pavex.common.security.HubAccessScope
 import com.pavex.shipment.entity.Parcel
 import com.pavex.shipment.entity.Shipment
@@ -136,6 +137,11 @@ class AdminShipmentQueryService(
             ?: throw notFound()
     }
 
+    /** Printable parcel labels, e.g. for a shipment booked at this hub's counter. */
+    @Transactional(readOnly = true)
+    fun labels(scope: HubAccessScope, rawTrackingCode: String): ShipmentLabelsResponse =
+        ShipmentResponseMapper.labels(findInScope(scope, rawTrackingCode))
+
     @Transactional(readOnly = true)
     fun get(scope: HubAccessScope, rawTrackingCode: String): AdminShipmentDetailResponse {
         val shipment = findInScope(scope, rawTrackingCode)
@@ -145,6 +151,8 @@ class AdminShipmentQueryService(
         return AdminShipmentDetailResponse(
             id = shipment.id,
             merchantId = shipment.merchantId,
+            channel = shipment.channel,
+            counterFeePaidAmount = shipment.counterFeePaidAmount,
             createdByUserId = shipment.createdByUserId,
             quoteId = shipment.quoteId,
             quoteRequestId = shipment.quoteRequestId,
@@ -283,6 +291,7 @@ class AdminShipmentQueryService(
         id = shipment.id,
         trackingCode = shipment.trackingCode,
         merchantId = shipment.merchantId,
+        channel = shipment.channel,
         createdByUserId = shipment.createdByUserId,
         merchantReference = shipment.merchantReference,
         status = shipment.status,

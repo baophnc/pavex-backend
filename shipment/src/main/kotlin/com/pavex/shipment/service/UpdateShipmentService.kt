@@ -11,6 +11,7 @@ import com.pavex.shipment.entity.ParcelStage
 import com.pavex.shipment.entity.ParcelStatus
 import com.pavex.shipment.entity.Shipment
 import com.pavex.shipment.entity.ShipmentAddressSnapshot
+import com.pavex.shipment.entity.ShipmentChannel
 import com.pavex.shipment.entity.ShipmentDetailsChange
 import com.pavex.shipment.entity.ShipmentLifecycleStatus
 import com.pavex.shipment.exception.InvalidShipmentRequestException
@@ -38,7 +39,10 @@ class UpdateShipmentService(
     @Transactional
     fun updateOwn(actorUserId: UUID, rawTrackingCode: String, request: UpdateShipmentRequest): ShipmentDetailResponse {
         val shipment = shipments.findByTrackingCodeIgnoreCaseAndCreatedByUserId(trackingCode(rawTrackingCode), actorUserId)
+            ?.takeIf { it.channel == ShipmentChannel.MERCHANT_WEB }
             ?: throw notFound()
+        // A shop shipment always names its merchant (ck_shipment_channel_merchant).
+        val merchantId = requireNotNull(shipment.merchantId)
         requireActive(shipment)
         if (shipment.parcels.any { it.status != ParcelStatus.AWAITING_PICKUP }) {
             throw ShipmentConflictException(
@@ -47,7 +51,7 @@ class UpdateShipmentService(
             )
         }
         request.merchantReference?.trim()?.takeIf(String::isNotEmpty)?.let { reference ->
-            shipments.findActiveTrackingCodesByMerchantReference(shipment.merchantId, reference)
+            shipments.findActiveTrackingCodesByMerchantReference(merchantId, reference)
                 .firstOrNull { it != shipment.trackingCode }
                 ?.let { other ->
                     throw ShipmentConflictException(
@@ -58,7 +62,7 @@ class UpdateShipmentService(
         }
         val sender = request.pickupAddressId
             ?.takeIf { it != shipment.pickupAddressId }
-            ?.let { pickupSender(shipment, it) }
+            ?.let { pickupSender(shipment, merchantId, it) }
 
         apply(shipment, actorUserId, null) {
             ShipmentDetailsChange(
@@ -112,8 +116,8 @@ class UpdateShipmentService(
     }
 
     /** The merchant's saved pickup point as the new sender; it must stay in the shipment's ward. */
-    private fun pickupSender(shipment: Shipment, pickupAddressId: UUID): ShipmentAddressSnapshot {
-        val pickup = partners.pickupAddress(shipment.merchantId, pickupAddressId)
+    private fun pickupSender(shipment: Shipment, merchantId: UUID, pickupAddressId: UUID): ShipmentAddressSnapshot {
+        val pickup = partners.pickupAddress(merchantId, pickupAddressId)
             ?: throw InvalidShipmentRequestException(
                 "pickup_address_not_found",
                 "The pickup address was not found among this merchant's pickup addresses.",

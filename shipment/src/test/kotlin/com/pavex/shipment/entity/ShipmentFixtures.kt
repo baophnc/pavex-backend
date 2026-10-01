@@ -4,14 +4,22 @@ import java.math.BigDecimal
 import java.time.Instant
 import java.util.UUID
 
-/** A shipment with a 22,000 VND shipping fee (one parcel by default), for money-rule tests. */
+/**
+ * A shipment with a 22,000 VND shipping fee (one parcel by default), for money-rule tests. With
+ * [counter] it is a walk-in shipment booked at the origin hub's counter instead of a shop's.
+ */
 object ShipmentFixtures {
-    fun moneyShipment(payer: ShippingFeePayer, codAmount: Long, parcelCount: Int = 1): Shipment {
+    fun moneyShipment(
+        payer: ShippingFeePayer,
+        codAmount: Long,
+        parcelCount: Int = 1,
+        counter: CounterAcceptance? = null,
+    ): Shipment {
         val now = Instant.parse("2026-09-25T03:00:00Z")
         return Shipment.createFoundation(
             id = UUID.randomUUID(),
             trackingCode = "PAVEX2609250123456789",
-            merchantId = UUID.randomUUID(),
+            merchantId = if (counter == null) UUID.randomUUID() else null,
             createdByUserId = UUID.randomUUID(),
             idempotencyKey = "shipment-money-001",
             requestFingerprint = "C".repeat(64),
@@ -60,6 +68,7 @@ object ShipmentFixtures {
             },
             note = null,
             createdAt = now,
+            counter = counter,
         )
     }
 }

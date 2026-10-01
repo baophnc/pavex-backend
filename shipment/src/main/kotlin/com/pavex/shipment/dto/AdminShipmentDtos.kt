@@ -3,6 +3,7 @@ package com.pavex.shipment.dto
 import com.pavex.shipment.entity.DeliveryAttemptOutcome
 import com.pavex.shipment.entity.DeliveryFailureReason
 import com.pavex.shipment.entity.DeliveryProofMethod
+import com.pavex.shipment.entity.ShipmentChannel
 import com.pavex.shipment.entity.ShipmentLifecycleStatus
 import com.pavex.shipment.entity.ShipmentServiceLevel
 import com.pavex.shipment.entity.ShipmentStatus
@@ -19,7 +20,8 @@ data class AdminShipmentPageResponse(
 data class AdminShipmentSummaryResponse(
     val id: UUID,
     val trackingCode: String,
-    val merchantId: UUID,
+    val merchantId: UUID?,
+    val channel: ShipmentChannel,
     val createdByUserId: UUID,
     val merchantReference: String?,
     val status: ShipmentStatus,
@@ -46,7 +48,10 @@ data class AdminShipmentSummaryResponse(
 
 data class AdminShipmentDetailResponse(
     val id: UUID,
-    val merchantId: UUID,
+    val merchantId: UUID?,
+    val channel: ShipmentChannel,
+    /** Cash the walk-in sender paid at the counter for the shipping fee. */
+    val counterFeePaidAmount: Long?,
     val createdByUserId: UUID,
     val quoteId: UUID,
     val quoteRequestId: UUID,

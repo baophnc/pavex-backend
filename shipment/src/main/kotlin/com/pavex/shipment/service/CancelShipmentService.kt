@@ -140,7 +140,7 @@ data class ShipmentCancellationState(
 private data class ShipmentCancelledOutboxPayload(
     val shipmentId: UUID,
     val trackingCode: String,
-    val merchantId: UUID,
+    val merchantId: UUID?,
     val reason: String,
     val actorUserId: UUID,
     val occurredAt: Instant,

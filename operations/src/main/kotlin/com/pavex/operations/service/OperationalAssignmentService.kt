@@ -592,10 +592,12 @@ class OperationalAssignmentService(
 
     internal fun buildDrafts(plan: ShipmentAssignmentPlan): List<AssignmentDraft> {
         var sequence = 1
-        val drafts = mutableListOf(
-            AssignmentDraft(sequence++, null, OperationalAssignmentType.PICKUP, WorkforceMemberKind.COURIER, plan.originHubId),
-            AssignmentDraft(sequence++, null, OperationalAssignmentType.ORIGIN_HUB_HANDLING, WorkforceMemberKind.WAREHOUSE_OPERATOR, plan.originHubId),
-        )
+        val drafts = mutableListOf<AssignmentDraft>()
+        // Parcels handed in at the counter are already at the origin hub: nobody goes to pick them up.
+        if (!plan.startsAtOriginHub) {
+            drafts += AssignmentDraft(sequence++, null, OperationalAssignmentType.PICKUP, WorkforceMemberKind.COURIER, plan.originHubId)
+        }
+        drafts += AssignmentDraft(sequence++, null, OperationalAssignmentType.ORIGIN_HUB_HANDLING, WorkforceMemberKind.WAREHOUSE_OPERATOR, plan.originHubId)
         plan.routeLegs.sortedBy { it.sequence }.forEach { leg ->
             drafts += AssignmentDraft(
                 sequence++,

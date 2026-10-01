@@ -2,6 +2,7 @@ package com.pavex.shipment.service
 
 import com.pavex.shipment.dto.ShipmentCreatedResponse
 import com.pavex.shipment.entity.Shipment
+import com.pavex.shipment.entity.ShipmentChannel
 import com.pavex.shipment.repository.ShipmentRepository
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -13,6 +14,7 @@ import java.util.UUID
 class ShipmentCreationWriter(
     private val shipments: ShipmentRepository,
     private val outbox: ShipmentOutboxService,
+    private val financialEvents: ShipmentFinancialEvents,
     private val objectMapper: ObjectMapper,
 ) {
     @Transactional(readOnly = true)
@@ -45,6 +47,7 @@ class ShipmentCreationWriter(
                     shipmentId = saved.id,
                     trackingCode = saved.trackingCode,
                     merchantId = saved.merchantId,
+                    channel = saved.channel,
                     createdByUserId = saved.createdByUserId,
                     quoteId = saved.quoteId,
                     parcelCodes = saved.parcels.sortedBy { it.sequence }.map { it.code },
@@ -57,6 +60,7 @@ class ShipmentCreationWriter(
             ),
             occurredAt = saved.createdAt,
         )
+        if (saved.channel == ShipmentChannel.COUNTER) financialEvents.counterAccepted(saved)
         return ShipmentResponseMapper.created(saved)
     }
 }
@@ -69,7 +73,8 @@ data class ExistingShipmentCreation(
 private data class ShipmentCreatedOutboxPayload(
     val shipmentId: UUID,
     val trackingCode: String,
-    val merchantId: UUID,
+    val merchantId: UUID?,
+    val channel: ShipmentChannel,
     val createdByUserId: UUID,
     val quoteId: UUID,
     val parcelCodes: List<String>,

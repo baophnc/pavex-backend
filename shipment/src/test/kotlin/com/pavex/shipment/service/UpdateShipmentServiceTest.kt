@@ -129,7 +129,7 @@ class UpdateShipmentServiceTest {
 
     private fun pickup(wardCode: String) = MerchantPickupAddressSnapshot(
         id = UUID.randomUUID(),
-        merchantId = shipment.merchantId,
+        merchantId = requireNotNull(shipment.merchantId),
         name = "Kho",
         contactName = "Kho mới",
         contactPhone = "0901111222",

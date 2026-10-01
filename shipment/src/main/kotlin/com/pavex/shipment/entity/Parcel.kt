@@ -211,6 +211,24 @@ class Parcel(
         updatedAt = occurredAt
     }
 
+    /**
+     * A walk-in customer handed the parcel in at the origin hub's counter: it starts there, in the
+     * hub's custody, without the courier pickup a shop's parcel goes through.
+     */
+    fun receiveAtCounter(hubId: UUID, hubName: String, receivedAt: Instant) {
+        check(status == ParcelStatus.AWAITING_PICKUP) { "Only a new parcel can be received at the counter." }
+        status = ParcelStatus.AT_ORIGIN_HUB
+        stage = ParcelStage.AT_HUB
+        currentLocationType = ParcelLocationType.HUB
+        currentHubId = hubId
+        currentHubName = hubName
+        currentRouteLegId = null
+        currentAssignmentId = null
+        custodyType = ParcelCustodyType.HUB
+        custodyReferenceId = hubId
+        updatedAt = receivedAt
+    }
+
     fun cancel(cancelledAt: Instant) {
         require(status == ParcelStatus.AWAITING_PICKUP) { "Parcel can only be cancelled before pickup." }
         status = ParcelStatus.CANCELLED
