@@ -67,7 +67,8 @@ seed_users="$(docker exec pavex-backend-identity-db-1 sh -c \
 {
   echo "BEGIN;"
   echo "DELETE FROM auth.user_account WHERE email LIKE '%@pavex.test' OR email LIKE '%@demo.pavex.local'"
-  echo "  OR email LIKE '%@khachhang.pavex.com' OR (email LIKE '%@pavex.com' AND email <> 'admin@pavex.com');"
+  echo "  OR email LIKE '%@khachhang.pavex.com' OR email LIKE 'deleted+%@pavex.invalid'"
+  echo "  OR (email LIKE '%@pavex.com' AND email <> 'admin@pavex.com');"
   echo "CREATE TEMP TABLE seed_user (id uuid, email text) ON COMMIT DROP;"
   echo "COPY seed_user (id, email) FROM stdin;"
   printf '%s\n' "$seed_users"

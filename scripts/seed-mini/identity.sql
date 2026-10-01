@@ -1,4 +1,4 @@
--- Tài khoản test (@pavex.test). Giữ lại admin@pavex.com và tài khoản riêng của bạn (ví dụ Gmail),
+-- Tài khoản test (@pavex.test, kể cả tài khoản test đã xoá mềm). Giữ lại admin@pavex.com và tài khoản riêng của bạn (ví dụ Gmail),
 -- nhưng gỡ vai trò MERCHANT của chúng vì mọi cửa hàng được tạo lại từ đầu.
 \set ON_ERROR_STOP on
 BEGIN;
@@ -7,6 +7,7 @@ DELETE FROM identity.user_account
 WHERE email LIKE '%@pavex.test'
    OR email LIKE '%@demo.pavex.local'
    OR email LIKE '%@khachhang.pavex.com'
+   OR email LIKE 'deleted+%@pavex.invalid'
    OR (email LIKE '%@pavex.com' AND email <> 'admin@pavex.com');
 
 UPDATE identity.user_account SET authorization_version = authorization_version + 1, updated_at = NOW()
