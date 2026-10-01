@@ -27,6 +27,8 @@ spring:
     properties:
       hibernate:
         default_schema: shipments
+        # Lists and the control tower read parcels/events of many shipments: one query per 100.
+        default_batch_fetch_size: 100
 
   flyway:
     enabled: true

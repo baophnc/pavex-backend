@@ -1,5 +1,6 @@
 package com.pavex.shipment.dto
 
+import com.pavex.common.api.PageResponse
 import java.time.Instant
 import java.util.UUID
 
@@ -47,4 +48,13 @@ data class ShipmentControlTowerSummaryResponse(
     val shipmentStuck: Int,
     val caseOverdue: Int,
     val signatureConsistency: Int,
+    val info: Int = 0,
+    /** Every alert type, zero included, so screens can list the counts without a mapping. */
+    val byType: Map<ShipmentControlAlertType, Int> = emptyMap(),
+)
+
+/** The summary and one page of alerts from a single scan, for the control tower screen. */
+data class ShipmentControlTowerOverviewResponse(
+    val summary: ShipmentControlTowerSummaryResponse,
+    val alerts: PageResponse<ShipmentControlAlertResponse>,
 )
