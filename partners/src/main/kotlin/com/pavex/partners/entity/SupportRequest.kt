@@ -108,8 +108,12 @@ class SupportRequestAttachment(
     var contentType: String = "",
     @Column(name = "size_bytes", nullable = false)
     var sizeBytes: Int = 0,
-    @Column(nullable = false)
-    var data: ByteArray = ByteArray(0),
+    /** Where the file lives in object storage; null for files stored in [data] before that. */
+    @Column(name = "object_key", length = 200)
+    var objectKey: String? = null,
+    /** The file's bytes, only for attachments sent before object storage. */
+    @Column
+    var data: ByteArray? = null,
     @Column(name = "created_at", nullable = false)
     var createdAt: Instant = Instant.now(),
 )

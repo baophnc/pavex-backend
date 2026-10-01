@@ -8,6 +8,12 @@ spring:
 
   application:
     name: identity-service
+
+  # Avatar uploads (the service caps them at 2 MB).
+  servlet:
+    multipart:
+      max-file-size: 3MB
+      max-request-size: 3MB
   datasource:
     url: ${IDENTITY_DB_URL:jdbc:postgresql://localhost:5434/pavex_identity}
     username: ${IDENTITY_DB_USERNAME:pavex}
@@ -44,6 +50,14 @@ security:
 
 pavex:
   keys-dir: ${user.home}/.pavex/keys
+
+  # Avatars are kept in MinIO (compose service "minio") and served publicly through the gateway.
+  storage:
+    endpoint: ${MINIO_ENDPOINT:http://localhost:9000}
+    access-key: ${MINIO_ACCESS_KEY:pavex}
+    secret-key: ${MINIO_SECRET_KEY:pavex-minio}
+    avatars-bucket: ${MINIO_AVATARS_BUCKET:pavex-avatars}
+    avatar-base-url: ${PAVEX_PUBLIC_BASE_URL:http://localhost:8080}/api/v1/avatars
 
   # Must match Auth so the credential and authorization identity agree.
   bootstrap-admin:

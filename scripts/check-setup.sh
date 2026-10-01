@@ -58,7 +58,7 @@ if command -v docker >/dev/null 2>&1; then
   elif ! running_services="$(cd "$repo_dir" && docker compose ps --status running --services)"; then
     problem "Không đọc được trạng thái Docker Compose của PAVEX."
   else
-    for service in auth-db identity-db partners-db network-db pricing-db shipment-db operations-db billing-db fleet-db gateway-redis rabbitmq mailpit; do
+    for service in auth-db identity-db partners-db network-db pricing-db shipment-db operations-db billing-db fleet-db gateway-redis rabbitmq mailpit minio; do
       if ! printf '%s\n' "$running_services" | grep -Fxq "$service"; then
         problem "$service chưa chạy. Chạy docker compose up -d --wait."
       fi

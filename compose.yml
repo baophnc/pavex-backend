@@ -188,6 +188,31 @@ services:
       - "8025:8025"
       - "1025:1025"
 
+  # Photos and attachments (proof of delivery, support attachments, avatars). Console: http://localhost:9001
+  # MinIO no longer publishes community images (minio/minio is gone from Docker Hub); pgsty/minio keeps
+  # building the same open-source server from its source.
+  minio:
+    image: pgsty/minio:RELEASE.2026-08-04T00-00-00Z
+
+    command: ["server", "/data", "--console-address", ":9001"]
+
+    environment:
+      MINIO_ROOT_USER: pavex
+      MINIO_ROOT_PASSWORD: pavex-minio
+
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+
+    volumes:
+      - minio_data:/data
+
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+
   gateway-redis:
     image: redis:8.2-alpine
 
@@ -237,3 +262,4 @@ volumes:
   billing_postgres_data:
   fleet_postgres_data:
   rabbitmq_data:
+  minio_data:

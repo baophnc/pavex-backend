@@ -98,6 +98,12 @@ shipment:
 
 pavex:
   keys-dir: ${user.home}/.pavex/keys
+  # Proof-of-delivery photos are kept in MinIO (compose service "minio"), not in the database.
+  storage:
+    endpoint: ${MINIO_ENDPOINT:http://localhost:9000}
+    access-key: ${MINIO_ACCESS_KEY:pavex}
+    secret-key: ${MINIO_SECRET_KEY:pavex-minio}
+    evidence-bucket: ${MINIO_EVIDENCE_BUCKET:pavex-evidence}
   openapi:
     gateway-url: ${PAVEX_PUBLIC_BASE_URL:http://localhost:8080}
 

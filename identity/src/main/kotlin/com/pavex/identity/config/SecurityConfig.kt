@@ -98,6 +98,8 @@ class SecurityConfig {
                     .requestMatchers(HttpMethod.PATCH, "/api/v1/identities/me").authenticated()
                     .requestMatchers(HttpMethod.GET, "/api/v1/auth/me").authenticated()
                     .requestMatchers(HttpMethod.PATCH, "/api/v1/auth/me/profile").authenticated()
+                    .requestMatchers(HttpMethod.POST, "/api/v1/auth/me/avatar").authenticated()
+                    .requestMatchers(HttpMethod.GET, "/api/v1/avatars/*").permitAll()
                     .requestMatchers("/api/v1/users/**", "/api/v1/roles/**", "/api/v1/permissions/**").authenticated()
                     .anyRequest().denyAll()
             }

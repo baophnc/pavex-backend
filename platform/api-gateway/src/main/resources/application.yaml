@@ -182,6 +182,33 @@ spring:
                     redis-rate-limiter.burstCapacity: ${GATEWAY_AUTH_BURST_CAPACITY:20}
                     redis-rate-limiter.requestedTokens: 1
 
+            - id: identity-current-user-avatar
+              order: -109
+              uri: lb://identity-service
+              predicates:
+                - Path=/api/v1/auth/me/avatar
+              filters:
+                - name: RequestRateLimiter
+                  args:
+                    key-resolver: "#{@clientIpKeyResolver}"
+                    redis-rate-limiter.replenishRate: ${GATEWAY_API_REPLENISH_RATE:30}
+                    redis-rate-limiter.burstCapacity: ${GATEWAY_API_BURST_CAPACITY:60}
+                    redis-rate-limiter.requestedTokens: 1
+
+            # Public profile photos (random ids), shown in the portals and the app without a session.
+            - id: identity-avatars
+              uri: lb://identity-service
+              predicates:
+                - Path=/api/v1/avatars/**
+                - Method=GET
+              filters:
+                - name: RequestRateLimiter
+                  args:
+                    key-resolver: "#{@clientIpKeyResolver}"
+                    redis-rate-limiter.replenishRate: ${GATEWAY_API_REPLENISH_RATE:30}
+                    redis-rate-limiter.burstCapacity: ${GATEWAY_API_BURST_CAPACITY:60}
+                    redis-rate-limiter.requestedTokens: 1
+
             - id: identity-users
               uri: lb://identity-service
               predicates:
