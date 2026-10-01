@@ -7,10 +7,12 @@ import com.pavex.partners.dto.MerchantListResponse
 import com.pavex.partners.entity.MerchantStatus
 import com.pavex.partners.exception.ApiException
 import com.pavex.partners.service.AdminMerchantReadinessService
+import com.pavex.partners.service.MerchantScopeResolver
 import com.pavex.partners.service.MerchantService
 import jakarta.validation.Valid
 import org.springframework.http.HttpStatus
 import org.springframework.security.access.prepost.PreAuthorize
+import org.springframework.security.core.Authentication
 import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.security.oauth2.jwt.Jwt
 import org.springframework.web.bind.annotation.GetMapping
@@ -28,31 +30,38 @@ import java.util.UUID
 class AdminMerchantController(
     private val merchants: MerchantService,
     private val readiness: AdminMerchantReadinessService,
+    private val scopes: MerchantScopeResolver,
 ) {
     @GetMapping
     @PreAuthorize("hasAuthority('partners.merchants.read')")
     fun list(
+        authentication: Authentication,
         @RequestParam(defaultValue = "1") page: Int,
         @RequestParam(defaultValue = "20") pageSize: Int,
         @RequestParam(required = false) status: String?,
         @RequestParam(required = false) search: String?,
-    ): MerchantListResponse = merchants.listAdmin(page, pageSize, parseStatus(status), search)
+        @RequestParam(required = false) hubId: UUID?,
+    ): MerchantListResponse =
+        merchants.listAdmin(scopes.resolve(authentication), page, pageSize, parseStatus(status), search, hubId)
 
     @GetMapping("/{merchantId}")
     @PreAuthorize("hasAuthority('partners.merchants.read')")
-    fun get(@PathVariable merchantId: UUID): AdminMerchantResponse = merchants.getAdmin(merchantId)
+    fun get(authentication: Authentication, @PathVariable merchantId: UUID): AdminMerchantResponse =
+        merchants.getAdmin(merchantId, scopes.resolve(authentication))
 
     @GetMapping("/{merchantId}/readiness")
     @PreAuthorize("hasAuthority('partners.merchants.read')")
-    fun readiness(@PathVariable merchantId: UUID): AdminMerchantReadinessResponse = readiness.readiness(merchantId)
+    fun readiness(authentication: Authentication, @PathVariable merchantId: UUID): AdminMerchantReadinessResponse =
+        readiness.readiness(merchantId, scopes.resolve(authentication))
 
     @PatchMapping("/{merchantId}/status")
     @PreAuthorize("hasAuthority('partners.merchants.manage-status')")
     fun changeStatus(
         @AuthenticationPrincipal jwt: Jwt,
+        authentication: Authentication,
         @PathVariable merchantId: UUID,
         @Valid @RequestBody request: ChangeMerchantStatusRequest,
-    ): AdminMerchantResponse = merchants.changeStatus(merchantId, jwt.userId(), request)
+    ): AdminMerchantResponse = merchants.changeStatus(merchantId, jwt.userId(), request, scopes.resolve(authentication))
 
     private fun parseStatus(value: String?): MerchantStatus? {
         if (value.isNullOrBlank()) return null

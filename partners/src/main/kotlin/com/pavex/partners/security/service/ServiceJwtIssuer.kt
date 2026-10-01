@@ -24,17 +24,25 @@ class ServiceJwtIssuer(
 
     fun issueForIdentity(
         now: Instant = Instant.now(),
-    ): String {
+    ): String = issue(IDENTITY_SERVICE, IDENTITY_MERCHANT_SCOPE, now)
+
+    /** Asks Network which hub serves a ward. */
+    fun issueForNetwork(): String = issue("network-service", "network.partners.resolve")
+
+    /** Asks Operations which hubs a user works at. */
+    fun issueForOperations(): String = issue("operations-service", "operations.hub-scope.read")
+
+    private fun issue(audience: String, scope: String, now: Instant = Instant.now()): String {
         val claims = JwtClaimsSet
             .builder()
             .issuer(issuer)
             .subject(PARTNERS_SERVICE)
-            .audience(listOf(IDENTITY_SERVICE))
+            .audience(listOf(audience))
             .issuedAt(now)
             .expiresAt(now.plus(ttl))
             .id(UUID.randomUUID().toString())
             .claim(TOKEN_TYPE_CLAIM, SERVICE_TOKEN_TYPE)
-            .claim(SCOPE_CLAIM, IDENTITY_MERCHANT_SCOPE)
+            .claim(SCOPE_CLAIM, scope)
             .build()
 
         val header = JwsHeader

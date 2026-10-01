@@ -65,12 +65,13 @@ class CounterCashService(
     @Transactional(readOnly = true)
     fun hubList(
         userId: UUID,
+        allHubs: Boolean,
         hubId: UUID,
         status: CounterSettlementStatus?,
         rawPhone: String?,
         rawTrackingCode: String?,
     ): List<CounterSettlementResponse> {
-        requireCounter(userId, hubId)
+        requireCounter(userId, hubId, allHubs)
         val phone = rawPhone?.trim()?.takeIf(String::isNotEmpty)?.let {
             VietnamesePhone.normalize(it) ?: throw InvalidBillingRequestException("invalid_phone", "The phone number is not a Vietnamese phone number.")
         }
@@ -83,11 +84,11 @@ class CounterCashService(
      * shipment was booked with. A taken fee is hub cash that goes to finance like any other.
      */
     @Transactional
-    fun complete(userId: UUID, settlementId: UUID, rawPhone: String, note: String?): CounterSettlementResponse {
+    fun complete(userId: UUID, allHubs: Boolean, settlementId: UUID, rawPhone: String, note: String?): CounterSettlementResponse {
         val settlement = settlements.findById(settlementId).orElseThrow {
             BillingNotFoundException("counter_settlement_not_found", "Counter settlement was not found.")
         }
-        requireCounter(userId, settlement.hubId)
+        requireCounter(userId, settlement.hubId, allHubs)
         val phone = VietnamesePhone.normalize(rawPhone)
         if (phone == null || phone != settlement.senderPhone) {
             throw InvalidBillingRequestException("counter_phone_mismatch", "The phone number does not match the sender of this shipment.")
@@ -124,8 +125,9 @@ class CounterCashService(
     fun adminList(hubId: UUID?, status: CounterSettlementStatus?): List<CounterSettlementResponse> =
         settlements.search(hubId, status, null, null, PageRequest.of(0, ADMIN_LIST_LIMIT)).map(CounterSettlementResponse::from)
 
-    private fun requireCounter(userId: UUID, hubId: UUID) {
-        if (!operations.canOperateAtHub(userId, hubId, OperationsCapability.CASH_HANDLING)) {
+    /** Head office works any hub's counter; hub staff only the counters of hubs they work at. */
+    private fun requireCounter(userId: UUID, hubId: UUID, allHubs: Boolean) {
+        if (!allHubs && !operations.canOperateAtHub(userId, hubId, OperationsCapability.CASH_HANDLING)) {
             throw BillingForbiddenException("cash_hub_forbidden", "The user cannot handle cash at this hub.")
         }
     }

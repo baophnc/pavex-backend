@@ -36,6 +36,8 @@ class MerchantService(
     private val pickupAddresses: MerchantPickupAddressRepository,
     private val identityClient: IdentityMerchantGateway,
     private val jdbcTemplate: JdbcTemplate,
+    /** Files a new application under the hub of the applicant's address (absent in unit tests). */
+    private val servingHubs: MerchantServingHubService? = null,
 ) {
     @Transactional
     fun create(userId: UUID, request: MerchantProfileRequest): MerchantProfileResponse {
@@ -71,6 +73,7 @@ class MerchantService(
                     changedAt = now,
                 ),
             )
+            servingHubs?.refreshAfterCommit(saved.id)
             saved.toResponse()
         } catch (_: DataIntegrityViolationException) {
             throw ApiException(HttpStatus.CONFLICT, "merchant_profile_exists", "Merchant profile already exists.")
@@ -146,11 +149,25 @@ class MerchantService(
     }
 
     @Transactional(readOnly = true)
-    fun listAdmin(page: Int, pageSize: Int, status: MerchantStatus?, search: String?): MerchantListResponse {
+    fun listAdmin(
+        scope: MerchantScope,
+        page: Int,
+        pageSize: Int,
+        status: MerchantStatus?,
+        search: String?,
+        hubId: UUID? = null,
+    ): MerchantListResponse {
+        if (hubId != null && !scope.covers(hubId)) {
+            throw ApiException(HttpStatus.FORBIDDEN, "hub_outside_scope", "The hub is outside your assigned hubs.")
+        }
         val pagination = OneBasedPagination.normalize(page, pageSize)
         val result = merchants.search(
             status,
             normalize(search).orEmpty(),
+            scope.allHubs,
+            // JPQL needs a non-empty IN list; nobody's hub is the zero id.
+            scope.hubIds.ifEmpty { setOf(ZERO_UUID) },
+            hubId,
             PageRequest.of(
                 pagination.zeroBasedPage,
                 pagination.pageSize,
@@ -167,8 +184,9 @@ class MerchantService(
     }
 
     @Transactional(readOnly = true)
-    fun getAdmin(id: UUID): AdminMerchantResponse {
+    fun getAdmin(id: UUID, scope: MerchantScope = HEAD_OFFICE): AdminMerchantResponse {
         val merchant = merchants.findById(id).orElseThrow { merchantNotFound() }
+        if (!scope.covers(merchant)) throw merchantNotFound()
         return AdminMerchantResponse(
             merchant.toResponse(),
             history.findAllByMerchantIdOrderByChangedAtDesc(id).map {
@@ -186,14 +204,20 @@ class MerchantService(
     }
 
     @Transactional
-    fun changeStatus(id: UUID, adminUserId: UUID, request: ChangeMerchantStatusRequest): AdminMerchantResponse {
+    fun changeStatus(
+        id: UUID,
+        adminUserId: UUID,
+        request: ChangeMerchantStatusRequest,
+        scope: MerchantScope = HEAD_OFFICE,
+    ): AdminMerchantResponse {
         val merchant = merchants.findById(id).orElseThrow { merchantNotFound() }
+        if (!scope.covers(merchant)) throw merchantNotFound()
         val next = try {
             MerchantStatus.valueOf(request.status.trim().uppercase(Locale.ROOT))
         } catch (_: IllegalArgumentException) {
             throw ApiException(HttpStatus.BAD_REQUEST, "invalid_merchant_status", "Merchant status is invalid.")
         }
-        if (next == merchant.status) return getAdmin(id)
+        if (next == merchant.status) return getAdmin(id, scope)
         if (!merchant.canTransitionTo(next)) {
             throw ApiException(
                 HttpStatus.CONFLICT,
@@ -330,9 +354,13 @@ class MerchantService(
         createdAt,
         updatedAt,
         version,
+        servingHubId,
     )
 
     companion object {
+        private val ZERO_UUID = UUID(0, 0)
+        private val HEAD_OFFICE = MerchantScope(allHubs = true, hubIds = emptySet())
+
         private const val ELIGIBILITY_MESSAGE =
             "Verify your email and complete your customer profile before applying as a merchant."
     }

@@ -17,6 +17,7 @@ class MerchantPickupAddressService(
     private val pickupAddresses: MerchantPickupAddressRepository,
     private val merchants: MerchantService,
     private val locations: LocationService,
+    private val servingHubs: MerchantServingHubService,
 ) {
     @Transactional
     fun create(userId: UUID, request: PickupAddressRequest): PickupAddressResponse {
@@ -30,6 +31,7 @@ class MerchantPickupAddressService(
             currentDefault.updatedAt = now
             pickupAddresses.saveAndFlush(currentDefault)
         }
+        servingHubs.refreshAfterCommit(merchant.id)
         return pickupAddresses.save(
             MerchantPickupAddress(
                 merchantId = merchant.id,
@@ -86,6 +88,7 @@ class MerchantPickupAddressService(
         address.provinceCode = request.provinceCode.trim()
         address.wardCode = request.wardCode.trim()
         address.updatedAt = now
+        servingHubs.refreshAfterCommit(merchant.id)
         return pickupAddresses.save(address).toResponse()
     }
 
@@ -94,6 +97,7 @@ class MerchantPickupAddressService(
         val merchant = merchants.findActiveByUser(userId)
         val address = findOwned(merchant.id, id)
         val wasDefault = address.isDefault
+        servingHubs.refreshAfterCommit(merchant.id)
         pickupAddresses.delete(address)
         pickupAddresses.flush()
         if (wasDefault) {
@@ -119,6 +123,7 @@ class MerchantPickupAddressService(
         address.isDefault = true
         address.updatedAt = now
         pickupAddresses.save(address)
+        servingHubs.refreshAfterCommit(merchant.id)
     }
 
     private fun validateLocation(request: PickupAddressRequest) {

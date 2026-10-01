@@ -13,6 +13,7 @@ import com.pavex.billing.service.CounterCashService
 import jakarta.validation.Valid
 import org.springframework.http.HttpStatus
 import org.springframework.security.access.prepost.PreAuthorize
+import org.springframework.security.core.Authentication
 import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.security.oauth2.jwt.Jwt
 import org.springframework.web.bind.annotation.GetMapping
@@ -52,31 +53,38 @@ class CashController(
     @PreAuthorize("hasAuthority('billing.cash.read-hub')")
     fun hubCollections(
         @AuthenticationPrincipal jwt: Jwt,
+        authentication: Authentication,
         @PathVariable hubId: UUID,
         @RequestParam(required = false) status: CashCollectionStatus?,
-    ): List<CashCollectionResponse> = cash.hubCollections(jwt.userId(), hubId, status)
+    ): List<CashCollectionResponse> = cash.hubCollections(jwt.userId(), hubId, status, authentication.seesAllHubs())
 
     @PostMapping("/collections/{collectionId}/resubmit")
     @PreAuthorize("hasAuthority('billing.cash.read-hub')")
-    fun resubmit(@AuthenticationPrincipal jwt: Jwt, @PathVariable collectionId: UUID): CashCollectionResponse =
-        cash.resubmitFromHub(jwt.userId(), collectionId)
+    fun resubmit(@AuthenticationPrincipal jwt: Jwt, authentication: Authentication, @PathVariable collectionId: UUID): CashCollectionResponse =
+        cash.resubmitFromHub(jwt.userId(), collectionId, authentication.seesAllHubs())
 
     /** What the hub counter owes walk-in senders (COD) or is owed (return fees). */
     @GetMapping("/hubs/{hubId}/counter-settlements")
     @PreAuthorize("hasAuthority('billing.counter.settle')")
     fun counterSettlements(
         @AuthenticationPrincipal jwt: Jwt,
+        authentication: Authentication,
         @PathVariable hubId: UUID,
         @RequestParam(required = false) status: CounterSettlementStatus?,
         @RequestParam(required = false) phone: String?,
         @RequestParam(required = false) trackingCode: String?,
-    ): List<CounterSettlementResponse> = counterCash.hubList(jwt.userId(), hubId, status, phone, trackingCode)
+    ): List<CounterSettlementResponse> = counterCash.hubList(jwt.userId(), authentication.seesAllHubs(), hubId, status, phone, trackingCode)
 
     @PostMapping("/counter-settlements/{settlementId}/complete")
     @PreAuthorize("hasAuthority('billing.counter.settle')")
     fun completeCounterSettlement(
         @AuthenticationPrincipal jwt: Jwt,
+        authentication: Authentication,
         @PathVariable settlementId: UUID,
         @Valid @RequestBody request: CompleteCounterSettlementRequest,
-    ): CounterSettlementResponse = counterCash.complete(jwt.userId(), settlementId, request.phone, request.note)
+    ): CounterSettlementResponse =
+        counterCash.complete(jwt.userId(), authentication.seesAllHubs(), settlementId, request.phone, request.note)
 }
+
+/** Head office (scope.all-hubs) handles the cash of any hub. */
+private fun Authentication.seesAllHubs(): Boolean = authorities.any { it.authority == "scope.all-hubs" }

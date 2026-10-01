@@ -26,9 +26,7 @@ Mật khẩu chung: **`Pavex2026!`**
 | Email | Vai trò | Dùng ở |
 |---|---|---|
 | `admin@pavex.test` | Quản trị hệ thống | Management (3001) |
-| `vanhanh@pavex.test` | Quản lý vận hành (toàn quốc) | Management |
-| `taichinh@pavex.test` | Kế toán | Management |
-| `cskh@pavex.test` | Kinh doanh & CSKH (duyệt cửa hàng) | Management |
+| `vanhanh@pavex.test` | Quản lý vận hành: điều hành công ty, xem mọi bưu cục, duyệt cửa hàng, tiền, đối soát | Management |
 | `truongbc.hn@pavex.test` | Trưởng bưu cục Ba Đình | Management, app |
 | `nhanvien.hn@pavex.test` | Nhân viên bưu cục Ba Đình | Management, app |
 | `buuta.hn@pavex.test` | Bưu tá Ba Đình | App |

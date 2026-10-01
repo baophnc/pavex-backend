@@ -30,7 +30,30 @@ class InternalServiceJwtConfig(
     private val fleetPublicKey: Resource,
     @Value("\${security.trusted-services.fleet.issuer}")
     private val fleetIssuer: String,
+    @Value("\${security.trusted-services.partners.public-key}")
+    private val partnersPublicKey: Resource,
+    @Value("\${security.trusted-services.partners.issuer}")
+    private val partnersIssuer: String,
 ) {
+    /** Partners may only ask which hubs a user works at, to scope merchant lists. */
+    @Bean("partnersServiceJwtDecoder")
+    fun partnersServiceJwtDecoder(): JwtDecoder {
+        val publicKey = partnersPublicKey.inputStream.use {
+            requireNotNull(RsaKeyConverters.x509().convert(it))
+        }
+        val decoder = NimbusJwtDecoder.withPublicKey(publicKey).build()
+        decoder.setJwtValidator(
+            DelegatingOAuth2TokenValidator(
+                JwtValidators.createDefaultWithIssuer(partnersIssuer),
+                exactClaim("sub", PARTNERS_SERVICE),
+                exactClaim(PavexJwtClaims.TOKEN_TYPE, PavexTokenTypes.SERVICE),
+                audience(OPERATIONS_SERVICE),
+                scope(OPERATIONS_HUB_SCOPE_READ),
+            ),
+        )
+        return decoder
+    }
+
     /** Billing may only ask whether a user can handle cash at a hub. */
     @Bean("billingServiceJwtDecoder")
     fun billingServiceJwtDecoder(): JwtDecoder {
@@ -111,5 +134,7 @@ class InternalServiceJwtConfig(
         private const val OPERATIONS_ACCESS_CHECK_SCOPE = "operations.access.check"
         private const val FLEET_SERVICE = "fleet-service"
         private const val OPERATIONS_FLEET_READ_SCOPE = "operations.fleet.read"
+        private const val PARTNERS_SERVICE = "partners-service"
+        private const val OPERATIONS_HUB_SCOPE_READ = "operations.hub-scope.read"
     }
 }

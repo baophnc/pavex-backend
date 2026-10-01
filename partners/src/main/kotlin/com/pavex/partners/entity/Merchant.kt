@@ -44,6 +44,9 @@ class Merchant(
     var contactEmail: String? = null,
     @Column(name = "tax_code", length = 50)
     var taxCode: String? = null,
+    /** The hub serving the ward of the default pickup point; it looks after this merchant. */
+    @Column(name = "serving_hub_id")
+    var servingHubId: UUID? = null,
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 50)
     var status: MerchantStatus = MerchantStatus.PENDING_VERIFICATION,

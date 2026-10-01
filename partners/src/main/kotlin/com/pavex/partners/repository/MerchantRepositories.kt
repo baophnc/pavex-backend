@@ -17,10 +17,14 @@ import java.time.Instant
 interface MerchantRepository : JpaRepository<Merchant, UUID> {
     fun findByUserId(userId: UUID): Merchant?
 
+    fun findAllByServingHubIdIsNull(): List<Merchant>
+
     @Query(
         """
     SELECT m FROM Merchant m
     WHERE (:status IS NULL OR m.status = :status)
+      AND (:allHubs = TRUE OR m.servingHubId IN :hubIds)
+      AND (:hubId IS NULL OR m.servingHubId = :hubId)
       AND (
            LOWER(m.merchantCode) LIKE LOWER(CONCAT('%', :search, '%')) OR
            LOWER(m.businessName) LIKE LOWER(CONCAT('%', :search, '%')) OR
@@ -32,6 +36,9 @@ interface MerchantRepository : JpaRepository<Merchant, UUID> {
     fun search(
         @Param("status") status: MerchantStatus?,
         @Param("search") search: String,
+        @Param("allHubs") allHubs: Boolean,
+        @Param("hubIds") hubIds: Collection<UUID>,
+        @Param("hubId") hubId: UUID?,
         pageable: Pageable,
     ): Page<Merchant>
 }

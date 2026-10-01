@@ -10,8 +10,8 @@ INSERT INTO partners.merchants (id, merchant_code, user_id, business_name, conta
                                 status_changed_by_user_id, verified_at, verified_by_user_id, version, created_at, updated_at) VALUES
     ('5eed0030-0000-4000-8000-000000000001', 'PVM000001', '5eed0010-0000-4000-8000-000000000041',
      'Cửa hàng Hoa Sen', 'Bùi Ngọc Mai', '0912000041', 'shop.daduyet@pavex.test', '0109000041',
-     'ACTIVE', NULL, NULL, NOW(), '5eed0010-0000-4000-8000-000000000004',
-     NOW(), '5eed0010-0000-4000-8000-000000000004', 0, NOW(), NOW()),
+     'ACTIVE', NULL, NULL, NOW(), '5eed0010-0000-4000-8000-000000000002',
+     NOW(), '5eed0010-0000-4000-8000-000000000002', 0, NOW(), NOW()),
     ('5eed0030-0000-4000-8000-000000000002', 'PVM000002', '5eed0010-0000-4000-8000-000000000042',
      'Cửa hàng Mai Vàng', 'Đặng Hữu Phước', '0912000042', 'shop.choduyet@pavex.test', '0309000042',
      'PENDING_VERIFICATION', NULL, NULL, NOW(), NULL, NULL, NULL, 0, NOW(), NOW());
@@ -24,7 +24,7 @@ INSERT INTO partners.merchant_pickup_addresses (id, merchant_id, name, contact_n
 INSERT INTO partners.merchant_status_history (id, merchant_id, from_status, to_status, reason_code, reason_detail,
                                               changed_by_user_id, changed_at) VALUES
     ('5eed0032-0000-4000-8000-000000000001', '5eed0030-0000-4000-8000-000000000001', 'PENDING_VERIFICATION', 'ACTIVE',
-     NULL, 'Duyệt sẵn bởi seed-mini', '5eed0010-0000-4000-8000-000000000004', NOW());
+     NULL, 'Duyệt sẵn bởi seed-mini', '5eed0010-0000-4000-8000-000000000002', NOW());
 
 SELECT setval('partners.merchant_code_seq', 2, true);
 
