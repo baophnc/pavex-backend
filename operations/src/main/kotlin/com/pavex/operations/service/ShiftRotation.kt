@@ -34,6 +34,9 @@ object ShiftRotation {
         ShiftSlot(2, "Ca đêm", LocalTime.of(22, 0), Duration.ofHours(8)),
     )
 
+    /** The whole day, used when operations.shifts.roster.full-day is on (testing). */
+    val FULL_DAY = ShiftSlot(0, "Ca cả ngày", LocalTime.MIDNIGHT, Duration.ofHours(24))
+
     /** Post offices with fewer members than this open a single office-hours shift. */
     const val TWO_SHIFT_POST_OFFICE_MIN_MEMBERS = 5
 
