@@ -4,6 +4,7 @@ import com.pavex.contracts.identity.MerchantEligibilityResponse
 import com.pavex.contracts.identity.MerchantRoleSyncRequest
 import com.pavex.partners.entity.Merchant
 import com.pavex.partners.entity.MerchantPickupAddress
+import com.pavex.partners.entity.MerchantRoleOutboxMessage
 import com.pavex.partners.entity.MerchantStatus
 import com.pavex.partners.entity.Province
 import com.pavex.partners.entity.Ward
@@ -21,6 +22,7 @@ import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import org.springframework.jdbc.core.JdbcTemplate
 import java.lang.reflect.Proxy
+import java.time.Instant
 import java.util.Optional
 import java.util.UUID
 
@@ -58,6 +60,26 @@ class AdminMerchantReadinessServiceTest {
         assertEquals(listOf("DEFAULT_PICKUP_REQUIRED"), result.restrictions)
     }
 
+    @Test
+    fun `an approval that has not reached identity yet is shown with its last error`() {
+        val pending = MerchantRoleOutboxMessage(
+            merchantId = merchant.id,
+            userId = merchant.userId,
+            enabled = true,
+            occurredAt = Instant.parse("2026-10-01T08:00:00Z"),
+            attemptCount = 3,
+            lastError = "Identity unavailable",
+        )
+
+        val synced = service(eligible = true, addresses = listOf(usable)).readiness(merchant.id)
+        val waiting = service(eligible = true, addresses = listOf(usable), pendingRole = pending).readiness(merchant.id)
+
+        assertNull(synced.roleSync)
+        assertEquals(true, waiting.roleSync?.enabled)
+        assertEquals(3, waiting.roleSync?.attempts)
+        assertEquals("Identity unavailable", waiting.roleSync?.lastError)
+    }
+
     private fun pickup(name: String, phone: String, isDefault: Boolean) = MerchantPickupAddress(
         merchantId = merchant.id,
         name = name,
@@ -70,7 +92,11 @@ class AdminMerchantReadinessServiceTest {
     )
 
     /** [eligible] null simulates Identity being unavailable. */
-    private fun service(eligible: Boolean?, addresses: List<MerchantPickupAddress>): AdminMerchantReadinessService {
+    private fun service(
+        eligible: Boolean?,
+        addresses: List<MerchantPickupAddress>,
+        pendingRole: MerchantRoleOutboxMessage? = null,
+    ): AdminMerchantReadinessService {
         val merchants = proxy<MerchantRepository> { method, _ ->
             if (method == "findById") Optional.of(merchant) else defaultValue(method)
         }
@@ -95,15 +121,18 @@ class AdminMerchantReadinessServiceTest {
         val wards = proxy<WardRepository> { method, _ ->
             if (method == "findAllById") listOf(Ward(code = "20194", name = "Hải Châu", fullName = "Phường Hải Châu", provinceCode = "48")) else defaultValue(method)
         }
+        val roleOutbox = proxy<MerchantRoleOutboxRepository> { method, _ ->
+            if (method == "findFirstByMerchantIdAndProcessedAtIsNullOrderByOccurredAtDesc") pendingRole else defaultValue(method)
+        }
         val merchantService = MerchantService(
             merchants,
             proxy<MerchantStatusHistoryRepository> { method, _ -> defaultValue(method) },
-            proxy<MerchantRoleOutboxRepository> { method, _ -> defaultValue(method) },
+            roleOutbox,
             pickups,
             identity,
             JdbcTemplate(),
         )
-        return AdminMerchantReadinessService(merchants, merchantService, pickups, identity, provinces, wards)
+        return AdminMerchantReadinessService(merchants, merchantService, pickups, identity, provinces, wards, roleOutbox)
     }
 
     private inline fun <reified T> proxy(

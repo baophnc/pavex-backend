@@ -3,10 +3,12 @@ package com.pavex.partners.service
 import com.pavex.common.contact.VietnamesePhone
 import com.pavex.partners.dto.AdminMerchantReadinessResponse
 import com.pavex.partners.dto.AdminPickupAddressResponse
+import com.pavex.partners.dto.MerchantRoleSyncResponse
 import com.pavex.partners.exception.ApiException
 import com.pavex.partners.exception.IdentityServiceUnavailableException
 import com.pavex.partners.repository.MerchantPickupAddressRepository
 import com.pavex.partners.repository.MerchantRepository
+import com.pavex.partners.repository.MerchantRoleOutboxRepository
 import com.pavex.partners.repository.ProvinceRepository
 import com.pavex.partners.repository.WardRepository
 import java.util.UUID
@@ -16,7 +18,8 @@ import org.springframework.transaction.annotation.Transactional
 
 /**
  * Lets an admin see what a merchant sees when creating an order: the same restrictions the
- * Shipment service enforces, plus which pickup addresses it would accept as a sender.
+ * Shipment service enforces, which pickup addresses it would accept as a sender, and whether its
+ * merchant role has reached Identity yet.
  */
 @Service
 class AdminMerchantReadinessService(
@@ -26,6 +29,7 @@ class AdminMerchantReadinessService(
     private val identityClient: IdentityMerchantGateway,
     private val provinces: ProvinceRepository,
     private val wards: WardRepository,
+    private val roleOutbox: MerchantRoleOutboxRepository,
 ) {
     @Transactional(readOnly = true)
     fun readiness(merchantId: UUID): AdminMerchantReadinessResponse {
@@ -70,6 +74,9 @@ class AdminMerchantReadinessService(
                     createdAt = address.createdAt,
                     updatedAt = address.updatedAt,
                 )
+            },
+            roleSync = roleOutbox.findFirstByMerchantIdAndProcessedAtIsNullOrderByOccurredAtDesc(merchant.id)?.let {
+                MerchantRoleSyncResponse(it.enabled, it.occurredAt, it.attemptCount, it.lastError)
             },
         )
     }
