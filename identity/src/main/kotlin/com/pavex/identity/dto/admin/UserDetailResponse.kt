@@ -41,4 +41,9 @@ data class UserDetailResponse(
     val profileCreatedAt: Instant?,
 
     val profileUpdatedAt: Instant?,
+
+    /** Set once the account is deleted: when, and the email it had then. */
+    val deletedAt: Instant? = null,
+
+    val deletedEmail: String? = null,
 )

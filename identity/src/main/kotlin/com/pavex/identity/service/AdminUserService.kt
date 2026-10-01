@@ -168,6 +168,8 @@ class AdminUserService(
             version = account.version,
             profileCreatedAt = profile?.createdAt,
             profileUpdatedAt = profile?.updatedAt,
+            deletedAt = account.deletedAt,
+            deletedEmail = account.deletedEmail,
         )
     }
 
