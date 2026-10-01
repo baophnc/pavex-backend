@@ -4,6 +4,7 @@ import com.pavex.shipment.dto.ShipmentDetailResponse
 import com.pavex.shipment.dto.ShipmentLabelsResponse
 import com.pavex.shipment.dto.ShipmentPageResponse
 import com.pavex.shipment.entity.Shipment
+import com.pavex.shipment.entity.ShipmentChannel
 import com.pavex.shipment.entity.ShipmentAddressSnapshot
 import com.pavex.shipment.entity.ShipmentStatus
 import com.pavex.shipment.exception.InvalidShipmentRequestException
@@ -35,7 +36,9 @@ class ShipmentQueryService(
         val trackingCode = ShipmentCodeNormalizer.normalizeOrNull(rawTrackingCode)
             ?.takeIf { !it.contains('-') }
             ?: throw notFound()
+        // Staff book counter shipments for walk-in customers; those are not their own orders.
         return shipments.findByTrackingCodeIgnoreCaseAndCreatedByUserId(trackingCode, actorUserId)
+            ?.takeIf { it.channel == ShipmentChannel.MERCHANT_WEB }
             ?: throw notFound()
     }
 
@@ -65,6 +68,7 @@ class ShipmentQueryService(
         val root = query.from(Shipment::class.java)
         val predicates = mutableListOf<Predicate>(
             cb.equal(root.get<UUID>("createdByUserId"), actorUserId),
+            cb.equal(root.get<ShipmentChannel>("channel"), ShipmentChannel.MERCHANT_WEB),
         )
         if (status != null) {
             predicates += cb.equal(root.get<ShipmentStatus>("status"), status)

@@ -1,6 +1,7 @@
 package com.pavex.shipment.service
 
 import com.pavex.shipment.entity.Shipment
+import com.pavex.shipment.entity.ShipmentChannel
 import com.pavex.shipment.entity.ShipmentLifecycleStatus
 import com.pavex.shipment.entity.ShipmentStatus
 import com.pavex.shipment.entity.ShippingFeePayer
@@ -30,6 +31,8 @@ class ShipmentFinancialEvents(
                     shipmentId = shipment.id,
                     trackingCode = shipment.trackingCode,
                     merchantId = shipment.merchantId,
+                    channel = shipment.channel,
+                    originHubId = shipment.originHubId,
                     courierUserId = requireNotNull(shipment.collectedByUserId),
                     hubId = shipment.destinationHubId,
                     attemptId = requireNotNull(shipment.collectionAttemptId),
@@ -58,11 +61,14 @@ class ShipmentFinancialEvents(
                     shipmentId = shipment.id,
                     trackingCode = shipment.trackingCode,
                     merchantId = shipment.merchantId,
+                    channel = shipment.channel,
+                    originHubId = shipment.originHubId,
                     lifecycleStatus = shipment.lifecycleStatus,
                     finalStatus = shipment.status,
                     shippingFeePayer = shipment.shippingFeePayer,
                     shippingFee = shipment.shippingFee,
                     merchantShippingFee = shipment.merchantShippingFee(),
+                    counterSenderFeeDue = shipment.counterSenderFeeDue(),
                     codAmount = shipment.codAmount,
                     amountToCollect = shipment.recipientCollectAmount,
                     collectedAmount = shipment.collectedAmount,
@@ -73,16 +79,48 @@ class ShipmentFinancialEvents(
         )
     }
 
+    /**
+     * A walk-in shipment was booked at the counter: billing learns who to pay its COD back to, and
+     * books the shipping fee the sender paid in cash into the hub's takings.
+     */
+    fun counterAccepted(shipment: Shipment) {
+        check(shipment.channel == ShipmentChannel.COUNTER) { "Only a counter shipment is accepted at the counter." }
+        outbox.enqueue(
+            aggregateId = shipment.id,
+            aggregateCode = shipment.trackingCode,
+            eventType = COUNTER_ACCEPTED,
+            payloadJson = objectMapper.writeValueAsString(
+                ShipmentCounterAcceptedPayload(
+                    shipmentId = shipment.id,
+                    trackingCode = shipment.trackingCode,
+                    hubId = shipment.originHubId,
+                    clerkUserId = shipment.createdByUserId,
+                    senderName = shipment.sender.contactName,
+                    senderPhone = shipment.sender.contactPhone,
+                    shippingFeePayer = shipment.shippingFeePayer,
+                    shippingFee = shipment.shippingFee,
+                    feePaidAtCounter = shipment.counterFeePaidAmount ?: 0,
+                    codAmount = shipment.codAmount,
+                    acceptedAt = shipment.createdAt,
+                ),
+            ),
+            occurredAt = shipment.createdAt,
+        )
+    }
+
     companion object {
         const val CASH_COLLECTED = "shipment.cash-collected"
         const val CLOSED = "shipment.closed"
+        const val COUNTER_ACCEPTED = "shipment.counter-accepted"
     }
 }
 
 data class ShipmentCashCollectedPayload(
     val shipmentId: UUID,
     val trackingCode: String,
-    val merchantId: UUID,
+    val merchantId: UUID?,
+    val channel: ShipmentChannel,
+    val originHubId: UUID,
     val courierUserId: UUID,
     val hubId: UUID,
     val attemptId: UUID,
@@ -96,14 +134,33 @@ data class ShipmentCashCollectedPayload(
 data class ShipmentClosedPayload(
     val shipmentId: UUID,
     val trackingCode: String,
-    val merchantId: UUID,
+    val merchantId: UUID?,
+    val channel: ShipmentChannel,
+    val originHubId: UUID,
     val lifecycleStatus: ShipmentLifecycleStatus,
     val finalStatus: ShipmentStatus,
     val shippingFeePayer: ShippingFeePayer,
     val shippingFee: Long,
     val merchantShippingFee: Long,
+    /** Unpaid fee a walk-in sender settles at the counter (returned recipient-paid shipment). */
+    val counterSenderFeeDue: Long,
     val codAmount: Long,
     val amountToCollect: Long,
     val collectedAmount: Long?,
     val closedAt: Instant,
+)
+
+/** A walk-in shipment booked at a hub counter; the sender is paid COD back there. */
+data class ShipmentCounterAcceptedPayload(
+    val shipmentId: UUID,
+    val trackingCode: String,
+    val hubId: UUID,
+    val clerkUserId: UUID,
+    val senderName: String,
+    val senderPhone: String,
+    val shippingFeePayer: ShippingFeePayer,
+    val shippingFee: Long,
+    val feePaidAtCounter: Long,
+    val codAmount: Long,
+    val acceptedAt: Instant,
 )

@@ -37,7 +37,11 @@ class OperationsShipmentClient(
 ) {
     private val client = builder.baseUrl(serviceUrl).build()
 
-    fun plan(shipmentId: UUID, reservation: ShipmentNetworkReservationSnapshot): ShipmentOperationsPlanResponse {
+    fun plan(
+        shipmentId: UUID,
+        reservation: ShipmentNetworkReservationSnapshot,
+        startsAtOriginHub: Boolean = false,
+    ): ShipmentOperationsPlanResponse {
         val response = try {
             client.post()
                 .uri("/internal/v1/operations/shipments/{shipmentId}/plan", shipmentId)
@@ -49,6 +53,7 @@ class OperationsShipmentClient(
                         routeLegs = reservation.routeLegs.map {
                             ShipmentOperationsRouteLeg(it.routeLegId, it.sequence, it.fromHubId, it.toHubId)
                         },
+                        startsAtOriginHub = startsAtOriginHub,
                     ),
                 )
                 .retrieve()

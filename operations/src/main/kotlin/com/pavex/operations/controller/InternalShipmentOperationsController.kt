@@ -48,6 +48,7 @@ class InternalShipmentOperationsController(
                     ShipmentAssignmentRouteLeg(it.routeLegId, it.sequence, it.fromHubId, it.toHubId)
                 },
                 priority = request.priority,
+                startsAtOriginHub = request.startsAtOriginHub,
             ),
         )
         return ShipmentOperationsPlanResponse(shipmentId, planned.map(::snapshot))

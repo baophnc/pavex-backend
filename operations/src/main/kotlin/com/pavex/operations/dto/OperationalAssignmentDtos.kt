@@ -29,6 +29,7 @@ data class ShipmentAssignmentPlan(
     val destinationHubId: UUID,
     val routeLegs: List<ShipmentAssignmentRouteLeg>,
     val priority: Int = 50,
+    val startsAtOriginHub: Boolean = false,
 )
 
 data class OperationalAssignmentResponse(

@@ -3,6 +3,10 @@ package com.pavex.shipment.service
 import com.pavex.common.contact.VietnamesePhone
 import com.pavex.contracts.network.ReserveShipmentNetworkRequest
 import com.pavex.contracts.network.ShipmentNetworkReservationSnapshot
+import com.pavex.contracts.operations.OperationsAssignmentStatus
+import com.pavex.contracts.operations.OperationsAssignmentType
+import com.pavex.contracts.operations.OperationsCapability
+import com.pavex.contracts.operations.ShipmentOperationsPlanResponse
 import com.pavex.contracts.partners.PartnerLocationSnapshot
 import com.pavex.contracts.pricing.PricingQuoteServiceLevel
 import com.pavex.contracts.pricing.PricingQuoteSnapshot
@@ -11,10 +15,12 @@ import com.pavex.shipment.client.NetworkShipmentClient
 import com.pavex.shipment.client.OperationsShipmentClient
 import com.pavex.shipment.client.PartnerShipmentClient
 import com.pavex.shipment.client.PricingQuoteClient
+import com.pavex.shipment.dto.CreateCounterShipmentRequest
 import com.pavex.shipment.dto.CreateShipmentRequest
 import com.pavex.shipment.dto.ParcelContentsRequest
 import com.pavex.shipment.dto.ShipmentAddressRequest
 import com.pavex.shipment.dto.ShipmentCreatedResponse
+import com.pavex.shipment.entity.CounterAcceptance
 import com.pavex.shipment.entity.ParcelDraft
 import com.pavex.shipment.entity.Shipment
 import com.pavex.shipment.entity.ShipmentAddressSnapshot
@@ -25,6 +31,7 @@ import com.pavex.shipment.entity.ShipmentPricingZone
 import com.pavex.shipment.entity.ShipmentServiceLevel
 import com.pavex.shipment.entity.ShippingFeePayer
 import com.pavex.shipment.exception.InvalidShipmentRequestException
+import com.pavex.shipment.exception.ShipmentApiException
 import com.pavex.shipment.exception.ShipmentConflictException
 import com.pavex.shipment.exception.ShipmentForbiddenException
 import com.pavex.shipment.exception.ShipmentGoneException
@@ -34,6 +41,7 @@ import java.security.MessageDigest
 import java.time.Instant
 import java.util.HexFormat
 import java.util.UUID
+import org.slf4j.LoggerFactory
 import org.springframework.dao.DataIntegrityViolationException
 import org.springframework.stereotype.Service
 import tools.jackson.databind.ObjectMapper
@@ -72,29 +80,108 @@ class CreateShipmentService(
         merchantReference?.let { requireUnusedMerchantReference(merchantId, it) }
         val senderInput = pickupSender(merchantId, request.pickupAddressId)
 
+        return book(
+            Booking(
+                actorUserId = actorUserId,
+                idempotencyKey = idempotencyKey,
+                fingerprint = fingerprint,
+                quoteId = request.quoteId,
+                sender = senderInput,
+                recipient = recipientInput,
+                parcels = parcelInputs,
+                shippingFeePayer = request.shippingFeePayer,
+                note = request.note,
+                merchantId = merchantId,
+                merchantReference = request.merchantReference,
+                pickupAddressId = request.pickupAddressId,
+                counter = null,
+            ),
+        )
+    }
+
+    /**
+     * Hub staff book a walk-in customer's shipment at their hub's counter. The sender is typed in
+     * (no shop, no pickup address), the parcels are already in the hub, and the quote must start at
+     * this hub; when the sender pays, the cash taken must be exactly the shipping fee.
+     */
+    fun createAtCounter(
+        actorUserId: UUID,
+        idempotencyKeyHeader: String?,
+        request: CreateCounterShipmentRequest,
+    ): CreateShipmentResult {
+        val idempotencyKey = validateIdempotencyKey(idempotencyKeyHeader)
+        val senderInput = normalizeAddress(request.sender)
+        val recipientInput = normalizeAddress(request.recipient)
+        val parcelInputs = normalizeParcels(request.parcels)
+        val fingerprint = counterFingerprint(request, senderInput, recipientInput, parcelInputs)
+
+        writer.findExisting(actorUserId, idempotencyKey)?.let {
+            return replayOrConflict(it, fingerprint)
+        }
+
+        if (!operations.canOperateAtHub(actorUserId, request.hubId, OperationsCapability.PARCEL_SCANNING)) {
+            throw ShipmentForbiddenException(
+                "counter_hub_forbidden",
+                "The current user does not serve the counter of this hub.",
+            )
+        }
+
+        return book(
+            Booking(
+                actorUserId = actorUserId,
+                idempotencyKey = idempotencyKey,
+                fingerprint = fingerprint,
+                quoteId = request.quoteId,
+                sender = senderInput,
+                recipient = recipientInput,
+                parcels = parcelInputs,
+                shippingFeePayer = request.shippingFeePayer,
+                note = request.note,
+                merchantId = null,
+                merchantReference = null,
+                pickupAddressId = null,
+                counter = CounterBooking(request.hubId, request.cashReceived),
+            ),
+        )
+    }
+
+    /**
+     * Prices, routes, plans and stores one shipment. The network reservation and operations plan
+     * are tied to the shipment id, so they are made exactly once and released again if anything
+     * after them fails; only the tracking code is regenerated if it collides.
+     */
+    private fun book(booking: Booking): CreateShipmentResult {
+        val actorUserId = booking.actorUserId
+        val counter = booking.counter
+        val merchantReference = booking.merchantReference?.trim()?.takeIf { it.isNotEmpty() }
+
         val now = Instant.now()
-        val quote = pricing.getValid(request.quoteId)
-        if (quote.quoteId != request.quoteId || !quote.expiresAt.isAfter(now)) {
+        val quote = pricing.getValid(booking.quoteId)
+        if (quote.quoteId != booking.quoteId || !quote.expiresAt.isAfter(now)) {
             throw ShipmentGoneException(
                 "quote_invalid_or_expired",
                 "The selected pricing quote is missing or expired.",
             )
         }
-        validateQuoteLocations(quote, senderInput, recipientInput)
-        validateQuoteParcels(quote, parcelInputs)
+        if (counter == null) {
+            validateQuoteLocations(quote, booking.sender, booking.recipient)
+        } else {
+            validateCounterQuote(quote, counter, booking.recipient, booking.shippingFeePayer)
+        }
+        validateQuoteParcels(quote, booking.parcels)
         if (writer.isQuoteUsed(quote.quoteId)) {
             throw quoteAlreadyUsed()
         }
 
-        val senderLocation = partners.resolveLocation(senderInput.provinceCode, senderInput.wardCode)
-        val recipientLocation = partners.resolveLocation(recipientInput.provinceCode, recipientInput.wardCode)
-        validateResolvedLocation(senderInput, senderLocation)
-        validateResolvedLocation(recipientInput, recipientLocation)
+        val senderLocation = partners.resolveLocation(booking.sender.provinceCode, booking.sender.wardCode)
+        val recipientLocation = partners.resolveLocation(booking.recipient.provinceCode, booking.recipient.wardCode)
+        validateResolvedLocation(booking.sender, senderLocation)
+        validateResolvedLocation(booking.recipient, recipientLocation)
 
-        val sender = senderInput.toSnapshot(senderLocation)
-        val recipient = recipientInput.toSnapshot(recipientLocation)
+        val sender = booking.sender.toSnapshot(senderLocation)
+        val recipient = booking.recipient.toSnapshot(recipientLocation)
         val priceSnapshot = quote.toShipmentPriceSnapshot()
-        val parcelDrafts = toParcelDrafts(quote, parcelInputs)
+        val parcelDrafts = toParcelDrafts(quote, booking.parcels)
         val shipmentWeightKg = parcelDrafts.fold(BigDecimal.ZERO) { total, parcel -> total.add(parcel.actualWeightKg) }
         if (shipmentWeightKg.signum() <= 0) {
             throw InvalidShipmentRequestException(
@@ -103,18 +190,17 @@ class CreateShipmentService(
             )
         }
 
-        // The network reservation and operations plan are tied to shipmentId, so they are
-        // made exactly once. Only the tracking code is regenerated if it collides.
         val shipmentId = UUID.randomUUID()
         // If reserve() itself fails nothing is held; an ambiguous failure (e.g. a timeout
         // after Network committed) is cleaned up by Network's unconfirmed-reservation expiry.
+        // The route starts where the quote starts: the shop's pickup ward, or the counter hub.
         val reservation = network.reserve(
             ReserveShipmentNetworkRequest(
                 shipmentId = shipmentId,
                 actorUserId = actorUserId,
                 routeRevision = INITIAL_ROUTE_REVISION,
-                originProvinceCode = sender.provinceCode,
-                originWardCode = sender.wardCode,
+                originProvinceCode = quote.origin.provinceCode,
+                originWardCode = quote.origin.wardCode,
                 destinationProvinceCode = recipient.provinceCode,
                 destinationWardCode = recipient.wardCode,
                 shipmentWeightKg = shipmentWeightKg,
@@ -127,9 +213,9 @@ class CreateShipmentService(
                 expectedDestinationHubId = quote.destination.primaryHubId,
             ),
         )
-        try {
+        val plan = try {
             validateReservation(quote, shipmentId, shipmentWeightKg, reservation)
-            operations.plan(shipmentId, reservation)
+            operations.plan(shipmentId, reservation, startsAtOriginHub = counter != null)
         } catch (exception: RuntimeException) {
             compensateIfNeeded(reservation, operationsPlanned = false, shipmentId, actorUserId, "Shipment creation aborted.")
             throw exception
@@ -141,21 +227,22 @@ class CreateShipmentService(
                 val shipment = Shipment.createFoundation(
                     id = shipmentId,
                     trackingCode = trackingCodes.create(now),
-                    merchantId = merchantId,
+                    merchantId = booking.merchantId,
                     createdByUserId = actorUserId,
-                    idempotencyKey = idempotencyKey,
-                    requestFingerprint = fingerprint,
-                    merchantReference = request.merchantReference,
-                    pickupAddressId = request.pickupAddressId,
+                    idempotencyKey = booking.idempotencyKey,
+                    requestFingerprint = booking.fingerprint,
+                    merchantReference = booking.merchantReference,
+                    pickupAddressId = booking.pickupAddressId,
                     sender = sender,
                     recipient = recipient,
-                    shippingFeePayer = request.shippingFeePayer,
+                    shippingFeePayer = booking.shippingFeePayer,
                     price = priceSnapshot,
                     origin = reservation.origin.toShipmentSnapshot(),
                     destination = reservation.destination.toShipmentSnapshot(),
                     parcelDrafts = parcelDrafts,
-                    note = request.note,
+                    note = booking.note,
                     createdAt = now,
+                    counter = counter?.let { CounterAcceptance(it.cashReceived) },
                 )
                 shipment.assignReservedRoute(
                     routeRevision = reservation.routeRevision,
@@ -172,19 +259,26 @@ class CreateShipmentService(
                 if (reservation.batchId != null) {
                     networkConfirmations.confirmBestEffort(shipmentId, reservation.routeRevision, actorUserId)
                 }
+                if (counter != null) {
+                    finishCounterHandling(shipmentId, plan, actorUserId, counter.hubId)
+                }
                 return CreateShipmentResult(created, replayed = false)
             } catch (exception: DataIntegrityViolationException) {
                 // A concurrent request with the same Idempotency-Key or quote won the race:
                 // release what this request reserved and answer like that request did.
-                writer.findExisting(actorUserId, idempotencyKey)?.let {
+                writer.findExisting(actorUserId, booking.idempotencyKey)?.let {
                     compensateIfNeeded(reservation, operationsPlanned, shipmentId, actorUserId, "Duplicate shipment request.")
-                    return replayOrConflict(it, fingerprint)
+                    return replayOrConflict(it, booking.fingerprint)
                 }
                 if (writer.isQuoteUsed(quote.quoteId)) {
                     compensateIfNeeded(reservation, operationsPlanned, shipmentId, actorUserId, "Quote already used.")
                     throw quoteAlreadyUsed()
                 }
-                if (merchantReference != null && writer.shipmentWithMerchantReference(merchantId, merchantReference) != null) {
+                val merchantId = booking.merchantId
+                if (
+                    merchantId != null && merchantReference != null &&
+                    writer.shipmentWithMerchantReference(merchantId, merchantReference) != null
+                ) {
                     compensateIfNeeded(reservation, operationsPlanned, shipmentId, actorUserId, "Merchant reference already used.")
                     requireUnusedMerchantReference(merchantId, merchantReference)
                 }
@@ -200,6 +294,78 @@ class CreateShipmentService(
             "tracking_code_allocation_failed",
             "A unique PAVEX tracking code could not be allocated. Please retry the request.",
         )
+    }
+
+    /**
+     * The clerk who booked the counter shipment received the parcels into the hub, so the origin-hub
+     * handling is theirs and already done; this opens the first line-haul leg. Best effort: the
+     * shipment is saved, and an inbound scan at the hub can still take the handling over and finish it.
+     */
+    private fun finishCounterHandling(
+        shipmentId: UUID,
+        plan: ShipmentOperationsPlanResponse,
+        actorUserId: UUID,
+        hubId: UUID,
+    ) {
+        val handling = plan.assignments.firstOrNull {
+            it.type == OperationsAssignmentType.ORIGIN_HUB_HANDLING && it.hubId == hubId
+        } ?: return
+        try {
+            val claimed = if (handling.status in HANDLING_TAKEN_STATUSES) {
+                handling
+            } else {
+                operations.claimHubHandling(shipmentId, handling.id, actorUserId, OperationsAssignmentType.ORIGIN_HUB_HANDLING, hubId)
+            }
+            if (claimed.status != OperationsAssignmentStatus.COMPLETED) {
+                operations.completeAssignment(
+                    shipmentId = shipmentId,
+                    assignmentId = claimed.id,
+                    actorUserId = actorUserId,
+                    expectedType = OperationsAssignmentType.ORIGIN_HUB_HANDLING,
+                    hubId = hubId,
+                    note = "Parcels were handed in at the hub counter.",
+                )
+            }
+        } catch (exception: ShipmentApiException) {
+            log.warn(
+                "Origin handling of counter shipment {} was not finished ({}); an inbound scan can finish it.",
+                shipmentId,
+                exception.code,
+            )
+        }
+    }
+
+    /**
+     * A counter quote starts at the counter hub (it is priced from the hub's own ward) and ends at
+     * the recipient; the cash taken is the whole fee when the sender pays, nothing otherwise.
+     */
+    private fun validateCounterQuote(
+        quote: PricingQuoteSnapshot,
+        counter: CounterBooking,
+        recipient: NormalizedAddress,
+        shippingFeePayer: ShippingFeePayer,
+    ) {
+        if (quote.origin.primaryHubId != counter.hubId) {
+            throw InvalidShipmentRequestException(
+                "counter_quote_hub_mismatch",
+                "The selected quote must start at the counter's hub.",
+            )
+        }
+        val recipientMatches = recipient.provinceCode == quote.destination.provinceCode &&
+            recipient.wardCode == quote.destination.wardCode
+        if (!recipientMatches) {
+            throw InvalidShipmentRequestException(
+                "quote_location_mismatch",
+                "The recipient location must match the selected quote.",
+            )
+        }
+        val expectedCash = if (shippingFeePayer == ShippingFeePayer.SENDER) quote.fees.total else 0
+        if (counter.cashReceived != expectedCash) {
+            throw InvalidShipmentRequestException(
+                "counter_cash_mismatch",
+                "The cash taken at the counter must be $expectedCash VND for this shipment.",
+            )
+        }
     }
 
     /** Names the reason a merchant cannot create orders, most fundamental first, so it can be fixed. */
@@ -395,6 +561,27 @@ class CreateShipmentService(
         return HexFormat.of().withUpperCase().formatHex(MessageDigest.getInstance("SHA-256").digest(bytes))
     }
 
+    private fun counterFingerprint(
+        request: CreateCounterShipmentRequest,
+        sender: NormalizedAddress,
+        recipient: NormalizedAddress,
+        parcels: List<NormalizedParcel>,
+    ): String {
+        val bytes = objectMapper.writeValueAsBytes(
+            CounterShipmentRequestFingerprint(
+                hubId = request.hubId,
+                quoteId = request.quoteId,
+                sender = sender,
+                recipient = recipient,
+                shippingFeePayer = request.shippingFeePayer,
+                parcels = parcels,
+                note = request.note?.trim(),
+                cashReceived = request.cashReceived,
+            ),
+        )
+        return HexFormat.of().withUpperCase().formatHex(MessageDigest.getInstance("SHA-256").digest(bytes))
+    }
+
     private fun validateIdempotencyKey(value: String?): String {
         if (value == null || value.length !in 8..100 || value.any { it.code > 127 || (!it.isLetterOrDigit() && it !in "-_.:") }) {
             if (value == null) {
@@ -486,6 +673,12 @@ class CreateShipmentService(
     companion object {
         private const val MAXIMUM_TRACKING_CODE_ATTEMPTS = 5
         private const val INITIAL_ROUTE_REVISION = 1
+        private val HANDLING_TAKEN_STATUSES = setOf(
+            OperationsAssignmentStatus.ACCEPTED,
+            OperationsAssignmentStatus.IN_PROGRESS,
+            OperationsAssignmentStatus.COMPLETED,
+        )
+        private val log = LoggerFactory.getLogger(CreateShipmentService::class.java)
     }
 }
 
@@ -527,4 +720,37 @@ private data class ShipmentRequestFingerprint(
     val shippingFeePayer: ShippingFeePayer,
     val parcels: List<NormalizedParcel>,
     val note: String?,
+)
+
+/** What one booking needs, whether a shop created it on the web or staff booked it at a counter. */
+private class Booking(
+    val actorUserId: UUID,
+    val idempotencyKey: String,
+    val fingerprint: String,
+    val quoteId: UUID,
+    val sender: NormalizedAddress,
+    val recipient: NormalizedAddress,
+    val parcels: List<NormalizedParcel>,
+    val shippingFeePayer: ShippingFeePayer,
+    val note: String?,
+    val merchantId: UUID?,
+    val merchantReference: String?,
+    val pickupAddressId: UUID?,
+    val counter: CounterBooking?,
+)
+
+private data class CounterBooking(
+    val hubId: UUID,
+    val cashReceived: Long,
+)
+
+private data class CounterShipmentRequestFingerprint(
+    val hubId: UUID,
+    val quoteId: UUID,
+    val sender: NormalizedAddress,
+    val recipient: NormalizedAddress,
+    val shippingFeePayer: ShippingFeePayer,
+    val parcels: List<NormalizedParcel>,
+    val note: String?,
+    val cashReceived: Long,
 )

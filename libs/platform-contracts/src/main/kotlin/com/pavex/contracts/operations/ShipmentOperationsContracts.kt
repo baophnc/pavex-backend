@@ -45,6 +45,8 @@ data class PlanShipmentOperationsRequest(
     val destinationHubId: UUID,
     val routeLegs: List<ShipmentOperationsRouteLeg>,
     val priority: Int = 50,
+    /** The parcels were handed in at the origin hub's counter, so no courier pickup is planned. */
+    val startsAtOriginHub: Boolean = false,
 )
 
 data class ShipmentOperationsAssignmentSnapshot(
