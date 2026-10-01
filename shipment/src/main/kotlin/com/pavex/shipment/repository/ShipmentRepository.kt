@@ -9,7 +9,15 @@ import org.springframework.data.repository.query.Param
 import java.time.Instant
 import java.util.UUID
 
+interface ShipmentTrackingCode {
+    val id: UUID
+    val trackingCode: String
+}
+
 interface ShipmentRepository : JpaRepository<Shipment, UUID> {
+    @Query("select s.id as id, s.trackingCode as trackingCode from Shipment s where s.id in :ids")
+    fun findTrackingCodes(@Param("ids") ids: Collection<UUID>): List<ShipmentTrackingCode>
+
     @Query(
         """
         select s.id as id, s.routeRevision as routeRevision, s.createdByUserId as createdByUserId
