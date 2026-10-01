@@ -70,9 +70,52 @@ class ShiftRosterService(
     }
 
     fun run(now: Instant): RosterResult {
+        // Before ended shifts are closed: with full-day shifts, whoever worked through midnight goes on.
+        if (properties.fullDay) {
+            val carried = transactions.execute { carryOverFullDay(now) } ?: 0
+            if (carried > 0) log.info("Full-day shifts: {} people carried over to today's shift", carried)
+        }
         val checkedOut = transactions.execute { closeEndedShifts(now) } ?: 0
         val (shifts, entries) = transactions.execute { roster(now) } ?: (0 to 0)
         return RosterResult(shifts, entries, checkedOut)
+    }
+
+    /**
+     * Testing with full-day shifts: someone still checked in when their day's shift ended is moved
+     * to today's shift at the same hub, so jobs keep reaching them after midnight.
+     */
+    private fun carryOverFullDay(now: Instant): Int {
+        val members = jdbc.queryForList(
+            """
+            WITH moving AS (
+                SELECT old.id AS old_id, cur.id AS new_id, old.workforce_member_id, s.ends_at AS ended_at
+                FROM operations.workforce_shift_assignments old
+                JOIN operations.work_shifts s ON s.id = old.shift_id
+                JOIN operations.workforce_shift_assignments cur
+                  ON cur.workforce_member_id = old.workforce_member_id AND cur.status = 'SCHEDULED'
+                JOIN operations.work_shifts cs
+                  ON cs.id = cur.shift_id AND cs.hub_id = s.hub_id AND cs.status = 'SCHEDULED'
+                 AND cs.starts_at <= ? AND cs.ends_at > ?
+                WHERE old.status = 'CHECKED_IN' AND s.ends_at <= ?
+            ), ended AS (
+                UPDATE operations.workforce_shift_assignments a
+                SET status = 'CHECKED_OUT', checked_out_at = m.ended_at, status_changed_by_user_id = ?,
+                    note = COALESCE(a.note, 'Chuyển sang ca hôm sau'), updated_at = ?, version = a.version + 1
+                FROM moving m WHERE a.id = m.old_id
+                RETURNING a.id
+            )
+            UPDATE operations.workforce_shift_assignments a
+            SET status = 'CHECKED_IN', checked_in_at = ?, status_changed_by_user_id = ?, updated_at = ?, version = a.version + 1
+            FROM moving m WHERE a.id = m.new_id
+            RETURNING a.workforce_member_id
+            """.trimIndent(),
+            UUID::class.java,
+            Timestamp.from(now), Timestamp.from(now), Timestamp.from(now),
+            properties.actorUserId, Timestamp.from(now),
+            Timestamp.from(now), properties.actorUserId, Timestamp.from(now),
+        ).filterNotNull()
+        members.forEach { dispatchQueue.wake(it) }
+        return members.size
     }
 
     /** Checks out people who forgot to, so they can check in to their next shift. */
