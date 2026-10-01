@@ -47,8 +47,7 @@ data class CreateCounterShipmentRequest(
     val recipient: ShipmentAddressRequest,
     val shippingFeePayer: ShippingFeePayer,
     @field:Size(min = 1, max = 20)
-    @field:Valid
-    val parcels: List<ParcelContentsRequest>,
+    val parcels: List<@Valid ParcelContentsRequest>,
     @field:Size(max = 1000)
     val note: String? = null,
     @field:Min(0)
