@@ -19,4 +19,6 @@ class ShipmentControlTowerProperties {
     var highCaseSla: Duration = Duration.ofHours(2)
     var criticalCaseSla: Duration = Duration.ofMinutes(30)
     var requireSignatureOnDelivery: Boolean = false
+    /** How long computed alerts are reused, so paging and filtering do not rescan every shipment. */
+    var cacheTtl: Duration = Duration.ofSeconds(15)
 }
