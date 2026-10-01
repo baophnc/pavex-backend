@@ -342,3 +342,31 @@ data class CompleteCounterSettlementRequest(
     @field:Size(max = 500)
     val note: String? = null,
 )
+
+/**
+ * Cash finance approved in a period. The fee part is Pavex's revenue; the COD part is owed on to
+ * merchants (through settlement) or to walk-in senders (paid back at the counter).
+ */
+data class ApprovedCashResponse(
+    val from: java.time.LocalDate,
+    val to: java.time.LocalDate,
+    val count: Long,
+    val totalAmount: Long,
+    /** Shipping fees collected in cash: from recipients on delivery and from senders at the counter. */
+    val feeRevenue: Long,
+    val counterFeeRevenue: Long,
+    val deliveryFeeRevenue: Long,
+    val codOwedToMerchants: Long,
+    val codOwedToSenders: Long,
+    /**
+     * Fees merchants pay themselves for shipments closed in the period: no cash moves, they are
+     * netted in settlement. Null when the view is narrowed to one hub (merchants have no hub).
+     */
+    val merchantFeeRevenue: Long?,
+    /** The newest approved rows, at most [ITEM_LIMIT]; the totals above cover the whole period. */
+    val items: List<CashCollectionResponse>,
+) {
+    companion object {
+        const val ITEM_LIMIT = 300
+    }
+}

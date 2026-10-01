@@ -1,5 +1,6 @@
 package com.pavex.billing.controller
 
+import com.pavex.billing.dto.ApprovedCashResponse
 import com.pavex.billing.dto.CancelInvoiceRequest
 import com.pavex.billing.dto.CashCollectionResponse
 import com.pavex.billing.dto.CashRemittanceResponse
@@ -35,6 +36,7 @@ import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
+import java.time.LocalDate
 import java.util.UUID
 
 /** Finance: invoices, payments, COD settlement and payouts. */
@@ -98,6 +100,14 @@ class AdminCashController(
     private val cash: CashService,
     private val counterCash: CounterCashService,
 ) {
+    /** Approved cash of a period with its totals; the fee part is Pavex's revenue. */
+    @GetMapping("/approved")
+    fun approved(
+        @RequestParam from: LocalDate,
+        @RequestParam to: LocalDate,
+        @RequestParam(required = false) hubId: UUID?,
+    ): ApprovedCashResponse = cash.approvedHistory(from, to, hubId)
+
     /** COD paid back and return fees taken at hub counters, to reconcile with hub cash. */
     @GetMapping("/counter-settlements")
     fun counterSettlements(

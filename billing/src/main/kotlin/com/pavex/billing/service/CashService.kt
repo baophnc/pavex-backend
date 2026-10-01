@@ -1,18 +1,22 @@
 package com.pavex.billing.service
 
 import com.pavex.billing.client.OperationsClient
+import com.pavex.billing.dto.ApprovedCashResponse
 import com.pavex.billing.dto.CashCollectionResponse
 import com.pavex.billing.dto.CashRemittanceResponse
 import com.pavex.billing.entity.CashCollection
 import com.pavex.billing.entity.CashCollectionStatus
 import com.pavex.billing.entity.CashRemittance
 import com.pavex.billing.entity.CashRemittanceStatus
+import com.pavex.billing.entity.CashSource
+import com.pavex.billing.entity.CodPayee
 import com.pavex.billing.exception.BillingConflictException
 import com.pavex.billing.exception.BillingForbiddenException
 import com.pavex.billing.exception.BillingNotFoundException
 import com.pavex.billing.exception.InvalidBillingRequestException
 import com.pavex.billing.repository.CashCollectionRepository
 import com.pavex.billing.repository.CashRemittanceRepository
+import com.pavex.billing.repository.MerchantFeeChargeRepository
 import com.pavex.billing.service.InvoiceService.Companion.domain
 import com.pavex.contracts.operations.OperationsCapability
 import org.springframework.data.domain.PageRequest
@@ -20,6 +24,9 @@ import org.springframework.stereotype.Service
 import org.springframework.transaction.PlatformTransactionManager
 import org.springframework.transaction.support.TransactionTemplate
 import java.time.Clock
+import java.time.LocalDate
+import java.time.ZoneId
+import java.time.temporal.ChronoUnit
 import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
 import java.util.UUID
@@ -35,6 +42,7 @@ class CashService(
     private val remittances: CashRemittanceRepository,
     private val operations: OperationsClient,
     private val counterCash: CounterCashService,
+    private val feeCharges: MerchantFeeChargeRepository,
     transactionManager: PlatformTransactionManager,
     private val clock: Clock,
 ) {
@@ -120,6 +128,34 @@ class CashService(
         remittances.search(hubId, courierUserId, status, PageRequest.of(0, ADMIN_LIST_LIMIT)).map(CashRemittanceResponse::from)
     }
 
+    /** What finance approved between two Vietnamese calendar days, inclusive, with its totals. */
+    fun approvedHistory(from: LocalDate, to: LocalDate, hubId: UUID?): ApprovedCashResponse {
+        if (from.isAfter(to)) throw InvalidBillingRequestException("invalid_date_range", "from must not be after to.")
+        if (ChronoUnit.DAYS.between(from, to) > MAX_HISTORY_DAYS) {
+            throw InvalidBillingRequestException("date_range_too_long", "Choose at most $MAX_HISTORY_DAYS days.")
+        }
+        val start = from.atStartOfDay(VIETNAM).toInstant()
+        val until = to.plusDays(1).atStartOfDay(VIETNAM).toInstant()
+        return inReadTx {
+            val totals = collections.approvedTotals(start, until, hubId)
+            val fees = { source: CashSource -> totals.filter { it.source == source }.sumOf { it.feeAmount } }
+            ApprovedCashResponse(
+                from = from,
+                to = to,
+                count = totals.sumOf { it.count },
+                totalAmount = totals.sumOf { it.amount },
+                feeRevenue = totals.sumOf { it.feeAmount },
+                counterFeeRevenue = fees(CashSource.COUNTER),
+                deliveryFeeRevenue = fees(CashSource.DELIVERY),
+                codOwedToMerchants = totals.filter { it.codPayee == CodPayee.MERCHANT }.sumOf { it.codAmount },
+                codOwedToSenders = totals.filter { it.codPayee == CodPayee.SENDER }.sumOf { it.codAmount },
+                merchantFeeRevenue = if (hubId == null) feeCharges.totalClosedBetween(start, until) else null,
+                items = collections.findApproved(start, until, hubId, PageRequest.of(0, ApprovedCashResponse.ITEM_LIMIT))
+                    .map(CashCollectionResponse::from),
+            )
+        }
+    }
+
     fun approveRemittance(remittanceId: UUID, actorUserId: UUID): CashRemittanceResponse = inTx {
         val remittance = loadRemittance(remittanceId)
         if (remittance.status != CashRemittanceStatus.SUBMITTED) {
@@ -202,6 +238,8 @@ class CashService(
     companion object {
         private const val LIST_LIMIT = 200
         private const val ADMIN_LIST_LIMIT = 500
+        private const val MAX_HISTORY_DAYS = 366L
+        private val VIETNAM: ZoneId = ZoneId.of("Asia/Ho_Chi_Minh")
         private val DAY: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyyMMdd")
     }
 }
