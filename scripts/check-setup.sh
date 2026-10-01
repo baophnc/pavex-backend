@@ -41,11 +41,11 @@ if command -v openssl >/dev/null 2>&1; then
     private="$key_root/$issuer/private.pem"
     public="$key_root/$issuer/public.pem"
     if [[ ! -s "$private" || ! -s "$public" ]]; then
-      problem "Thiếu cặp khóa $issuer. Chạy bash scripts/dev-setup.sh."
+      problem "Thiếu cặp khóa $issuer. Chạy bash scripts/security-bootstrap.sh."
     elif ! openssl pkey -in "$private" -check -noout >/dev/null 2>&1; then
       problem "Khóa $issuer không hợp lệ; không tự xóa hay tạo đè."
     elif ! cmp -s <(openssl pkey -in "$private" -pubout 2>/dev/null) "$public"; then
-      problem "Khóa công khai $issuer không khớp khóa riêng. Chạy bash scripts/dev-setup.sh để phục hồi public key."
+      problem "Khóa công khai $issuer không khớp khóa riêng. Chạy bash scripts/security-bootstrap.sh để phục hồi public key."
     else
       ok "Cặp khóa $issuer hợp lệ, không thay đổi."
     fi
@@ -58,7 +58,7 @@ if command -v docker >/dev/null 2>&1; then
   elif ! running_services="$(cd "$repo_dir" && docker compose ps --status running --services)"; then
     problem "Không đọc được trạng thái Docker Compose của PAVEX."
   else
-    for service in auth-db identity-db partners-db network-db pricing-db shipment-db operations-db billing-db fleet-db gateway-redis rabbitmq mailpit; do
+    for service in auth-db identity-db partners-db network-db pricing-db shipment-db operations-db billing-db fleet-db gateway-redis rabbitmq mailpit minio; do
       if ! printf '%s\n' "$running_services" | grep -Fxq "$service"; then
         problem "$service chưa chạy. Chạy docker compose up -d --wait."
       fi

@@ -6,6 +6,7 @@ import com.pavex.shipment.config.ShipmentControlTowerProperties
 import com.pavex.shipment.dto.ShipmentControlAlertResponse
 import com.pavex.shipment.dto.ShipmentControlAlertSeverity
 import com.pavex.shipment.dto.ShipmentControlAlertType
+import com.pavex.shipment.dto.ShipmentControlTowerOverviewResponse
 import com.pavex.shipment.dto.ShipmentControlTowerSummaryResponse
 import com.pavex.shipment.entity.DeliveryAttempt
 import com.pavex.shipment.entity.DeliveryAttemptOutcome
@@ -29,6 +30,7 @@ import java.time.Clock
 import java.time.Duration
 import java.time.Instant
 import java.util.UUID
+import java.util.concurrent.ConcurrentHashMap
 
 @Service
 class ShipmentControlTowerService(
@@ -41,6 +43,25 @@ class ShipmentControlTowerService(
     private val metrics: ShipmentControlTowerMetrics,
     private val clock: Clock,
 ) {
+    private class CachedAlerts(val computedAt: Instant, val alerts: List<ShipmentControlAlertResponse>)
+
+    /** Alerts per scope and hub filter; everyone with the same scope shares one scan. */
+    private val cache = ConcurrentHashMap<String, CachedAlerts>()
+
+    @Transactional(readOnly = true)
+    fun overview(
+        authentication: Authentication,
+        type: ShipmentControlAlertType?,
+        severity: ShipmentControlAlertSeverity?,
+        hubId: UUID?,
+        search: String?,
+        page: Int,
+        pageSize: Int,
+    ): ShipmentControlTowerOverviewResponse {
+        val alerts = alertsFor(authentication, hubId)
+        return ShipmentControlTowerOverviewResponse(summarize(alerts), page(alerts, type, severity, search, page, pageSize))
+    }
+
     @Transactional(readOnly = true)
     fun search(
         authentication: Authentication,
@@ -50,11 +71,34 @@ class ShipmentControlTowerService(
         search: String?,
         page: Int,
         pageSize: Int,
-    ): PageResponse<ShipmentControlAlertResponse> {
+    ): PageResponse<ShipmentControlAlertResponse> =
+        page(alertsFor(authentication, hubId), type, severity, search, page, pageSize)
+
+    @Transactional(readOnly = true)
+    fun summary(authentication: Authentication, hubId: UUID?): ShipmentControlTowerSummaryResponse =
+        summarize(alertsFor(authentication, hubId))
+
+    private fun alertsFor(authentication: Authentication, hubId: UUID?): List<ShipmentControlAlertResponse> {
         val scope = access.resolve(authentication)
         requireHubScope(scope, hubId)
-        val all = buildAlerts(scope, hubId)
-        metrics.update(all)
+        val key = "${if (scope.global) "*" else scope.hubIds.sorted().joinToString(",")}|${hubId ?: ""}"
+        val now = clock.instant()
+        cache[key]?.takeIf { Duration.between(it.computedAt, now) < properties.cacheTtl }?.let { return it.alerts }
+        val alerts = buildAlerts(scope, hubId)
+        cache[key] = CachedAlerts(now, alerts)
+        cache.entries.removeIf { Duration.between(it.value.computedAt, now) >= properties.cacheTtl }
+        metrics.update(alerts)
+        return alerts
+    }
+
+    private fun page(
+        all: List<ShipmentControlAlertResponse>,
+        type: ShipmentControlAlertType?,
+        severity: ShipmentControlAlertSeverity?,
+        search: String?,
+        page: Int,
+        pageSize: Int,
+    ): PageResponse<ShipmentControlAlertResponse> {
         val needle = search?.trim()?.takeIf { it.isNotEmpty() }
         val filtered = all.asSequence()
             .filter { type == null || it.type == type }
@@ -70,25 +114,20 @@ class ShipmentControlTowerService(
         return PageResponse(items, pagination.page, pagination.pageSize, filtered.size.toLong())
     }
 
-    @Transactional(readOnly = true)
-    fun summary(authentication: Authentication, hubId: UUID?): ShipmentControlTowerSummaryResponse {
-        val scope = access.resolve(authentication)
-        requireHubScope(scope, hubId)
-        val alerts = buildAlerts(scope, hubId)
-        metrics.update(alerts)
-        return ShipmentControlTowerSummaryResponse(
-            total = alerts.size,
-            critical = alerts.count { it.severity == ShipmentControlAlertSeverity.CRITICAL },
-            warning = alerts.count { it.severity == ShipmentControlAlertSeverity.WARNING },
-            sentButNotArrived = alerts.count { it.type == ShipmentControlAlertType.SENT_BUT_NOT_ARRIVED },
-            missingArrivalScan = alerts.count { it.type == ShipmentControlAlertType.MISSING_ARRIVAL_SCAN },
-            arrivedNotOutForDelivery = alerts.count { it.type == ShipmentControlAlertType.ARRIVED_NOT_OUT_FOR_DELIVERY },
-            routeDeviation = alerts.count { it.type == ShipmentControlAlertType.ROUTE_DEVIATION },
-            shipmentStuck = alerts.count { it.type == ShipmentControlAlertType.SHIPMENT_STUCK },
-            caseOverdue = alerts.count { it.type == ShipmentControlAlertType.CASE_OVERDUE },
-            signatureConsistency = alerts.count { it.type == ShipmentControlAlertType.SIGNATURE_WITHOUT_DELIVERY || it.type == ShipmentControlAlertType.DELIVERED_WITHOUT_SIGNATURE },
-        )
-    }
+    private fun summarize(alerts: List<ShipmentControlAlertResponse>) = ShipmentControlTowerSummaryResponse(
+        total = alerts.size,
+        critical = alerts.count { it.severity == ShipmentControlAlertSeverity.CRITICAL },
+        warning = alerts.count { it.severity == ShipmentControlAlertSeverity.WARNING },
+        sentButNotArrived = alerts.count { it.type == ShipmentControlAlertType.SENT_BUT_NOT_ARRIVED },
+        missingArrivalScan = alerts.count { it.type == ShipmentControlAlertType.MISSING_ARRIVAL_SCAN },
+        arrivedNotOutForDelivery = alerts.count { it.type == ShipmentControlAlertType.ARRIVED_NOT_OUT_FOR_DELIVERY },
+        routeDeviation = alerts.count { it.type == ShipmentControlAlertType.ROUTE_DEVIATION },
+        shipmentStuck = alerts.count { it.type == ShipmentControlAlertType.SHIPMENT_STUCK },
+        caseOverdue = alerts.count { it.type == ShipmentControlAlertType.CASE_OVERDUE },
+        signatureConsistency = alerts.count { it.type == ShipmentControlAlertType.SIGNATURE_WITHOUT_DELIVERY || it.type == ShipmentControlAlertType.DELIVERED_WITHOUT_SIGNATURE },
+        info = alerts.count { it.severity == ShipmentControlAlertSeverity.INFO },
+        byType = ShipmentControlAlertType.entries.associateWith { type -> alerts.count { it.type == type } },
+    )
 
     private fun buildAlerts(scope: ShipmentControlTowerScope, requestedHubId: UUID?): List<ShipmentControlAlertResponse> {
         val now = clock.instant()
@@ -107,8 +146,6 @@ class ShipmentControlTowerService(
         val alerts = mutableListOf<ShipmentControlAlertResponse>()
 
         shipmentItems.forEach { shipment ->
-            shipment.parcels.size
-            shipment.events.size
             addMovementAlerts(alerts, shipment, now)
             addDeliveryProofAlerts(alerts, shipment, attemptsByShipment[shipment.id].orEmpty(), now)
             addRouteDeviationAlerts(alerts, shipment, signalsByShipment[shipment.id].orEmpty())
@@ -176,13 +213,13 @@ class ShipmentControlTowerService(
             scope.global -> emptySet()
             else -> scope.hubIds
         }
-        shipmentReads.findActiveCases(allowedHubs).forEach { item ->
+        val overdue = shipmentReads.findActiveCases(allowedHubs)
+            .filter { now.isAfter(it.createdAt.plus(caseSla(it.severity))) }
+        val trackingCodes = shipments.findAllById(overdue.mapNotNull { it.shipmentId }.toSet())
+            .associate { it.id to it.trackingCode }
+        overdue.forEach { item ->
             val dueAt = item.createdAt.plus(caseSla(item.severity))
-            if (!now.isAfter(dueAt)) return@forEach
-            val tracking = item.shipmentId?.let { id ->
-                val found = shipments.findById(id)
-                if (found.isPresent) found.get().trackingCode else null
-            }
+            val tracking = item.shipmentId?.let(trackingCodes::get)
             alerts += ShipmentControlAlertResponse(
                 key = "CASE_OVERDUE:${item.id}",
                 type = ShipmentControlAlertType.CASE_OVERDUE,

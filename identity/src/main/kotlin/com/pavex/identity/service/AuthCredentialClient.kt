@@ -1,5 +1,6 @@
 package com.pavex.identity.service
 
+import com.pavex.contracts.identity.CredentialEmailRequest
 import com.pavex.contracts.identity.CredentialInvitationRequest
 import com.pavex.identity.security.service.ServiceJwtIssuer
 import org.springframework.cloud.client.loadbalancer.LoadBalanced
@@ -28,9 +29,28 @@ class AuthCredentialClient(
     fun sendInvitation(
         userId: UUID,
         email: String,
+        staff: Boolean = false,
     ) = post(
         path = "/internal/v1/credentials/invitations/send",
-        body = CredentialInvitationRequest(userId, email),
+        body = CredentialInvitationRequest(userId, email, staff),
+    )
+
+    /** The account was deleted: its sign-in email becomes [placeholder] and it can no longer sign in. */
+    fun close(
+        userId: UUID,
+        placeholder: String,
+    ) = post(
+        path = "/internal/v1/credentials/$userId/close",
+        body = CredentialEmailRequest(placeholder),
+    )
+
+    /** The sign-in email changed; Auth signs the account out and asks the new address to confirm. */
+    fun changeEmail(
+        userId: UUID,
+        email: String,
+    ) = post(
+        path = "/internal/v1/credentials/$userId/email",
+        body = CredentialEmailRequest(email),
     )
 
     fun revokeSessions(

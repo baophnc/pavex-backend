@@ -4,6 +4,7 @@ import com.pavex.common.api.PageResponse
 import com.pavex.shipment.dto.ShipmentControlAlertResponse
 import com.pavex.shipment.dto.ShipmentControlAlertSeverity
 import com.pavex.shipment.dto.ShipmentControlAlertType
+import com.pavex.shipment.dto.ShipmentControlTowerOverviewResponse
 import com.pavex.shipment.dto.ShipmentControlTowerSummaryResponse
 import com.pavex.shipment.service.ShipmentControlTowerService
 import org.springframework.security.access.prepost.PreAuthorize
@@ -31,6 +32,18 @@ class ShipmentControlTowerController(
         @RequestParam(defaultValue = "50") pageSize: Int,
     ): PageResponse<ShipmentControlAlertResponse> =
         service.search(authentication, type, severity, hubId, search, page, pageSize)
+
+    @GetMapping
+    fun overview(
+        authentication: Authentication,
+        @RequestParam(required = false) type: ShipmentControlAlertType?,
+        @RequestParam(required = false) severity: ShipmentControlAlertSeverity?,
+        @RequestParam(required = false) hubId: UUID?,
+        @RequestParam(required = false) search: String?,
+        @RequestParam(defaultValue = "1") page: Int,
+        @RequestParam(defaultValue = "50") pageSize: Int,
+    ): ShipmentControlTowerOverviewResponse =
+        service.overview(authentication, type, severity, hubId, search, page, pageSize)
 
     @GetMapping("/summary")
     fun summary(

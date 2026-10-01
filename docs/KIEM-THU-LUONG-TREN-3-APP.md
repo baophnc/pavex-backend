@@ -1,5 +1,9 @@
 # Pavex — Kịch bản kiểm thử luồng trên 3 app
 
+> **Lưu ý (01/10/2026):** tài liệu này viết cho bộ seed toàn quốc cũ, đã được thay bằng seed-mini
+> (`scripts/seed-mini/README.md`). Các tài khoản và bưu cục bên dưới không còn tồn tại; kịch bản sẽ được viết lại
+> theo seed-mini khi làm lại phần vận đơn.
+
 > Cập nhật ngày 30/09/2026. Tài liệu này hướng dẫn kiểm thử **bằng giao diện** của cả 3 app, theo đúng thứ tự
 > nghiệp vụ thật. Kiến trúc, cách chạy và dữ liệu seed xem ở [PAVEX-TAI-LIEU-TONG-HOP.md](PAVEX-TAI-LIEU-TONG-HOP.md).
 

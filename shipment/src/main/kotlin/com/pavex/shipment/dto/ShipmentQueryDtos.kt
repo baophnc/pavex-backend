@@ -6,6 +6,7 @@ import com.pavex.shipment.entity.ShipmentStatus
 import jakarta.validation.constraints.NotBlank
 import jakarta.validation.constraints.Size
 import java.time.Instant
+import java.util.UUID
 
 /** Customer-facing list result. Internal UUIDs intentionally stay out of the API contract. */
 data class ShipmentPageResponse(
@@ -63,6 +64,37 @@ data class ShipmentTimelineEventResponse(
     val parcelCode: String?,
     val locationName: String?,
     val occurredAt: Instant,
+)
+
+/** A merchant's edit before pickup. Omitted fields stay as they are; "" clears note and reference. */
+data class UpdateShipmentRequest(
+    @field:Size(max = 120)
+    val recipientName: String? = null,
+    @field:Size(max = 20)
+    val recipientPhone: String? = null,
+    @field:Size(max = 500)
+    val recipientAddressLine: String? = null,
+    @field:Size(max = 1000)
+    val note: String? = null,
+    @field:Size(max = 100)
+    val merchantReference: String? = null,
+    /** Another saved pickup point in the same ward. */
+    val pickupAddressId: UUID? = null,
+)
+
+/** A staff edit, also after pickup: the recipient's contact details and the note, with a reason. */
+data class AdminUpdateShipmentRequest(
+    @field:Size(max = 120)
+    val recipientName: String? = null,
+    @field:Size(max = 20)
+    val recipientPhone: String? = null,
+    @field:Size(max = 500)
+    val recipientAddressLine: String? = null,
+    @field:Size(max = 1000)
+    val note: String? = null,
+    @field:NotBlank
+    @field:Size(max = 300)
+    val reason: String,
 )
 
 data class CancelShipmentRequest(

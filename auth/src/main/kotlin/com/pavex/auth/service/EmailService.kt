@@ -31,6 +31,8 @@ class EmailService(
     private val invitationUrl: String,
     @Value("\${pavex.email.management-password-reset-url:http://localhost:3001/reset-password}")
     private val managementPasswordResetUrl: String,
+    @Value("\${pavex.email.management-invitation-url:http://localhost:3001/accept-invite}")
+    private val managementInvitationUrl: String,
 ) {
 
     fun sendVerificationEmail(
@@ -168,66 +170,50 @@ class EmailService(
     fun sendInvitationEmail(
         to: String,
         rawToken: String,
+        portal: PasswordResetPortal = PasswordResetPortal.CLIENT,
     ) {
+        val encodedToken = URLEncoder.encode(rawToken, StandardCharsets.UTF_8)
+        val destination = when (portal) {
+            PasswordResetPortal.CLIENT -> invitationUrl
+            PasswordResetPortal.MANAGEMENT -> managementInvitationUrl
+        }
+        val invitationLink = "$destination?token=$encodedToken"
 
-        val invitationLink =
-            "$invitationUrl?token=$rawToken"
-
-        val message =
-            mailSender.createMimeMessage()
-
-        val helper =
-            MimeMessageHelper(
-                message,
-                true,
-                "UTF-8",
-            )
-
-        helper.setFrom(
-            from
-        )
-
-        helper.setTo(
-            to
-        )
-
-        helper.setSubject(
-            "You have been invited to PAVEX"
-        )
-
+        val message = mailSender.createMimeMessage()
+        val helper = MimeMessageHelper(message, true, "UTF-8")
+        helper.setFrom(from)
+        helper.setTo(to)
+        helper.setSubject("PAVEX — Lời mời kích hoạt tài khoản")
         helper.setText(
             """
-        <h2>You have been invited to PAVEX</h2>
+            <html>
+            <body>
+                <h2>Bạn được mời dùng PAVEX</h2>
 
-        <p>
-            An account has been created for you in PAVEX.
-        </p>
+                <p>
+                    Một tài khoản PAVEX vừa được tạo cho email này. Bấm vào liên kết dưới đây để
+                    kích hoạt tài khoản và đặt mật khẩu của bạn.
+                </p>
 
-        <p>
-            Use the link below to activate your account
-            and create your password.
-        </p>
+                <p>
+                    <a href="$invitationLink">
+                        Kích hoạt tài khoản
+                    </a>
+                </p>
 
-        <p>
-            <a href="$invitationLink">
-                Accept invitation
-            </a>
-        </p>
+                <p>
+                    Lời mời có hiệu lực trong 24 giờ.
+                </p>
 
-        <p>
-            This invitation expires in 24 hours.
-        </p>
-
-        <p>
-            If you were not expecting this invitation,
-            you can ignore this email.
-        </p>
-        """.trimIndent(),
+                <p>
+                    Nếu bạn không chờ lời mời này, hãy bỏ qua email.
+                </p>
+            </body>
+            </html>
+            """.trimIndent(),
             true,
         )
 
-        mailSender.send(
-            message
-        )
+        mailSender.send(message)
     }
 }

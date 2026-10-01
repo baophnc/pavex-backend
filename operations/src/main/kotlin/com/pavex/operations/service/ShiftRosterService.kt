@@ -28,6 +28,11 @@ data class ShiftRosterProperties(
     val actorUserId: UUID = UUID.fromString("00000000-0000-0000-0000-000000000001"),
     /** A check-in still open this long after its shift ended is checked out automatically. */
     val autoCheckOutAfter: Duration = Duration.ofHours(1),
+    /**
+     * For testing: one shift from 00:00 to 24:00 every day for everyone, no day off, so staff can
+     * check in and take jobs at any hour.
+     */
+    val fullDay: Boolean = false,
 )
 
 @Configuration
@@ -155,9 +160,9 @@ class ShiftRosterService(
         for ((key, members) in rosters) {
             val (hubId, drivers) = key
             val hubType = hubTypes[hubId] ?: continue
-            val slots = ShiftRotation.slots(hubType, members.size, drivers)
+            val slots = if (properties.fullDay) listOf(ShiftRotation.FULL_DAY) else ShiftRotation.slots(hubType, members.size, drivers)
             for (day in days) {
-                val plan = ShiftRotation.plan(members, slots.size, day)
+                val plan = if (properties.fullDay) mapOf(0 to members) else ShiftRotation.plan(members, slots.size, day)
                 for (slot in slots) {
                     val startsAt = day.atTime(slot.start).atZone(zone).toInstant()
                     val endsAt = startsAt.plus(slot.length)

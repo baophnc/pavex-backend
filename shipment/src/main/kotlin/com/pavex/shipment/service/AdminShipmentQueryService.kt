@@ -9,6 +9,7 @@ import com.pavex.shipment.dto.ShipmentLabelsResponse
 import com.pavex.common.security.HubAccessScope
 import com.pavex.shipment.entity.Parcel
 import com.pavex.shipment.entity.Shipment
+import com.pavex.shipment.entity.ShipmentAddressSnapshot
 import com.pavex.shipment.entity.ShipmentEvent
 import com.pavex.shipment.entity.ShipmentLifecycleStatus
 import com.pavex.shipment.entity.ShipmentStatus
@@ -24,6 +25,8 @@ import jakarta.persistence.criteria.Root
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.time.Instant
+import java.time.LocalDate
+import java.time.ZoneId
 import java.util.UUID
 
 @Service
@@ -41,7 +44,20 @@ class AdminShipmentQueryService(
         rawQuery: String?,
         rawCursor: String?,
         requestedLimit: Int?,
+        hubId: UUID? = null,
+        createdFrom: LocalDate? = null,
+        createdTo: LocalDate? = null,
     ): AdminShipmentPageResponse {
+        if (hubId != null && !scope.canAccessHub(hubId)) {
+            throw InvalidShipmentRequestException("hub_outside_scope", "The hub is outside your assigned hubs.")
+        }
+        if (createdFrom != null && createdTo != null && createdFrom.isAfter(createdTo)) {
+            throw InvalidShipmentRequestException("invalid_date_range", "createdFrom must not be after createdTo.")
+        }
+        val range = CreatedRange(
+            from = createdFrom?.atStartOfDay(VIETNAM)?.toInstant(),
+            until = createdTo?.plusDays(1)?.atStartOfDay(VIETNAM)?.toInstant(),
+        )
         val status = parseStatus(rawStatus)
         val lifecycleStatus = parseLifecycleStatus(rawLifecycleStatus)
         val search = rawQuery?.trim()?.takeIf(String::isNotEmpty)?.also {
@@ -62,14 +78,14 @@ class AdminShipmentQueryService(
         val totalCount = run {
             val countQuery = cb.createQuery(Long::class.java)
             val root = countQuery.from(Shipment::class.java)
-            val predicates = filters(cb, countQuery, root, scope, status, lifecycleStatus, merchantId, search)
+            val predicates = filters(cb, countQuery, root, scope, status, lifecycleStatus, merchantId, search, hubId, range)
             countQuery.select(cb.count(root)).where(*predicates.toTypedArray())
             entityManager.createQuery(countQuery).singleResult
         }
 
         val query = cb.createQuery(Shipment::class.java)
         val root = query.from(Shipment::class.java)
-        val predicates = filters(cb, query, root, scope, status, lifecycleStatus, merchantId, search).toMutableList()
+        val predicates = filters(cb, query, root, scope, status, lifecycleStatus, merchantId, search, hubId, range).toMutableList()
         if (cursor != null) {
             val createdAt = root.get<Instant>("createdAt")
             val trackingCode = root.get<String>("trackingCode")
@@ -108,6 +124,17 @@ class AdminShipmentQueryService(
             nextCursor = nextCursor,
             totalCount = totalCount,
         )
+    }
+
+    /** The shipment when [scope] may see it; outside the scope it does not exist. */
+    @Transactional(readOnly = true)
+    fun findInScope(scope: HubAccessScope, rawTrackingCode: String): Shipment {
+        val trackingCode = ShipmentCodeNormalizer.normalizeOrNull(rawTrackingCode)
+            ?.takeIf { !it.contains('-') }
+            ?: throw notFound()
+        return shipments.findByTrackingCodeIgnoreCase(trackingCode)
+            ?.takeIf { scope.isGlobal || touchesHubs(it, scope.hubIds) }
+            ?: throw notFound()
     }
 
     /** Printable parcel labels, e.g. for a shipment booked at this hub's counter. */
@@ -187,8 +214,13 @@ class AdminShipmentQueryService(
         lifecycleStatus: ShipmentLifecycleStatus?,
         merchantId: UUID?,
         search: String?,
+        hubId: UUID?,
+        range: CreatedRange,
     ): List<Predicate> = buildList {
         if (!scope.isGlobal) add(touchesHubs(cb, query, root, scope.hubIds))
+        if (hubId != null) add(touchesHubs(cb, query, root, setOf(hubId)))
+        range.from?.let { add(cb.greaterThanOrEqualTo(root.get("createdAt"), it)) }
+        range.until?.let { add(cb.lessThan(root.get("createdAt"), it)) }
         if (status != null) add(cb.equal(root.get<ShipmentStatus>("status"), status))
         if (lifecycleStatus != null) {
             add(cb.equal(root.get<ShipmentLifecycleStatus>("lifecycleStatus"), lifecycleStatus))
@@ -196,12 +228,16 @@ class AdminShipmentQueryService(
         if (merchantId != null) add(cb.equal(root.get<UUID>("merchantId"), merchantId))
         if (search != null) {
             val pattern = "%${search.lowercase()}%"
-            add(
-                cb.or(
-                    cb.like(cb.lower(root.get<String>("trackingCode")), pattern),
-                    cb.like(cb.lower(root.get<String>("merchantReference")), pattern),
-                ),
+            val matches = mutableListOf(
+                cb.like(cb.lower(root.get<String>("trackingCode")), pattern),
+                cb.like(cb.lower(root.get<String>("merchantReference")), pattern),
             )
+            // Recipient phones are stored normalized (0xxxxxxxxx), so search by their digits.
+            search.filter(Char::isDigit).takeIf { it.length >= 6 }?.let { digits ->
+                val phone = if (digits.startsWith("84")) "0" + digits.drop(2) else digits
+                matches += cb.like(root.get<ShipmentAddressSnapshot>("recipient").get("contactPhone"), "%$phone%")
+            }
+            add(cb.or(*matches.toTypedArray()))
         }
     }
 
@@ -225,15 +261,6 @@ class AdminShipmentQueryService(
             cb.exists(parcels),
             cb.exists(events),
         )
-    }
-
-    private fun findInScope(scope: HubAccessScope, rawTrackingCode: String): Shipment {
-        val trackingCode = ShipmentCodeNormalizer.normalizeOrNull(rawTrackingCode)
-            ?.takeIf { !it.contains('-') }
-            ?: throw notFound()
-        return shipments.findByTrackingCodeIgnoreCase(trackingCode)
-            ?.takeIf { scope.isGlobal || touchesHubs(it, scope.hubIds) }
-            ?: throw notFound()
     }
 
     private fun touchesHubs(shipment: Shipment, hubIds: Set<UUID>): Boolean =
@@ -284,6 +311,9 @@ class AdminShipmentQueryService(
         parcelCount = shipment.parcels.size,
         createdAt = shipment.createdAt,
         updatedAt = shipment.updatedAt,
+        cancellationReason = shipment.cancellationReason,
+        cancelledAt = shipment.cancelledAt,
+        cancelledAfterPickup = shipment.cancelledAfterPickup,
     )
 
     private fun notFound() = ShipmentNotFoundException(
@@ -297,3 +327,9 @@ class AdminShipmentQueryService(
         const val MAX_QUERY_LENGTH = 120
     }
 }
+
+/** Shipments created in [from, until), both open when null. */
+data class CreatedRange(val from: Instant?, val until: Instant?)
+
+/** Dates in filters are Vietnamese calendar days. */
+private val VIETNAM: ZoneId = ZoneId.of("Asia/Ho_Chi_Minh")

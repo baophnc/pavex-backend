@@ -41,6 +41,9 @@ data class AdminShipmentSummaryResponse(
     val parcelCount: Int,
     val createdAt: Instant,
     val updatedAt: Instant,
+    val cancellationReason: String? = null,
+    val cancelledAt: Instant? = null,
+    val cancelledAfterPickup: Boolean = false,
 )
 
 data class AdminShipmentDetailResponse(

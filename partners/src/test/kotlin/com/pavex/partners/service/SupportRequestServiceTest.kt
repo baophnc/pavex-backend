@@ -13,6 +13,13 @@ import com.pavex.partners.exception.ApiException
 import com.pavex.partners.repository.SupportRequestAttachmentRepository
 import com.pavex.partners.repository.SupportRequestEventRepository
 import com.pavex.partners.repository.SupportRequestRepository
+import com.pavex.storage.ObjectStorage
+import java.lang.reflect.Proxy
+import java.time.Instant
+import java.time.LocalDate
+import java.util.Optional
+import java.util.UUID
+import org.junit.jupiter.api.Assertions.assertArrayEquals
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertNull
@@ -20,18 +27,29 @@ import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import org.springframework.http.HttpStatus
-import java.lang.reflect.Proxy
-import java.time.Instant
-import java.time.LocalDate
-import java.util.Optional
-import java.util.UUID
 
 class SupportRequestServiceTest {
     private val requests = linkedMapOf<UUID, SupportRequest>()
     private val attachments = mutableListOf<SupportRequestAttachment>()
     private val events = mutableListOf<SupportRequestEvent>()
     private val published = mutableListOf<Any>()
-    private val service = SupportRequestService(requestRepository(), attachmentRepository(), eventRepository()) { published += it }
+    private val stored = mutableMapOf<String, ByteArray>()
+    private val storage = object : ObjectStorage {
+        override fun put(bucket: String, key: String, bytes: ByteArray, contentType: String) {
+            stored["$bucket/$key"] = bytes
+        }
+        override fun get(bucket: String, key: String): ByteArray? = stored["$bucket/$key"]
+        override fun delete(bucket: String, key: String) {
+            stored.remove("$bucket/$key")
+        }
+    }
+    private val service = SupportRequestService(
+        requestRepository(),
+        attachmentRepository(),
+        eventRepository(),
+        storage,
+        "pavex-attachments",
+    ) { published += it }
 
     @Test
     fun `a claim is saved with its evidence and a receipt is queued`() {
@@ -43,6 +61,9 @@ class SupportRequestServiceTest {
         assertEquals(receipt.code, saved.code)
         assertEquals(SupportRequestStatus.NEW, saved.status)
         assertEquals(saved.id, attachments.single().requestId)
+        // The file itself is in object storage; the database only points at it.
+        assertEquals(null, attachments.single().data)
+        assertArrayEquals(jpeg, stored["pavex-attachments/${attachments.single().objectKey}"])
         assertEquals(SupportRequestAction.SUBMITTED, events.single().action)
         assertEquals(receipt.code, (published.single() as SupportRequestSubmittedEvent).code)
     }

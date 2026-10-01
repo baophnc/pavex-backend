@@ -1,9 +1,14 @@
 package com.pavex.auth.service
 
 import com.pavex.auth.entity.UserAccount
+import com.pavex.auth.repository.ExternalIdentityRepository
 import com.pavex.auth.repository.UserAccountRepository
 import com.pavex.auth.security.OpaqueTokenService
 import com.pavex.contracts.identity.CredentialInvitationRequest
+import java.time.Duration
+import java.time.Instant
+import java.util.Optional
+import java.util.UUID
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
@@ -11,10 +16,6 @@ import org.junit.jupiter.api.Test
 import org.mockito.Mockito.RETURNS_DEFAULTS
 import org.mockito.Mockito.mock
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
-import java.time.Duration
-import java.time.Instant
-import java.util.Optional
-import java.util.UUID
 
 class StaffTemporaryPasswordTest {
     private val encoder = BCryptPasswordEncoder()
@@ -34,6 +35,8 @@ class StaffTemporaryPasswordTest {
         mock(InvitationService::class.java),
         mock(SessionService::class.java),
         mock(AdvisoryLockService::class.java),
+        mock(ExternalIdentityRepository::class.java),
+        mock(EmailVerificationService::class.java),
         "123456",
         Duration.ofHours(72),
     )

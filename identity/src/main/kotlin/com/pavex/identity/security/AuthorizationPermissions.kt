@@ -11,5 +11,6 @@ object AuthorizationPermissions {
         const val INVITE_USERS = "identity.users.invite"
         const val ASSIGN_ROLE = "identity.roles.assign"
         const val MANAGE_USER_STATUS = "identity.users.manage-status"
+        const val DELETE_USERS = "identity.users.delete"
     }
 }

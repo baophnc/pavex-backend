@@ -78,7 +78,7 @@ class ShipmentCase(
         this.assignedToUserId = assignedToUserId
         status = ShipmentCaseStatus.ASSIGNED
         touch(now)
-        addEvent("case.assigned", optionalText(note, 1000) ?: "Case assigned.", actorUserId, now,
+        addEvent("case.assigned", optionalText(note, 1000) ?: "Đã phân công người xử lý.", actorUserId, now,
             "{\"assignedToUserId\":\"$assignedToUserId\"}")
     }
 
@@ -90,7 +90,7 @@ class ShipmentCase(
         }
         status = ShipmentCaseStatus.INVESTIGATING
         touch(now)
-        addEvent("case.investigating", optionalText(note, 1000) ?: "Investigation started.", actorUserId, now)
+        addEvent("case.investigating", optionalText(note, 1000) ?: "Bắt đầu điều tra.", actorUserId, now)
     }
 
     fun addNote(actorUserId: UUID, note: String, now: Instant) {
@@ -116,7 +116,7 @@ class ShipmentCase(
         val parcelJson = this.parcelId?.let { "\"$it\"" } ?: "null"
         addEvent(
             "case.shipment-linked",
-            optionalText(note, 1000) ?: "Unidentified parcel linked to shipment.",
+            optionalText(note, 1000) ?: "Đã xác định vận đơn cho kiện.",
             actorUserId,
             now,
             "{\"shipmentId\":\"$shipmentId\",\"parcelId\":$parcelJson}",
@@ -139,7 +139,7 @@ class ShipmentCase(
         status = ShipmentCaseStatus.CLOSED
         closedAt = now
         touch(now)
-        addEvent("case.closed", optionalText(note, 1000) ?: "Case closed.", actorUserId, now)
+        addEvent("case.closed", optionalText(note, 1000) ?: "Đã đóng hồ sơ.", actorUserId, now)
     }
 
     private fun ensureMutable() {
@@ -246,7 +246,7 @@ class ShipmentCase(
             val parcelJson = item.parcelId?.let { "\"$it\"" } ?: "null"
             item.addEvent(
                 "case.created",
-                "$type case created.",
+                "Tạo hồ sơ ${if (type == ShipmentCaseType.PROBLEM_PARCEL) "kiện có vấn đề" else "kiện chưa xác định"}.",
                 actorUserId,
                 now,
                 "{\"type\":\"${type.name}\",\"severity\":\"${severity.name}\",\"hubId\":\"$hubId\",\"shipmentId\":$shipmentJson,\"parcelId\":$parcelJson}",

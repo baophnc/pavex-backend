@@ -57,6 +57,16 @@ class UserAccount(
     )
     var updatedAt: Instant = Instant.now(),
 
+    /** When and by whom the account was deleted; [deletedEmail] is the address it had then. */
+    @Column(name = "deleted_at")
+    var deletedAt: Instant? = null,
+
+    @Column(name = "deleted_by_user_id")
+    var deletedByUserId: UUID? = null,
+
+    @Column(name = "deleted_email", length = 255)
+    var deletedEmail: String? = null,
+
     @Version
     @Column(nullable = false)
     var version: Long = 0,
@@ -66,6 +76,8 @@ enum class AccountStatus {
     ACTIVE,
     SUSPENDED,
     DISABLED,
+    /** Deleted softly: kept for history, cannot sign in, hidden from the default lists. */
+    DELETED,
 }
 enum class ProfileStatus {
     INCOMPLETE,

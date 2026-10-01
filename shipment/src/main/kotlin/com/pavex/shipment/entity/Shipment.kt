@@ -369,6 +369,72 @@ class Shipment(
         )
     }
 
+    /**
+     * Applies [change] and records it on the timeline. Returns the Vietnamese names of the
+     * fields that changed; nothing is recorded when the change is a no-op.
+     */
+    fun updateDetails(change: ShipmentDetailsChange, actorUserId: UUID, reason: String?, now: Instant): List<String> {
+        check(lifecycleStatus == ShipmentLifecycleStatus.ACTIVE) { "Only active shipments can be edited." }
+        val changed = mutableListOf<String>()
+        var nextRecipient = recipient
+        change.recipientName?.let { requireEventText(it, 120, "recipientName") }?.takeIf { it != recipient.contactName }?.let {
+            nextRecipient = nextRecipient.copy(contactName = it)
+            changed += "tên người nhận"
+        }
+        change.recipientPhone?.let {
+            requireNotNull(com.pavex.common.contact.VietnamesePhone.normalize(it)) { "recipientPhone must be a valid Vietnamese phone number." }
+        }?.takeIf { it != recipient.contactPhone }?.let {
+            nextRecipient = nextRecipient.copy(contactPhone = it)
+            changed += "số điện thoại người nhận"
+        }
+        change.recipientAddressLine?.let { requireEventText(it, 500, "recipientAddressLine") }?.takeIf { it != recipient.addressLine }?.let {
+            nextRecipient = nextRecipient.copy(addressLine = it)
+            changed += "địa chỉ người nhận"
+        }
+        if (nextRecipient !== recipient) recipient = nextRecipient
+        change.note?.let { optionalText(it, 1000, "note") }.let { next ->
+            if (change.note != null && next != note) {
+                note = next
+                changed += "ghi chú"
+            }
+        }
+        change.merchantReference?.let { optionalText(it, 100, "merchantReference") }.let { next ->
+            if (change.merchantReference != null && next != merchantReference) {
+                merchantReference = next
+                changed += "mã đơn của shop"
+            }
+        }
+        val nextSender = change.sender
+        if (nextSender != null && change.pickupAddressId != null && change.pickupAddressId != pickupAddressId) {
+            require(nextSender.provinceCode == sender.provinceCode && nextSender.wardCode == sender.wardCode) {
+                "A new pickup point must be in the same ward; otherwise cancel and create the shipment again."
+            }
+            sender = nextSender
+            pickupAddressId = change.pickupAddressId
+            changed += "điểm lấy hàng"
+        }
+        if (changed.isEmpty()) return changed
+
+        val summary = "Cập nhật ${changed.joinToString(", ")}"
+        val withReason = reason?.trim()?.takeIf(String::isNotEmpty)?.let { "$summary. Lý do: $it" } ?: summary
+        events += ShipmentEvent(
+            shipment = this,
+            status = status,
+            code = "shipment.details-updated",
+            description = withReason.take(500),
+            actorUserId = actorUserId,
+            occurredAt = now,
+            recordedAt = now,
+        )
+        updatedAt = now
+        return changed
+    }
+
+    private fun optionalText(value: String, maxLength: Int, field: String): String? =
+        value.trim().takeIf(String::isNotEmpty)?.also {
+            require(it.length <= maxLength) { "$field must not exceed $maxLength characters." }
+        }
+
     fun markRouteReleased(releasedAt: Instant) {
         if (routingStatus == ShipmentRoutingStatus.RELEASED) return
         routingStatus = ShipmentRoutingStatus.RELEASED

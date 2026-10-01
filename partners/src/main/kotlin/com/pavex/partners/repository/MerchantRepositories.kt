@@ -48,6 +48,9 @@ interface MerchantPickupAddressRepository : JpaRepository<MerchantPickupAddress,
 }
 
 interface MerchantRoleOutboxRepository : JpaRepository<MerchantRoleOutboxMessage, UUID> {
+    /** The merchant's role change still waiting to reach Identity, if any. */
+    fun findFirstByMerchantIdAndProcessedAtIsNullOrderByOccurredAtDesc(merchantId: UUID): MerchantRoleOutboxMessage?
+
     /**
      * Claims due messages for this transaction. SKIP LOCKED lets several Partners
      * instances poll safely, and a message is only claimable when no older message for

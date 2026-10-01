@@ -21,6 +21,13 @@ class ShipmentAddressSnapshot(
     @Column(nullable = false, length = 160)
     var wardName: String = "",
 ) {
+    /** A new snapshot, so JPA sees the embedded address change as a whole. */
+    fun copy(
+        contactName: String = this.contactName,
+        contactPhone: String = this.contactPhone,
+        addressLine: String = this.addressLine,
+    ) = ShipmentAddressSnapshot(contactName, contactPhone, addressLine, provinceCode, provinceName, wardCode, wardName)
+
     companion object {
         fun create(
             contactName: String,

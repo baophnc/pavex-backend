@@ -20,6 +20,9 @@ import com.pavex.partners.exception.ApiException
 import com.pavex.partners.repository.SupportRequestAttachmentRepository
 import com.pavex.partners.repository.SupportRequestEventRepository
 import com.pavex.partners.repository.SupportRequestRepository
+import com.pavex.storage.ObjectKeys
+import com.pavex.storage.ObjectStorage
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.ApplicationEventPublisher
 import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Sort
@@ -47,6 +50,8 @@ class SupportRequestService(
     private val requests: SupportRequestRepository,
     private val attachments: SupportRequestAttachmentRepository,
     private val events: SupportRequestEventRepository,
+    private val storage: ObjectStorage,
+    @Value("\${pavex.storage.attachments-bucket}") private val bucket: String,
     private val publisher: ApplicationEventPublisher,
 ) {
     @Transactional
@@ -84,18 +89,29 @@ class SupportRequestService(
                 updatedAt = now,
             ),
         )
-        attachments.saveAll(
-            normalizedFiles.map { file ->
-                SupportRequestAttachment(
-                    requestId = saved.id,
-                    fileName = file.fileName,
-                    contentType = file.contentType,
-                    sizeBytes = file.bytes.size,
-                    data = file.bytes,
-                    createdAt = now,
-                )
-            },
-        )
+        val stored = mutableListOf<String>()
+        try {
+            attachments.saveAll(
+                normalizedFiles.map { file ->
+                    val id = UUID.randomUUID()
+                    val key = ObjectKeys.dated("support", id, now)
+                    storage.put(bucket, key, file.bytes, file.contentType)
+                    stored += key
+                    SupportRequestAttachment(
+                        id = id,
+                        requestId = saved.id,
+                        fileName = file.fileName,
+                        contentType = file.contentType,
+                        sizeBytes = file.bytes.size,
+                        objectKey = key,
+                        createdAt = now,
+                    )
+                },
+            )
+        } catch (exception: RuntimeException) {
+            stored.forEach { key -> runCatching { storage.delete(bucket, key) } }
+            throw exception
+        }
         events.save(SupportRequestEvent(requestId = saved.id, actorUserId = actorUserId, action = SupportRequestAction.SUBMITTED, toStatus = saved.status, createdAt = now))
         publisher.publishEvent(SupportRequestSubmittedEvent(saved.code, saved.kind, saved.email))
         return SupportRequestSubmittedResponse(saved.code, saved.kind, saved.createdAt)
@@ -139,9 +155,14 @@ class SupportRequestService(
     fun get(id: UUID): SupportRequestDetailResponse = find(id).toDetail()
 
     @Transactional(readOnly = true)
-    fun attachment(id: UUID, attachmentId: UUID): SupportRequestAttachment =
-        attachments.findByIdAndRequestId(attachmentId, id)
-            ?: throw ApiException(HttpStatus.NOT_FOUND, "support_attachment_not_found", "Attachment was not found.")
+    fun attachment(id: UUID, attachmentId: UUID): SupportAttachmentFile {
+        val item = attachments.findByIdAndRequestId(attachmentId, id) ?: throw attachmentNotFound()
+        val bytes = item.objectKey?.let { storage.get(bucket, it) } ?: item.data ?: throw attachmentNotFound()
+        return SupportAttachmentFile(item.fileName, item.contentType, bytes)
+    }
+
+    private fun attachmentNotFound() =
+        ApiException(HttpStatus.NOT_FOUND, "support_attachment_not_found", "Attachment was not found.")
 
     @Transactional
     fun changeStatus(id: UUID, actorUserId: UUID, body: ChangeSupportRequestStatus): SupportRequestDetailResponse = guarded {
@@ -247,3 +268,9 @@ class SupportRequestService(
         private val THROTTLE_WINDOW: Duration = Duration.ofHours(1)
     }
 }
+
+class SupportAttachmentFile(
+    val fileName: String,
+    val contentType: String,
+    val bytes: ByteArray,
+)

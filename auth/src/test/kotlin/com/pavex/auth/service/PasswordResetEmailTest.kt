@@ -20,7 +20,7 @@ class PasswordResetEmailTest {
             `when`(sender.createMimeMessage()).thenReturn(message)
             val email = EmailService(sender, "no-reply@pavex.local", "http://localhost:3000/verify-email",
                 "http://localhost:3000/reset-password", "http://localhost:3000/accept-invite",
-                "http://localhost:3001/reset-password")
+                "http://localhost:3001/reset-password", "http://localhost:3001/accept-invite")
             email.sendPasswordResetEmail("ngocmai@demo.pavex.local", "test-token", portal)
             verify(sender).send(message)
             message.saveChanges()

@@ -154,6 +154,7 @@ class AuthEmailConsumer(
                 emailService.sendInvitationEmail(
                     to = event.email,
                     rawToken = event.rawToken,
+                    portal = event.portal,
                 )
             }
 
