@@ -6,6 +6,12 @@ gateway:
     trusted-proxies: ${GATEWAY_TRUSTED_PROXIES:}
 
 spring:
+  # Settings from .env at the repository root (see .env.example), whether the service is started by
+  # scripts/dev-up.sh (from the root) or from the IDE (from the module folder). Variables exported in
+  # the shell still win over the file.
+  config:
+    import: "optional:file:./.env[.properties],optional:file:../.env[.properties],optional:file:../../.env[.properties]"
+
   application:
     name: api-gateway
 

@@ -5,7 +5,7 @@ import { fileURLToPath } from "node:url";
 import { join } from "node:path";
 
 const root = fileURLToPath(new URL("../../", import.meta.url));
-const modules = ["auth", "identity", "partners", "network", "pricing", "shipment", "operations", "platform/api-gateway", "platform/discovery-server"];
+const modules = ["auth", "identity", "partners", "network", "pricing", "shipment", "operations", "billing", "fleet", "platform/api-gateway", "platform/discovery-server"];
 
 test("each service has exactly one runtime application YAML without environment overlays", () => {
   for (const module of modules) {
@@ -44,7 +44,7 @@ test("Eureka clients advertise explicit loopback IP, never a machine-specific lo
 test("setup no longer requires a local-specific script or imported environment file", () => {
   assert.ok(existsSync(join(root, "scripts/security-bootstrap.sh")));
   assert.ok(!existsSync(join(root, "scripts/security-bootstrap-local.sh")));
-  const setup = readFileSync(join(root, "scripts/dev-setup.sh"), "utf8");
-  assert.match(setup, /exec bash "\$script_dir\/security-bootstrap\.sh"/);
-  assert.doesNotMatch(setup, /source |--spring.profiles/);
+  const up = readFileSync(join(root, "scripts/dev-up.sh"), "utf8");
+  assert.match(up, /bash "\$script_dir\/security-bootstrap\.sh"/);
+  assert.doesNotMatch(up, /source |--spring.profiles/);
 });
