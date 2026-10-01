@@ -1,6 +1,7 @@
 package com.pavex.auth.controller
 
 import com.pavex.auth.service.InternalCredentialService
+import com.pavex.contracts.identity.CredentialEmailRequest
 import com.pavex.contracts.identity.CredentialInvitationRequest
 import io.swagger.v3.oas.annotations.Hidden
 import jakarta.validation.Valid
@@ -34,6 +35,24 @@ class InternalCredentialController(
         @Valid @RequestBody request: CredentialInvitationRequest,
     ) {
         service.sendInvitation(request)
+    }
+
+    @PostMapping("/{userId}/close")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    fun close(
+        @PathVariable userId: UUID,
+        @Valid @RequestBody request: CredentialEmailRequest,
+    ) {
+        service.close(userId, request)
+    }
+
+    @PostMapping("/{userId}/email")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    fun changeEmail(
+        @PathVariable userId: UUID,
+        @Valid @RequestBody request: CredentialEmailRequest,
+    ) {
+        service.changeEmail(userId, request)
     }
 
     @PostMapping("/{userId}/revoke-sessions")

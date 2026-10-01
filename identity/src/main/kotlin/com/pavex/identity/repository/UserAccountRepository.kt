@@ -120,7 +120,8 @@ interface UserAccountRepository : JpaRepository<UserAccount, UUID> {
         )
 
         AND (
-            CAST(:status AS TEXT) IS NULL
+            -- Deleted accounts only show when asked for by status.
+            (CAST(:status AS TEXT) IS NULL AND u.status <> 'DELETED')
             OR u.status =
                 CAST(:status AS TEXT)
         )
@@ -220,7 +221,8 @@ interface UserAccountRepository : JpaRepository<UserAccount, UUID> {
         )
 
         AND (
-            CAST(:status AS TEXT) IS NULL
+            -- Deleted accounts only show when asked for by status.
+            (CAST(:status AS TEXT) IS NULL AND u.status <> 'DELETED')
             OR u.status =
                 CAST(:status AS TEXT)
         )

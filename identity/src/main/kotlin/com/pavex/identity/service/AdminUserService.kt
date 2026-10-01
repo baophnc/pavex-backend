@@ -1,18 +1,20 @@
 package com.pavex.identity.service
 
+import com.pavex.common.api.OneBasedPagination
+import com.pavex.common.api.PageResponse
 import com.pavex.identity.dto.admin.CreateUserRequest
 import com.pavex.identity.dto.admin.CreateUserResponse
 import com.pavex.identity.dto.admin.UpdateUserProfileRequest
 import com.pavex.identity.dto.admin.UserDetailResponse
 import com.pavex.identity.dto.admin.UserListItemResponse
-import com.pavex.common.api.PageResponse
-import com.pavex.common.api.OneBasedPagination
 import com.pavex.identity.entity.AccountStatus
 import com.pavex.identity.entity.Gender
 import com.pavex.identity.entity.ProfileStatus
 import com.pavex.identity.entity.UserAccount
 import com.pavex.identity.entity.UserProfile
 import com.pavex.identity.entity.UserRole
+import com.pavex.identity.exception.AccountDeletedException
+import com.pavex.identity.exception.ApiException
 import com.pavex.identity.exception.InvalidUserProfileException
 import com.pavex.identity.exception.LastActiveAdminException
 import com.pavex.identity.exception.RoleNotFoundException
@@ -25,6 +27,7 @@ import org.springframework.data.domain.PageRequest
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
+import org.springframework.web.client.HttpClientErrorException
 import org.springframework.web.server.ResponseStatusException
 import java.net.URI
 import java.time.Instant
@@ -201,6 +204,7 @@ class AdminUserService(
     @Transactional
     fun changeStatus(userId: UUID, newStatus: AccountStatus) {
         val account = findAccount(userId)
+        if (account.status == AccountStatus.DELETED || newStatus == AccountStatus.DELETED) throw AccountDeletedException()
         if (account.status == newStatus) return
         if (account.status == AccountStatus.ACTIVE && newStatus != AccountStatus.ACTIVE) {
             val adminRole = roles.findByCodeForUpdate(RoleService.ADMIN_ROLE) ?: throw RoleNotFoundException()
@@ -215,9 +219,67 @@ class AdminUserService(
         if (newStatus != AccountStatus.ACTIVE) authCredentialClient.revokeSessions(account.id)
     }
 
+    /**
+     * Deletes [userId] softly. The account stays for history (shipments and audit keep pointing at it),
+     * but it cannot sign in and its email is freed: it becomes a placeholder, the real address is kept
+     * in deletedEmail. Nobody deletes their own account, and the last active admin stays.
+     */
+    @Transactional
+    fun deleteUser(userId: UUID, actorUserId: UUID) {
+        val account = findAccount(userId)
+        if (account.status == AccountStatus.DELETED) return
+        if (userId == actorUserId) {
+            throw ApiException(HttpStatus.CONFLICT, "cannot_delete_own_account", "Bạn không thể tự xoá tài khoản của mình.")
+        }
+        if (account.status == AccountStatus.ACTIVE) {
+            val adminRole = roles.findByCodeForUpdate(RoleService.ADMIN_ROLE) ?: throw RoleNotFoundException()
+            if (userRoles.existsByUserIdAndRoleId(account.id, adminRole.id) &&
+                userRoles.countActiveUsersWithRoleCode(RoleService.ADMIN_ROLE) <= 1
+            ) throw LastActiveAdminException()
+        }
+        val now = Instant.now()
+        val placeholder = "deleted+${account.id}@pavex.invalid"
+        account.deletedEmail = account.email
+        account.email = placeholder
+        account.status = AccountStatus.DELETED
+        account.emailVerified = false
+        account.deletedAt = now
+        account.deletedByUserId = actorUserId
+        account.authorizationVersion += 1
+        account.updatedAt = now
+        accounts.save(account)
+        // Inside the transaction: if Auth cannot close the credential, the account is not deleted either.
+        authCredentialClient.close(account.id, placeholder)
+    }
+
+    /** An administrator changes the sign-in email; the account must confirm the new address again. */
+    @Transactional
+    fun changeEmail(userId: UUID, rawEmail: String) {
+        val account = findAccount(userId)
+        if (account.status == AccountStatus.DELETED) throw AccountDeletedException()
+        val email = rawEmail.trim().lowercase()
+        if (email == account.email) return
+        if (accounts.existsByEmail(email)) {
+            throw ApiException(HttpStatus.CONFLICT, "email_already_exists", "Email này đã được dùng cho tài khoản khác.")
+        }
+        account.email = email
+        account.emailVerified = false
+        account.authorizationVersion += 1
+        account.updatedAt = Instant.now()
+        accounts.save(account)
+        try {
+            authCredentialClient.changeEmail(account.id, email)
+        } catch (_: HttpClientErrorException.Conflict) {
+            throw ApiException(HttpStatus.CONFLICT, "email_already_exists", "Email này đã được dùng cho tài khoản khác.")
+        }
+    }
+
+    /** Staff are invited to the management portal; customers and shops to the customer portal. */
     fun inviteUser(userId: UUID) {
         val account = findAccount(userId)
-        authCredentialClient.sendInvitation(account.id, account.email)
+        val roleCodes = loadRolesByUser(listOf(account.id))[account.id].orEmpty()
+        val staff = roleCodes.any { it !in CUSTOMER_PORTAL_ROLES }
+        authCredentialClient.sendInvitation(account.id, account.email, staff)
     }
 
     private fun findAccount(userId: UUID): UserAccount =
@@ -263,4 +325,7 @@ class AdminUserService(
         if (!uri.isAbsolute || uri.scheme.lowercase() !in setOf("http", "https")) throw InvalidUserProfileException()
     }
 
+    private companion object {
+        val CUSTOMER_PORTAL_ROLES = setOf("CUSTOMER", "MERCHANT")
+    }
 }

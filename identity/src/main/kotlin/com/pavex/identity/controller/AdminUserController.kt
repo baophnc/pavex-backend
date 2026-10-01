@@ -30,6 +30,8 @@ import org.springframework.http.ResponseEntity
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken
 import org.springframework.web.bind.annotation.PostMapping
 import java.net.URI
+import org.springframework.web.bind.annotation.DeleteMapping
+import com.pavex.identity.dto.admin.ChangeUserEmailRequest
 @RestController
 @RequestMapping("/api/v1/users")
 @SecurityRequirement(name = "bearerAuth")
@@ -154,6 +156,32 @@ class AdminUserController(
             )
     }
 
+
+    /** Deletes the account softly: kept for history, cannot sign in, email freed for reuse. */
+    @PreAuthorize(
+        "hasAuthority('${AuthorizationPermissions.Identity.DELETE_USERS}')"
+    )
+    @DeleteMapping("/{userId}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    fun deleteUser(
+        authentication: JwtAuthenticationToken,
+        @PathVariable userId: UUID,
+    ) {
+        adminUserService.deleteUser(userId, UUID.fromString(authentication.token.subject))
+    }
+
+    /** Changes the sign-in email; the account confirms the new address through the email Auth sends. */
+    @PreAuthorize(
+        "hasAuthority('${AuthorizationPermissions.Identity.MANAGE_USER_PROFILE}')"
+    )
+    @PutMapping("/{userId}/email")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    fun changeEmail(
+        @PathVariable userId: UUID,
+        @Valid @RequestBody request: ChangeUserEmailRequest,
+    ) {
+        adminUserService.changeEmail(userId, request.email)
+    }
 
     @PreAuthorize(
         "hasAuthority('${AuthorizationPermissions.Identity.MANAGE_USER_STATUS}')"
