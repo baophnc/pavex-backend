@@ -55,10 +55,11 @@ class HubService(
     }
 
     @Transactional(readOnly = true)
-    fun listPublic(provinceCode: String?, search: String?, page: Int, pageSize: Int): PageResponse<PublicHubResponse> {
+    fun listPublic(provinceCode: String?, search: String?, page: Int, pageSize: Int, type: HubType? = null): PageResponse<PublicHubResponse> {
         val pagination = OneBasedPagination.normalize(page, pageSize)
         return hubs.searchPublic(
             HubStatus.ACTIVE,
+            type,
             provinceCode?.trim().orEmpty(),
             search?.trim().orEmpty(),
             PageRequest.of(pagination.zeroBasedPage, pagination.pageSize, Sort.by(Sort.Direction.ASC, "name")),

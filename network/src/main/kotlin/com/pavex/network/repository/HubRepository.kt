@@ -42,6 +42,7 @@ interface HubRepository : JpaRepository<Hub, UUID> {
         SELECT h FROM Hub h
         WHERE h.status = :activeStatus
           AND h.publicVisible = true
+          AND (:type IS NULL OR h.type = :type)
           AND (:provinceCode = '' OR h.provinceCode = :provinceCode)
           AND (:search = '' OR
                LOWER(h.code) LIKE LOWER(CONCAT('%', :search, '%')) OR
@@ -51,6 +52,7 @@ interface HubRepository : JpaRepository<Hub, UUID> {
     )
     fun searchPublic(
         @Param("activeStatus") activeStatus: HubStatus,
+        @Param("type") type: HubType?,
         @Param("provinceCode") provinceCode: String,
         @Param("search") search: String,
         pageable: Pageable,
