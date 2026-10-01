@@ -41,6 +41,13 @@ object ShipmentVietnameseText {
             "Shipment created and awaiting pickup." -> return "Đã tạo đơn hàng, chờ nhân viên lấy hàng."
             "Shipment lifecycle completed." -> return "Đã hoàn tất vòng đời đơn hàng."
             "Parcel delivered with proof." -> return "Đã giao hàng và ghi nhận bằng chứng giao nhận."
+            // Case events written before they were recorded in Vietnamese.
+            "PROBLEM_PARCEL case created." -> return "Tạo hồ sơ kiện có vấn đề."
+            "UNIDENTIFIED_PARCEL case created." -> return "Tạo hồ sơ kiện chưa xác định."
+            "Case assigned." -> return "Đã phân công người xử lý."
+            "Investigation started." -> return "Bắt đầu điều tra."
+            "Unidentified parcel linked to shipment." -> return "Đã xác định vận đơn cho kiện."
+            "Case closed." -> return "Đã đóng hồ sơ."
         }
         legacyScan.matchEntire(description)?.let { match ->
             val status = ParcelStatus.entries.find { it.name == match.groupValues[1] }

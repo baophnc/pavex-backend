@@ -406,7 +406,7 @@ class ShipmentCaseService(
         closedAt = item.closedAt,
         version = item.version,
         events = item.events.sortedWith(compareBy({ it.occurredAt }, { it.id })).map {
-            ShipmentCaseEventResponse(it.id, it.code, it.description, it.actorUserId, it.occurredAt, it.dataJson)
+            ShipmentCaseEventResponse(it.id, it.code, ShipmentVietnameseText.event(it.description), it.actorUserId, it.occurredAt, it.dataJson)
         },
     )
 
