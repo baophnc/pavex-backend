@@ -98,7 +98,7 @@ class AdminSupportRequestController(
             )
             .header("X-Content-Type-Options", "nosniff")
             .cacheControl(CacheControl.noStore())
-            .body(file.data)
+            .body(file.bytes)
     }
 
     @PostMapping("/{id}/status")

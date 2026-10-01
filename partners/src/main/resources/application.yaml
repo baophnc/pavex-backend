@@ -1,5 +1,11 @@
 # LOCAL DEVELOPMENT ONLY. Do not deploy with these credentials or bootstrap settings.
 spring:
+  # Settings from .env at the repository root (see .env.example), whether the service is started by
+  # scripts/dev-up.sh (from the root) or from the IDE (from the module folder). Variables exported in
+  # the shell still win over the file.
+  config:
+    import: "optional:file:./.env[.properties],optional:file:../.env[.properties],optional:file:../../.env[.properties]"
+
   application:
     name: partners-service
 
@@ -74,6 +80,12 @@ partners:
 
 pavex:
   keys-dir: ${user.home}/.pavex/keys
+  # Support request attachments are kept in MinIO (compose service "minio"), not in the database.
+  storage:
+    endpoint: ${MINIO_ENDPOINT:http://localhost:9000}
+    access-key: ${MINIO_ACCESS_KEY:pavex}
+    secret-key: ${MINIO_SECRET_KEY:pavex-minio}
+    attachments-bucket: ${MINIO_ATTACHMENTS_BUCKET:pavex-attachments}
   gateway-url: ${PAVEX_PUBLIC_BASE_URL:http://localhost:8080}
 
 eureka:

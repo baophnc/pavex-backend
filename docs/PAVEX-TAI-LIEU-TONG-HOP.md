@@ -147,7 +147,6 @@ User/mật khẩu của mọi database: `pavex` / `pavex`.
 ### 2.2 Cài đặt cần có
 
 - Java 21, Docker Desktop, `curl`, OpenSSL (backend)
-- Python 3 (sinh dữ liệu seed toàn quốc)
 - Node.js ≥ 20.9 và pnpm 11 (hai frontend)
 - Tuỳ chọn: IntelliJ IDEA (repo backend có sẵn cấu hình chạy trong `.run/`)
 
@@ -160,9 +159,10 @@ Mọi lệnh chạy trong thư mục `pavex-backend`.
 #### 2.3.1 Lần đầu trên một máy
 
 ```bash
-bash scripts/dev-setup.sh          # tạo cặp khoá JWT cho từng service trong ~/.pavex/keys
-docker compose up -d --wait        # 8 PostgreSQL + Redis + RabbitMQ + Mailpit
-bash scripts/check-setup.sh        # kiểm tra khoá, container và module
+cp .env.example .env               # cấu hình riêng của máy (Google, email thật, payOS); để nguyên cũng chạy được
+./scripts/dev-up.sh                # tạo khoá JWT, bật container, build và chạy mọi service
+./scripts/seed-mini/apply.sh       # nạp dữ liệu test nhỏ: 2 bưu cục, 14 tài khoản (mục 2.5)
+bash scripts/check-setup.sh        # khi chạy không lên: kiểm tra khoá, container và module
 ```
 
 #### 2.3.2 Chạy toàn bộ bằng một lệnh (khuyến nghị)
@@ -172,7 +172,7 @@ bash scripts/check-setup.sh        # kiểm tra khoá, container và module
 ```
 
 Script này làm lần lượt:
-1. Nạp `.env` ở thư mục gốc nếu có (xem mục 2.8), tạo khoá JWT còn thiếu và bật container (`docker compose up -d --wait`).
+1. Tạo khoá JWT còn thiếu và bật container (`docker compose up -d --wait`): 9 PostgreSQL, Redis, RabbitMQ, Mailpit, MinIO.
 2. Build lại toàn bộ: `./mvnw -DskipTests clean install`. Vì vậy mọi thay đổi code đều được áp dụng.
 3. Chạy các service theo thứ tự: Discovery → Identity → Auth → Partners → Network → Pricing →
    Operations → Shipment → Billing → Fleet → Gateway. Mỗi service phải báo healthy thì mới chạy service tiếp theo.
@@ -198,7 +198,8 @@ Nếu chỉ muốn xem dữ liệu mà không chạy app, bật riêng database:
 #### 2.3.4 Chạy từng service bằng IntelliJ
 
 1. Reload Maven project.
-2. Chạy các cấu hình **PAVEX - …** trong `.run/` theo đúng thứ tự ở mục 2.3.2.
+2. Chạy các cấu hình **PAVEX - …** trong `.run/` theo đúng thứ tự ở mục 2.3.2. Mỗi service tự đọc `.env` ở thư mục gốc,
+   nên không cần plugin EnvFile.
 3. Đợi Identity và Auth khởi động xong rồi mới đăng nhập.
 
 `.run/` hiện **chưa có cấu hình cho Billing và Fleet**. Chạy hai service này bằng `dev-up.sh`, hoặc
@@ -224,11 +225,10 @@ vận hành miền và tài xế để token nhận quyền mới.
 | Hiện tượng | Cách xử lý |
 |---|---|
 | Gateway báo `UnknownHostException` khi đăng nhập | Dừng các JVM, chạy lại Discovery trước để xoá registry cũ, rồi chạy lại các service và Gateway |
-| `dev-up.sh` dừng trước Auth, yêu cầu cutover | Chạy `./scripts/cutover-auth-identity.sh --apply` rồi chạy lại `./scripts/dev-up.sh` |
 | Cổng đang bị chiếm | Chạy `./scripts/dev-down.sh`, hoặc `lsof -i :<cổng>` để tìm tiến trình cũ |
-| Không nhận được email | Mở Mailpit ở http://localhost:8025; không có email thật nào được gửi ra ngoài |
+| Không nhận được email | Mở Mailpit ở http://localhost:8025. Email chỉ ra hộp thư thật khi bạn bật khối `MAIL_*` trong `.env` |
 
-**Không xoá thư mục `.local/`:** trong đó có nhật ký seed, backup và manifest tài khoản.
+**Không xoá thư mục `.local/`:** trong đó có log của từng service và bản sao lưu DB trước mỗi lần seed (xem `scripts/README.md`).
 
 #### 2.3.7 Giới hạn tần suất theo IP khi deploy
 
@@ -311,158 +311,16 @@ flutter run                  # chọn iPhone, simulator hoặc Android
 
 ---
 
-### 2.5 Dữ liệu seed hiện có
+### 2.5 Dữ liệu seed
 
-#### 2.5.1 Nguồn gốc
+Dữ liệu test là **seed-mini**: 2 bưu cục (Ba Đình, Hà Nội và Tân Sơn Hoà, TP.HCM) nối bằng tuyến trục, 14 tài khoản
+`@pavex.test` cho mọi vai trò (mật khẩu chung), 1 cửa hàng đã duyệt và 1 cửa hàng chờ duyệt. Không có sẵn vận đơn:
+tạo khi test.
 
-- **Mạng lưới** (3.358 hub, tuyến, lịch chạy): từ `scripts/seed-nationwide/generate.py`, nạp ngày 25/09/2026.
-  Mỗi phường/xã có một bưu cục.
-- **Nhân sự:** từ `scripts/seed-nationwide/staff.py`, nạp lại ngày 29/09/2026 bằng `apply.sh --staff-only`.
-- **Không seed** shop, khách hàng và vận đơn: tự tạo khi test (mục 2.5.9).
-- **Bảng giá:** bảng giá demo do Pricing tự tạo khi khởi động (`PRICING_DEMO_SEED_ENABLED=true`, mặc định bật).
-- **Tra cứu toàn bộ nhân sự:**
-  - `.local/seed/nationwide/staff.csv` (mở bằng Excel);
-  - `.local/seed/nationwide/staff.json`.
-  - Có đủ email, họ tên, chức vụ, mã nhân viên, SĐT, nơi làm, ngày nghỉ trong tuần, bưu cục trên tuyến.
-- **Giữ nguyên khi seed lại:** `admin@pavex.com` và các tài khoản tự đăng ký (ví dụ Gmail của bạn). Tài khoản giữ lại
-  bị gỡ vai trò MERCHANT, vì hồ sơ shop đã xoá.
+Danh sách tài khoản, mật khẩu và chi tiết mạng lưới: [`scripts/seed-mini/README.md`](../scripts/seed-mini/README.md).
 
-#### 2.5.2 Mật khẩu
-
-- **Mọi tài khoản seed** dùng chung một mật khẩu dev, in ở cuối `apply.sh` và nằm trong trường `password` của `staff.json`.
-- **`admin@pavex.com`**: mật khẩu ở mục `bootstrap-admin` trong `identity/src/main/resources/application.yaml` (và `auth/...`).
-
-Đây là thông tin đăng nhập chỉ dùng cho môi trường dev. Tài liệu này cố ý không chép mật khẩu ra.
-
-#### 2.5.3 Số liệu
-
-Tổng **17.402 tài khoản nhân sự**, 17.378 người có hồ sơ nhân sự vận hành, 452 tuyến xe gom.
-
-| Chức vụ | Số người |
-|---|---:|
-| Quản trị hệ thống | 2 |
-| Quản lý vận hành miền Bắc | 2 |
-| Quản lý vận hành miền Trung | 2 |
-| Quản lý vận hành miền Nam | 2 |
-| Kinh doanh & CSKH | 10 |
-| Kế toán | 6 |
-| Giám đốc trung tâm | 3 |
-| Phó giám đốc trung tâm | 6 |
-| Trưởng kho | 34 |
-| Phó kho | 34 |
-| Nhân viên khai thác | 889 |
-| Trưởng bưu cục | 3.320 |
-| Nhân viên bưu cục | 2.050 |
-| Bưu tá | 9.950 |
-| Tài xế tuyến bưu cục | 904 |
-| Tài xế trục | 127 |
-| Tài xế liên vùng | 61 |
-
-| Trạng thái | Số người | Ý nghĩa |
-|---|---:|---|
-| Đang làm | 15.834 | Đăng nhập, có ca, nhận việc bình thường |
-| Nghỉ phép | 858 | Có ca nhưng đang tắt Sẵn sàng; check-in thì nhận việc lại |
-| Mới mời, chưa kích hoạt | 180 | Chưa đăng nhập được; quản trị gửi lời mời để họ tự đặt mật khẩu |
-| Tạm khoá | 161 | Tài khoản và hồ sơ nhân sự bị tạm ngưng, không đăng nhập, không có ca |
-| Đã nghỉ việc | 369 | Tài khoản bị vô hiệu, không còn thuộc bưu cục nào |
-
-#### 2.5.4 Email và mã nhân viên
-
-Email theo mẫu **`<tên>.<họ + đệm>.<chức vụ>@pavex.com`**, viết thường không dấu. Người trùng tên thì thêm số vào
-cuối, ví dụ `hung.phancong.tbc@pavex.com` và `hung.phancong.tbc2@pavex.com`. Mã nhân viên dạng `PVX000123`, tăng dần.
-
-| Viết tắt | Chức vụ | | Viết tắt | Chức vụ |
-|---|---|---|---|---|
-| `qtht` | Quản trị hệ thống | | `tk` / `pk` | Trưởng kho / Phó kho tỉnh |
-| `qlvh` | Quản lý vận hành miền | | `nvkt` | Nhân viên khai thác (kho tỉnh, trung tâm) |
-| `cskh` | Kinh doanh & CSKH | | `tbc` | Trưởng bưu cục |
-| `kt` | Kế toán | | `nvbc` | Nhân viên bưu cục |
-| `gdtt` / `pgdtt` | Giám đốc / Phó giám đốc trung tâm miền | | `bt` | Bưu tá |
-| | | | `tx` | Tài xế (tuyến, trục, liên vùng) |
-
-`pavex.com` là tên miền của đơn vị khác và hiện không nhận thư. Thư gửi tới tài khoản seed sẽ bị trả về, nhưng vẫn nên
-tránh bấm "gửi lời mời" hay "quên mật khẩu" cho tài khoản seed khi `.env` đang bật gửi mail thật.
-
-#### 2.5.5 Quy mô từng nơi
-
-| Nơi | Số nơi | Trưởng | Nhân viên | Bưu tá |
-|---|---:|---|---|---|
-| Bưu cục phường ở TP lớn (Hà Nội, TP.HCM, Hải Phòng, Đà Nẵng, Cần Thơ) | 263 | 1 | 2 | 6–10 |
-| Bưu cục phường ở tỉnh khác | 434 | 1 | 1 | 3–5 |
-| Bưu cục xã | 2.146 | 1 | 0–1 (trưởng tự quét hàng) | 2–3 |
-| Bưu cục xã vùng xa | 465 | 1 | 0 | 1–2 |
-| Bưu cục đặc khu, hải đảo | 12 | 1 | 0 | 1–2 |
-| Kho tỉnh | 34 | trưởng + phó | 10–40, theo số bưu cục phục vụ | — |
-| Trung tâm miền | 3 | giám đốc + 2 phó | 66–80 | — |
-| Văn phòng | — | Quản trị 2, Vận hành miền 6, Kinh doanh & CSKH 10, Kế toán 6 | | |
-
-Họ tên theo tỉ lệ họ thực tế và vùng miền. Giới tính và tuổi theo công việc (bưu tá 20–40, tài xế 25–55…). SĐT đúng
-đầu số các nhà mạng, không trùng.
-
-#### 2.5.6 Tài xế và tuyến xe
-
-- **Tài xế tuyến bưu cục** thuộc đội xe của kho tỉnh.
-  - Bưu cục chính của họ là kho tỉnh, nhưng họ cũng là thành viên của mọi bưu cục trên tuyến.
-  - Mỗi tuyến gom 6 bưu cục liền nhau ở TP lớn, 8 bưu cục ở tỉnh khác. Mỗi tuyến có 2 tài xế.
-- **Tài xế trục** chạy kho tỉnh ↔ trung tâm miền: thuộc kho tỉnh, và là thành viên của trung tâm miền.
-- **Tài xế liên vùng** thuộc trung tâm miền.
-- **Luật giao việc (Operations):**
-  - Tài xế check-in ca ở kho tỉnh là nhận được việc trung chuyển ở mọi hub mình là thành viên.
-  - Các nhân viên khác vẫn phải check-in đúng tại hub có việc.
-  - Ví dụ: tài xế `dung.nguyendinh.tx@pavex.com` thuộc KHO-HN và chạy tuyến có BC-HN-BADINH (6 bưu cục).
-
-#### 2.5.7 Ca làm tự động
-
-Operations tự giữ sẵn ca cho **7 ngày tới**. Việc này chạy khi khởi động và mỗi giờ một lần, nên không phải tạo ca bằng tay.
-
-- **Mỗi nơi có mấy ca:**
-  - Bưu cục nhỏ (dưới 5 người): 1 ca hành chính 07:30–17:30.
-  - Bưu cục lớn: ca sáng 07:00–15:00 và ca chiều 13:00–21:00.
-  - Kho tỉnh và trung tâm miền: 3 ca 06–14, 14–22, 22–06.
-  - Tài xế chỉ có hai ca ban ngày: 06–14 và 14–22.
-- **Ai làm ca nào:**
-  - Mỗi người làm 6 ngày, nghỉ 1 ngày cố định trong tuần (cột "Ngày nghỉ" trong `staff.csv`).
-  - Ca sáng và ca chiều đổi nhau theo từng tuần.
-  - Ca nào của hub nào cũng luôn có người.
-- **Tự check-out:** ai quên check-out thì hệ thống tự check-out sau khi ca kết thúc 1 giờ.
-- **Người mới:** nhân sự thêm vào sẽ tự có ca từ lần chạy kế tiếp.
-- **Tắt tính năng:** đặt `OPERATIONS_SHIFT_ROSTER_ENABLED=false`.
-
-Để test: đăng nhập app hiện trường bằng một tài khoản đang có ca, bấm **Check-in** ở tab Hôm nay, rồi bật **Sẵn sàng**.
-
-#### 2.5.8 Tài khoản thử tiêu biểu
-
-Luôn ở trạng thái Đang làm. Ngày nghỉ là ngày không có ca trong tuần.
-
-| Vai trò | Đăng nhập ở | Email | Họ tên | Ngày nghỉ | Việc nên thử |
-|---|---|---|---|---|---|
-| Quản trị | Management :3001 | `hung.phananh.qtht@pavex.com` | Phan Anh Hùng | — | Toàn quyền (ngoài `admin@pavex.com`) |
-| Vận hành miền Bắc | Management :3001 | `huong.tranminh.qlvh@pavex.com` | Trần Minh Hương | — | Vận đơn, phân công, giám sát, xe trung chuyển toàn quốc |
-| Vận hành miền Nam | Management :3001 | `hanh.dangthu.qlvh@pavex.com` | Đặng Thu Hạnh | — | Như trên |
-| Kinh doanh & CSKH | Management :3001 | `chau.vuminh.cskh@pavex.com` | Vũ Minh Châu | — | Duyệt shop mới, bảng giá, yêu cầu hỗ trợ |
-| Kế toán | Management :3001 | `chi.nguyenthi.kt@pavex.com` | Nguyễn Thị Chi | — | Duyệt tiền nộp, đối soát, hoá đơn |
-| Giám đốc TT miền Bắc | Management :3001 | `hai.nguyendinh.gdtt@pavex.com` | Nguyễn Đình Hải | Chủ nhật | Nhân sự, ca làm, phân công tại TT-MIENBAC |
-| Trưởng kho Hà Nội | Management :3001 | `vy.hoangthuy.tk@pavex.com` | Hoàng Thùy Vy | Thứ Sáu | Kho KHO-HN, xe trung chuyển đi/đến kho |
-| Nhân viên khai thác KHO-HN | App hiện trường | `quang.nguyenthanh.nvkt4@pavex.com` | Nguyễn Thanh Quang | Thứ Tư | Nhập kho, kiểm kho, xuất kho |
-| Tài xế tuyến (Ba Đình) | App hiện trường | `dung.nguyendinh.tx@pavex.com` | Nguyễn Đình Dũng | Chủ nhật | Check-in ca ở KHO-HN, nhận chuyến gom hàng các bưu cục trên tuyến, tab Chuyến gửi GPS |
-| Tài xế tuyến (Ba Đình), người thứ hai | App hiện trường | `phong.nguyenxuan.tx2@pavex.com` | Nguyễn Xuân Phong | Thứ Ba | Cùng tuyến, thường khác ngày nghỉ |
-| Tài xế trục Hà Nội | App hiện trường | `tam.trinhthanh.tx@pavex.com` | Trịnh Thanh Tâm | Chủ nhật | Chuyến KHO-HN ↔ TT-MIENBAC |
-| Trưởng bưu cục Ba Đình | Management / App | `nga.nguyenngoc.tbc@pavex.com` | Nguyễn Ngọc Nga | Chủ nhật | Nhân sự, ca, vận đơn, tiền của bưu cục; xem xe đi/đến |
-| Nhân viên bưu cục Ba Đình | App hiện trường | `thanh.hoangbao.nvbc@pavex.com` | Hoàng Bảo Thành | Thứ Năm | Nhập kho, nhận tiền bưu tá nộp |
-| Bưu tá Ba Đình | App / Management | `quynh.nguyenkim.bt@pavex.com` | Nguyễn Kim Quỳnh | Thứ Tư | Lấy hàng, giao hàng, thu tiền, nộp tiền |
-| Bưu tá Ba Đình, người thứ hai | App / Management | `khang.phamthanh.bt@pavex.com` | Phạm Thanh Khang | Thứ Ba | Như trên |
-| Trưởng kho TP.HCM | Management :3001 | `mai.chauthi.tk@pavex.com` | Châu Thị Mai | Chủ nhật | Kho KHO-HCM |
-| Tài xế tuyến (Sài Gòn) | App hiện trường | `hung.doxuan.tx2@pavex.com` | Đỗ Xuân Hùng | Thứ Tư | Tuyến có bưu cục Sài Gòn |
-| Trưởng bưu cục Sài Gòn | Management / App | `hoa.hoangkhanh.tbc@pavex.com` | Hoàng Khánh Hoa | Thứ Sáu | Bưu cục phường Sài Gòn |
-| Bưu tá Sài Gòn | App / Management | `vinh.vohuu.bt@pavex.com` | Võ Hữu Vinh | Thứ Ba | Lấy hàng, giao hàng, thu tiền |
-
-#### 2.5.9 Những gì **không** seed
-
-- **Shop và khách hàng:** tự đăng ký ở client portal.
-  - Muốn làm shop: gửi hồ sơ ở `/merchant/onboarding`, rồi Kinh doanh & CSKH duyệt ở `/partners/merchants`.
-  - Duyệt xong, đăng nhập lại để có menu Vận đơn.
-- **Vận đơn, tiền, hoá đơn, chuyến xe:** sinh ra khi bạn chạy luồng thật.
-- **Yêu cầu hỗ trợ:** giữ nguyên những gì đã có.
+Tài khoản `admin@pavex.com` (tự tạo khi khởi động) dùng mật khẩu ở mục `bootstrap-admin` trong
+`identity/src/main/resources/application.yaml`.
 
 ---
 
@@ -470,9 +328,7 @@ Luôn ở trạng thái Đang làm. Ngày nghỉ là ngày không có ca trong t
 
 | Lệnh (chạy trong `pavex-backend`) | Tác dụng | Lưu ý |
 |---|---|---|
-| `scripts/seed-nationwide/apply.sh --staff-only` | Giữ mạng lưới, sinh lại toàn bộ nhân sự; xoá shop, vận đơn, báo giá, tiền, chuyến xe | **Xoá và thay dữ liệu hiện có.** Luôn backup vào `.local/backups/<thời điểm>/` trước. Mặc định dừng các service rồi chạy lại `dev-up.sh` |
-| `scripts/seed-nationwide/apply.sh [--day YYYY-MM-DD]` | Như trên, và sinh lại cả mạng lưới (hub, tuyến, lịch chạy) | Chỉ cần khi đổi cấu trúc mạng lưới |
-| `node scripts/seed-baofuc-e2e.mjs`, `node scripts/seed-luong-giao-hang-viet.mjs` | Kịch bản E2E cũ | Viết cho mạng lưới demo cũ (`HN-HOANKIEM`, `HN-GW`…). **Chưa kiểm chứng** lại sau khi đổi sang mạng lưới toàn quốc |
+| `./scripts/seed-mini/apply.sh` | Xoá mạng lưới, nhân sự, cửa hàng, vận đơn, báo giá, tiền, chuyến xe; nạp lại seed-mini rồi chạy `dev-up.sh` | **Xoá và thay dữ liệu hiện có.** Luôn sao lưu vào `.local/backups/<thời điểm>-seed-mini/` trước. Thêm `--no-start` để không khởi động lại |
 
 Khôi phục một database từ backup, ví dụ shipment:
 
@@ -491,16 +347,15 @@ Nên dừng các service trước khi khôi phục.
 
 **Kịch bản kiểm thử chi tiết từng bước trên cả 3 app:** [KIEM-THU-LUONG-TREN-3-APP.md](KIEM-THU-LUONG-TREN-3-APP.md).
 
-Danh sách tài khoản thử ở mục 2.5.8. Tất cả dùng mật khẩu ở mục 2.5.2. Tóm tắt một luồng đầy đủ:
+Danh sách tài khoản thử và mật khẩu ở `scripts/seed-mini/README.md`. Tóm tắt một luồng đầy đủ:
 
-1. **Tạo shop:** đăng ký một tài khoản ở client portal :3000, gửi hồ sơ shop. Đăng nhập tài khoản Kinh doanh & CSKH
-   ở management :3001 để duyệt shop.
-2. **Tạo vận đơn:** đăng nhập lại shop, khai báo điểm lấy hàng (chọn phường Ba Đình, Hà Nội để khớp tài khoản thử),
-   tạo vận đơn có COD, in nhãn.
+1. **Cửa hàng:** `shop.daduyet@pavex.test` đã được duyệt sẵn, có điểm lấy hàng ở Phường Ba Đình. Muốn thử luồng
+   duyệt: dùng `shop.choduyet@pavex.test`, rồi duyệt bằng `cskh@pavex.test` ở management :3001.
+2. **Tạo vận đơn:** đăng nhập `shop.daduyet@pavex.test` ở client portal :3000, tạo vận đơn có COD gửi vào TP.HCM, in nhãn.
 3. **Lấy hàng và nhập kho:** bưu tá Ba Đình check-in ca trong app, nhận việc lấy hàng rồi quét Lấy hàng. Nhân viên
    hoặc trưởng bưu cục Ba Đình quét Nhập kho, không cần bấm Nhận việc trước.
-4. **Trung chuyển:** tài xế tuyến check-in ca ở KHO-HN, nhận việc trung chuyển, quét Lên xe (chuyến tự bắt đầu và gửi
-   GPS). Nhân viên khai thác KHO-HN quét Nhập kho, chặng tiếp theo được mở ngay.
+4. **Trung chuyển:** `taixe@pavex.test` check-in ca, nhận việc trung chuyển, quét Lên xe (chuyến tự bắt đầu và gửi
+   GPS). Nhân viên Tân Sơn Hoà quét Nhập kho khi xe tới.
 5. **Giao và tiền:** tiếp tục tới bưu cục phát; bưu tá giao, thu tiền, nộp tiền; kế toán duyệt và đối soát.
 
 Email phát sinh khi thử (xác thực, xác nhận yêu cầu hỗ trợ…) xem ở Mailpit: http://localhost:8025.
@@ -513,13 +368,10 @@ Mặc định mọi thứ chạy giả lập: email vào Mailpit, thanh toán d�
 Muốn dùng thật, điền biến vào **`.env` ở thư mục gốc backend** rồi chạy lại `./scripts/dev-up.sh`.
 
 - **Mẫu và giải thích từng biến:** `.env.example`. Chạy `cp .env.example .env` để bắt đầu.
-- **Cách script nạp file:**
-  - Đọc từng dòng `KEY=VALUE`, không chạy lệnh trong file.
-  - Dòng có `#` bị bỏ qua. Biến để trống cũng bị bỏ qua, nên service dùng mặc định trong `application.yaml`.
+- **Cách nạp:** mỗi service tự đọc `.env` ở thư mục gốc, dù chạy bằng `dev-up.sh` hay IntelliJ.
+  - Mỗi dòng `KEY=giá-trị`, không dùng ngoặc kép, **không để trống `KEY=`** (muốn dùng mặc định thì giữ dấu `#`).
   - Biến đã `export` trong shell được ưu tiên hơn file, ví dụ tạm quay về thanh toán giả:
     `BILLING_PAYMENT_PROVIDER=fake ./scripts/dev-up.sh`.
-- **IntelliJ không tự đọc `.env`.** Dùng plugin EnvFile trỏ tới `.env`, hoặc nhập biến vào mục
-  "Environment variables" của từng cấu hình chạy.
 - **Không commit `.env`** (đã có trong `.gitignore`); chỉ commit `.env.example`.
 
 | Chức năng | Service | Biến chính |
@@ -769,7 +621,7 @@ Chưa có phí hoàn hàng riêng.
 - **Ca làm:**
   - Tạo ca tại bưu cục, phân người vào ca, check-in/check-out, đánh vắng.
   - Hệ thống **tự giữ sẵn ca 7 ngày tới** theo lịch luân phiên (làm 6 ngày nghỉ 1), và tự check-out người quên
-    check-out sau khi ca kết thúc 1 giờ (mục 2.5.7).
+    check-out sau khi ca kết thúc 1 giờ.
 - **Điều kiện được giao việc:**
   - Là thành viên của hub có việc, đang check-in một ca, và đang bật Sẵn sàng.
   - Riêng tài xế trung chuyển: check-in ca ở kho tỉnh là đủ để nhận việc ở mọi bưu cục trên tuyến của mình.
@@ -3146,5 +2998,4 @@ Flyway tự áp migration còn thiếu khi service khởi động. File nằm �
 | Bản đồ xe | Dùng tile OpenStreetMap công cộng, chỉ hợp cho dev. Chạy thật nên đổi sang nhà cung cấp Việt Nam (Goong, VietMap) để hiển thị đúng chủ quyền |
 | Theo dõi xe | Chưa có toạ độ hub nên chưa tự nhận biết xe vào/rời hub bằng vị trí; chưa có danh mục xe (biển số do tài xế tự nhập); chưa dự báo giờ tới |
 | GPS nền trên iPhone | Cần tài xế cho phép vị trí; iOS có thể dừng app nếu tài xế vuốt tắt hẳn app giữa chuyến |
-| Script E2E cũ | `seed-baofuc-e2e.mjs`, `seed-luong-giao-hang-viet.mjs` viết cho mạng lưới demo cũ, chưa kiểm chứng lại |
 | Triển khai thật | Cấu hình hiện tại chỉ dành cho local. Trước khi deploy cần: quản lý secret, khoá JWT riêng, tắt hoặc đổi mật khẩu admin khởi tạo, đổi mật khẩu DB/RabbitMQ/Redis, đặt domain, CORS và danh sách proxy tin cậy (mục 2.3.7, 2.8) |

@@ -12,34 +12,12 @@ for tool in docker curl; do
   }
 done
 
-"$script_dir/dev-setup.sh"
+mkdir -p "$local_dir/logs" "$local_dir/pids"
+# Creates the JWT key pair of any service that has none yet (in ~/.pavex/keys); existing keys are kept.
+bash "$script_dir/security-bootstrap.sh"
 
-# Runtime defaults live in each service's application.yaml. Real mail, payOS and Google settings
-# go in .env at the repository root (see .env.example); the services inherit them from here.
-# Do not source legacy .local/dev.env or override JWT key paths here.
-
-# Reads KEY=VALUE lines without evaluating them, so values with spaces, $ or quotes stay intact.
-# An empty value is skipped so the application.yaml default applies (Spring would otherwise use "").
-# A variable already exported in the shell wins, e.g. BILLING_PAYMENT_PROVIDER=fake ./scripts/dev-up.sh
-load_env_file() {
-  local file="$1" line key value
-  while IFS= read -r line || [[ -n "$line" ]]; do
-    line="${line%$'\r'}"
-    [[ "$line" =~ ^[[:space:]]*([A-Za-z_][A-Za-z0-9_]*)=(.*)$ ]] || continue
-    key="${BASH_REMATCH[1]}"
-    value="${BASH_REMATCH[2]}"
-    if [[ "$value" =~ ^\"(.*)\"$ || "$value" =~ ^\'(.*)\'$ ]]; then
-      value="${BASH_REMATCH[1]}"
-    fi
-    [[ -n "$value" ]] || continue
-    [[ -n "${!key+x}" ]] || export "$key=$value"
-  done < "$file"
-}
-
-if [[ -f "$repo_dir/.env" ]]; then
-  load_env_file "$repo_dir/.env"
-  echo "==> Loaded settings from .env"
-fi
+# Settings such as Google, real email or payOS live in .env at the repository root (see .env.example).
+# Every service reads that file itself, so the same settings apply when a service is started from the IDE.
 
 started_pid_files=()
 
@@ -116,60 +94,12 @@ docker compose up -d --wait
 # this branch's executable jars.
 ./mvnw -DskipTests clean install
 
-preflight_auth_identity_cutover() {
-  local user_table_exists legacy_rbac_exists account_count marker_table_exists marker_complete
-
-  user_table_exists="$(docker compose exec -T auth-db psql -U pavex -d pavex_auth -Atqc     "SELECT CASE WHEN to_regclass('auth.user_account') IS NOT NULL THEN 'yes' ELSE 'no' END")"
-
-  # A brand-new database has not run Auth Flyway yet. V15 is safe there because
-  # there are no legacy users to migrate.
-  if [[ "$user_table_exists" != "yes" ]]; then
-    return 0
-  fi
-
-  legacy_rbac_exists="$(docker compose exec -T auth-db psql -U pavex -d pavex_auth -Atqc     "SELECT CASE WHEN to_regclass('auth.user_role') IS NOT NULL THEN 'yes' ELSE 'no' END")"
-
-  # V15 has already finalized this database.
-  if [[ "$legacy_rbac_exists" != "yes" ]]; then
-    return 0
-  fi
-
-  account_count="$(docker compose exec -T auth-db psql -U pavex -d pavex_auth -Atqc     'SELECT COUNT(*) FROM auth.user_account')"
-
-  if [[ "$account_count" == "0" ]]; then
-    return 0
-  fi
-
-  marker_table_exists="$(docker compose exec -T auth-db psql -U pavex -d pavex_auth -Atqc     "SELECT CASE WHEN to_regclass('auth.identity_cutover_marker') IS NOT NULL THEN 'yes' ELSE 'no' END")"
-
-  marker_complete="no"
-  if [[ "$marker_table_exists" == "yes" ]]; then
-    marker_complete="$(docker compose exec -T auth-db psql -U pavex -d pavex_auth -Atqc       "SELECT CASE WHEN EXISTS (SELECT 1 FROM auth.identity_cutover_marker WHERE id=1 AND completed_at IS NOT NULL) THEN 'yes' ELSE 'no' END")"
-  fi
-
-  if [[ "$marker_complete" != "yes" ]]; then
-    cat >&2 <<'EOF'
-Existing Auth users still need the one-time Auth -> Identity cutover.
-Identity has already been started first so its V1-V3 schema is ready.
-
-Run:
-  ./scripts/cutover-auth-identity.sh --apply
-
-Then rerun:
-  ./scripts/dev-up.sh
-EOF
-    return 1
-  fi
-}
-
 # Wait on readiness, not the full health: with real SMTP in .env the mail check of auth and partners
 # can take longer than the probe timeout although the service is up.
 start_app discovery-server platform/discovery-server/target/discovery-server-0.0.1-SNAPSHOT.jar http://localhost:8761/actuator/health/readiness
 
-# Start Identity before Auth. This guarantees Identity Flyway V1-V3 is ready
-# before a legacy Auth database is allowed to cross the destructive V15 cutover.
+# Identity before Auth: Auth reads accounts and roles from Identity at sign-in.
 start_app identity-service identity/target/identity-service-0.0.1-SNAPSHOT.jar http://localhost:8082/actuator/health/readiness
-preflight_auth_identity_cutover
 
 start_app auth-service auth/target/auth-service-0.0.1-SNAPSHOT.jar http://localhost:8081/actuator/health/readiness
 start_app partners-service partners/target/partners-service-0.0.1-SNAPSHOT.jar http://localhost:8083/actuator/health/readiness

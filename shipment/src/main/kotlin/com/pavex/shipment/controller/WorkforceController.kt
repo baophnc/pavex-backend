@@ -71,7 +71,7 @@ class WorkforceController(
         return ResponseEntity.ok()
             .contentType(MediaType.parseMediaType(item.contentType))
             .cacheControl(CacheControl.noStore())
-            .body(item.data)
+            .body(item.bytes)
     }
 
     @GetMapping("/reports/summary")
