@@ -2,6 +2,7 @@ package com.pavex.network.controller
 
 import com.pavex.network.dto.PageResponse
 import com.pavex.network.dto.hub.PublicHubResponse
+import com.pavex.network.entity.HubType
 import com.pavex.network.service.HubService
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.RequestMapping
@@ -17,5 +18,6 @@ class PublicNetworkController(private val hubs: HubService) {
         @RequestParam(required = false) search: String?,
         @RequestParam(defaultValue = "1") page: Int,
         @RequestParam(defaultValue = "24") pageSize: Int,
-    ): PageResponse<PublicHubResponse> = hubs.listPublic(provinceCode, search, page, pageSize)
+        @RequestParam(required = false) type: HubType?,
+    ): PageResponse<PublicHubResponse> = hubs.listPublic(provinceCode, search, page, pageSize, type)
 }
