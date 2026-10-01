@@ -71,6 +71,20 @@ data class AdminMerchantReadinessResponse(
     val identityChecked: Boolean,
     val defaultPickupAddressId: UUID?,
     val pickupAddresses: List<AdminPickupAddressResponse>,
+    /** Null when the merchant role in Identity matches the merchant's status. */
+    val roleSync: MerchantRoleSyncResponse? = null,
+)
+
+/**
+ * A merchant role change Partners has not yet delivered to Identity. Until it is, the shop's
+ * sign-in keeps its old roles: an approved shop still cannot order.
+ */
+data class MerchantRoleSyncResponse(
+    /** True when the change grants the MERCHANT role, false when it removes it. */
+    val enabled: Boolean,
+    val pendingSince: Instant,
+    val attempts: Int,
+    val lastError: String?,
 )
 
 data class AdminPickupAddressResponse(
