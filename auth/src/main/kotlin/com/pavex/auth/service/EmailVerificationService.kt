@@ -204,6 +204,17 @@ class EmailVerificationService(
     }
 
 
+    /** An administrator changed the account's email: the new address must be confirmed. */
+    @Transactional
+    fun issueForChangedEmail(
+        userId: UUID,
+        email: String,
+    ) {
+        advisoryLockService.lockEmailVerification(userId)
+        issue(userId = userId, email = email, now = Instant.now())
+    }
+
+
     private fun issue(
         userId: UUID,
         email: String,

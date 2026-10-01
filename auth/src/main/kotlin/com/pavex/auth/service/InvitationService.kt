@@ -2,6 +2,7 @@ package com.pavex.auth.service
 
 import com.pavex.auth.entity.InvitationToken
 import com.pavex.auth.event.InvitationRequestedEvent
+import com.pavex.auth.event.PasswordResetPortal
 import com.pavex.auth.exception.AccountAlreadyActivatedException
 import com.pavex.auth.exception.InvalidInvitationTokenException
 import com.pavex.auth.exception.UserCannotBeInvitedException
@@ -55,6 +56,7 @@ class InvitationService(
     @Transactional
     fun sendInvite(
         userId: UUID,
+        portal: PasswordResetPortal = PasswordResetPortal.CLIENT,
     ) {
 
         /*
@@ -124,6 +126,7 @@ class InvitationService(
                 InvitationRequestedEvent(
                     email = user.email,
                     rawToken = issued.raw,
+                    portal = portal,
                 ),
             aggregateType = "user",
             aggregateId = user.id,

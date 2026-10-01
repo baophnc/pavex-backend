@@ -1,17 +1,22 @@
 package com.pavex.auth.service
 
 import com.pavex.auth.entity.UserAccount
+import com.pavex.auth.event.PasswordResetPortal
 import com.pavex.auth.exception.CredentialProvisionConflictException
+import com.pavex.auth.exception.EmailAlreadyExistsException
+import com.pavex.auth.exception.UserNotFoundException
+import com.pavex.auth.repository.ExternalIdentityRepository
 import com.pavex.auth.repository.UserAccountRepository
 import com.pavex.auth.security.OpaqueTokenService
+import com.pavex.contracts.identity.CredentialEmailRequest
 import com.pavex.contracts.identity.CredentialInvitationRequest
+import java.time.Duration
+import java.time.Instant
+import java.util.UUID
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
-import java.time.Duration
-import java.time.Instant
-import java.util.UUID
 
 @Service
 class InternalCredentialService(
@@ -21,6 +26,8 @@ class InternalCredentialService(
     private val invitationService: InvitationService,
     private val sessionService: SessionService,
     private val advisoryLockService: AdvisoryLockService,
+    private val externalIdentities: ExternalIdentityRepository,
+    private val emailVerification: EmailVerificationService,
     @Value("\${auth.staff-credentials.temporary-password}")
     private val temporaryPassword: String,
     @Value("\${auth.staff-credentials.temporary-password-ttl}")
@@ -81,12 +88,59 @@ class InternalCredentialService(
     @Transactional
     fun sendInvitation(request: CredentialInvitationRequest) {
         ensureCredential(request)
-        invitationService.sendInvite(request.userId)
+        invitationService.sendInvite(
+            request.userId,
+            if (request.staff) PasswordResetPortal.MANAGEMENT else PasswordResetPortal.CLIENT,
+        )
     }
 
     @Transactional
     fun revokeSessions(userId: UUID) {
         sessionService.logoutAll(userId)
+    }
+
+    /**
+     * The account was deleted in Identity: its email becomes the placeholder Identity chose (so the real
+     * address can sign up again), the password and Google link stop working, and every session ends.
+     */
+    @Transactional
+    fun close(userId: UUID, request: CredentialEmailRequest) {
+        val account = accounts.findById(userId).orElse(null) ?: return
+        val placeholder = normalizeEmail(request.email)
+        advisoryLockService.lockEmail(placeholder)
+        account.email = placeholder
+        account.emailVerified = false
+        account.passwordHash = requireNotNull(passwordEncoder.encode(opaqueTokenService.issue().raw)) {
+            "Password encoder returned null"
+        }
+        account.mustChangePassword = false
+        account.temporaryPasswordExpiresAt = null
+        account.updatedAt = Instant.now()
+        accounts.save(account)
+        externalIdentities.deleteAllByUserId(userId)
+        sessionService.logoutAll(userId)
+    }
+
+    /**
+     * An administrator changed the account's email. It must be free, signs every session out, and is
+     * confirmed again through a verification email sent to the new address.
+     */
+    @Transactional
+    fun changeEmail(userId: UUID, request: CredentialEmailRequest) {
+        val email = normalizeEmail(request.email)
+        advisoryLockService.lockEmail(email)
+        val account = accounts.findById(userId).orElseThrow { UserNotFoundException() }
+        if (account.email == email) return
+        val taken = accounts.findByEmail(email)
+        if (taken != null && taken.id != userId) throw EmailAlreadyExistsException(email)
+        account.email = email
+        account.emailVerified = false
+        account.updatedAt = Instant.now()
+        accounts.save(account)
+        // A Google link was made for the old address; the new one signs in with a password or relinks.
+        externalIdentities.deleteAllByUserId(userId)
+        sessionService.logoutAll(userId)
+        emailVerification.issueForChangedEmail(userId, email)
     }
 
     private fun ensureCredential(request: CredentialInvitationRequest) {

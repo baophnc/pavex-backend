@@ -16,4 +16,8 @@ interface ExternalIdentityRepository :
         userId: UUID,
         provider: String,
     ): ExternalIdentity?
+
+    fun deleteAllByUserId(
+        userId: UUID,
+    )
 }

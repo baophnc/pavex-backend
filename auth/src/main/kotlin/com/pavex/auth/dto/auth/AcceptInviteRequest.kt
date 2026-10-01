@@ -18,16 +18,9 @@ data class AcceptInviteRequest(
     @field:NotBlank(
         message = "Password is required",
     )
-    @field:Size(
-        min = 8,
-        max = 128,
-        message = "Password must be between 8 and 128 characters",
-    )
     @field:Pattern(
-        regexp =
-            "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[^A-Za-z0-9]).{8,128}$",
-        message =
-            "Password must contain uppercase, lowercase, number and special character",
+        regexp = PasswordRules.PATTERN,
+        message = PasswordRules.MESSAGE,
     )
     val password: String,
 )

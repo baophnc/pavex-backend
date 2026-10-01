@@ -152,6 +152,7 @@ pavex:
     password-reset-url: ${PASSWORD_RESET_URL:http://localhost:3000/reset-password}
     management-password-reset-url: ${MANAGEMENT_PASSWORD_RESET_URL:http://localhost:3001/reset-password}
     invitation-url: ${INVITATION_URL:http://localhost:3000/accept-invite}
+    management-invitation-url: ${MANAGEMENT_INVITATION_URL:http://localhost:3001/accept-invite}
 
 eureka:
   client:
