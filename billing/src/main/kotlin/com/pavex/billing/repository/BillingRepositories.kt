@@ -81,6 +81,42 @@ interface CashCollectionRepository : JpaRepository<CashCollection, UUID> {
 
     fun findByStatementIdOrderByApprovedAtAsc(statementId: UUID): List<CashCollection>
 
+    /** Cash finance approved in [from, until), newest first: the history of the cash desk. */
+    @Query(
+        """
+        select c from CashCollection c
+        where c.status = com.pavex.billing.entity.CashCollectionStatus.APPROVED
+          and c.approvedAt >= :from and c.approvedAt < :until
+          and (:hubId is null or c.currentHubId = :hubId or c.originHubId = :hubId)
+        order by c.approvedAt desc
+        """,
+    )
+    fun findApproved(
+        @Param("from") from: Instant,
+        @Param("until") until: Instant,
+        @Param("hubId") hubId: UUID?,
+        pageable: Pageable,
+    ): List<CashCollection>
+
+    /** Totals of approved cash in [from, until) per source and COD owner, over every row (not a page). */
+    @Query(
+        """
+        select c.source as source, c.codPayee as codPayee, count(c) as count,
+               coalesce(sum(c.amount), 0) as amount, coalesce(sum(c.feeAmount), 0) as feeAmount,
+               coalesce(sum(c.codAmount), 0) as codAmount
+        from CashCollection c
+        where c.status = com.pavex.billing.entity.CashCollectionStatus.APPROVED
+          and c.approvedAt >= :from and c.approvedAt < :until
+          and (:hubId is null or c.currentHubId = :hubId or c.originHubId = :hubId)
+        group by c.source, c.codPayee
+        """,
+    )
+    fun approvedTotals(
+        @Param("from") from: Instant,
+        @Param("until") until: Instant,
+        @Param("hubId") hubId: UUID?,
+    ): List<ApprovedCashTotal>
+
     @Query(
         """
         select c from CashCollection c
@@ -146,6 +182,10 @@ interface MerchantFeeChargeRepository : JpaRepository<MerchantFeeCharge, UUID> {
         """,
     )
     fun findUnsettled(@Param("merchantId") merchantId: UUID?, @Param("cutoff") cutoff: Instant): List<MerchantFeeCharge>
+
+    /** Shipping fees merchants owe for shipments closed in [from, until); netted in settlement. */
+    @Query("select coalesce(sum(f.amount), 0) from MerchantFeeCharge f where f.closedAt >= :from and f.closedAt < :until")
+    fun totalClosedBetween(@Param("from") from: Instant, @Param("until") until: Instant): Long
 }
 
 interface SettlementStatementRepository : JpaRepository<SettlementStatement, UUID> {
@@ -193,4 +233,13 @@ interface CounterSettlementRepository : JpaRepository<CounterSettlement, UUID> {
         @Param("trackingCode") trackingCode: String?,
         pageable: Pageable,
     ): List<CounterSettlement>
+}
+
+interface ApprovedCashTotal {
+    val source: CashSource
+    val codPayee: com.pavex.billing.entity.CodPayee
+    val count: Long
+    val amount: Long
+    val feeAmount: Long
+    val codAmount: Long
 }
