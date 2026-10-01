@@ -3,6 +3,7 @@ package com.pavex.billing.controller
 import com.pavex.billing.dto.CancelInvoiceRequest
 import com.pavex.billing.dto.CashCollectionResponse
 import com.pavex.billing.dto.CashRemittanceResponse
+import com.pavex.billing.dto.CounterSettlementResponse
 import com.pavex.billing.dto.GenerateStatementsRequest
 import com.pavex.billing.dto.InvoiceListItemResponse
 import com.pavex.billing.dto.InvoiceResponse
@@ -14,11 +15,13 @@ import com.pavex.billing.dto.SettlementStatementDetailResponse
 import com.pavex.billing.dto.SettlementStatementResponse
 import com.pavex.billing.entity.CashCollectionStatus
 import com.pavex.billing.entity.CashRemittanceStatus
+import com.pavex.billing.entity.CounterSettlementStatus
 import com.pavex.billing.entity.InvoiceStatus
 import com.pavex.billing.entity.PayoutStatus
 import com.pavex.billing.payment.PaymentReconciliationService
 import com.pavex.billing.payment.PaymentReconciliationSummary
 import com.pavex.billing.service.CashService
+import com.pavex.billing.service.CounterCashService
 import com.pavex.billing.service.InvoiceService
 import com.pavex.billing.service.SettlementService
 import jakarta.validation.Valid
@@ -93,7 +96,15 @@ class AdminBillingController(
 @PreAuthorize("hasAuthority('billing.cash.approve')")
 class AdminCashController(
     private val cash: CashService,
+    private val counterCash: CounterCashService,
 ) {
+    /** COD paid back and return fees taken at hub counters, to reconcile with hub cash. */
+    @GetMapping("/counter-settlements")
+    fun counterSettlements(
+        @RequestParam(required = false) hubId: UUID?,
+        @RequestParam(required = false) status: CounterSettlementStatus?,
+    ): List<CounterSettlementResponse> = counterCash.adminList(hubId, status)
+
     @GetMapping("/collections")
     fun collections(
         @RequestParam(required = false) hubId: UUID?,

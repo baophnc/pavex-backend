@@ -35,6 +35,7 @@ class MessagingConfig(
     companion object {
         const val CASH_COLLECTED = "shipment.cash-collected"
         const val SHIPMENT_CLOSED = "shipment.closed"
-        val SUBSCRIBED_EVENTS = listOf(CASH_COLLECTED, SHIPMENT_CLOSED)
+        const val COUNTER_ACCEPTED = "shipment.counter-accepted"
+        val SUBSCRIBED_EVENTS = listOf(CASH_COLLECTED, SHIPMENT_CLOSED, COUNTER_ACCEPTED)
     }
 }

@@ -27,6 +27,8 @@ class ShipmentEventListener(
                 ingestion.cashCollected(eventId, objectMapper.readValue(body, CashCollectedEvent::class.java))
             ShipmentEventIngestion.SHIPMENT_CLOSED ->
                 ingestion.shipmentClosed(eventId, objectMapper.readValue(body, ShipmentClosedEvent::class.java))
+            ShipmentEventIngestion.COUNTER_ACCEPTED ->
+                ingestion.counterAccepted(eventId, objectMapper.readValue(body, CounterAcceptedEvent::class.java))
             else -> {
                 log.debug("Ignoring shipment event {} of type {}.", eventId, eventType)
                 false
