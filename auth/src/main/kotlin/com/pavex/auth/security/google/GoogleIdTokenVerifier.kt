@@ -2,9 +2,8 @@ package com.pavex.auth.security.google
 
 import com.pavex.auth.exception.GoogleAuthenticationNotConfiguredException
 import com.pavex.auth.exception.InvalidGoogleTokenException
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
-import org.springframework.core.env.Environment
-import org.springframework.core.env.Profiles
 import org.springframework.security.oauth2.core.DelegatingOAuth2TokenValidator
 import org.springframework.security.oauth2.core.OAuth2Error
 import org.springframework.security.oauth2.core.OAuth2TokenValidator
@@ -23,11 +22,13 @@ class GoogleIdTokenVerifier(
         "\${auth.google.client-ids:}"
     )
     rawClientIds: String,
-
-    environment: Environment,
 ) {
 
-    private val configuredClientIds =
+    /**
+     * The OAuth client ids of the Google Cloud project that owns the sign-in button
+     * (GOOGLE_CLIENT_ID in .env). None configured means Google sign-in is off.
+     */
+    private val clientIds =
         rawClientIds
             .split(",")
             .map {
@@ -38,17 +39,12 @@ class GoogleIdTokenVerifier(
             }
             .toSet()
 
-    private val clientIds =
-        if (
-            configuredClientIds.isEmpty() &&
-            !environment.acceptsProfiles(
-                Profiles.of("prod")
-            )
-        ) {
-            setOf(LOCAL_DEVELOPMENT_CLIENT_ID)
-        } else {
-            configuredClientIds
+    init {
+        if (clientIds.isEmpty()) {
+            LoggerFactory.getLogger(GoogleIdTokenVerifier::class.java)
+                .info("Google sign-in is off: set GOOGLE_CLIENT_ID in .env (see docs/CHAY-LOCAL.md).")
         }
+    }
 
 
     private val decoder by lazy {
@@ -250,9 +246,5 @@ class GoogleIdTokenVerifier(
                     "accounts.google.com",
                     "https://accounts.google.com",
                 )
-
-        private const val
-            LOCAL_DEVELOPMENT_CLIENT_ID =
-                "718173529385-hden9ogj5u4br4bu6um7dk65jdodsnq2.apps.googleusercontent.com"
     }
 }
