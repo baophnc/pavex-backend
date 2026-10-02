@@ -27,6 +27,7 @@ import com.pavex.billing.service.InvoiceService
 import com.pavex.billing.service.SettlementService
 import jakarta.validation.Valid
 import org.springframework.security.access.prepost.PreAuthorize
+import org.springframework.security.core.Authentication
 import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.security.oauth2.jwt.Jwt
 import org.springframework.web.bind.annotation.GetMapping
@@ -92,7 +93,10 @@ class AdminBillingController(
     fun payoutAccount(@PathVariable merchantId: UUID): PayoutAccountResponse = settlements.payoutAccountOf(merchantId)
 }
 
-/** Finance review of cash that hubs received from couriers. */
+/**
+ * Review of the cash couriers hand to hubs and hubs take at the counter. Head office sees every
+ * hub; a hub manager reviews only the hubs they manage, naming the hub on each list.
+ */
 @RestController
 @RequestMapping("/api/v1/admin/billing/cash")
 @PreAuthorize("hasAuthority('billing.cash.approve')")
@@ -103,45 +107,85 @@ class AdminCashController(
     /** Approved cash of a period with its totals; the fee part is Pavex's revenue. */
     @GetMapping("/approved")
     fun approved(
+        @AuthenticationPrincipal jwt: Jwt,
+        authentication: Authentication,
         @RequestParam from: LocalDate,
         @RequestParam to: LocalDate,
         @RequestParam(required = false) hubId: UUID?,
-    ): ApprovedCashResponse = cash.approvedHistory(from, to, hubId)
+    ): ApprovedCashResponse {
+        cash.requireReviewScope(jwt.userId(), authentication.seesAllHubs(), hubId)
+        return cash.approvedHistory(from, to, hubId)
+    }
 
     /** COD paid back and return fees taken at hub counters, to reconcile with hub cash. */
     @GetMapping("/counter-settlements")
     fun counterSettlements(
+        @AuthenticationPrincipal jwt: Jwt,
+        authentication: Authentication,
         @RequestParam(required = false) hubId: UUID?,
         @RequestParam(required = false) status: CounterSettlementStatus?,
-    ): List<CounterSettlementResponse> = counterCash.adminList(hubId, status)
+    ): List<CounterSettlementResponse> {
+        cash.requireReviewScope(jwt.userId(), authentication.seesAllHubs(), hubId)
+        return counterCash.adminList(hubId, status)
+    }
 
     @GetMapping("/collections")
     fun collections(
+        @AuthenticationPrincipal jwt: Jwt,
+        authentication: Authentication,
         @RequestParam(required = false) hubId: UUID?,
         @RequestParam(required = false) collectorUserId: UUID?,
         @RequestParam(required = false) status: CashCollectionStatus?,
-    ): List<CashCollectionResponse> = cash.adminCollections(hubId, collectorUserId, status)
+    ): List<CashCollectionResponse> {
+        cash.requireReviewScope(jwt.userId(), authentication.seesAllHubs(), hubId)
+        return cash.adminCollections(hubId, collectorUserId, status)
+    }
 
     @GetMapping("/remittances")
     fun remittances(
+        @AuthenticationPrincipal jwt: Jwt,
+        authentication: Authentication,
         @RequestParam(required = false) hubId: UUID?,
         @RequestParam(required = false) courierUserId: UUID?,
         @RequestParam(required = false) status: CashRemittanceStatus?,
-    ): List<CashRemittanceResponse> = cash.adminRemittances(hubId, courierUserId, status)
+    ): List<CashRemittanceResponse> {
+        cash.requireReviewScope(jwt.userId(), authentication.seesAllHubs(), hubId)
+        return cash.adminRemittances(hubId, courierUserId, status)
+    }
 
     @PostMapping("/remittances/{remittanceId}/approve")
-    fun approveRemittance(@AuthenticationPrincipal jwt: Jwt, @PathVariable remittanceId: UUID): CashRemittanceResponse =
-        cash.approveRemittance(remittanceId, jwt.userId())
+    fun approveRemittance(@AuthenticationPrincipal jwt: Jwt, authentication: Authentication, @PathVariable remittanceId: UUID): CashRemittanceResponse {
+        cash.requireReviewScope(jwt.userId(), authentication.seesAllHubs(), cash.remittanceHubId(remittanceId))
+        return cash.approveRemittance(remittanceId, jwt.userId())
+    }
 
     @PostMapping("/remittances/{remittanceId}/reject")
-    fun rejectRemittance(@AuthenticationPrincipal jwt: Jwt, @PathVariable remittanceId: UUID, @Valid @RequestBody request: RejectCashRequest): CashRemittanceResponse =
-        cash.rejectRemittance(remittanceId, jwt.userId(), request.reason)
+    fun rejectRemittance(
+        @AuthenticationPrincipal jwt: Jwt,
+        authentication: Authentication,
+        @PathVariable remittanceId: UUID,
+        @Valid @RequestBody request: RejectCashRequest,
+    ): CashRemittanceResponse {
+        cash.requireReviewScope(jwt.userId(), authentication.seesAllHubs(), cash.remittanceHubId(remittanceId))
+        return cash.rejectRemittance(remittanceId, jwt.userId(), request.reason)
+    }
 
     @PostMapping("/collections/{collectionId}/approve")
-    fun approveCollection(@AuthenticationPrincipal jwt: Jwt, @PathVariable collectionId: UUID): CashCollectionResponse =
-        cash.reviewCollection(collectionId, jwt.userId(), approve = true, reason = null)
+    fun approveCollection(@AuthenticationPrincipal jwt: Jwt, authentication: Authentication, @PathVariable collectionId: UUID): CashCollectionResponse {
+        cash.requireReviewScope(jwt.userId(), authentication.seesAllHubs(), cash.collectionHubId(collectionId))
+        return cash.reviewCollection(collectionId, jwt.userId(), approve = true, reason = null)
+    }
 
     @PostMapping("/collections/{collectionId}/reject")
-    fun rejectCollection(@AuthenticationPrincipal jwt: Jwt, @PathVariable collectionId: UUID, @Valid @RequestBody request: RejectCashRequest): CashCollectionResponse =
-        cash.reviewCollection(collectionId, jwt.userId(), approve = false, reason = request.reason)
+    fun rejectCollection(
+        @AuthenticationPrincipal jwt: Jwt,
+        authentication: Authentication,
+        @PathVariable collectionId: UUID,
+        @Valid @RequestBody request: RejectCashRequest,
+    ): CashCollectionResponse {
+        cash.requireReviewScope(jwt.userId(), authentication.seesAllHubs(), cash.collectionHubId(collectionId))
+        return cash.reviewCollection(collectionId, jwt.userId(), approve = false, reason = request.reason)
+    }
 }
+
+private fun Authentication.seesAllHubs(): Boolean = authorities.any { it.authority == "scope.all-hubs" }
