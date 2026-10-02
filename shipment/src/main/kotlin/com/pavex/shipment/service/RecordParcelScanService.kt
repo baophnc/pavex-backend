@@ -225,6 +225,7 @@ class ParcelScanWriter(
                     hubId = hub.hubId,
                     hubCode = hub.hubCode,
                     hubName = hub.hubName,
+                    routeLegId = parcel.currentRouteLegId,
                     actorUserId = actorUserId,
                     occurredAt = occurredAt,
                     recordedAt = receivedAt,
@@ -263,6 +264,8 @@ private data class ParcelScannedOutboxPayload(
     val hubId: UUID,
     val hubCode: String,
     val hubName: String,
+    /** The route leg the parcel is on after the scan: set while it rides a line-haul truck. */
+    val routeLegId: UUID?,
     val actorUserId: UUID,
     val occurredAt: Instant,
     val recordedAt: Instant,

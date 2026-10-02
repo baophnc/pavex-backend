@@ -40,6 +40,8 @@ class Hub(
     var publicVisible: Boolean = false,
     @Column(name = "public_name", length = 200)
     var publicName: String? = null,
+    var latitude: Double? = null,
+    var longitude: Double? = null,
     @Column(name = "created_at", nullable = false)
     var createdAt: Instant = Instant.now(),
     @Column(name = "updated_at", nullable = false)
@@ -56,6 +58,8 @@ class Hub(
         parentHubId: UUID?,
         publicVisible: Boolean,
         publicName: String?,
+        latitude: Double? = this.latitude,
+        longitude: Double? = this.longitude,
     ) {
         this.name = name.trim()
         this.type = type
@@ -65,6 +69,8 @@ class Hub(
         this.parentHubId = parentHubId
         this.publicVisible = publicVisible
         this.publicName = publicName?.trim()?.takeIf { it.isNotBlank() }
+        this.latitude = latitude
+        this.longitude = longitude
         this.updatedAt = Instant.now()
     }
 

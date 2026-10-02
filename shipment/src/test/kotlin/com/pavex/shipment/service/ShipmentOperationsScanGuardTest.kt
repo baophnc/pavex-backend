@@ -152,6 +152,25 @@ class ShipmentOperationsScanGuardTest {
     }
 
     @Test
+    fun `stock check at the origin finishes the handling of a counter shipment`() {
+        val target = target(ParcelStatus.AT_ORIGIN_HUB, originHubId)
+        val hub = hub(originHubId)
+        val handling = assignment(OperationsAssignmentType.ORIGIN_HUB_HANDLING, originHubId)
+        allowScanning(hub)
+        `when`(operations.findTypeAssignment(shipmentId, OperationsAssignmentType.ORIGIN_HUB_HANDLING, originHubId))
+            .thenReturn(handling)
+
+        val context = guard.validate(
+            actorUserId,
+            target,
+            hub,
+            RecordParcelScanRequest(target.parcelCode, originHubId),
+        )
+
+        assertEquals(handling, context.handlingAssignment)
+    }
+
+    @Test
     fun `checkpoint at a hub other than the parcel location is rejected`() {
         val target = target(ParcelStatus.AT_TRANSIT_HUB, transitHubId)
         val wrongHub = hub(destinationHubId)

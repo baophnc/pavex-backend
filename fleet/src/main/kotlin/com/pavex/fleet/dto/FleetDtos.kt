@@ -18,6 +18,9 @@ data class HubRef(
     val id: UUID,
     val code: String,
     val name: String,
+    /** Where the hub is on the map, when Network knows it. */
+    val lat: Double? = null,
+    val lng: Double? = null,
 )
 
 data class DriverTripResponse(

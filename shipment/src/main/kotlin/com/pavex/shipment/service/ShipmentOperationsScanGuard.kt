@@ -94,6 +94,8 @@ class ShipmentOperationsScanGuard(
 
         val handlingType = when {
             nextStatus == ParcelStatus.AT_ORIGIN_HUB -> OperationsAssignmentType.ORIGIN_HUB_HANDLING
+            // Counter shipments start on the origin shelf and are never "received"; a stock check finishes their handling.
+            checkpoint && target.parcelStatus == ParcelStatus.AT_ORIGIN_HUB -> OperationsAssignmentType.ORIGIN_HUB_HANDLING
             checkpoint && target.parcelStatus == ParcelStatus.AT_TRANSIT_HUB -> OperationsAssignmentType.TRANSIT_HUB_HANDLING
             checkpoint && target.parcelStatus == ParcelStatus.AT_DESTINATION_HUB -> OperationsAssignmentType.DESTINATION_HUB_HANDLING
             else -> null

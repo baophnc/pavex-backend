@@ -72,9 +72,12 @@ class DriverTripService(
         )
     }
 
+    /**
+     * Starts the trip from the app. The trip is a record of the truck run and needs no consent;
+     * sending its positions does (see [recordLocations]).
+     */
     @Transactional
     fun start(userId: UUID, email: String?, request: StartTripRequest): DriverTripResponse {
-        requireConsent(userId)
         val departure = departures(userId).firstOrNull {
             it.leg.laneId == request.laneId && it.leg.plannedDepartureAt == request.plannedDepartureAt
         } ?: throw FleetNotFoundException("trip_not_assigned", "You have no open line-haul work on this departure.")
@@ -88,12 +91,25 @@ class DriverTripService(
     @Transactional
     fun startFromScan(userId: UUID, email: String?): DriverTripResponse? {
         trips.findByDriverUserIdAndStatus(userId, FleetTripStatus.IN_PROGRESS)?.let { return TripViews.driver(it, 0) }
-        requireConsent(userId)
         val departure = departures(userId)
             .filter { it.loading }
             .firstOrNull { trips.findByDriverUserIdAndLaneIdAndPlannedDepartureAt(userId, it.leg.laneId, it.leg.plannedDepartureAt) == null }
             ?: return null
         return TripViews.driver(startDeparture(userId, email, departure, null, TripStartSource.DEPART_SCAN), departure.assignments.size)
+    }
+
+    /**
+     * A parcel was scanned onto a truck: the departure of its route leg is running, whether or not
+     * the driver's app is open. Returns null when the leg is unknown or the driver already runs
+     * another departure, which is then left to the driver.
+     */
+    @Transactional
+    fun startFromDeparture(driverUserId: UUID, routeLegId: UUID): FleetTrip? {
+        val leg = network.routeLegs(listOf(routeLegId)).firstOrNull() ?: return null
+        val tripLeg = TripPlanner.leg(leg)
+        trips.findByDriverUserIdAndLaneIdAndPlannedDepartureAt(driverUserId, tripLeg.laneId, tripLeg.plannedDepartureAt)?.let { return it }
+        if (trips.findByDriverUserIdAndStatus(driverUserId, FleetTripStatus.IN_PROGRESS) != null) return null
+        return trips.saveAndFlush(FleetTrip.start(driverUserId, null, tripLeg, null, TripStartSource.DEPART_SCAN, clock.instant()))
     }
 
     @Transactional
@@ -113,6 +129,7 @@ class DriverTripService(
     @Transactional
     fun recordLocations(userId: UUID, tripId: UUID, points: List<LocationPointRequest>): RecordLocationsResponse {
         val trip = ownedLocked(userId, tripId)
+        requireConsent(userId)
         if (!trip.inProgress) return RecordLocationsResponse(0, 0, points.size, TripViews.status(trip))
         val now = clock.instant()
         val (valid, rejected) = LocationWindow.split(points.map { it.toPoint() }, trip.startedAt, now)
@@ -159,7 +176,7 @@ class DriverTripService(
 
     private fun requireConsent(userId: UUID) {
         if (consents.findById(userId).orElse(null)?.termsVersion != CURRENT_TERMS_VERSION) {
-            throw FleetConflictException("consent_required", "Accept the location-sharing terms before starting a trip.")
+            throw FleetConflictException("consent_required", "Accept the location-sharing terms before sending the truck's position.")
         }
     }
 

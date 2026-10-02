@@ -14,6 +14,8 @@ data class FleetHubSnapshot(
     val code: String,
     val name: String,
     val type: String,
+    val latitude: Double? = null,
+    val longitude: Double? = null,
 )
 
 /** One reserved leg: the lane it runs on and when the scheduled departure leaves and arrives. */

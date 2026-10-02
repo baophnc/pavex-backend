@@ -50,7 +50,11 @@ data class TripLeg(
     val plannedDepartureAt: Instant,
     val plannedArrivalAt: Instant,
     val distanceKm: BigDecimal?,
+    val from: GeoPoint? = null,
+    val to: GeoPoint? = null,
 )
+
+data class GeoPoint(val lat: Double, val lng: Double)
 
 /**
  * One truck run of one line-haul driver on one lane departure. It only accepts positions while
@@ -87,6 +91,14 @@ class FleetTrip(
     var plannedArrivalAt: Instant = Instant.EPOCH,
     @Column(name = "distance_km", precision = 10, scale = 2)
     var distanceKm: BigDecimal? = null,
+    @Column(name = "from_lat")
+    var fromLat: Double? = null,
+    @Column(name = "from_lng")
+    var fromLng: Double? = null,
+    @Column(name = "to_lat")
+    var toLat: Double? = null,
+    @Column(name = "to_lng")
+    var toLng: Double? = null,
     @Column(name = "vehicle_plate", length = 20)
     var vehiclePlate: String? = null,
     @Enumerated(EnumType.STRING)
@@ -132,6 +144,28 @@ class FleetTrip(
     var version: Long = 0,
 ) {
     val inProgress: Boolean get() = status == FleetTripStatus.IN_PROGRESS
+
+    val origin: GeoPoint? get() = fromLat?.let { lat -> fromLng?.let { GeoPoint(lat, it) } }
+    val destination: GeoPoint? get() = toLat?.let { lat -> toLng?.let { GeoPoint(lat, it) } }
+
+    /**
+     * Moves a simulated truck: the point is stored like a phone's, but the distance is the share of
+     * the road already driven rather than the straight line between fixes, and no speed check applies.
+     */
+    fun moveSimulated(point: TripPoint, travelledMeters: Double, receivedAt: Instant) {
+        pointCount += 1
+        lastReceivedAt = receivedAt
+        updatedAt = receivedAt
+        this.travelledMeters = travelledMeters
+        lastLat = point.lat
+        lastLng = point.lng
+        lastAccuracyM = point.accuracyM
+        lastSpeedMps = point.speedMps
+        lastHeadingDeg = point.headingDeg
+        lastBatteryPct = point.batteryPct
+        lastMocked = true
+        lastRecordedAt = point.recordedAt
+    }
 
     fun arrive(source: TripEndSource, at: Instant) {
         check(inProgress) { "Trip has already arrived." }
@@ -210,6 +244,10 @@ class FleetTrip(
             plannedDepartureAt = leg.plannedDepartureAt,
             plannedArrivalAt = leg.plannedArrivalAt,
             distanceKm = leg.distanceKm,
+            fromLat = leg.from?.lat,
+            fromLng = leg.from?.lng,
+            toLat = leg.to?.lat,
+            toLng = leg.to?.lng,
             vehiclePlate = normalizePlate(vehiclePlate),
             status = FleetTripStatus.IN_PROGRESS,
             startSource = source,
