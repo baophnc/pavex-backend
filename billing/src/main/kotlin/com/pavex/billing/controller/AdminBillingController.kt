@@ -21,6 +21,7 @@ import com.pavex.billing.entity.InvoiceStatus
 import com.pavex.billing.entity.PayoutStatus
 import com.pavex.billing.payment.PaymentReconciliationService
 import com.pavex.billing.payment.PaymentReconciliationSummary
+import com.pavex.billing.repository.OutstandingCash
 import com.pavex.billing.service.CashService
 import com.pavex.billing.service.CounterCashService
 import com.pavex.billing.service.InvoiceService
@@ -115,6 +116,17 @@ class AdminCashController(
     ): ApprovedCashResponse {
         cash.requireReviewScope(jwt.userId(), authentication.seesAllHubs(), hubId)
         return cash.approvedHistory(from, to, hubId)
+    }
+
+    /** Cash not yet approved, by where it is, for the overview. */
+    @GetMapping("/outstanding")
+    fun outstanding(
+        @AuthenticationPrincipal jwt: Jwt,
+        authentication: Authentication,
+        @RequestParam(required = false) hubId: UUID?,
+    ): OutstandingCash {
+        cash.requireReviewScope(jwt.userId(), authentication.seesAllHubs(), hubId)
+        return cash.outstanding(hubId)
     }
 
     /** COD paid back and return fees taken at hub counters, to reconcile with hub cash. */

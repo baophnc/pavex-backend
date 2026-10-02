@@ -3,6 +3,10 @@ package com.pavex.partners.service
 import com.pavex.contracts.identity.MerchantEligibilityResponse
 import com.pavex.contracts.identity.MerchantRoleSyncRequest
 import com.pavex.partners.dto.ChangeMerchantStatusRequest
+import com.pavex.partners.dto.MerchantProfileRequest
+import com.pavex.partners.entity.MerchantBusinessType
+import com.pavex.partners.exception.ApiException
+import org.junit.jupiter.api.assertThrows
 import com.pavex.partners.entity.Merchant
 import com.pavex.partners.entity.MerchantPickupAddress
 import com.pavex.partners.entity.MerchantRoleOutboxMessage
@@ -74,6 +78,40 @@ class MerchantServiceTest {
         assertFalse(requireNotNull(capturedOutbox).enabled)
         assertEquals(merchant.userId, capturedOutbox.userId)
         assertEquals(merchant.userId, supersededUserId, "Older pending role changes must be superseded first")
+    }
+
+    @Test
+    fun `a verified shop updates where it sells but not who represents it`() {
+        val merchant = Merchant(
+            merchantCode = "PVM000001",
+            userId = UUID.randomUUID(),
+            businessName = "Cửa hàng Hoa Sen",
+            contactName = "Bùi Ngọc Mai",
+            contactPhone = "0912000041",
+            taxCode = "0109000041",
+            businessType = MerchantBusinessType.HOUSEHOLD,
+            representativeName = "Bùi Ngọc Mai",
+            status = MerchantStatus.ACTIVE,
+        )
+        val service = service(merchantByUser = merchant, merchantById = merchant)
+        val base = MerchantProfileRequest(
+            businessName = "Cửa hàng Hoa Sen",
+            contactName = "Bùi Ngọc Mai",
+            contactPhone = "0912000041",
+            taxCode = "0109000041",
+        )
+
+        val updated = service.updateMine(merchant.userId, base.copy(salesChannel = "https://shopee.vn/hoasen", expectedMonthlyOrders = 300))
+        assertEquals("https://shopee.vn/hoasen", updated.salesChannel)
+        assertEquals(MerchantBusinessType.HOUSEHOLD, updated.businessType, "A form without the business form keeps it")
+
+        val filled = service.updateMine(merchant.userId, base.copy(registrationNumber = "01A8000123"))
+        assertEquals("01A8000123", filled.registrationNumber, "A detail never given may be filled in once")
+
+        val locked = assertThrows<ApiException> {
+            service.updateMine(merchant.userId, base.copy(representativeName = "Người khác"))
+        }
+        assertEquals("merchant_verification_data_locked", locked.code)
     }
 
     private fun service(

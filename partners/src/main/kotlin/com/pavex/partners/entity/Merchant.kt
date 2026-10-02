@@ -25,6 +25,9 @@ enum class MerchantStatusReason {
     OTHER,
 }
 
+/** The business form behind a shop: a person selling online, a household business, or a company. */
+enum class MerchantBusinessType { INDIVIDUAL, HOUSEHOLD, COMPANY }
+
 @Entity
 @Table(name = "merchants", schema = "partners")
 class Merchant(
@@ -44,6 +47,21 @@ class Merchant(
     var contactEmail: String? = null,
     @Column(name = "tax_code", length = 50)
     var taxCode: String? = null,
+    @Enumerated(EnumType.STRING)
+    @Column(name = "business_type", length = 20)
+    var businessType: MerchantBusinessType? = null,
+    @Column(name = "registration_number", length = 50)
+    var registrationNumber: String? = null,
+    @Column(name = "representative_name", length = 200)
+    var representativeName: String? = null,
+    @Column(name = "registered_address", length = 500)
+    var registeredAddress: String? = null,
+    @Column(name = "sales_channel", length = 500)
+    var salesChannel: String? = null,
+    @Column(name = "product_category", length = 100)
+    var productCategory: String? = null,
+    @Column(name = "expected_monthly_orders")
+    var expectedMonthlyOrders: Int? = null,
     /** The hub serving the ward of the default pickup point; it looks after this merchant. */
     @Column(name = "serving_hub_id")
     var servingHubId: UUID? = null,
