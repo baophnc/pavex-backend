@@ -6,6 +6,8 @@ import com.pavex.shipment.dto.AdminUpdateShipmentRequest
 import com.pavex.shipment.dto.ShipmentLabelsResponse
 import com.pavex.shipment.security.requirePavexActor
 import com.pavex.shipment.service.AdminShipmentAccessService
+import com.pavex.shipment.service.ShipmentStatsResponse
+import com.pavex.shipment.service.ShipmentStatsService
 import com.pavex.shipment.service.AdminShipmentQueryService
 import com.pavex.shipment.service.UpdateShipmentService
 import jakarta.validation.Valid
@@ -28,6 +30,7 @@ import java.util.UUID
 class AdminShipmentController(
     private val queries: AdminShipmentQueryService,
     private val access: AdminShipmentAccessService,
+    private val stats: ShipmentStatsService,
     private val updates: UpdateShipmentService,
 ) {
     @GetMapping
@@ -49,6 +52,16 @@ class AdminShipmentController(
             hubId, createdFrom, createdTo,
         ),
     )
+
+    /** Daily bookings, fees, deliveries and failures for the overview charts. */
+    @GetMapping("/stats")
+    @PreAuthorize("hasAnyAuthority('shipments.admin.read','shipments.read-hub')")
+    fun stats(
+        authentication: Authentication,
+        @RequestParam from: LocalDate,
+        @RequestParam to: LocalDate,
+        @RequestParam(required = false) hubId: UUID?,
+    ): ShipmentStatsResponse = stats.stats(access.resolve(authentication), from, to, hubId)
 
     @GetMapping("/{trackingCode}/labels")
     @PreAuthorize("hasAnyAuthority('shipments.admin.read','shipments.read-hub')")

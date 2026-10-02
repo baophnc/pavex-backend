@@ -1,8 +1,11 @@
 package com.pavex.partners.dto
 
+import com.pavex.partners.entity.MerchantBusinessType
 import com.pavex.partners.entity.MerchantStatus
 import com.pavex.partners.entity.MerchantStatusReason
 import jakarta.validation.constraints.Email
+import jakarta.validation.constraints.Max
+import jakarta.validation.constraints.Min
 import jakarta.validation.constraints.NotBlank
 import jakarta.validation.constraints.Size
 import java.time.Instant
@@ -19,6 +22,19 @@ data class MerchantProfileRequest(
     val contactEmail: String? = null,
     @field:Size(max = 50)
     val taxCode: String? = null,
+    val businessType: MerchantBusinessType? = null,
+    @field:Size(max = 50)
+    val registrationNumber: String? = null,
+    @field:Size(max = 200)
+    val representativeName: String? = null,
+    @field:Size(max = 500)
+    val registeredAddress: String? = null,
+    @field:Size(max = 500)
+    val salesChannel: String? = null,
+    @field:Size(max = 100)
+    val productCategory: String? = null,
+    @field:Min(0) @field:Max(10_000_000)
+    val expectedMonthlyOrders: Int? = null,
 )
 
 data class MerchantProfileResponse(
@@ -40,6 +56,13 @@ data class MerchantProfileResponse(
     val version: Long,
     /** The hub that looks after this merchant; null until it has a pickup point. */
     val servingHubId: UUID? = null,
+    val businessType: MerchantBusinessType? = null,
+    val registrationNumber: String? = null,
+    val representativeName: String? = null,
+    val registeredAddress: String? = null,
+    val salesChannel: String? = null,
+    val productCategory: String? = null,
+    val expectedMonthlyOrders: Int? = null,
 )
 
 data class ChangeMerchantStatusRequest(

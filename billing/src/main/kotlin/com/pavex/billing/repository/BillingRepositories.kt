@@ -65,6 +65,24 @@ interface PaymentWebhookReceiptRepository : JpaRepository<PaymentWebhookReceipt,
 }
 
 interface CashCollectionRepository : JpaRepository<CashCollection, UUID> {
+    /**
+     * Cash not yet approved, by where it is: [heldByCourier] in a courier's hands, [atHub] counted
+     * in at a hub (or sent back for a recount), [submitted] waiting for the hub manager.
+     */
+    @Query(
+        """
+        select new com.pavex.billing.repository.OutstandingCash(
+            coalesce(sum(case when c.status = com.pavex.billing.entity.CashCollectionStatus.HELD and c.currentCustodianUserId is not null then c.amount else 0 end), 0),
+            coalesce(sum(case when c.status = com.pavex.billing.entity.CashCollectionStatus.HELD and c.currentCustodianUserId is null then c.amount else 0 end), 0),
+            coalesce(sum(case when c.status = com.pavex.billing.entity.CashCollectionStatus.SUBMITTED then c.amount else 0 end), 0),
+            count(c))
+        from CashCollection c
+        where c.status <> com.pavex.billing.entity.CashCollectionStatus.APPROVED
+          and (:allHubs = true or c.originHubId in :hubIds)
+        """,
+    )
+    fun outstanding(@Param("allHubs") allHubs: Boolean, @Param("hubIds") hubIds: Collection<java.util.UUID>): OutstandingCash
+
     fun existsByShipmentIdAndSource(shipmentId: UUID, source: CashSource): Boolean
 
     fun findByCollectedByUserIdOrderByCollectedAtDesc(userId: UUID, pageable: Pageable): List<CashCollection>
@@ -243,3 +261,10 @@ interface ApprovedCashTotal {
     val feeAmount: Long
     val codAmount: Long
 }
+
+data class OutstandingCash(
+    val heldByCouriers: Long,
+    val atHubs: Long,
+    val waitingApproval: Long,
+    val collections: Long,
+)

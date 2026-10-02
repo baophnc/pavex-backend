@@ -59,6 +59,13 @@ class MerchantService(
             contactPhone = request.contactPhone.trim(),
             contactEmail = normalize(request.contactEmail),
             taxCode = normalize(request.taxCode),
+            businessType = request.businessType,
+            registrationNumber = normalize(request.registrationNumber),
+            representativeName = normalize(request.representativeName),
+            registeredAddress = normalize(request.registeredAddress),
+            salesChannel = normalize(request.salesChannel),
+            productCategory = normalize(request.productCategory),
+            expectedMonthlyOrders = request.expectedMonthlyOrders,
             statusChangedAt = now,
             createdAt = now,
             updatedAt = now,
@@ -98,13 +105,19 @@ class MerchantService(
         }
         val businessName = request.businessName.trim()
         val taxCode = normalize(request.taxCode)
-        if (merchant.status in setOf(MerchantStatus.ACTIVE, MerchantStatus.SUSPENDED) &&
-            (merchant.businessName != businessName || merchant.taxCode != taxCode)
-        ) {
+        val registrationNumber = normalize(request.registrationNumber)
+        val representativeName = normalize(request.representativeName)
+        // A form sent without the newer fields keeps what is stored rather than clearing it.
+        val businessType = request.businessType ?: merchant.businessType
+        val verifiedFieldsChanged = merchant.businessName != businessName || merchant.taxCode != taxCode ||
+            merchant.businessType != businessType ||
+            (registrationNumber != null && merchant.registrationNumber != registrationNumber) ||
+            (representativeName != null && merchant.representativeName != representativeName)
+        if (merchant.status in setOf(MerchantStatus.ACTIVE, MerchantStatus.SUSPENDED) && verifiedFieldsChanged) {
             throw ApiException(
                 HttpStatus.CONFLICT,
                 "merchant_verification_data_locked",
-                "Business name and tax code cannot be changed after verification.",
+                "Business name, tax code, business form, registration and representative cannot be changed after verification.",
             )
         }
         merchant.businessName = businessName
@@ -112,6 +125,13 @@ class MerchantService(
         merchant.contactPhone = request.contactPhone.trim()
         merchant.contactEmail = normalize(request.contactEmail)
         merchant.taxCode = taxCode
+        merchant.businessType = businessType
+        registrationNumber?.let { merchant.registrationNumber = it }
+        representativeName?.let { merchant.representativeName = it }
+        request.registeredAddress?.let { merchant.registeredAddress = normalize(it) }
+        request.salesChannel?.let { merchant.salesChannel = normalize(it) }
+        request.productCategory?.let { merchant.productCategory = normalize(it) }
+        request.expectedMonthlyOrders?.let { merchant.expectedMonthlyOrders = it }
         merchant.updatedAt = Instant.now()
         return merchants.save(merchant).toResponse()
     }
@@ -355,6 +375,13 @@ class MerchantService(
         updatedAt,
         version,
         servingHubId,
+        businessType,
+        registrationNumber,
+        representativeName,
+        registeredAddress,
+        salesChannel,
+        productCategory,
+        expectedMonthlyOrders,
     )
 
     companion object {

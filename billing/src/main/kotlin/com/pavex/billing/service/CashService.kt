@@ -5,6 +5,7 @@ import com.pavex.billing.dto.ApprovedCashResponse
 import com.pavex.billing.dto.CashCollectionResponse
 import com.pavex.billing.dto.CashRemittanceResponse
 import com.pavex.billing.messaging.BillingEventPublisher
+import com.pavex.billing.repository.OutstandingCash
 import com.pavex.billing.entity.CashCollection
 import com.pavex.billing.entity.CashCollectionStatus
 import com.pavex.billing.entity.CashRemittance
@@ -122,6 +123,10 @@ class CashService(
             domain("cash_resubmit_conflict") { collection.resubmitFromHub(clock.instant()) }
             CashCollectionResponse.from(collections.saveAndFlush(collection))
         }
+    }
+
+    fun outstanding(hubId: UUID?): OutstandingCash = inReadTx {
+        collections.outstanding(hubId == null, listOfNotNull(hubId).ifEmpty { listOf(UUID(0, 0)) })
     }
 
     fun adminCollections(hubId: UUID?, collectorUserId: UUID?, status: CashCollectionStatus?): List<CashCollectionResponse> = inReadTx {
