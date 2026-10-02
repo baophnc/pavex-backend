@@ -216,6 +216,20 @@ class CashService(
         return items
     }
 
+    /**
+     * Head office reviews every hub's cash; a hub manager only the cash of a hub they manage, so
+     * a hub manager's lists must name the hub.
+     */
+    fun requireReviewScope(userId: UUID, allHubs: Boolean, hubId: UUID?) {
+        if (allHubs) return
+        if (hubId == null) throw InvalidBillingRequestException("hub_required", "Choose the hub whose cash to review.")
+        requireHubCashAccess(userId, hubId)
+    }
+
+    fun remittanceHubId(remittanceId: UUID): UUID = inReadTx { loadRemittance(remittanceId).hubId }
+
+    fun collectionHubId(collectionId: UUID): UUID? = inReadTx { loadCollection(collectionId).currentHubId }
+
     private fun requireHubCashAccess(userId: UUID, hubId: UUID) {
         if (!operations.canOperateAtHub(userId, hubId, OperationsCapability.CASH_HANDLING)) {
             throw BillingForbiddenException("cash_hub_forbidden", "The user cannot handle cash at this hub.")
