@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="925" height="610" viewBox="0 0 925 610" font-family="DejaVu Sans, Arial, sans-serif" font-size="11">
+<defs><marker id="open" markerWidth="12" markerHeight="12" refX="11" refY="6" orient="auto"><path d="M0,0 L11,6 L0,12" fill="none" stroke="#333"/></marker><marker id="tri" markerWidth="16" markerHeight="16" refX="15" refY="8" orient="auto"><path d="M0,0 L15,8 L0,16 Z" fill="#fff" stroke="#333"/></marker><marker id="dia" markerWidth="20" markerHeight="12" refX="1" refY="6" orient="auto"><path d="M1,6 L10,1 L19,6 L10,11 Z" fill="#333" stroke="#333"/></marker><marker id="odia" markerWidth="20" markerHeight="12" refX="1" refY="6" orient="auto"><path d="M1,6 L10,1 L19,6 L10,11 Z" fill="#fff" stroke="#333"/></marker></defs>
+<rect width="925" height="610" fill="#fff"/>
+<text x="20" y="22" font-size="14" font-weight="bold">DM-00 Context Map</text>
+<polyline points="360,82 200,82" fill="none" stroke="#333" stroke-dasharray="6,4" marker-end="url(#open)"/>
+<text x="280" y="79" text-anchor="middle" fill="#555" font-size="10">«use»</text>
+<polyline points="120,250 120,130" fill="none" stroke="#333" stroke-dasharray="6,4" marker-end="url(#open)"/>
+<text x="120" y="187" text-anchor="middle" fill="#555" font-size="10">«use»</text>
+<polyline points="453,250 453,130" fill="none" stroke="#333" stroke-dasharray="6,4" marker-end="url(#open)"/>
+<text x="453" y="187" text-anchor="middle" fill="#555" font-size="10">«use»</text>
+<polyline points="545,280 627,280 627,70 680,70" fill="none" stroke="#333" stroke-dasharray="6,4" marker-end="url(#open)"/>
+<text x="613" y="172" text-anchor="middle" fill="#555" font-size="10">«use»</text>
+<polyline points="545,292 705,292" fill="none" stroke="#333" stroke-dasharray="6,4" marker-end="url(#open)"/>
+<text x="625" y="289" text-anchor="middle" fill="#555" font-size="10">«use»</text>
+<polyline points="773,130 773,250" fill="none" stroke="#333" stroke-dasharray="6,4" marker-end="url(#open)"/>
+<text x="773" y="187" text-anchor="middle" fill="#555" font-size="10">«use»</text>
+<polyline points="179,340 179,366 737,366 737,340" fill="none" stroke="#333" stroke-dasharray="6,4" marker-end="url(#open)"/>
+<text x="458" y="337" text-anchor="middle" fill="#555" font-size="10">«use»</text>
+<polyline points="225,292 385,292" fill="none" stroke="#333" stroke-dasharray="6,4" marker-end="url(#open)"/>
+<text x="305" y="289" text-anchor="middle" fill="#555" font-size="10">«use»</text>
+<polyline points="473,460 473,340" fill="none" stroke="#333" stroke-dasharray="6,4" marker-end="url(#open)"/>
+<text x="473" y="397" text-anchor="middle" fill="#555" font-size="10">«use»</text>
+<polyline points="560,520 619,520 619,322 705,322" fill="none" stroke="#333" stroke-dasharray="6,4" marker-end="url(#open)"/>
+<text x="633" y="418" text-anchor="middle" fill="#555" font-size="10">«use»</text>
+<rect x="40" y="40" width="80.0" height="18" fill="#ede7f6" stroke="#333"/>
+<rect x="40" y="58" width="160" height="72" fill="#ede7f6" stroke="#333"/>
+<text x="120.0" y="98.0" text-anchor="middle" font-weight="bold">Identity &amp; Access</text>
+<rect x="360" y="40" width="80.0" height="18" fill="#ede7f6" stroke="#333"/>
+<rect x="360" y="58" width="160" height="72" fill="#ede7f6" stroke="#333"/>
+<text x="440.0" y="98.0" text-anchor="middle" font-weight="bold">Partner</text>
+<rect x="680" y="40" width="80.0" height="18" fill="#ede7f6" stroke="#333"/>
+<rect x="680" y="58" width="160" height="72" fill="#ede7f6" stroke="#333"/>
+<text x="760.0" y="98.0" text-anchor="middle" font-weight="bold">Pricing</text>
+<rect x="40" y="250" width="90" height="18" fill="#ede7f6" stroke="#333"/>
+<rect x="40" y="268" width="185.2" height="72" fill="#ede7f6" stroke="#333"/>
+<text x="132.6" y="308.0" text-anchor="middle" font-weight="bold">Workforce &amp; Operations</text>
+<rect x="385.2" y="250" width="80.0" height="18" fill="#ede7f6" stroke="#333"/>
+<rect x="385.2" y="268" width="160" height="72" fill="#ede7f6" stroke="#333"/>
+<text x="465.2" y="308.0" text-anchor="middle" font-weight="bold">Shipment</text>
+<rect x="705.2" y="250" width="80.0" height="18" fill="#ede7f6" stroke="#333"/>
+<rect x="705.2" y="268" width="160" height="72" fill="#ede7f6" stroke="#333"/>
+<text x="785.2" y="308.0" text-anchor="middle" font-weight="bold">Network</text>
+<rect x="400" y="460" width="80.0" height="18" fill="#ede7f6" stroke="#333"/>
+<rect x="400" y="478" width="160" height="72" fill="#ede7f6" stroke="#333"/>
+<text x="480.0" y="518.0" text-anchor="middle" font-weight="bold">Exception Handling</text>
+</svg>

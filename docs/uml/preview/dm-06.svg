@@ -1,0 +1,222 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1494" height="1441" viewBox="0 0 1494 1441" font-family="DejaVu Sans, Arial, sans-serif" font-size="11">
+<defs><marker id="open" markerWidth="12" markerHeight="12" refX="11" refY="6" orient="auto"><path d="M0,0 L11,6 L0,12" fill="none" stroke="#333"/></marker><marker id="tri" markerWidth="16" markerHeight="16" refX="15" refY="8" orient="auto"><path d="M0,0 L15,8 L0,16 Z" fill="#fff" stroke="#333"/></marker><marker id="dia" markerWidth="20" markerHeight="12" refX="1" refY="6" orient="auto"><path d="M1,6 L10,1 L19,6 L10,11 Z" fill="#333" stroke="#333"/></marker><marker id="odia" markerWidth="20" markerHeight="12" refX="1" refY="6" orient="auto"><path d="M1,6 L10,1 L19,6 L10,11 Z" fill="#fff" stroke="#333"/></marker></defs>
+<rect width="1494" height="1441" fill="#fff"/>
+<text x="20" y="22" font-size="14" font-weight="bold">DM-06 Exception Handling</text>
+<polyline points="185,697 185,807" fill="none" stroke="#333"/>
+<text x="176" y="715" fill="#a33" font-size="9" text-anchor="start">shipment</text>
+<text x="194" y="715" fill="#1a5" font-size="9" text-anchor="start">1</text>
+<text x="194" y="797" fill="#a33" font-size="9" text-anchor="start">exceptionRequests</text>
+<text x="176" y="797" fill="#1a5" font-size="9" text-anchor="start">0..*</text>
+<polyline points="972,272 972,716 233,716 233,807" fill="none" stroke="#333"/>
+<text x="963" y="290" fill="#a33" font-size="9" text-anchor="start">hub</text>
+<text x="981" y="290" fill="#1a5" font-size="9" text-anchor="start">0..1</text>
+<text x="242" y="797" fill="#a33" font-size="9" text-anchor="start">exceptionRequests</text>
+<text x="224" y="797" fill="#1a5" font-size="9" text-anchor="start">0..*</text>
+<polyline points="921,214 804,214 804,882 688,882" fill="none" stroke="#333"/>
+<text x="907" y="209" fill="#a33" font-size="9" text-anchor="end">hub</text>
+<text x="907" y="227" fill="#1a5" font-size="9" text-anchor="end">1</text>
+<text x="702" y="895" fill="#a33" font-size="9" text-anchor="start">cases</text>
+<text x="702" y="877" fill="#1a5" font-size="9" text-anchor="start">0..*</text>
+<polyline points="344,533 510,533 510,807" fill="none" stroke="#333"/>
+<text x="358" y="546" fill="#a33" font-size="9" text-anchor="start">shipment</text>
+<text x="358" y="528" fill="#1a5" font-size="9" text-anchor="start">0..1</text>
+<text x="518" y="797" fill="#a33" font-size="9" text-anchor="start">cases</text>
+<text x="500" y="797" fill="#1a5" font-size="9" text-anchor="start">0..*</text>
+<polyline points="586,391 586,807" fill="none" stroke="#333"/>
+<text x="577" y="409" fill="#a33" font-size="9" text-anchor="start">parcel</text>
+<text x="595" y="409" fill="#1a5" font-size="9" text-anchor="start">0..1</text>
+<text x="595" y="797" fill="#a33" font-size="9" text-anchor="start">cases</text>
+<text x="577" y="797" fill="#1a5" font-size="9" text-anchor="start">0..*</text>
+<polyline points="268,697 268,752 872,752 872,807" fill="none" stroke="#333"/>
+<text x="259" y="715" fill="#a33" font-size="9" text-anchor="start">shipment</text>
+<text x="277" y="715" fill="#1a5" font-size="9" text-anchor="start">1</text>
+<text x="881" y="797" fill="#a33" font-size="9" text-anchor="start">weightAdjustments</text>
+<text x="863" y="797" fill="#1a5" font-size="9" text-anchor="start">0..*</text>
+<polyline points="682,391 682,606 936,606 936,807" fill="none" stroke="#333"/>
+<text x="673" y="409" fill="#a33" font-size="9" text-anchor="start">parcel</text>
+<text x="691" y="409" fill="#1a5" font-size="9" text-anchor="start">1</text>
+<text x="946" y="797" fill="#a33" font-size="9" text-anchor="start">weightAdjustments</text>
+<text x="928" y="797" fill="#1a5" font-size="9" text-anchor="start">0..*</text>
+<polyline points="993,272 993,807" fill="none" stroke="#333"/>
+<text x="984" y="290" fill="#a33" font-size="9" text-anchor="start">hub</text>
+<text x="1002" y="290" fill="#1a5" font-size="9" text-anchor="start">0..1</text>
+<text x="1002" y="797" fill="#a33" font-size="9" text-anchor="start">weightAdjustments</text>
+<text x="984" y="797" fill="#1a5" font-size="9" text-anchor="start">0..*</text>
+<rect x="40" y="40" width="304" height="657" fill="#e3f2fd" stroke="#333"/>
+<line x1="40" y1="86" x2="344" y2="86" stroke="#333"/>
+<text x="192.0" y="58" text-anchor="middle">«aggregate root»</text>
+<text x="192.0" y="75" text-anchor="middle" font-weight="bold">Shipment</text>
+<text x="48" y="104">-id : UUID</text>
+<text x="48" y="121">-trackingCode : String</text>
+<text x="48" y="138">-merchantReference : String [0..1]</text>
+<text x="48" y="155">-createdByUserId : UUID</text>
+<text x="48" y="172">-sender : ShipmentAddressSnapshot</text>
+<text x="48" y="189">-recipient : ShipmentAddressSnapshot</text>
+<text x="48" y="206">-shippingFeePayer : ShippingFeePayer</text>
+<text x="48" y="223">-rateRevision : Int</text>
+<text x="48" y="240">-rateVersion : String</text>
+<text x="48" y="257">-currency : String</text>
+<text x="48" y="274">-serviceLevel : ShipmentServiceLevel</text>
+<text x="48" y="291">-pricingZone : ShipmentPricingZone</text>
+<text x="48" y="308">-fees : FeeBreakdown</text>
+<text x="48" y="325">-codAmount : Long</text>
+<text x="48" y="342">-declaredValue : Long</text>
+<text x="48" y="359">-estimate : DeliveryEstimate</text>
+<text x="48" y="376">-quoteExpiresAt : Instant</text>
+<text x="48" y="393">-origin : ShipmentEndpoint</text>
+<text x="48" y="410">-destination : ShipmentEndpoint</text>
+<text x="48" y="427">-routingStatus : ShipmentRoutingStatus</text>
+<text x="48" y="444">-routeRevision : Int</text>
+<text x="48" y="461">-reservedWeightKg : BigDecimal</text>
+<text x="48" y="478">-routeReadyAt : Instant [0..1]</text>
+<text x="48" y="495">-estimatedDeliveryAt : Instant [0..1]</text>
+<text x="48" y="512">-estimatedTransitMinutes : Int [0..1]</text>
+<text x="48" y="529">-routeDistanceKm : BigDecimal [0..1]</text>
+<text x="48" y="546">-status : ShipmentStatus</text>
+<text x="48" y="563">-lifecycleStatus : ShipmentLifecycleStatus</text>
+<text x="48" y="580">-hold : ShipmentHold [0..1]</text>
+<text x="48" y="597">-hasPendingWeightReview : Boolean</text>
+<text x="48" y="614">-note : String [0..1]</text>
+<text x="48" y="631">-cancellationReason : String [0..1]</text>
+<text x="48" y="648">-cancelledAt : Instant [0..1]</text>
+<text x="48" y="665">-completedAt : Instant [0..1]</text>
+<text x="48" y="682">-createdAt : Instant</text>
+<rect x="484" y="40" width="297" height="351" fill="#e3f2fd" stroke="#333"/>
+<line x1="484" y1="86" x2="781" y2="86" stroke="#333"/>
+<text x="632.5" y="58" text-anchor="middle">«entity»</text>
+<text x="632.5" y="75" text-anchor="middle" font-weight="bold">Parcel</text>
+<text x="492" y="104">-id : UUID</text>
+<text x="492" y="121">-code : String</text>
+<text x="492" y="138">-sequence : Int</text>
+<text x="492" y="155">-description : String</text>
+<text x="492" y="172">-quantity : Int</text>
+<text x="492" y="189">-category : GoodsCategory</text>
+<text x="492" y="206">-isFragile : Boolean</text>
+<text x="492" y="223">-weight : Weight</text>
+<text x="492" y="240">-dimensions : Dimensions</text>
+<text x="492" y="257">-status : ParcelStatus</text>
+<text x="492" y="274">-stage : ParcelStage</text>
+<text x="492" y="291">-flowDirection : ParcelFlowDirection</text>
+<text x="492" y="308">-currentLocationType : ParcelLocationType</text>
+<text x="492" y="325">-currentHubName : String [0..1]</text>
+<text x="492" y="342">-currentRouteLegId : UUID [0..1]</text>
+<text x="492" y="359">-custodyType : ParcelCustodyType</text>
+<text x="492" y="376">-custodyReferenceId : UUID [0..1]</text>
+<rect x="921" y="40" width="205" height="232" fill="#e3f2fd" stroke="#333"/>
+<line x1="921" y1="86" x2="1126" y2="86" stroke="#333"/>
+<text x="1023.5" y="58" text-anchor="middle">«aggregate root»</text>
+<text x="1023.5" y="75" text-anchor="middle" font-weight="bold">Hub</text>
+<text x="929" y="104">-id : UUID</text>
+<text x="929" y="121">-code : String</text>
+<text x="929" y="138">-name : String</text>
+<text x="929" y="155">-type : HubType</text>
+<text x="929" y="172">-status : HubStatus</text>
+<text x="929" y="189">-addressLine : String</text>
+<text x="929" y="206">-provinceCode : String</text>
+<text x="929" y="223">-wardCode : String</text>
+<text x="929" y="240">-publicVisible : Boolean</text>
+<text x="929" y="257">-publicName : String [0..1]</text>
+<rect x="40" y="807" width="290" height="283" fill="#e3f2fd" stroke="#333"/>
+<line x1="40" y1="853" x2="330" y2="853" stroke="#333"/>
+<text x="185.0" y="825" text-anchor="middle">«aggregate root»</text>
+<text x="185.0" y="842" text-anchor="middle" font-weight="bold">ShipmentExceptionRequest</text>
+<text x="48" y="871">-id : UUID</text>
+<text x="48" y="888">-kind : ShipmentExceptionRequestKind</text>
+<text x="48" y="905">-status : ShipmentExceptionRequestStatus</text>
+<text x="48" y="922">-reason : String</text>
+<text x="48" y="939">-routingRequired : Boolean</text>
+<text x="48" y="956">-forwardAddress : ContactAddress [0..1]</text>
+<text x="48" y="973">-requestedByUserId : UUID</text>
+<text x="48" y="990">-requestedAt : Instant</text>
+<text x="48" y="1007">-reviewedByUserId : UUID [0..1]</text>
+<text x="48" y="1024">-reviewedAt : Instant [0..1]</text>
+<text x="48" y="1041">-reviewNote : String [0..1]</text>
+<text x="48" y="1058">-completedByUserId : UUID [0..1]</text>
+<text x="48" y="1075">-completedAt : Instant [0..1]</text>
+<rect x="450" y="807" width="238" height="300" fill="#e3f2fd" stroke="#333"/>
+<line x1="450" y1="853" x2="688" y2="853" stroke="#333"/>
+<text x="569.0" y="825" text-anchor="middle">«aggregate root»</text>
+<text x="569.0" y="842" text-anchor="middle" font-weight="bold">ShipmentCase</text>
+<text x="458" y="871">-id : UUID</text>
+<text x="458" y="888">-caseNumber : String</text>
+<text x="458" y="905">-type : ShipmentCaseType</text>
+<text x="458" y="922">-status : ShipmentCaseStatus</text>
+<text x="458" y="939">-severity : ShipmentCaseSeverity</text>
+<text x="458" y="956">-externalBarcode : String [0..1]</text>
+<text x="458" y="973">-title : String</text>
+<text x="458" y="990">-description : String</text>
+<text x="458" y="1007">-reportedByUserId : UUID</text>
+<text x="458" y="1024">-assignedToUserId : UUID [0..1]</text>
+<text x="458" y="1041">-resolution : String [0..1]</text>
+<text x="458" y="1058">-createdAt : Instant</text>
+<text x="458" y="1075">-resolvedAt : Instant [0..1]</text>
+<text x="458" y="1092">-closedAt : Instant [0..1]</text>
+<rect x="808" y="807" width="257" height="266" fill="#e3f2fd" stroke="#333"/>
+<line x1="808" y1="853" x2="1065" y2="853" stroke="#333"/>
+<text x="936.5" y="825" text-anchor="middle">«entity»</text>
+<text x="936.5" y="842" text-anchor="middle" font-weight="bold">ShipmentWeightAdjustment</text>
+<text x="816" y="871">-id : UUID</text>
+<text x="816" y="888">-oldActualWeightKg : BigDecimal</text>
+<text x="816" y="905">-newActualWeightKg : BigDecimal</text>
+<text x="816" y="922">-oldChargeableWeightKg : BigDecimal</text>
+<text x="816" y="939">-newChargeableWeightKg : BigDecimal</text>
+<text x="816" y="956">-reason : String</text>
+<text x="816" y="973">-actorUserId : UUID</text>
+<text x="816" y="990">-adjustedAt : Instant</text>
+<text x="816" y="1007">-reviewCompleted : Boolean</text>
+<text x="816" y="1024">-reviewedByUserId : UUID [0..1]</text>
+<text x="816" y="1041">-reviewedAt : Instant [0..1]</text>
+<text x="816" y="1058">-reviewNote : String [0..1]</text>
+<rect x="40" y="1217" width="219" height="130" fill="#fff6d5" stroke="#333"/>
+<line x1="40" y1="1263" x2="259" y2="1263" stroke="#333"/>
+<text x="149.5" y="1235" text-anchor="middle">«enumeration»</text>
+<text x="149.5" y="1252" text-anchor="middle" font-weight="bold">ShipmentExceptionRequestKind</text>
+<text x="48" y="1281">RETURN_TO_SENDER</text>
+<text x="48" y="1298">FORWARD_TO_NEW_ADDRESS</text>
+<text x="48" y="1315">REDELIVERY</text>
+<text x="48" y="1332">CANCEL_SHIPMENT</text>
+<rect x="319" y="1217" width="232" height="147" fill="#fff6d5" stroke="#333"/>
+<line x1="319" y1="1263" x2="551" y2="1263" stroke="#333"/>
+<text x="435.0" y="1235" text-anchor="middle">«enumeration»</text>
+<text x="435.0" y="1252" text-anchor="middle" font-weight="bold">ShipmentExceptionRequestStatus</text>
+<text x="327" y="1281">PENDING</text>
+<text x="327" y="1298">APPROVED</text>
+<text x="327" y="1315">REJECTED</text>
+<text x="327" y="1332">COMPLETED</text>
+<text x="327" y="1349">CANCELLED</text>
+<rect x="611" y="1217" width="152" height="164" fill="#fff6d5" stroke="#333"/>
+<line x1="611" y1="1263" x2="763" y2="1263" stroke="#333"/>
+<text x="687.0" y="1235" text-anchor="middle">«enumeration»</text>
+<text x="687.0" y="1252" text-anchor="middle" font-weight="bold">ShipmentCaseType</text>
+<text x="619" y="1281">DAMAGED</text>
+<text x="619" y="1298">LOST</text>
+<text x="619" y="1315">MISSORTED</text>
+<text x="619" y="1332">UNIDENTIFIED_PARCEL</text>
+<text x="619" y="1349">ADDRESS_ISSUE</text>
+<text x="619" y="1366">OTHER</text>
+<rect x="823" y="1217" width="153" height="130" fill="#fff6d5" stroke="#333"/>
+<line x1="823" y1="1263" x2="976" y2="1263" stroke="#333"/>
+<text x="899.5" y="1235" text-anchor="middle">«enumeration»</text>
+<text x="899.5" y="1252" text-anchor="middle" font-weight="bold">ShipmentCaseStatus</text>
+<text x="831" y="1281">OPEN</text>
+<text x="831" y="1298">IN_PROGRESS</text>
+<text x="831" y="1315">RESOLVED</text>
+<text x="831" y="1332">CLOSED</text>
+<rect x="1036" y="1217" width="166" height="130" fill="#fff6d5" stroke="#333"/>
+<line x1="1036" y1="1263" x2="1202" y2="1263" stroke="#333"/>
+<text x="1119.0" y="1235" text-anchor="middle">«enumeration»</text>
+<text x="1119.0" y="1252" text-anchor="middle" font-weight="bold">ShipmentCaseSeverity</text>
+<text x="1044" y="1281">LOW</text>
+<text x="1044" y="1298">MEDIUM</text>
+<text x="1044" y="1315">HIGH</text>
+<text x="1044" y="1332">CRITICAL</text>
+<rect x="1262" y="1217" width="172" height="147" fill="#e8f5e9" stroke="#333"/>
+<line x1="1262" y1="1263" x2="1434" y2="1263" stroke="#333"/>
+<text x="1348.0" y="1235" text-anchor="middle">«value object»</text>
+<text x="1348.0" y="1252" text-anchor="middle" font-weight="bold">ContactAddress</text>
+<text x="1270" y="1281">-contactName : String</text>
+<text x="1270" y="1298">-contactPhone : String</text>
+<text x="1270" y="1315">-addressLine : String</text>
+<text x="1270" y="1332">-provinceCode : String</text>
+<text x="1270" y="1349">-wardCode : String</text>
+</svg>

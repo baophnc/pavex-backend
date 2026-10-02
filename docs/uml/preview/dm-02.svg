@@ -1,0 +1,124 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="972" height="1398" viewBox="0 0 972 1398" font-family="DejaVu Sans, Arial, sans-serif" font-size="11">
+<defs><marker id="open" markerWidth="12" markerHeight="12" refX="11" refY="6" orient="auto"><path d="M0,0 L11,6 L0,12" fill="none" stroke="#333"/></marker><marker id="tri" markerWidth="16" markerHeight="16" refX="15" refY="8" orient="auto"><path d="M0,0 L15,8 L0,16 Z" fill="#fff" stroke="#333"/></marker><marker id="dia" markerWidth="20" markerHeight="12" refX="1" refY="6" orient="auto"><path d="M1,6 L10,1 L19,6 L10,11 Z" fill="#333" stroke="#333"/></marker><marker id="odia" markerWidth="20" markerHeight="12" refX="1" refY="6" orient="auto"><path d="M1,6 L10,1 L19,6 L10,11 Z" fill="#fff" stroke="#333"/></marker></defs>
+<rect width="972" height="1398" fill="#fff"/>
+<text x="20" y="22" font-size="14" font-weight="bold">DM-02 Partner</text>
+<polyline points="264,82 324,82" fill="none" stroke="#333"/>
+<text x="278" y="95" fill="#a33" font-size="9" text-anchor="start">owner</text>
+<text x="278" y="77" fill="#1a5" font-size="9" text-anchor="start">1</text>
+<text x="310" y="77" fill="#a33" font-size="9" text-anchor="end">merchant</text>
+<text x="310" y="95" fill="#1a5" font-size="9" text-anchor="end">0..1</text>
+<polyline points="661,82 721,82" fill="none" stroke="#333" marker-start="url(#dia)"/>
+<text x="675" y="95" fill="#a33" font-size="9" text-anchor="start">merchant</text>
+<text x="675" y="77" fill="#1a5" font-size="9" text-anchor="start">1</text>
+<text x="707" y="77" fill="#a33" font-size="9" text-anchor="end">pickupAddresses</text>
+<text x="707" y="95" fill="#1a5" font-size="9" text-anchor="end">0..*</text>
+<polyline points="464,357 464,437" fill="none" stroke="#333"/>
+<text x="455" y="375" fill="#a33" font-size="9" text-anchor="start">merchant</text>
+<text x="473" y="375" fill="#1a5" font-size="9" text-anchor="start">1</text>
+<text x="473" y="427" fill="#a33" font-size="9" text-anchor="start">shipments</text>
+<text x="455" y="427" fill="#1a5" font-size="9" text-anchor="start">0..*</text>
+<rect x="40" y="40" width="224" height="164" fill="#e3f2fd" stroke="#333"/>
+<line x1="40" y1="86" x2="264" y2="86" stroke="#333"/>
+<text x="152.0" y="58" text-anchor="middle">«aggregate root»</text>
+<text x="152.0" y="75" text-anchor="middle" font-weight="bold">UserAccount</text>
+<text x="48" y="104">-id : UUID</text>
+<text x="48" y="121">-email : String</text>
+<text x="48" y="138">-emailVerified : Boolean</text>
+<text x="48" y="155">-status : AccountStatus</text>
+<text x="48" y="172">-profileStatus : ProfileStatus</text>
+<text x="48" y="189">-createdAt : Instant</text>
+<rect x="324" y="40" width="337" height="317" fill="#e3f2fd" stroke="#333"/>
+<line x1="324" y1="86" x2="661" y2="86" stroke="#333"/>
+<text x="492.5" y="58" text-anchor="middle">«aggregate root»</text>
+<text x="492.5" y="75" text-anchor="middle" font-weight="bold">Merchant</text>
+<text x="332" y="104">-id : UUID</text>
+<text x="332" y="121">-merchantCode : String</text>
+<text x="332" y="138">-businessName : String</text>
+<text x="332" y="155">-contactName : String</text>
+<text x="332" y="172">-contactPhone : String</text>
+<text x="332" y="189">-contactEmail : String [0..1]</text>
+<text x="332" y="206">-taxCode : String [0..1]</text>
+<text x="332" y="223">-status : MerchantStatus</text>
+<text x="332" y="240">-statusReasonCode : MerchantStatusReason [0..1]</text>
+<text x="332" y="257">-statusReasonDetail : String [0..1]</text>
+<text x="332" y="274">-statusChangedAt : Instant</text>
+<text x="332" y="291">-statusChangedByUserId : UUID [0..1]</text>
+<text x="332" y="308">-verifiedAt : Instant [0..1]</text>
+<text x="332" y="325">-verifiedByUserId : UUID [0..1]</text>
+<text x="332" y="342">-createdAt : Instant</text>
+<rect x="721" y="40" width="191" height="130" fill="#e3f2fd" stroke="#333"/>
+<line x1="721" y1="86" x2="912" y2="86" stroke="#333"/>
+<text x="816.5" y="58" text-anchor="middle">«entity»</text>
+<text x="816.5" y="75" text-anchor="middle" font-weight="bold">MerchantPickupAddress</text>
+<text x="729" y="104">-id : UUID</text>
+<text x="729" y="121">-name : String</text>
+<text x="729" y="138">-address : ContactAddress</text>
+<text x="729" y="155">-isDefault : Boolean</text>
+<rect x="300" y="437" width="304" height="657" fill="#e3f2fd" stroke="#333"/>
+<line x1="300" y1="483" x2="604" y2="483" stroke="#333"/>
+<text x="452.0" y="455" text-anchor="middle">«aggregate root»</text>
+<text x="452.0" y="472" text-anchor="middle" font-weight="bold">Shipment</text>
+<text x="308" y="501">-id : UUID</text>
+<text x="308" y="518">-trackingCode : String</text>
+<text x="308" y="535">-merchantReference : String [0..1]</text>
+<text x="308" y="552">-createdByUserId : UUID</text>
+<text x="308" y="569">-sender : ShipmentAddressSnapshot</text>
+<text x="308" y="586">-recipient : ShipmentAddressSnapshot</text>
+<text x="308" y="603">-shippingFeePayer : ShippingFeePayer</text>
+<text x="308" y="620">-rateRevision : Int</text>
+<text x="308" y="637">-rateVersion : String</text>
+<text x="308" y="654">-currency : String</text>
+<text x="308" y="671">-serviceLevel : ShipmentServiceLevel</text>
+<text x="308" y="688">-pricingZone : ShipmentPricingZone</text>
+<text x="308" y="705">-fees : FeeBreakdown</text>
+<text x="308" y="722">-codAmount : Long</text>
+<text x="308" y="739">-declaredValue : Long</text>
+<text x="308" y="756">-estimate : DeliveryEstimate</text>
+<text x="308" y="773">-quoteExpiresAt : Instant</text>
+<text x="308" y="790">-origin : ShipmentEndpoint</text>
+<text x="308" y="807">-destination : ShipmentEndpoint</text>
+<text x="308" y="824">-routingStatus : ShipmentRoutingStatus</text>
+<text x="308" y="841">-routeRevision : Int</text>
+<text x="308" y="858">-reservedWeightKg : BigDecimal</text>
+<text x="308" y="875">-routeReadyAt : Instant [0..1]</text>
+<text x="308" y="892">-estimatedDeliveryAt : Instant [0..1]</text>
+<text x="308" y="909">-estimatedTransitMinutes : Int [0..1]</text>
+<text x="308" y="926">-routeDistanceKm : BigDecimal [0..1]</text>
+<text x="308" y="943">-status : ShipmentStatus</text>
+<text x="308" y="960">-lifecycleStatus : ShipmentLifecycleStatus</text>
+<text x="308" y="977">-hold : ShipmentHold [0..1]</text>
+<text x="308" y="994">-hasPendingWeightReview : Boolean</text>
+<text x="308" y="1011">-note : String [0..1]</text>
+<text x="308" y="1028">-cancellationReason : String [0..1]</text>
+<text x="308" y="1045">-cancelledAt : Instant [0..1]</text>
+<text x="308" y="1062">-completedAt : Instant [0..1]</text>
+<text x="308" y="1079">-createdAt : Instant</text>
+<rect x="40" y="1174" width="158" height="147" fill="#fff6d5" stroke="#333"/>
+<line x1="40" y1="1220" x2="198" y2="1220" stroke="#333"/>
+<text x="119.0" y="1192" text-anchor="middle">«enumeration»</text>
+<text x="119.0" y="1209" text-anchor="middle" font-weight="bold">MerchantStatus</text>
+<text x="48" y="1238">PENDING_VERIFICATION</text>
+<text x="48" y="1255">ACTIVE</text>
+<text x="48" y="1272">REJECTED</text>
+<text x="48" y="1289">SUSPENDED</text>
+<text x="48" y="1306">CLOSED</text>
+<rect x="258" y="1174" width="166" height="164" fill="#fff6d5" stroke="#333"/>
+<line x1="258" y1="1220" x2="424" y2="1220" stroke="#333"/>
+<text x="341.0" y="1192" text-anchor="middle">«enumeration»</text>
+<text x="341.0" y="1209" text-anchor="middle" font-weight="bold">MerchantStatusReason</text>
+<text x="266" y="1238">MISSING_DOCUMENTS</text>
+<text x="266" y="1255">INVALID_INFORMATION</text>
+<text x="266" y="1272">POLICY_VIOLATION</text>
+<text x="266" y="1289">FRAUD_SUSPECTED</text>
+<text x="266" y="1306">OWNER_REQUEST</text>
+<text x="266" y="1323">OTHER</text>
+<rect x="484" y="1174" width="172" height="147" fill="#e8f5e9" stroke="#333"/>
+<line x1="484" y1="1220" x2="656" y2="1220" stroke="#333"/>
+<text x="570.0" y="1192" text-anchor="middle">«value object»</text>
+<text x="570.0" y="1209" text-anchor="middle" font-weight="bold">ContactAddress</text>
+<text x="492" y="1238">-contactName : String</text>
+<text x="492" y="1255">-contactPhone : String</text>
+<text x="492" y="1272">-addressLine : String</text>
+<text x="492" y="1289">-provinceCode : String</text>
+<text x="492" y="1306">-wardCode : String</text>
+</svg>

@@ -1,0 +1,60 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1160" height="960" viewBox="0 0 1160 960" font-family="DejaVu Sans, Arial, sans-serif" font-size="11">
+<defs><marker id="open" markerWidth="12" markerHeight="12" refX="11" refY="6" orient="auto"><path d="M0,0 L11,6 L0,12" fill="none" stroke="#333"/></marker><marker id="tri" markerWidth="16" markerHeight="16" refX="15" refY="8" orient="auto"><path d="M0,0 L15,8 L0,16 Z" fill="#fff" stroke="#333"/></marker><marker id="dia" markerWidth="20" markerHeight="12" refX="1" refY="6" orient="auto"><path d="M1,6 L10,1 L19,6 L10,11 Z" fill="#333" stroke="#333"/></marker><marker id="odia" markerWidth="20" markerHeight="12" refX="1" refY="6" orient="auto"><path d="M1,6 L10,1 L19,6 L10,11 Z" fill="#fff" stroke="#333"/></marker></defs>
+<rect width="1160" height="960" fill="#fff"/>
+<text x="20" y="22" font-size="14" font-weight="bold">UC-10 Phân rã: Ngoại lệ &amp; sự cố</text>
+<rect x="200" y="40" width="900" height="860" fill="#f4fbff" stroke="#333"/>
+<text x="650.0" y="58" text-anchor="middle" font-weight="bold">PAVEX Logistics Platform</text>
+<polyline points="100,222 341,150" fill="none" stroke="#333"/>
+<polyline points="100,234 341,307" fill="none" stroke="#333"/>
+<polyline points="725,243 475,308" fill="none" stroke="#333" stroke-dasharray="6,4" marker-end="url(#open)"/>
+<text x="600" y="272" text-anchor="middle" fill="#555" font-size="10">«extend»</text>
+<polyline points="749,296 511,317" fill="none" stroke="#333" stroke-dasharray="6,4" marker-end="url(#open)"/>
+<text x="630" y="304" text-anchor="middle" fill="#555" font-size="10">«extend»</text>
+<polyline points="685,342 515,333" fill="none" stroke="#333" stroke-dasharray="6,4" marker-end="url(#open)"/>
+<text x="600" y="334" text-anchor="middle" fill="#555" font-size="10">«extend»</text>
+<polyline points="771,395 489,342" fill="none" stroke="#333" stroke-dasharray="6,4" marker-end="url(#open)"/>
+<text x="630" y="366" text-anchor="middle" fill="#555" font-size="10">«extend»</text>
+<polyline points="100,521 290,521" fill="none" stroke="#333"/>
+<polyline points="100,716 290,716" fill="none" stroke="#333"/>
+<polyline points="725,633 475,698" fill="none" stroke="#333" stroke-dasharray="6,4" marker-end="url(#open)"/>
+<text x="600" y="662" text-anchor="middle" fill="#555" font-size="10">«extend»</text>
+<polyline points="749,686 511,707" fill="none" stroke="#333" stroke-dasharray="6,4" marker-end="url(#open)"/>
+<text x="630" y="694" text-anchor="middle" fill="#555" font-size="10">«extend»</text>
+<polyline points="685,732 515,723" fill="none" stroke="#333" stroke-dasharray="6,4" marker-end="url(#open)"/>
+<text x="600" y="724" text-anchor="middle" fill="#555" font-size="10">«extend»</text>
+<polyline points="771,785 489,732" fill="none" stroke="#333" stroke-dasharray="6,4" marker-end="url(#open)"/>
+<text x="630" y="756" text-anchor="middle" fill="#555" font-size="10">«extend»</text>
+<ellipse cx="405.0" cy="131.0" rx="115.0" ry="23.0" fill="#e3f2fd" stroke="#333"/>
+<text x="405.0" y="135.0" text-anchor="middle">Xem ngoại lệ vận đơn</text>
+<ellipse cx="405.0" cy="326.0" rx="115.0" ry="23.0" fill="#e3f2fd" stroke="#333"/>
+<text x="405.0" y="330.0" text-anchor="middle">Xử lý yêu cầu ngoại lệ</text>
+<ellipse cx="795.0" cy="225.0" rx="115.0" ry="23.0" fill="#e3f2fd" stroke="#333"/>
+<text x="795.0" y="229.0" text-anchor="middle">Phê duyệt yêu cầu</text>
+<ellipse cx="855.0" cy="287.0" rx="115.0" ry="23.0" fill="#e3f2fd" stroke="#333"/>
+<text x="855.0" y="291.0" text-anchor="middle">Từ chối yêu cầu</text>
+<ellipse cx="795.0" cy="349.0" rx="115.0" ry="23.0" fill="#e3f2fd" stroke="#333"/>
+<text x="795.0" y="353.0" text-anchor="middle">Hoàn tất yêu cầu</text>
+<ellipse cx="855.0" cy="411.0" rx="115.0" ry="23.0" fill="#e3f2fd" stroke="#333"/>
+<text x="855.0" y="415.0" text-anchor="middle">Định tuyến lại vận đơn</text>
+<ellipse cx="405.0" cy="521.0" rx="115.0" ry="23.0" fill="#e3f2fd" stroke="#333"/>
+<text x="405.0" y="525.0" text-anchor="middle">Báo cáo sự cố</text>
+<ellipse cx="405.0" cy="716.0" rx="115.0" ry="23.0" fill="#e3f2fd" stroke="#333"/>
+<text x="405.0" y="720.0" text-anchor="middle">Quản lý hồ sơ sự cố</text>
+<ellipse cx="795.0" cy="615.0" rx="115.0" ry="23.0" fill="#e3f2fd" stroke="#333"/>
+<text x="795.0" y="619.0" text-anchor="middle">Phân công xử lý sự cố</text>
+<ellipse cx="855.0" cy="677.0" rx="115.0" ry="23.0" fill="#e3f2fd" stroke="#333"/>
+<text x="855.0" y="681.0" text-anchor="middle">Cập nhật tiến độ xử lý</text>
+<ellipse cx="795.0" cy="739.0" rx="115.0" ry="23.0" fill="#e3f2fd" stroke="#333"/>
+<text x="795.0" y="743.0" text-anchor="middle">Giải quyết sự cố</text>
+<ellipse cx="855.0" cy="801.0" rx="115.0" ry="23.0" fill="#e3f2fd" stroke="#333"/>
+<text x="855.0" y="805.0" text-anchor="middle">Đóng hồ sơ sự cố</text>
+<circle cx="80.0" cy="198.5" r="10" fill="#fff" stroke="#333"/>
+<path d="M80.0,208.5 L80.0,238.5 M62.0,218.5 L98.0,218.5 M80.0,238.5 L65.0,266.5 M80.0,238.5 L95.0,266.5" stroke="#333" fill="none"/>
+<text x="80.0" y="282.5" text-anchor="middle" font-style="italic">Hub Coordinator</text>
+<circle cx="80.0" cy="491.0" r="10" fill="#fff" stroke="#333"/>
+<path d="M80.0,501.0 L80.0,531.0 M62.0,511.0 L98.0,511.0 M80.0,531.0 L65.0,559.0 M80.0,531.0 L95.0,559.0" stroke="#333" fill="none"/>
+<text x="80.0" y="575.0" text-anchor="middle" font-style="italic">Operational Staff</text>
+<circle cx="80.0" cy="686.0" r="10" fill="#fff" stroke="#333"/>
+<path d="M80.0,696.0 L80.0,726.0 M62.0,706.0 L98.0,706.0 M80.0,726.0 L65.0,754.0 M80.0,726.0 L95.0,754.0" stroke="#333" fill="none"/>
+<text x="80.0" y="770.0" text-anchor="middle">Operations Manager</text>
+</svg>

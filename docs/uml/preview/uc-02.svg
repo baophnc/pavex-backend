@@ -1,0 +1,71 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1160" height="1062" viewBox="0 0 1160 1062" font-family="DejaVu Sans, Arial, sans-serif" font-size="11">
+<defs><marker id="open" markerWidth="12" markerHeight="12" refX="11" refY="6" orient="auto"><path d="M0,0 L11,6 L0,12" fill="none" stroke="#333"/></marker><marker id="tri" markerWidth="16" markerHeight="16" refX="15" refY="8" orient="auto"><path d="M0,0 L15,8 L0,16 Z" fill="#fff" stroke="#333"/></marker><marker id="dia" markerWidth="20" markerHeight="12" refX="1" refY="6" orient="auto"><path d="M1,6 L10,1 L19,6 L10,11 Z" fill="#333" stroke="#333"/></marker><marker id="odia" markerWidth="20" markerHeight="12" refX="1" refY="6" orient="auto"><path d="M1,6 L10,1 L19,6 L10,11 Z" fill="#fff" stroke="#333"/></marker></defs>
+<rect width="1160" height="1062" fill="#fff"/>
+<text x="20" y="22" font-size="14" font-weight="bold">UC-02 Phân rã: Xác thực &amp; tài khoản cá nhân</text>
+<rect x="200" y="40" width="900" height="962" fill="#f4fbff" stroke="#333"/>
+<text x="650.0" y="58" text-anchor="middle" font-weight="bold">PAVEX Logistics Platform</text>
+<polyline points="100,288 363,152" fill="none" stroke="#333"/>
+<polyline points="681,125 519,129" fill="none" stroke="#333" stroke-dasharray="6,4" marker-end="url(#open)"/>
+<text x="600" y="124" text-anchor="middle" fill="#555" font-size="10">«extend»</text>
+<polyline points="100,294 324,249" fill="none" stroke="#333"/>
+<polyline points="100,438 346,355" fill="none" stroke="#333"/>
+<polyline points="519,333 681,329" fill="none" stroke="#333" stroke-dasharray="6,4" marker-end="url(#open)"/>
+<text x="600" y="328" text-anchor="middle" fill="#555" font-size="10">«include»</text>
+<polyline points="100,312 374,508" fill="none" stroke="#333"/>
+<polyline points="725,447 475,512" fill="none" stroke="#333" stroke-dasharray="6,4" marker-end="url(#open)"/>
+<text x="600" y="476" text-anchor="middle" fill="#555" font-size="10">«extend»</text>
+<polyline points="749,500 511,521" fill="none" stroke="#333" stroke-dasharray="6,4" marker-end="url(#open)"/>
+<text x="630" y="508" text-anchor="middle" fill="#555" font-size="10">«extend»</text>
+<polyline points="685,546 515,537" fill="none" stroke="#333" stroke-dasharray="6,4" marker-end="url(#open)"/>
+<text x="600" y="538" text-anchor="middle" fill="#555" font-size="10">«extend»</text>
+<polyline points="771,599 489,546" fill="none" stroke="#333" stroke-dasharray="6,4" marker-end="url(#open)"/>
+<text x="630" y="570" text-anchor="middle" fill="#555" font-size="10">«extend»</text>
+<polyline points="100,818 290,818" fill="none" stroke="#333"/>
+<polyline points="725,735 475,800" fill="none" stroke="#333" stroke-dasharray="6,4" marker-end="url(#open)"/>
+<text x="600" y="764" text-anchor="middle" fill="#555" font-size="10">«extend»</text>
+<polyline points="749,788 511,809" fill="none" stroke="#333" stroke-dasharray="6,4" marker-end="url(#open)"/>
+<text x="630" y="796" text-anchor="middle" fill="#555" font-size="10">«extend»</text>
+<polyline points="685,834 515,825" fill="none" stroke="#333" stroke-dasharray="6,4" marker-end="url(#open)"/>
+<text x="600" y="826" text-anchor="middle" fill="#555" font-size="10">«extend»</text>
+<polyline points="771,887 489,834" fill="none" stroke="#333" stroke-dasharray="6,4" marker-end="url(#open)"/>
+<text x="630" y="858" text-anchor="middle" fill="#555" font-size="10">«extend»</text>
+<ellipse cx="405.0" cy="131.0" rx="115.0" ry="23.0" fill="#e3f2fd" stroke="#333"/>
+<text x="405.0" y="135.0" text-anchor="middle">Đăng nhập</text>
+<ellipse cx="795.0" cy="123.0" rx="115.0" ry="23.0" fill="#e3f2fd" stroke="#333"/>
+<text x="795.0" y="127.0" text-anchor="middle">Quên mật khẩu</text>
+<ellipse cx="405.0" cy="233.0" rx="115.0" ry="23.0" fill="#e3f2fd" stroke="#333"/>
+<text x="405.0" y="237.0" text-anchor="middle">Đăng xuất</text>
+<ellipse cx="405.0" cy="335.0" rx="115.0" ry="23.0" fill="#e3f2fd" stroke="#333"/>
+<text x="405.0" y="339.0" text-anchor="middle">Đăng ký tài khoản</text>
+<ellipse cx="795.0" cy="327.0" rx="115.0" ry="23.0" fill="#e3f2fd" stroke="#333"/>
+<text x="795.0" y="331.0" text-anchor="middle">Xác minh email</text>
+<ellipse cx="405.0" cy="530.0" rx="115.0" ry="23.0" fill="#e3f2fd" stroke="#333"/>
+<text x="405.0" y="534.0" text-anchor="middle">Quản lý hồ sơ cá nhân</text>
+<ellipse cx="795.0" cy="429.0" rx="115.0" ry="23.0" fill="#e3f2fd" stroke="#333"/>
+<text x="795.0" y="433.0" text-anchor="middle">Xem hồ sơ cá nhân</text>
+<ellipse cx="855.0" cy="491.0" rx="115.0" ry="23.0" fill="#e3f2fd" stroke="#333"/>
+<text x="855.0" y="495.0" text-anchor="middle">Cập nhật thông tin cá nhân</text>
+<ellipse cx="795.0" cy="553.0" rx="115.0" ry="23.0" fill="#e3f2fd" stroke="#333"/>
+<text x="795.0" y="557.0" text-anchor="middle">Cập nhật ảnh đại diện</text>
+<ellipse cx="855.0" cy="615.0" rx="115.0" ry="23.0" fill="#e3f2fd" stroke="#333"/>
+<text x="855.0" y="619.0" text-anchor="middle">Đổi mật khẩu</text>
+<ellipse cx="405.0" cy="818.0" rx="115.0" ry="23.0" fill="#e3f2fd" stroke="#333"/>
+<text x="405.0" y="822.0" text-anchor="middle">Quản lý sổ địa chỉ</text>
+<ellipse cx="795.0" cy="717.0" rx="115.0" ry="23.0" fill="#e3f2fd" stroke="#333"/>
+<text x="795.0" y="721.0" text-anchor="middle">Thêm địa chỉ</text>
+<ellipse cx="855.0" cy="779.0" rx="115.0" ry="23.0" fill="#e3f2fd" stroke="#333"/>
+<text x="855.0" y="783.0" text-anchor="middle">Cập nhật địa chỉ</text>
+<ellipse cx="795.0" cy="841.0" rx="115.0" ry="23.0" fill="#e3f2fd" stroke="#333"/>
+<text x="795.0" y="845.0" text-anchor="middle">Xóa địa chỉ</text>
+<ellipse cx="855.0" cy="903.0" rx="115.0" ry="23.0" fill="#e3f2fd" stroke="#333"/>
+<text x="855.0" y="907.0" text-anchor="middle">Đặt địa chỉ mặc định</text>
+<circle cx="80.0" cy="268.0" r="10" fill="#fff" stroke="#333"/>
+<path d="M80.0,278.0 L80.0,308.0 M62.0,288.0 L98.0,288.0 M80.0,308.0 L65.0,336.0 M80.0,308.0 L95.0,336.0" stroke="#333" fill="none"/>
+<text x="80.0" y="352.0" text-anchor="middle" font-style="italic">Authenticated User</text>
+<circle cx="80.0" cy="415.0" r="10" fill="#fff" stroke="#333"/>
+<path d="M80.0,425.0 L80.0,455.0 M62.0,435.0 L98.0,435.0 M80.0,455.0 L65.0,483.0 M80.0,455.0 L95.0,483.0" stroke="#333" fill="none"/>
+<text x="80.0" y="499.0" text-anchor="middle">Guest</text>
+<circle cx="80.0" cy="788.0" r="10" fill="#fff" stroke="#333"/>
+<path d="M80.0,798.0 L80.0,828.0 M62.0,808.0 L98.0,808.0 M80.0,828.0 L65.0,856.0 M80.0,828.0 L95.0,856.0" stroke="#333" fill="none"/>
+<text x="80.0" y="872.0" text-anchor="middle">Customer</text>
+</svg>

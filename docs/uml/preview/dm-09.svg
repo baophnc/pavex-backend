@@ -1,0 +1,732 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="2498" height="2534" viewBox="0 0 2498 2534" font-family="DejaVu Sans, Arial, sans-serif" font-size="11">
+<defs><marker id="open" markerWidth="12" markerHeight="12" refX="11" refY="6" orient="auto"><path d="M0,0 L11,6 L0,12" fill="none" stroke="#333"/></marker><marker id="tri" markerWidth="16" markerHeight="16" refX="15" refY="8" orient="auto"><path d="M0,0 L15,8 L0,16 Z" fill="#fff" stroke="#333"/></marker><marker id="dia" markerWidth="20" markerHeight="12" refX="1" refY="6" orient="auto"><path d="M1,6 L10,1 L19,6 L10,11 Z" fill="#333" stroke="#333"/></marker><marker id="odia" markerWidth="20" markerHeight="12" refX="1" refY="6" orient="auto"><path d="M1,6 L10,1 L19,6 L10,11 Z" fill="#fff" stroke="#333"/></marker></defs>
+<rect width="2498" height="2534" fill="#fff"/>
+<text x="20" y="22" font-size="14" font-weight="bold">DM-09 Full Domain Model (entities)</text>
+<polyline points="341,82 271,82" fill="none" stroke="#333" marker-start="url(#dia)"/>
+<text x="327" y="77" fill="#a33" font-size="9" text-anchor="end">account</text>
+<text x="327" y="95" fill="#1a5" font-size="9" text-anchor="end">1</text>
+<text x="285" y="95" fill="#a33" font-size="9" text-anchor="start">profile</text>
+<text x="285" y="77" fill="#1a5" font-size="9" text-anchor="start">0..1</text>
+<polyline points="565,82 635,82" fill="none" stroke="#333" marker-start="url(#dia)"/>
+<text x="579" y="95" fill="#a33" font-size="9" text-anchor="start">owner</text>
+<text x="579" y="77" fill="#1a5" font-size="9" text-anchor="start">1</text>
+<text x="621" y="77" fill="#a33" font-size="9" text-anchor="end">addressBook</text>
+<text x="621" y="95" fill="#1a5" font-size="9" text-anchor="end">0..*</text>
+<polyline points="453,40 453,14 966,14 966,40" fill="none" stroke="#333"/>
+<text x="462" y="30" fill="#a33" font-size="9" text-anchor="start">users</text>
+<text x="444" y="30" fill="#1a5" font-size="9" text-anchor="start">0..*</text>
+<text x="975" y="30" fill="#a33" font-size="9" text-anchor="start">roles</text>
+<text x="957" y="30" fill="#1a5" font-size="9" text-anchor="start">0..*</text>
+<polyline points="1107,82 1177,82" fill="none" stroke="#333"/>
+<text x="1121" y="95" fill="#a33" font-size="9" text-anchor="start">roles</text>
+<text x="1121" y="77" fill="#1a5" font-size="9" text-anchor="start">0..*</text>
+<text x="1163" y="77" fill="#a33" font-size="9" text-anchor="end">permissions</text>
+<text x="1163" y="95" fill="#1a5" font-size="9" text-anchor="end">1..*</text>
+<polyline points="565,149 588,149 588,198 1518,198" fill="none" stroke="#333"/>
+<text x="579" y="162" fill="#a33" font-size="9" text-anchor="start">owner</text>
+<text x="579" y="144" fill="#1a5" font-size="9" text-anchor="start">1</text>
+<text x="1504" y="194" fill="#a33" font-size="9" text-anchor="end">merchant</text>
+<text x="1504" y="212" fill="#1a5" font-size="9" text-anchor="end">0..1</text>
+<polyline points="1855,82 1925,82" fill="none" stroke="#333" marker-start="url(#dia)"/>
+<text x="1869" y="95" fill="#a33" font-size="9" text-anchor="start">merchant</text>
+<text x="1869" y="77" fill="#1a5" font-size="9" text-anchor="start">1</text>
+<text x="1911" y="77" fill="#a33" font-size="9" text-anchor="end">pickupAddresses</text>
+<text x="1911" y="95" fill="#1a5" font-size="9" text-anchor="end">0..*</text>
+<polyline points="258,2335 328,2335" fill="none" stroke="#333" marker-start="url(#odia)"/>
+<text x="272" y="2348" fill="#a33" font-size="9" text-anchor="start">region</text>
+<text x="272" y="2330" fill="#1a5" font-size="9" text-anchor="start">1</text>
+<text x="314" y="2330" fill="#a33" font-size="9" text-anchor="end">serviceAreas</text>
+<text x="314" y="2348" fill="#1a5" font-size="9" text-anchor="end">0..*</text>
+<polyline points="1141,2085 1141,2189 482,2189 482,2293" fill="none" stroke="#333"/>
+<text x="1132" y="2103" fill="#a33" font-size="9" text-anchor="start">primaryHub</text>
+<text x="1150" y="2103" fill="#1a5" font-size="9" text-anchor="start">1</text>
+<text x="491" y="2283" fill="#a33" font-size="9" text-anchor="start">servedAreas</text>
+<text x="473" y="2283" fill="#1a5" font-size="9" text-anchor="start">0..*</text>
+<polyline points="533,2335 603,2335" fill="none" stroke="#333" marker-start="url(#dia)"/>
+<text x="547" y="2348" fill="#a33" font-size="9" text-anchor="start">serviceArea</text>
+<text x="547" y="2330" fill="#1a5" font-size="9" text-anchor="start">1</text>
+<text x="589" y="2330" fill="#a33" font-size="9" text-anchor="end">coverages</text>
+<text x="589" y="2348" fill="#1a5" font-size="9" text-anchor="end">1..*</text>
+<polyline points="1320,1883 1360,1883 1360,1823 1270,1823 1270,1853" fill="none" stroke="#333"/>
+<text x="1334" y="1896" fill="#a33" font-size="9" text-anchor="start">parentHub</text>
+<text x="1334" y="1878" fill="#1a5" font-size="9" text-anchor="start">0..1</text>
+<text x="1279" y="1843" fill="#a33" font-size="9" text-anchor="start">childHubs</text>
+<text x="1261" y="1843" fill="#1a5" font-size="9" text-anchor="start">0..*</text>
+<polyline points="1320,1895 1390,1895" fill="none" stroke="#333"/>
+<text x="1334" y="1908" fill="#a33" font-size="9" text-anchor="start">fromHub</text>
+<text x="1334" y="1890" fill="#1a5" font-size="9" text-anchor="start">1</text>
+<text x="1376" y="1890" fill="#a33" font-size="9" text-anchor="end">outboundLanes</text>
+<text x="1376" y="1908" fill="#1a5" font-size="9" text-anchor="end">0..*</text>
+<polyline points="1320,1909 1390,1909" fill="none" stroke="#333"/>
+<text x="1334" y="1922" fill="#a33" font-size="9" text-anchor="start">toHub</text>
+<text x="1334" y="1904" fill="#1a5" font-size="9" text-anchor="start">1</text>
+<text x="1376" y="1904" fill="#a33" font-size="9" text-anchor="end">inboundLanes</text>
+<text x="1376" y="1922" fill="#1a5" font-size="9" text-anchor="end">0..*</text>
+<polyline points="1634,1895 1704,1895" fill="none" stroke="#333" marker-start="url(#dia)"/>
+<text x="1648" y="1908" fill="#a33" font-size="9" text-anchor="start">lane</text>
+<text x="1648" y="1890" fill="#1a5" font-size="9" text-anchor="start">1</text>
+<text x="1690" y="1890" fill="#a33" font-size="9" text-anchor="end">schedules</text>
+<text x="1690" y="1908" fill="#1a5" font-size="9" text-anchor="end">0..*</text>
+<polyline points="1292,2085 1292,2293" fill="none" stroke="#333"/>
+<text x="1283" y="2103" fill="#a33" font-size="9" text-anchor="start">originHub</text>
+<text x="1301" y="2103" fill="#1a5" font-size="9" text-anchor="start">1</text>
+<text x="1301" y="2283" fill="#a33" font-size="9" text-anchor="start">originRoutes</text>
+<text x="1283" y="2283" fill="#1a5" font-size="9" text-anchor="start">0..*</text>
+<polyline points="1306,2085 1306,2293" fill="none" stroke="#333"/>
+<text x="1297" y="2103" fill="#a33" font-size="9" text-anchor="start">destinationHub</text>
+<text x="1315" y="2103" fill="#1a5" font-size="9" text-anchor="start">1</text>
+<text x="1315" y="2283" fill="#a33" font-size="9" text-anchor="start">destinationRoutes</text>
+<text x="1297" y="2283" fill="#1a5" font-size="9" text-anchor="start">0..*</text>
+<polyline points="1482,2335 1552,2335" fill="none" stroke="#333" marker-start="url(#dia)"/>
+<text x="1496" y="2348" fill="#a33" font-size="9" text-anchor="start">routeTemplate</text>
+<text x="1496" y="2330" fill="#1a5" font-size="9" text-anchor="start">1</text>
+<text x="1538" y="2330" fill="#a33" font-size="9" text-anchor="end">legs {ordered}</text>
+<text x="1538" y="2348" fill="#1a5" font-size="9" text-anchor="end">1..*</text>
+<polyline points="1593,2034 1593,2293" fill="none" stroke="#333"/>
+<text x="1584" y="2052" fill="#a33" font-size="9" text-anchor="start">lane</text>
+<text x="1602" y="2052" fill="#1a5" font-size="9" text-anchor="start">1</text>
+<text x="1602" y="2283" fill="#a33" font-size="9" text-anchor="start">usedInLegs</text>
+<text x="1584" y="2283" fill="#1a5" font-size="9" text-anchor="start">0..*</text>
+<polyline points="1593,1853 1593,1827 2188,1827 2188,1853" fill="none" stroke="#333"/>
+<text x="1602" y="1843" fill="#a33" font-size="9" text-anchor="start">lane</text>
+<text x="1584" y="1843" fill="#1a5" font-size="9" text-anchor="start">1</text>
+<text x="2197" y="1843" fill="#a33" font-size="9" text-anchor="start">reservations</text>
+<text x="2179" y="1843" fill="#1a5" font-size="9" text-anchor="start">0..*</text>
+<polyline points="1948,1895 2018,1895" fill="none" stroke="#333"/>
+<text x="1962" y="1908" fill="#a33" font-size="9" text-anchor="start">schedule</text>
+<text x="1962" y="1890" fill="#1a5" font-size="9" text-anchor="start">1</text>
+<text x="2004" y="1890" fill="#a33" font-size="9" text-anchor="end">reservations</text>
+<text x="2004" y="1908" fill="#1a5" font-size="9" text-anchor="end">0..*</text>
+<polyline points="1438,2293 1438,2066 2018,2066" fill="none" stroke="#333"/>
+<text x="1447" y="2283" fill="#a33" font-size="9" text-anchor="start">routeTemplate</text>
+<text x="1429" y="2283" fill="#1a5" font-size="9" text-anchor="start">0..1</text>
+<text x="2004" y="2061" fill="#a33" font-size="9" text-anchor="end">reservations</text>
+<text x="2004" y="2079" fill="#1a5" font-size="9" text-anchor="end">0..*</text>
+<polyline points="374,539 304,539" fill="none" stroke="#333" marker-start="url(#dia)"/>
+<text x="360" y="534" fill="#a33" font-size="9" text-anchor="end">ratePlan</text>
+<text x="360" y="552" fill="#1a5" font-size="9" text-anchor="end">1</text>
+<text x="318" y="552" fill="#a33" font-size="9" text-anchor="start">rules</text>
+<text x="318" y="534" fill="#1a5" font-size="9" text-anchor="start">1..*</text>
+<polyline points="625,539 695,539" fill="none" stroke="#333"/>
+<text x="639" y="552" fill="#a33" font-size="9" text-anchor="start">ratePlan</text>
+<text x="639" y="534" fill="#1a5" font-size="9" text-anchor="start">1</text>
+<text x="681" y="534" fill="#a33" font-size="9" text-anchor="end">quotes</text>
+<text x="681" y="552" fill="#1a5" font-size="9" text-anchor="end">0..*</text>
+<polyline points="906,539 976,539" fill="none" stroke="#333" marker-start="url(#dia)"/>
+<text x="920" y="552" fill="#a33" font-size="9" text-anchor="start">quote</text>
+<text x="920" y="534" fill="#1a5" font-size="9" text-anchor="start">1</text>
+<text x="962" y="534" fill="#a33" font-size="9" text-anchor="end">parcels</text>
+<text x="962" y="552" fill="#1a5" font-size="9" text-anchor="end">1..*</text>
+<polyline points="864,497 864,464 1336,464 1336,497" fill="none" stroke="#333" marker-start="url(#dia)"/>
+<text x="873" y="487" fill="#a33" font-size="9" text-anchor="start">quote</text>
+<text x="855" y="487" fill="#1a5" font-size="9" text-anchor="start">1</text>
+<text x="1346" y="487" fill="#a33" font-size="9" text-anchor="start">options</text>
+<text x="1328" y="487" fill="#1a5" font-size="9" text-anchor="start">1..*</text>
+<polyline points="1518,278 982,278 982,1056" fill="none" stroke="#333"/>
+<text x="1504" y="273" fill="#a33" font-size="9" text-anchor="end">merchant</text>
+<text x="1504" y="291" fill="#1a5" font-size="9" text-anchor="end">1</text>
+<text x="991" y="1046" fill="#a33" font-size="9" text-anchor="start">shipments</text>
+<text x="973" y="1046" fill="#1a5" font-size="9" text-anchor="start">0..*</text>
+<polyline points="562,916 562,972 786,972 786,1056" fill="none" stroke="#333"/>
+<text x="553" y="934" fill="#a33" font-size="9" text-anchor="start">ratePlan</text>
+<text x="571" y="934" fill="#1a5" font-size="9" text-anchor="start">1</text>
+<text x="795" y="1046" fill="#a33" font-size="9" text-anchor="start">shipments</text>
+<text x="777" y="1046" fill="#1a5" font-size="9" text-anchor="start">0..*</text>
+<polyline points="814,763 814,1056" fill="none" stroke="#333"/>
+<text x="804" y="781" fill="#a33" font-size="9" text-anchor="start">quote</text>
+<text x="822" y="781" fill="#1a5" font-size="9" text-anchor="start">1</text>
+<text x="822" y="1046" fill="#a33" font-size="9" text-anchor="start">shipments</text>
+<text x="804" y="1046" fill="#1a5" font-size="9" text-anchor="start">0..*</text>
+<polyline points="1192,1853 1192,1783 895,1783 895,1713" fill="none" stroke="#333"/>
+<text x="1201" y="1843" fill="#a33" font-size="9" text-anchor="start">originHub</text>
+<text x="1183" y="1843" fill="#1a5" font-size="9" text-anchor="start">1</text>
+<text x="886" y="1731" fill="#a33" font-size="9" text-anchor="start">originShipments</text>
+<text x="904" y="1731" fill="#1a5" font-size="9" text-anchor="start">0..*</text>
+<polyline points="1205,1853 1205,1790 916,1790 916,1713" fill="none" stroke="#333"/>
+<text x="1214" y="1843" fill="#a33" font-size="9" text-anchor="start">destinationHub</text>
+<text x="1196" y="1843" fill="#1a5" font-size="9" text-anchor="start">1</text>
+<text x="907" y="1731" fill="#a33" font-size="9" text-anchor="start">destinationShipments</text>
+<text x="925" y="1731" fill="#1a5" font-size="9" text-anchor="start">0..*</text>
+<polyline points="1025,1098 1095,1098" fill="none" stroke="#333" marker-start="url(#dia)"/>
+<text x="1039" y="1111" fill="#a33" font-size="9" text-anchor="start">shipment</text>
+<text x="1039" y="1093" fill="#1a5" font-size="9" text-anchor="start">1</text>
+<text x="1081" y="1093" fill="#a33" font-size="9" text-anchor="end">parcels</text>
+<text x="1081" y="1111" fill="#1a5" font-size="9" text-anchor="end">1..*</text>
+<polyline points="721,1098 651,1098" fill="none" stroke="#333" marker-start="url(#dia)"/>
+<text x="707" y="1093" fill="#a33" font-size="9" text-anchor="end">shipment</text>
+<text x="707" y="1111" fill="#1a5" font-size="9" text-anchor="end">1</text>
+<text x="665" y="1111" fill="#a33" font-size="9" text-anchor="start">events {ordered}</text>
+<text x="665" y="1093" fill="#1a5" font-size="9" text-anchor="start">0..*</text>
+<polyline points="1206,1056 1206,1023 596,1023 596,1056" fill="none" stroke="#333"/>
+<text x="1215" y="1046" fill="#a33" font-size="9" text-anchor="start">parcel</text>
+<text x="1197" y="1046" fill="#1a5" font-size="9" text-anchor="start">0..1</text>
+<text x="606" y="1046" fill="#a33" font-size="9" text-anchor="start">events</text>
+<text x="588" y="1046" fill="#1a5" font-size="9" text-anchor="start">0..*</text>
+<polyline points="1166,1853 1166,1729 542,1729 542,1271" fill="none" stroke="#333"/>
+<text x="1175" y="1843" fill="#a33" font-size="9" text-anchor="start">hub</text>
+<text x="1157" y="1843" fill="#1a5" font-size="9" text-anchor="start">0..1</text>
+<text x="533" y="1289" fill="#a33" font-size="9" text-anchor="start">events</text>
+<text x="551" y="1289" fill="#1a5" font-size="9" text-anchor="start">0..*</text>
+<polyline points="721,1291 382,1291 382,1222 363,1222" fill="none" stroke="#333" marker-start="url(#dia)"/>
+<text x="707" y="1286" fill="#a33" font-size="9" text-anchor="end">shipment</text>
+<text x="707" y="1304" fill="#1a5" font-size="9" text-anchor="end">1</text>
+<text x="377" y="1235" fill="#a33" font-size="9" text-anchor="start">deliveryAttempts</text>
+<text x="377" y="1217" fill="#1a5" font-size="9" text-anchor="start">0..*</text>
+<polyline points="1132,1056 1132,1016 255,1016 255,1056" fill="none" stroke="#333"/>
+<text x="1141" y="1046" fill="#a33" font-size="9" text-anchor="start">parcel</text>
+<text x="1123" y="1046" fill="#1a5" font-size="9" text-anchor="start">1</text>
+<text x="264" y="1046" fill="#a33" font-size="9" text-anchor="start">deliveryAttempts</text>
+<text x="246" y="1046" fill="#1a5" font-size="9" text-anchor="start">0..*</text>
+<polyline points="1218,1853 1218,1407" fill="none" stroke="#333"/>
+<text x="1226" y="1843" fill="#a33" font-size="9" text-anchor="start">currentHub</text>
+<text x="1208" y="1843" fill="#1a5" font-size="9" text-anchor="start">0..1</text>
+<text x="1208" y="1425" fill="#a33" font-size="9" text-anchor="start">parcelsOnHand</text>
+<text x="1226" y="1425" fill="#1a5" font-size="9" text-anchor="start">0..*</text>
+<polyline points="1003,1713 1003,1776 2075,1776 2075,1853" fill="none" stroke="#333"/>
+<text x="994" y="1731" fill="#a33" font-size="9" text-anchor="start">shipment</text>
+<text x="1012" y="1731" fill="#1a5" font-size="9" text-anchor="start">1</text>
+<text x="2084" y="1843" fill="#a33" font-size="9" text-anchor="start">capacityReservations</text>
+<text x="2066" y="1843" fill="#1a5" font-size="9" text-anchor="start">0..*</text>
+<polyline points="721,1619 358,1619 358,1947 330,1947" fill="none" stroke="#333"/>
+<text x="707" y="1614" fill="#a33" font-size="9" text-anchor="end">shipment</text>
+<text x="707" y="1632" fill="#1a5" font-size="9" text-anchor="end">1</text>
+<text x="344" y="1960" fill="#a33" font-size="9" text-anchor="start">exceptionRequests</text>
+<text x="344" y="1942" fill="#1a5" font-size="9" text-anchor="start">0..*</text>
+<polyline points="1128,1853 1128,1820 233,1820 233,1853" fill="none" stroke="#333"/>
+<text x="1137" y="1843" fill="#a33" font-size="9" text-anchor="start">hub</text>
+<text x="1119" y="1843" fill="#1a5" font-size="9" text-anchor="start">0..1</text>
+<text x="242" y="1843" fill="#a33" font-size="9" text-anchor="start">exceptionRequests</text>
+<text x="224" y="1843" fill="#1a5" font-size="9" text-anchor="start">0..*</text>
+<polyline points="1153,1853 1153,1813 519,1813 519,1853" fill="none" stroke="#333"/>
+<text x="1162" y="1843" fill="#a33" font-size="9" text-anchor="start">hub</text>
+<text x="1144" y="1843" fill="#1a5" font-size="9" text-anchor="start">1</text>
+<text x="528" y="1843" fill="#a33" font-size="9" text-anchor="start">cases</text>
+<text x="510" y="1843" fill="#1a5" font-size="9" text-anchor="start">0..*</text>
+<polyline points="721,1666 460,1666 460,1853" fill="none" stroke="#333"/>
+<text x="707" y="1661" fill="#a33" font-size="9" text-anchor="end">shipment</text>
+<text x="707" y="1679" fill="#1a5" font-size="9" text-anchor="end">0..1</text>
+<text x="468" y="1843" fill="#a33" font-size="9" text-anchor="start">cases</text>
+<text x="450" y="1843" fill="#1a5" font-size="9" text-anchor="start">0..*</text>
+<polyline points="1169,1407 1169,1726 578,1726 578,1853" fill="none" stroke="#333"/>
+<text x="1160" y="1425" fill="#a33" font-size="9" text-anchor="start">parcel</text>
+<text x="1178" y="1425" fill="#1a5" font-size="9" text-anchor="start">0..1</text>
+<text x="588" y="1843" fill="#a33" font-size="9" text-anchor="start">cases</text>
+<text x="570" y="1843" fill="#1a5" font-size="9" text-anchor="start">0..*</text>
+<polyline points="843,1713 843,1853" fill="none" stroke="#333"/>
+<text x="834" y="1731" fill="#a33" font-size="9" text-anchor="start">shipment</text>
+<text x="852" y="1731" fill="#1a5" font-size="9" text-anchor="start">1</text>
+<text x="852" y="1843" fill="#a33" font-size="9" text-anchor="start">weightAdjustments</text>
+<text x="834" y="1843" fill="#1a5" font-size="9" text-anchor="start">0..*</text>
+<polyline points="1095,1319 1037,1319 1037,1920 965,1920" fill="none" stroke="#333"/>
+<text x="1081" y="1314" fill="#a33" font-size="9" text-anchor="end">parcel</text>
+<text x="1081" y="1332" fill="#1a5" font-size="9" text-anchor="end">1</text>
+<text x="979" y="1932" fill="#a33" font-size="9" text-anchor="start">weightAdjustments</text>
+<text x="979" y="1914" fill="#1a5" font-size="9" text-anchor="start">0..*</text>
+<polyline points="1115,1895 965,1895" fill="none" stroke="#333"/>
+<text x="1101" y="1890" fill="#a33" font-size="9" text-anchor="end">hub</text>
+<text x="1101" y="1908" fill="#1a5" font-size="9" text-anchor="end">0..1</text>
+<text x="979" y="1908" fill="#a33" font-size="9" text-anchor="start">weightAdjustments</text>
+<text x="979" y="1890" fill="#1a5" font-size="9" text-anchor="start">0..*</text>
+<polyline points="528,204 528,366 1610,366 1610,497" fill="none" stroke="#333"/>
+<text x="519" y="222" fill="#a33" font-size="9" text-anchor="start">account</text>
+<text x="537" y="222" fill="#1a5" font-size="9" text-anchor="start">1</text>
+<text x="1620" y="487" fill="#a33" font-size="9" text-anchor="start">workforceMember</text>
+<text x="1602" y="487" fill="#1a5" font-size="9" text-anchor="start">0..1</text>
+<polyline points="1764,497 1764,464 2363,464 2363,497" fill="none" stroke="#333" marker-start="url(#dia)"/>
+<text x="1774" y="487" fill="#a33" font-size="9" text-anchor="start">member</text>
+<text x="1756" y="487" fill="#1a5" font-size="9" text-anchor="start">1</text>
+<text x="2372" y="487" fill="#a33" font-size="9" text-anchor="start">memberships</text>
+<text x="2354" y="487" fill="#1a5" font-size="9" text-anchor="start">0..*</text>
+<polyline points="1307,1853 1307,711 2289,711 2289,644" fill="none" stroke="#333"/>
+<text x="1316" y="1843" fill="#a33" font-size="9" text-anchor="start">hub</text>
+<text x="1298" y="1843" fill="#1a5" font-size="9" text-anchor="start">1</text>
+<text x="2280" y="662" fill="#a33" font-size="9" text-anchor="start">memberships</text>
+<text x="2298" y="662" fill="#1a5" font-size="9" text-anchor="start">0..*</text>
+<polyline points="1803,539 1873,539" fill="none" stroke="#333" marker-start="url(#dia)"/>
+<text x="1817" y="552" fill="#a33" font-size="9" text-anchor="start">member</text>
+<text x="1817" y="534" fill="#1a5" font-size="9" text-anchor="start">1</text>
+<text x="1859" y="534" fill="#a33" font-size="9" text-anchor="end">availability</text>
+<text x="1859" y="552" fill="#1a5" font-size="9" text-anchor="end">1</text>
+<polyline points="1294,1853 1294,1584 2242,1584 2242,1288" fill="none" stroke="#333"/>
+<text x="1303" y="1843" fill="#a33" font-size="9" text-anchor="start">hub</text>
+<text x="1285" y="1843" fill="#1a5" font-size="9" text-anchor="start">1</text>
+<text x="2233" y="1306" fill="#a33" font-size="9" text-anchor="start">shifts</text>
+<text x="2251" y="1306" fill="#1a5" font-size="9" text-anchor="start">0..*</text>
+<polyline points="2163,1098 2093,1098" fill="none" stroke="#333" marker-start="url(#dia)"/>
+<text x="2149" y="1093" fill="#a33" font-size="9" text-anchor="end">shift</text>
+<text x="2149" y="1111" fill="#1a5" font-size="9" text-anchor="end">1</text>
+<text x="2107" y="1111" fill="#a33" font-size="9" text-anchor="start">assignments</text>
+<text x="2107" y="1093" fill="#1a5" font-size="9" text-anchor="start">0..*</text>
+<polyline points="1688,627 1688,834 1900,834 1900,1056" fill="none" stroke="#333"/>
+<text x="1678" y="645" fill="#a33" font-size="9" text-anchor="start">member</text>
+<text x="1696" y="645" fill="#1a5" font-size="9" text-anchor="start">1</text>
+<text x="1909" y="1046" fill="#a33" font-size="9" text-anchor="start">shiftAssignments</text>
+<text x="1891" y="1046" fill="#1a5" font-size="9" text-anchor="start">0..*</text>
+<polyline points="960,1056 960,1030 1516,1030 1516,1056" fill="none" stroke="#333"/>
+<text x="969" y="1046" fill="#a33" font-size="9" text-anchor="start">shipment</text>
+<text x="951" y="1046" fill="#1a5" font-size="9" text-anchor="start">1</text>
+<text x="1525" y="1046" fill="#a33" font-size="9" text-anchor="start">assignments {ordered}</text>
+<text x="1507" y="1046" fill="#1a5" font-size="9" text-anchor="start">0..*</text>
+<polyline points="1282,1853 1282,1637 1570,1637 1570,1407" fill="none" stroke="#333"/>
+<text x="1291" y="1843" fill="#a33" font-size="9" text-anchor="start">hub</text>
+<text x="1273" y="1843" fill="#1a5" font-size="9" text-anchor="start">1</text>
+<text x="1561" y="1425" fill="#a33" font-size="9" text-anchor="start">assignments</text>
+<text x="1579" y="1425" fill="#1a5" font-size="9" text-anchor="start">0..*</text>
+<polyline points="1652,627 1652,1056" fill="none" stroke="#333"/>
+<text x="1644" y="645" fill="#a33" font-size="9" text-anchor="start">assignee</text>
+<text x="1662" y="645" fill="#1a5" font-size="9" text-anchor="start">0..1</text>
+<text x="1662" y="1046" fill="#a33" font-size="9" text-anchor="start">assignments</text>
+<text x="1644" y="1046" fill="#1a5" font-size="9" text-anchor="start">0..*</text>
+<polyline points="1462,1098 1392,1098" fill="none" stroke="#333"/>
+<text x="1448" y="1093" fill="#a33" font-size="9" text-anchor="end">currentAssignment</text>
+<text x="1448" y="1111" fill="#1a5" font-size="9" text-anchor="end">0..1</text>
+<text x="1406" y="1111" fill="#a33" font-size="9" text-anchor="start">parcels</text>
+<text x="1406" y="1093" fill="#1a5" font-size="9" text-anchor="start">0..*</text>
+<rect x="40" y="40" width="231" height="164" fill="#e3f2fd" stroke="#333"/>
+<line x1="40" y1="86" x2="271" y2="86" stroke="#333"/>
+<text x="155.5" y="58" text-anchor="middle">«entity»</text>
+<text x="155.5" y="75" text-anchor="middle" font-weight="bold">UserProfile</text>
+<text x="48" y="104">-firstName : String [0..1]</text>
+<text x="48" y="121">-lastName : String [0..1]</text>
+<text x="48" y="138">-displayName : String [0..1]</text>
+<text x="48" y="155">-gender : Gender [0..1]</text>
+<text x="48" y="172">-dateOfBirth : LocalDate [0..1]</text>
+<text x="48" y="189">-avatarUrl : String [0..1]</text>
+<rect x="341" y="40" width="224" height="164" fill="#e3f2fd" stroke="#333"/>
+<line x1="341" y1="86" x2="565" y2="86" stroke="#333"/>
+<text x="453.0" y="58" text-anchor="middle">«aggregate root»</text>
+<text x="453.0" y="75" text-anchor="middle" font-weight="bold">UserAccount</text>
+<text x="349" y="104">-id : UUID</text>
+<text x="349" y="121">-email : String</text>
+<text x="349" y="138">-emailVerified : Boolean</text>
+<text x="349" y="155">-status : AccountStatus</text>
+<text x="349" y="172">-profileStatus : ProfileStatus</text>
+<text x="349" y="189">-createdAt : Instant</text>
+<rect x="635" y="40" width="191" height="130" fill="#e3f2fd" stroke="#333"/>
+<line x1="635" y1="86" x2="826" y2="86" stroke="#333"/>
+<text x="730.5" y="58" text-anchor="middle">«entity»</text>
+<text x="730.5" y="75" text-anchor="middle" font-weight="bold">UserAddress</text>
+<text x="643" y="104">-id : UUID</text>
+<text x="643" y="121">-label : String</text>
+<text x="643" y="138">-address : ContactAddress</text>
+<text x="643" y="155">-isDefault : Boolean</text>
+<rect x="896" y="40" width="211" height="147" fill="#e3f2fd" stroke="#333"/>
+<line x1="896" y1="86" x2="1107" y2="86" stroke="#333"/>
+<text x="1001.5" y="58" text-anchor="middle">«aggregate root»</text>
+<text x="1001.5" y="75" text-anchor="middle" font-weight="bold">Role</text>
+<text x="904" y="104">-id : UUID</text>
+<text x="904" y="121">-code : String</text>
+<text x="904" y="138">-name : String</text>
+<text x="904" y="155">-description : String [0..1]</text>
+<text x="904" y="172">-isSystem : Boolean</text>
+<rect x="1177" y="40" width="211" height="130" fill="#e3f2fd" stroke="#333"/>
+<line x1="1177" y1="86" x2="1388" y2="86" stroke="#333"/>
+<text x="1282.5" y="58" text-anchor="middle">«entity»</text>
+<text x="1282.5" y="75" text-anchor="middle" font-weight="bold">Permission</text>
+<text x="1185" y="104">-id : UUID</text>
+<text x="1185" y="121">-code : String</text>
+<text x="1185" y="138">-name : String</text>
+<text x="1185" y="155">-description : String [0..1]</text>
+<rect x="1518" y="40" width="337" height="317" fill="#e3f2fd" stroke="#333"/>
+<line x1="1518" y1="86" x2="1855" y2="86" stroke="#333"/>
+<text x="1686.5" y="58" text-anchor="middle">«aggregate root»</text>
+<text x="1686.5" y="75" text-anchor="middle" font-weight="bold">Merchant</text>
+<text x="1526" y="104">-id : UUID</text>
+<text x="1526" y="121">-merchantCode : String</text>
+<text x="1526" y="138">-businessName : String</text>
+<text x="1526" y="155">-contactName : String</text>
+<text x="1526" y="172">-contactPhone : String</text>
+<text x="1526" y="189">-contactEmail : String [0..1]</text>
+<text x="1526" y="206">-taxCode : String [0..1]</text>
+<text x="1526" y="223">-status : MerchantStatus</text>
+<text x="1526" y="240">-statusReasonCode : MerchantStatusReason [0..1]</text>
+<text x="1526" y="257">-statusReasonDetail : String [0..1]</text>
+<text x="1526" y="274">-statusChangedAt : Instant</text>
+<text x="1526" y="291">-statusChangedByUserId : UUID [0..1]</text>
+<text x="1526" y="308">-verifiedAt : Instant [0..1]</text>
+<text x="1526" y="325">-verifiedByUserId : UUID [0..1]</text>
+<text x="1526" y="342">-createdAt : Instant</text>
+<rect x="1925" y="40" width="191" height="130" fill="#e3f2fd" stroke="#333"/>
+<line x1="1925" y1="86" x2="2116" y2="86" stroke="#333"/>
+<text x="2020.5" y="58" text-anchor="middle">«entity»</text>
+<text x="2020.5" y="75" text-anchor="middle" font-weight="bold">MerchantPickupAddress</text>
+<text x="1933" y="104">-id : UUID</text>
+<text x="1933" y="121">-name : String</text>
+<text x="1933" y="138">-address : ContactAddress</text>
+<text x="1933" y="155">-isDefault : Boolean</text>
+<rect x="40" y="497" width="264" height="198" fill="#e3f2fd" stroke="#333"/>
+<line x1="40" y1="543" x2="304" y2="543" stroke="#333"/>
+<text x="172.0" y="515" text-anchor="middle">«entity»</text>
+<text x="172.0" y="532" text-anchor="middle" font-weight="bold">RateRule</text>
+<text x="48" y="561">-id : UUID</text>
+<text x="48" y="578">-serviceLevel : ServiceLevel</text>
+<text x="48" y="595">-pricingZone : PricingZone</text>
+<text x="48" y="612">-baseFee : Long</text>
+<text x="48" y="629">-includedWeightKg : BigDecimal</text>
+<text x="48" y="646">-additionalWeightStepKg : BigDecimal</text>
+<text x="48" y="663">-additionalWeightStepFee : Long</text>
+<text x="48" y="680">-estimate : DeliveryEstimate</text>
+<rect x="374" y="497" width="251" height="419" fill="#e3f2fd" stroke="#333"/>
+<line x1="374" y1="543" x2="625" y2="543" stroke="#333"/>
+<text x="499.5" y="515" text-anchor="middle">«aggregate root»</text>
+<text x="499.5" y="532" text-anchor="middle" font-weight="bold">RatePlan</text>
+<text x="382" y="561">-id : UUID</text>
+<text x="382" y="578">-code : String</text>
+<text x="382" y="595">-revision : Int</text>
+<text x="382" y="612">-name : String</text>
+<text x="382" y="629">-currency : String</text>
+<text x="382" y="646">-status : RatePlanStatus</text>
+<text x="382" y="663">-effectiveFrom : Instant [0..1]</text>
+<text x="382" y="680">-effectiveTo : Instant [0..1]</text>
+<text x="382" y="697">-quoteTtlMinutes : Int</text>
+<text x="382" y="714">-volumetricDivisor : BigDecimal</text>
+<text x="382" y="731">-remoteEndpointSurcharge : Long</text>
+<text x="382" y="748">-islandTransportRate : BigDecimal</text>
+<text x="382" y="765">-codPolicy : CodPolicy</text>
+<text x="382" y="782">-insurancePolicy : InsurancePolicy</text>
+<text x="382" y="799">-limits : ShipmentLimits</text>
+<text x="382" y="816">-createdBy : UUID [0..1]</text>
+<text x="382" y="833">-activatedBy : UUID [0..1]</text>
+<text x="382" y="850">-activatedAt : Instant [0..1]</text>
+<text x="382" y="867">-retiredBy : UUID [0..1]</text>
+<text x="382" y="884">-retiredAt : Instant [0..1]</text>
+<text x="382" y="901">-createdAt : Instant</text>
+<rect x="695" y="497" width="211" height="266" fill="#e3f2fd" stroke="#333"/>
+<line x1="695" y1="543" x2="906" y2="543" stroke="#333"/>
+<text x="800.5" y="515" text-anchor="middle">«aggregate root»</text>
+<text x="800.5" y="532" text-anchor="middle" font-weight="bold">QuoteRequest</text>
+<text x="703" y="561">-id : UUID</text>
+<text x="703" y="578">-rateRevision : Int</text>
+<text x="703" y="595">-rateVersion : String</text>
+<text x="703" y="612">-pricingZone : PricingZone</text>
+<text x="703" y="629">-origin : QuoteEndpoint</text>
+<text x="703" y="646">-destination : QuoteEndpoint</text>
+<text x="703" y="663">-totalWeight : Weight</text>
+<text x="703" y="680">-parcelCount : Int</text>
+<text x="703" y="697">-codAmount : Long</text>
+<text x="703" y="714">-declaredValue : Long</text>
+<text x="703" y="731">-createdAt : Instant</text>
+<text x="703" y="748">-expiresAt : Instant</text>
+<rect x="976" y="497" width="185" height="130" fill="#e3f2fd" stroke="#333"/>
+<line x1="976" y1="543" x2="1161" y2="543" stroke="#333"/>
+<text x="1068.5" y="515" text-anchor="middle">«entity»</text>
+<text x="1068.5" y="532" text-anchor="middle" font-weight="bold">QuoteParcel</text>
+<text x="984" y="561">-id : UUID</text>
+<text x="984" y="578">-sequence : Int</text>
+<text x="984" y="595">-weight : Weight</text>
+<text x="984" y="612">-dimensions : Dimensions</text>
+<rect x="1231" y="497" width="211" height="130" fill="#e3f2fd" stroke="#333"/>
+<line x1="1231" y1="543" x2="1442" y2="543" stroke="#333"/>
+<text x="1336.5" y="515" text-anchor="middle">«entity»</text>
+<text x="1336.5" y="532" text-anchor="middle" font-weight="bold">QuoteOption</text>
+<text x="1239" y="561">-id : UUID</text>
+<text x="1239" y="578">-serviceLevel : ServiceLevel</text>
+<text x="1239" y="595">-fees : FeeBreakdown</text>
+<text x="1239" y="612">-estimate : DeliveryEstimate</text>
+<rect x="1572" y="497" width="231" height="130" fill="#e3f2fd" stroke="#333"/>
+<line x1="1572" y1="543" x2="1803" y2="543" stroke="#333"/>
+<text x="1687.5" y="515" text-anchor="middle">«aggregate root»</text>
+<text x="1687.5" y="532" text-anchor="middle" font-weight="bold">WorkforceMember</text>
+<text x="1580" y="561">-id : UUID</text>
+<text x="1580" y="578">-employeeCode : String</text>
+<text x="1580" y="595">-kind : WorkforceMemberKind</text>
+<text x="1580" y="612">-status : WorkforceMemberStatus</text>
+<rect x="1873" y="497" width="271" height="113" fill="#e3f2fd" stroke="#333"/>
+<line x1="1873" y1="543" x2="2144" y2="543" stroke="#333"/>
+<text x="2008.5" y="515" text-anchor="middle">«entity»</text>
+<text x="2008.5" y="532" text-anchor="middle" font-weight="bold">WorkforceAvailability</text>
+<text x="1881" y="561">-status : WorkforceAvailabilityStatus</text>
+<text x="1881" y="578">-maxConcurrentAssignments : Int</text>
+<text x="1881" y="595">-updatedAt : Instant</text>
+<rect x="2214" y="497" width="224" height="147" fill="#e3f2fd" stroke="#333"/>
+<line x1="2214" y1="543" x2="2438" y2="543" stroke="#333"/>
+<text x="2326.0" y="515" text-anchor="middle">«entity»</text>
+<text x="2326.0" y="532" text-anchor="middle" font-weight="bold">HubMembership</text>
+<text x="2222" y="561">-id : UUID</text>
+<text x="2222" y="578">-isPrimary : Boolean</text>
+<text x="2222" y="595">-isActive : Boolean</text>
+<text x="2222" y="612">-assignedAt : Instant</text>
+<text x="2222" y="629">-unassignedAt : Instant [0..1]</text>
+<rect x="40" y="1056" width="323" height="249" fill="#e3f2fd" stroke="#333"/>
+<line x1="40" y1="1102" x2="363" y2="1102" stroke="#333"/>
+<text x="201.5" y="1074" text-anchor="middle">«entity»</text>
+<text x="201.5" y="1091" text-anchor="middle" font-weight="bold">DeliveryAttempt</text>
+<text x="48" y="1120">-id : UUID</text>
+<text x="48" y="1137">-attemptNumber : Int</text>
+<text x="48" y="1154">-outcome : DeliveryAttemptOutcome</text>
+<text x="48" y="1171">-failureReason : DeliveryFailureReason [0..1]</text>
+<text x="48" y="1188">-proofMethod : DeliveryProofMethod [0..1]</text>
+<text x="48" y="1205">-recipientName : String [0..1]</text>
+<text x="48" y="1222">-evidenceReference : String [0..1]</text>
+<text x="48" y="1239">-note : String [0..1]</text>
+<text x="48" y="1256">-location : GeoPoint [0..1]</text>
+<text x="48" y="1273">-actorUserId : UUID</text>
+<text x="48" y="1290">-occurredAt : Instant</text>
+<rect x="433" y="1056" width="218" height="215" fill="#e3f2fd" stroke="#333"/>
+<line x1="433" y1="1102" x2="651" y2="1102" stroke="#333"/>
+<text x="542.0" y="1074" text-anchor="middle">«entity»</text>
+<text x="542.0" y="1091" text-anchor="middle" font-weight="bold">ShipmentEvent</text>
+<text x="441" y="1120">-id : UUID</text>
+<text x="441" y="1137">-status : ShipmentStatus</text>
+<text x="441" y="1154">-code : String</text>
+<text x="441" y="1171">-description : String</text>
+<text x="441" y="1188">-actorUserId : UUID [0..1]</text>
+<text x="441" y="1205">-locationName : String [0..1]</text>
+<text x="441" y="1222">-dataJson : String [0..1]</text>
+<text x="441" y="1239">-occurredAt : Instant</text>
+<text x="441" y="1256">-recordedAt : Instant</text>
+<rect x="721" y="1056" width="304" height="657" fill="#e3f2fd" stroke="#333"/>
+<line x1="721" y1="1102" x2="1025" y2="1102" stroke="#333"/>
+<text x="873.0" y="1074" text-anchor="middle">«aggregate root»</text>
+<text x="873.0" y="1091" text-anchor="middle" font-weight="bold">Shipment</text>
+<text x="729" y="1120">-id : UUID</text>
+<text x="729" y="1137">-trackingCode : String</text>
+<text x="729" y="1154">-merchantReference : String [0..1]</text>
+<text x="729" y="1171">-createdByUserId : UUID</text>
+<text x="729" y="1188">-sender : ShipmentAddressSnapshot</text>
+<text x="729" y="1205">-recipient : ShipmentAddressSnapshot</text>
+<text x="729" y="1222">-shippingFeePayer : ShippingFeePayer</text>
+<text x="729" y="1239">-rateRevision : Int</text>
+<text x="729" y="1256">-rateVersion : String</text>
+<text x="729" y="1273">-currency : String</text>
+<text x="729" y="1290">-serviceLevel : ShipmentServiceLevel</text>
+<text x="729" y="1307">-pricingZone : ShipmentPricingZone</text>
+<text x="729" y="1324">-fees : FeeBreakdown</text>
+<text x="729" y="1341">-codAmount : Long</text>
+<text x="729" y="1358">-declaredValue : Long</text>
+<text x="729" y="1375">-estimate : DeliveryEstimate</text>
+<text x="729" y="1392">-quoteExpiresAt : Instant</text>
+<text x="729" y="1409">-origin : ShipmentEndpoint</text>
+<text x="729" y="1426">-destination : ShipmentEndpoint</text>
+<text x="729" y="1443">-routingStatus : ShipmentRoutingStatus</text>
+<text x="729" y="1460">-routeRevision : Int</text>
+<text x="729" y="1477">-reservedWeightKg : BigDecimal</text>
+<text x="729" y="1494">-routeReadyAt : Instant [0..1]</text>
+<text x="729" y="1511">-estimatedDeliveryAt : Instant [0..1]</text>
+<text x="729" y="1528">-estimatedTransitMinutes : Int [0..1]</text>
+<text x="729" y="1545">-routeDistanceKm : BigDecimal [0..1]</text>
+<text x="729" y="1562">-status : ShipmentStatus</text>
+<text x="729" y="1579">-lifecycleStatus : ShipmentLifecycleStatus</text>
+<text x="729" y="1596">-hold : ShipmentHold [0..1]</text>
+<text x="729" y="1613">-hasPendingWeightReview : Boolean</text>
+<text x="729" y="1630">-note : String [0..1]</text>
+<text x="729" y="1647">-cancellationReason : String [0..1]</text>
+<text x="729" y="1664">-cancelledAt : Instant [0..1]</text>
+<text x="729" y="1681">-completedAt : Instant [0..1]</text>
+<text x="729" y="1698">-createdAt : Instant</text>
+<rect x="1095" y="1056" width="297" height="351" fill="#e3f2fd" stroke="#333"/>
+<line x1="1095" y1="1102" x2="1392" y2="1102" stroke="#333"/>
+<text x="1243.5" y="1074" text-anchor="middle">«entity»</text>
+<text x="1243.5" y="1091" text-anchor="middle" font-weight="bold">Parcel</text>
+<text x="1103" y="1120">-id : UUID</text>
+<text x="1103" y="1137">-code : String</text>
+<text x="1103" y="1154">-sequence : Int</text>
+<text x="1103" y="1171">-description : String</text>
+<text x="1103" y="1188">-quantity : Int</text>
+<text x="1103" y="1205">-category : GoodsCategory</text>
+<text x="1103" y="1222">-isFragile : Boolean</text>
+<text x="1103" y="1239">-weight : Weight</text>
+<text x="1103" y="1256">-dimensions : Dimensions</text>
+<text x="1103" y="1273">-status : ParcelStatus</text>
+<text x="1103" y="1290">-stage : ParcelStage</text>
+<text x="1103" y="1307">-flowDirection : ParcelFlowDirection</text>
+<text x="1103" y="1324">-currentLocationType : ParcelLocationType</text>
+<text x="1103" y="1341">-currentHubName : String [0..1]</text>
+<text x="1103" y="1358">-currentRouteLegId : UUID [0..1]</text>
+<text x="1103" y="1375">-custodyType : ParcelCustodyType</text>
+<text x="1103" y="1392">-custodyReferenceId : UUID [0..1]</text>
+<rect x="1462" y="1056" width="271" height="351" fill="#e3f2fd" stroke="#333"/>
+<line x1="1462" y1="1102" x2="1733" y2="1102" stroke="#333"/>
+<text x="1597.5" y="1074" text-anchor="middle">«aggregate root»</text>
+<text x="1597.5" y="1091" text-anchor="middle" font-weight="bold">OperationalAssignment</text>
+<text x="1470" y="1120">-id : UUID</text>
+<text x="1470" y="1137">-code : String</text>
+<text x="1470" y="1154">-sequence : Int</text>
+<text x="1470" y="1171">-routeLegId : UUID [0..1]</text>
+<text x="1470" y="1188">-type : OperationalAssignmentType</text>
+<text x="1470" y="1205">-requiredKind : WorkforceMemberKind</text>
+<text x="1470" y="1222">-status : OperationalAssignmentStatus</text>
+<text x="1470" y="1239">-priority : Int</text>
+<text x="1470" y="1256">-assignedByUserId : UUID [0..1]</text>
+<text x="1470" y="1273">-assignedAt : Instant [0..1]</text>
+<text x="1470" y="1290">-acceptedAt : Instant [0..1]</text>
+<text x="1470" y="1307">-startedAt : Instant [0..1]</text>
+<text x="1470" y="1324">-completedAt : Instant [0..1]</text>
+<text x="1470" y="1341">-cancelledAt : Instant [0..1]</text>
+<text x="1470" y="1358">-resolutionNote : String [0..1]</text>
+<text x="1470" y="1375">-lastActorUserId : UUID [0..1]</text>
+<text x="1470" y="1392">-createdAt : Instant</text>
+<rect x="1803" y="1056" width="290" height="232" fill="#e3f2fd" stroke="#333"/>
+<line x1="1803" y1="1102" x2="2093" y2="1102" stroke="#333"/>
+<text x="1948.0" y="1074" text-anchor="middle">«entity»</text>
+<text x="1948.0" y="1091" text-anchor="middle" font-weight="bold">WorkforceShiftAssignment</text>
+<text x="1811" y="1120">-id : UUID</text>
+<text x="1811" y="1137">-status : WorkforceShiftAssignmentStatus</text>
+<text x="1811" y="1154">-assignedByUserId : UUID</text>
+<text x="1811" y="1171">-statusChangedByUserId : UUID</text>
+<text x="1811" y="1188">-assignedAt : Instant</text>
+<text x="1811" y="1205">-checkedInAt : Instant [0..1]</text>
+<text x="1811" y="1222">-checkedOutAt : Instant [0..1]</text>
+<text x="1811" y="1239">-markedAbsentAt : Instant [0..1]</text>
+<text x="1811" y="1256">-cancelledAt : Instant [0..1]</text>
+<text x="1811" y="1273">-note : String [0..1]</text>
+<rect x="2163" y="1056" width="238" height="232" fill="#e3f2fd" stroke="#333"/>
+<line x1="2163" y1="1102" x2="2401" y2="1102" stroke="#333"/>
+<text x="2282.0" y="1074" text-anchor="middle">«aggregate root»</text>
+<text x="2282.0" y="1091" text-anchor="middle" font-weight="bold">WorkShift</text>
+<text x="2171" y="1120">-id : UUID</text>
+<text x="2171" y="1137">-code : String</text>
+<text x="2171" y="1154">-name : String</text>
+<text x="2171" y="1171">-startsAt : Instant</text>
+<text x="2171" y="1188">-endsAt : Instant</text>
+<text x="2171" y="1205">-status : WorkShiftStatus</text>
+<text x="2171" y="1222">-createdByUserId : UUID</text>
+<text x="2171" y="1239">-cancelledByUserId : UUID [0..1]</text>
+<text x="2171" y="1256">-cancelReason : String [0..1]</text>
+<text x="2171" y="1273">-cancelledAt : Instant [0..1]</text>
+<rect x="40" y="1853" width="290" height="283" fill="#e3f2fd" stroke="#333"/>
+<line x1="40" y1="1899" x2="330" y2="1899" stroke="#333"/>
+<text x="185.0" y="1871" text-anchor="middle">«aggregate root»</text>
+<text x="185.0" y="1888" text-anchor="middle" font-weight="bold">ShipmentExceptionRequest</text>
+<text x="48" y="1917">-id : UUID</text>
+<text x="48" y="1934">-kind : ShipmentExceptionRequestKind</text>
+<text x="48" y="1951">-status : ShipmentExceptionRequestStatus</text>
+<text x="48" y="1968">-reason : String</text>
+<text x="48" y="1985">-routingRequired : Boolean</text>
+<text x="48" y="2002">-forwardAddress : ContactAddress [0..1]</text>
+<text x="48" y="2019">-requestedByUserId : UUID</text>
+<text x="48" y="2036">-requestedAt : Instant</text>
+<text x="48" y="2053">-reviewedByUserId : UUID [0..1]</text>
+<text x="48" y="2070">-reviewedAt : Instant [0..1]</text>
+<text x="48" y="2087">-reviewNote : String [0..1]</text>
+<text x="48" y="2104">-completedByUserId : UUID [0..1]</text>
+<text x="48" y="2121">-completedAt : Instant [0..1]</text>
+<rect x="400" y="1853" width="238" height="300" fill="#e3f2fd" stroke="#333"/>
+<line x1="400" y1="1899" x2="638" y2="1899" stroke="#333"/>
+<text x="519.0" y="1871" text-anchor="middle">«aggregate root»</text>
+<text x="519.0" y="1888" text-anchor="middle" font-weight="bold">ShipmentCase</text>
+<text x="408" y="1917">-id : UUID</text>
+<text x="408" y="1934">-caseNumber : String</text>
+<text x="408" y="1951">-type : ShipmentCaseType</text>
+<text x="408" y="1968">-status : ShipmentCaseStatus</text>
+<text x="408" y="1985">-severity : ShipmentCaseSeverity</text>
+<text x="408" y="2002">-externalBarcode : String [0..1]</text>
+<text x="408" y="2019">-title : String</text>
+<text x="408" y="2036">-description : String</text>
+<text x="408" y="2053">-reportedByUserId : UUID</text>
+<text x="408" y="2070">-assignedToUserId : UUID [0..1]</text>
+<text x="408" y="2087">-resolution : String [0..1]</text>
+<text x="408" y="2104">-createdAt : Instant</text>
+<text x="408" y="2121">-resolvedAt : Instant [0..1]</text>
+<text x="408" y="2138">-closedAt : Instant [0..1]</text>
+<rect x="708" y="1853" width="257" height="266" fill="#e3f2fd" stroke="#333"/>
+<line x1="708" y1="1899" x2="965" y2="1899" stroke="#333"/>
+<text x="836.5" y="1871" text-anchor="middle">«entity»</text>
+<text x="836.5" y="1888" text-anchor="middle" font-weight="bold">ShipmentWeightAdjustment</text>
+<text x="716" y="1917">-id : UUID</text>
+<text x="716" y="1934">-oldActualWeightKg : BigDecimal</text>
+<text x="716" y="1951">-newActualWeightKg : BigDecimal</text>
+<text x="716" y="1968">-oldChargeableWeightKg : BigDecimal</text>
+<text x="716" y="1985">-newChargeableWeightKg : BigDecimal</text>
+<text x="716" y="2002">-reason : String</text>
+<text x="716" y="2019">-actorUserId : UUID</text>
+<text x="716" y="2036">-adjustedAt : Instant</text>
+<text x="716" y="2053">-reviewCompleted : Boolean</text>
+<text x="716" y="2070">-reviewedByUserId : UUID [0..1]</text>
+<text x="716" y="2087">-reviewedAt : Instant [0..1]</text>
+<text x="716" y="2104">-reviewNote : String [0..1]</text>
+<rect x="1115" y="1853" width="205" height="232" fill="#e3f2fd" stroke="#333"/>
+<line x1="1115" y1="1899" x2="1320" y2="1899" stroke="#333"/>
+<text x="1217.5" y="1871" text-anchor="middle">«aggregate root»</text>
+<text x="1217.5" y="1888" text-anchor="middle" font-weight="bold">Hub</text>
+<text x="1123" y="1917">-id : UUID</text>
+<text x="1123" y="1934">-code : String</text>
+<text x="1123" y="1951">-name : String</text>
+<text x="1123" y="1968">-type : HubType</text>
+<text x="1123" y="1985">-status : HubStatus</text>
+<text x="1123" y="2002">-addressLine : String</text>
+<text x="1123" y="2019">-provinceCode : String</text>
+<text x="1123" y="2036">-wardCode : String</text>
+<text x="1123" y="2053">-publicVisible : Boolean</text>
+<text x="1123" y="2070">-publicName : String [0..1]</text>
+<rect x="1390" y="1853" width="244" height="181" fill="#e3f2fd" stroke="#333"/>
+<line x1="1390" y1="1899" x2="1634" y2="1899" stroke="#333"/>
+<text x="1512.0" y="1871" text-anchor="middle">«aggregate root»</text>
+<text x="1512.0" y="1888" text-anchor="middle" font-weight="bold">HubLane</text>
+<text x="1398" y="1917">-id : UUID</text>
+<text x="1398" y="1934">-code : String</text>
+<text x="1398" y="1951">-transportMode : TransportMode</text>
+<text x="1398" y="1968">-estimatedTransitMinutes : Int</text>
+<text x="1398" y="1985">-distanceKm : BigDecimal [0..1]</text>
+<text x="1398" y="2002">-maxShipmentWeightKg : BigDecimal</text>
+<text x="1398" y="2019">-status : HubLaneStatus</text>
+<rect x="1704" y="1853" width="244" height="181" fill="#e3f2fd" stroke="#333"/>
+<line x1="1704" y1="1899" x2="1948" y2="1899" stroke="#333"/>
+<text x="1826.0" y="1871" text-anchor="middle">«entity»</text>
+<text x="1826.0" y="1888" text-anchor="middle" font-weight="bold">LaneSchedule</text>
+<text x="1712" y="1917">-id : UUID</text>
+<text x="1712" y="1934">-departureTime : LocalTime</text>
+<text x="1712" y="1951">-operatingDays : DayOfWeek [1..7]</text>
+<text x="1712" y="1968">-effectiveFrom : LocalDate</text>
+<text x="1712" y="1985">-effectiveTo : LocalDate [0..1]</text>
+<text x="1712" y="2002">-capacityKg : BigDecimal</text>
+<text x="1712" y="2019">-status : LaneScheduleStatus</text>
+<rect x="2018" y="1853" width="284" height="266" fill="#e3f2fd" stroke="#333"/>
+<line x1="2018" y1="1899" x2="2302" y2="1899" stroke="#333"/>
+<text x="2160.0" y="1871" text-anchor="middle">«entity»</text>
+<text x="2160.0" y="1888" text-anchor="middle" font-weight="bold">LaneCapacityReservation</text>
+<text x="2026" y="1917">-id : UUID</text>
+<text x="2026" y="1934">-batchId : UUID</text>
+<text x="2026" y="1951">-routeRevision : Int</text>
+<text x="2026" y="1968">-legSequence : Int</text>
+<text x="2026" y="1985">-serviceDate : LocalDate</text>
+<text x="2026" y="2002">-departureAt : Instant</text>
+<text x="2026" y="2019">-arrivalAt : Instant</text>
+<text x="2026" y="2036">-reservedWeightKg : BigDecimal</text>
+<text x="2026" y="2053">-departureCapacityKg : BigDecimal</text>
+<text x="2026" y="2070">-routeSource : CapacityRouteSource</text>
+<text x="2026" y="2087">-routeTemplateRevision : Int [0..1]</text>
+<text x="2026" y="2104">-status : LaneCapacityReservationStatus</text>
+<rect x="40" y="2293" width="218" height="130" fill="#e3f2fd" stroke="#333"/>
+<line x1="40" y1="2339" x2="258" y2="2339" stroke="#333"/>
+<text x="149.0" y="2311" text-anchor="middle">«aggregate root»</text>
+<text x="149.0" y="2328" text-anchor="middle" font-weight="bold">NetworkRegion</text>
+<text x="48" y="2357">-id : UUID</text>
+<text x="48" y="2374">-code : String</text>
+<text x="48" y="2391">-name : String</text>
+<text x="48" y="2408">-status : NetworkRegionStatus</text>
+<rect x="328" y="2293" width="205" height="130" fill="#e3f2fd" stroke="#333"/>
+<line x1="328" y1="2339" x2="533" y2="2339" stroke="#333"/>
+<text x="430.5" y="2311" text-anchor="middle">«aggregate root»</text>
+<text x="430.5" y="2328" text-anchor="middle" font-weight="bold">ServiceArea</text>
+<text x="336" y="2357">-id : UUID</text>
+<text x="336" y="2374">-code : String</text>
+<text x="336" y="2391">-name : String</text>
+<text x="336" y="2408">-status : ServiceAreaStatus</text>
+<rect x="603" y="2293" width="191" height="147" fill="#e3f2fd" stroke="#333"/>
+<line x1="603" y1="2339" x2="794" y2="2339" stroke="#333"/>
+<text x="698.5" y="2311" text-anchor="middle">«entity»</text>
+<text x="698.5" y="2328" text-anchor="middle" font-weight="bold">ServiceAreaCoverage</text>
+<text x="611" y="2357">-id : UUID</text>
+<text x="611" y="2374">-provinceCode : String</text>
+<text x="611" y="2391">-wardCode : String [0..1]</text>
+<text x="611" y="2408">-tier : CoverageTier</text>
+<text x="611" y="2425">-isActive : Boolean</text>
+<rect x="1264" y="2293" width="218" height="181" fill="#e3f2fd" stroke="#333"/>
+<line x1="1264" y1="2339" x2="1482" y2="2339" stroke="#333"/>
+<text x="1373.0" y="2311" text-anchor="middle">«aggregate root»</text>
+<text x="1373.0" y="2328" text-anchor="middle" font-weight="bold">RouteTemplate</text>
+<text x="1272" y="2357">-id : UUID</text>
+<text x="1272" y="2374">-code : String</text>
+<text x="1272" y="2391">-name : String</text>
+<text x="1272" y="2408">-description : String [0..1]</text>
+<text x="1272" y="2425">-priority : Int</text>
+<text x="1272" y="2442">-status : RouteTemplateStatus</text>
+<text x="1272" y="2459">-revision : Int</text>
+<rect x="1552" y="2293" width="150" height="96" fill="#e3f2fd" stroke="#333"/>
+<line x1="1552" y1="2339" x2="1702" y2="2339" stroke="#333"/>
+<text x="1627.0" y="2311" text-anchor="middle">«entity»</text>
+<text x="1627.0" y="2328" text-anchor="middle" font-weight="bold">RouteTemplateLeg</text>
+<text x="1560" y="2357">-id : UUID</text>
+<text x="1560" y="2374">-sequence : Int</text>
+</svg>

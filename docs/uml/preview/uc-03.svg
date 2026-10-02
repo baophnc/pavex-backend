@@ -1,0 +1,61 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1160" height="982" viewBox="0 0 1160 982" font-family="DejaVu Sans, Arial, sans-serif" font-size="11">
+<defs><marker id="open" markerWidth="12" markerHeight="12" refX="11" refY="6" orient="auto"><path d="M0,0 L11,6 L0,12" fill="none" stroke="#333"/></marker><marker id="tri" markerWidth="16" markerHeight="16" refX="15" refY="8" orient="auto"><path d="M0,0 L15,8 L0,16 Z" fill="#fff" stroke="#333"/></marker><marker id="dia" markerWidth="20" markerHeight="12" refX="1" refY="6" orient="auto"><path d="M1,6 L10,1 L19,6 L10,11 Z" fill="#333" stroke="#333"/></marker><marker id="odia" markerWidth="20" markerHeight="12" refX="1" refY="6" orient="auto"><path d="M1,6 L10,1 L19,6 L10,11 Z" fill="#fff" stroke="#333"/></marker></defs>
+<rect width="1160" height="982" fill="#fff"/>
+<text x="20" y="22" font-size="14" font-weight="bold">UC-03 Phân rã: Quản trị người dùng &amp; phân quyền</text>
+<rect x="200" y="40" width="900" height="882" fill="#f4fbff" stroke="#333"/>
+<text x="650.0" y="58" text-anchor="middle" font-weight="bold">PAVEX Logistics Platform</text>
+<polyline points="100,467 373,277" fill="none" stroke="#333"/>
+<polyline points="736,143 464,235" fill="none" stroke="#333" stroke-dasharray="6,4" marker-end="url(#open)"/>
+<text x="600" y="186" text-anchor="middle" fill="#555" font-size="10">«extend»</text>
+<polyline points="764,199 496,241" fill="none" stroke="#333" stroke-dasharray="6,4" marker-end="url(#open)"/>
+<text x="630" y="217" text-anchor="middle" fill="#555" font-size="10">«extend»</text>
+<polyline points="681,249 519,253" fill="none" stroke="#333" stroke-dasharray="6,4" marker-end="url(#open)"/>
+<text x="600" y="248" text-anchor="middle" fill="#555" font-size="10">«extend»</text>
+<polyline points="756,297 504,267" fill="none" stroke="#333" stroke-dasharray="6,4" marker-end="url(#open)"/>
+<text x="630" y="279" text-anchor="middle" fill="#555" font-size="10">«extend»</text>
+<polyline points="731,352 469,274" fill="none" stroke="#333" stroke-dasharray="6,4" marker-end="url(#open)"/>
+<text x="600" y="310" text-anchor="middle" fill="#555" font-size="10">«extend»</text>
+<polyline points="100,481 290,481" fill="none" stroke="#333"/>
+<polyline points="472,462 728,390" fill="none" stroke="#333" stroke-dasharray="6,4" marker-end="url(#open)"/>
+<text x="600" y="423" text-anchor="middle" fill="#555" font-size="10">«include»</text>
+<polyline points="100,495 373,685" fill="none" stroke="#333"/>
+<polyline points="736,595 464,687" fill="none" stroke="#333" stroke-dasharray="6,4" marker-end="url(#open)"/>
+<text x="600" y="638" text-anchor="middle" fill="#555" font-size="10">«extend»</text>
+<polyline points="764,651 496,693" fill="none" stroke="#333" stroke-dasharray="6,4" marker-end="url(#open)"/>
+<text x="630" y="669" text-anchor="middle" fill="#555" font-size="10">«extend»</text>
+<polyline points="681,701 519,705" fill="none" stroke="#333" stroke-dasharray="6,4" marker-end="url(#open)"/>
+<text x="600" y="700" text-anchor="middle" fill="#555" font-size="10">«extend»</text>
+<polyline points="756,749 504,719" fill="none" stroke="#333" stroke-dasharray="6,4" marker-end="url(#open)"/>
+<text x="630" y="731" text-anchor="middle" fill="#555" font-size="10">«extend»</text>
+<polyline points="731,804 469,726" fill="none" stroke="#333" stroke-dasharray="6,4" marker-end="url(#open)"/>
+<text x="600" y="762" text-anchor="middle" fill="#555" font-size="10">«extend»</text>
+<ellipse cx="405.0" cy="255.0" rx="115.0" ry="23.0" fill="#e3f2fd" stroke="#333"/>
+<text x="405.0" y="259.0" text-anchor="middle">Quản lý người dùng</text>
+<ellipse cx="795.0" cy="123.0" rx="115.0" ry="23.0" fill="#e3f2fd" stroke="#333"/>
+<text x="795.0" y="127.0" text-anchor="middle">Tìm kiếm &amp; lọc người dùng</text>
+<ellipse cx="855.0" cy="185.0" rx="115.0" ry="23.0" fill="#e3f2fd" stroke="#333"/>
+<text x="855.0" y="189.0" text-anchor="middle">Xem chi tiết người dùng</text>
+<ellipse cx="795.0" cy="247.0" rx="115.0" ry="23.0" fill="#e3f2fd" stroke="#333"/>
+<text x="795.0" y="251.0" text-anchor="middle">Cập nhật trạng thái tài khoản</text>
+<ellipse cx="855.0" cy="309.0" rx="115.0" ry="23.0" fill="#e3f2fd" stroke="#333"/>
+<text x="855.0" y="313.0" text-anchor="middle">Xác minh hồ sơ người dùng</text>
+<ellipse cx="795.0" cy="371.0" rx="115.0" ry="23.0" fill="#e3f2fd" stroke="#333"/>
+<text x="795.0" y="375.0" text-anchor="middle">Gán vai trò cho người dùng</text>
+<ellipse cx="405.0" cy="481.0" rx="115.0" ry="23.0" fill="#e3f2fd" stroke="#333"/>
+<text x="405.0" y="485.0" text-anchor="middle">Tạo tài khoản nhân viên</text>
+<ellipse cx="405.0" cy="707.0" rx="115.0" ry="23.0" fill="#e3f2fd" stroke="#333"/>
+<text x="405.0" y="711.0" text-anchor="middle">Quản lý vai trò &amp; quyền</text>
+<ellipse cx="795.0" cy="575.0" rx="115.0" ry="23.0" fill="#e3f2fd" stroke="#333"/>
+<text x="795.0" y="579.0" text-anchor="middle">Xem vai trò &amp; quyền</text>
+<ellipse cx="855.0" cy="637.0" rx="115.0" ry="23.0" fill="#e3f2fd" stroke="#333"/>
+<text x="855.0" y="641.0" text-anchor="middle">Tạo vai trò</text>
+<ellipse cx="795.0" cy="699.0" rx="115.0" ry="23.0" fill="#e3f2fd" stroke="#333"/>
+<text x="795.0" y="703.0" text-anchor="middle">Cập nhật vai trò</text>
+<ellipse cx="855.0" cy="761.0" rx="115.0" ry="23.0" fill="#e3f2fd" stroke="#333"/>
+<text x="855.0" y="765.0" text-anchor="middle">Xóa vai trò</text>
+<ellipse cx="795.0" cy="823.0" rx="115.0" ry="23.0" fill="#e3f2fd" stroke="#333"/>
+<text x="795.0" y="827.0" text-anchor="middle">Phân quyền cho vai trò</text>
+<circle cx="80.0" cy="451.0" r="10" fill="#fff" stroke="#333"/>
+<path d="M80.0,461.0 L80.0,491.0 M62.0,471.0 L98.0,471.0 M80.0,491.0 L65.0,519.0 M80.0,491.0 L95.0,519.0" stroke="#333" fill="none"/>
+<text x="80.0" y="535.0" text-anchor="middle">Platform Admin</text>
+</svg>

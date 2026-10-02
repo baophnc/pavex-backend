@@ -1,0 +1,255 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1867" height="1118" viewBox="0 0 1867 1118" font-family="DejaVu Sans, Arial, sans-serif" font-size="11">
+<defs><marker id="open" markerWidth="12" markerHeight="12" refX="11" refY="6" orient="auto"><path d="M0,0 L11,6 L0,12" fill="none" stroke="#333"/></marker><marker id="tri" markerWidth="16" markerHeight="16" refX="15" refY="8" orient="auto"><path d="M0,0 L15,8 L0,16 Z" fill="#fff" stroke="#333"/></marker><marker id="dia" markerWidth="20" markerHeight="12" refX="1" refY="6" orient="auto"><path d="M1,6 L10,1 L19,6 L10,11 Z" fill="#333" stroke="#333"/></marker><marker id="odia" markerWidth="20" markerHeight="12" refX="1" refY="6" orient="auto"><path d="M1,6 L10,1 L19,6 L10,11 Z" fill="#fff" stroke="#333"/></marker></defs>
+<rect width="1867" height="1118" fill="#fff"/>
+<text x="20" y="22" font-size="14" font-weight="bold">DM-03 Network</text>
+<polyline points="258,82 318,82" fill="none" stroke="#333" marker-start="url(#odia)"/>
+<text x="272" y="95" fill="#a33" font-size="9" text-anchor="start">region</text>
+<text x="272" y="77" fill="#1a5" font-size="9" text-anchor="start">1</text>
+<text x="304" y="77" fill="#a33" font-size="9" text-anchor="end">serviceAreas</text>
+<text x="304" y="95" fill="#1a5" font-size="9" text-anchor="end">0..*</text>
+<polyline points="446,331 446,170" fill="none" stroke="#333"/>
+<text x="456" y="321" fill="#a33" font-size="9" text-anchor="start">primaryHub</text>
+<text x="438" y="321" fill="#1a5" font-size="9" text-anchor="start">1</text>
+<text x="438" y="188" fill="#a33" font-size="9" text-anchor="start">servedAreas</text>
+<text x="456" y="188" fill="#1a5" font-size="9" text-anchor="start">0..*</text>
+<polyline points="523,82 583,82" fill="none" stroke="#333" marker-start="url(#dia)"/>
+<text x="537" y="95" fill="#a33" font-size="9" text-anchor="start">serviceArea</text>
+<text x="537" y="77" fill="#1a5" font-size="9" text-anchor="start">1</text>
+<text x="569" y="77" fill="#a33" font-size="9" text-anchor="end">coverages</text>
+<text x="569" y="95" fill="#1a5" font-size="9" text-anchor="end">1..*</text>
+<polyline points="575,361 615,361 615,301 525,301 525,331" fill="none" stroke="#333"/>
+<text x="589" y="374" fill="#a33" font-size="9" text-anchor="start">parentHub</text>
+<text x="589" y="356" fill="#1a5" font-size="9" text-anchor="start">0..1</text>
+<text x="534" y="321" fill="#a33" font-size="9" text-anchor="start">childHubs</text>
+<text x="516" y="321" fill="#1a5" font-size="9" text-anchor="start">0..*</text>
+<polyline points="575,373 915,373" fill="none" stroke="#333"/>
+<text x="589" y="386" fill="#a33" font-size="9" text-anchor="start">fromHub</text>
+<text x="589" y="368" fill="#1a5" font-size="9" text-anchor="start">1</text>
+<text x="901" y="368" fill="#a33" font-size="9" text-anchor="end">outboundLanes</text>
+<text x="901" y="386" fill="#1a5" font-size="9" text-anchor="end">0..*</text>
+<polyline points="575,387 915,387" fill="none" stroke="#333"/>
+<text x="589" y="400" fill="#a33" font-size="9" text-anchor="start">toHub</text>
+<text x="589" y="382" fill="#1a5" font-size="9" text-anchor="start">1</text>
+<text x="901" y="382" fill="#a33" font-size="9" text-anchor="end">inboundLanes</text>
+<text x="901" y="400" fill="#1a5" font-size="9" text-anchor="end">0..*</text>
+<polyline points="1159,373 1219,373" fill="none" stroke="#333" marker-start="url(#dia)"/>
+<text x="1173" y="386" fill="#a33" font-size="9" text-anchor="start">lane</text>
+<text x="1173" y="368" fill="#1a5" font-size="9" text-anchor="start">1</text>
+<text x="1205" y="368" fill="#a33" font-size="9" text-anchor="end">schedules</text>
+<text x="1205" y="386" fill="#1a5" font-size="9" text-anchor="end">0..*</text>
+<polyline points="575,408 878,408 878,221" fill="none" stroke="#333"/>
+<text x="589" y="421" fill="#a33" font-size="9" text-anchor="start">originHub</text>
+<text x="589" y="403" fill="#1a5" font-size="9" text-anchor="start">1</text>
+<text x="869" y="239" fill="#a33" font-size="9" text-anchor="start">originRoutes</text>
+<text x="887" y="239" fill="#1a5" font-size="9" text-anchor="start">0..*</text>
+<polyline points="575,447 797,447 797,149 834,149" fill="none" stroke="#333"/>
+<text x="589" y="460" fill="#a33" font-size="9" text-anchor="start">destinationHub</text>
+<text x="589" y="442" fill="#1a5" font-size="9" text-anchor="start">1</text>
+<text x="820" y="144" fill="#a33" font-size="9" text-anchor="end">destinationRoutes</text>
+<text x="820" y="162" fill="#1a5" font-size="9" text-anchor="end">0..*</text>
+<polyline points="1052,82 1112,82" fill="none" stroke="#333" marker-start="url(#dia)"/>
+<text x="1066" y="95" fill="#a33" font-size="9" text-anchor="start">routeTemplate</text>
+<text x="1066" y="77" fill="#1a5" font-size="9" text-anchor="start">1</text>
+<text x="1098" y="77" fill="#a33" font-size="9" text-anchor="end">legs {ordered}</text>
+<text x="1098" y="95" fill="#1a5" font-size="9" text-anchor="end">1..*</text>
+<polyline points="1136,331 1136,136" fill="none" stroke="#333"/>
+<text x="1144" y="321" fill="#a33" font-size="9" text-anchor="start">lane</text>
+<text x="1126" y="321" fill="#1a5" font-size="9" text-anchor="start">1</text>
+<text x="1126" y="154" fill="#a33" font-size="9" text-anchor="start">usedInLegs</text>
+<text x="1144" y="154" fill="#1a5" font-size="9" text-anchor="start">0..*</text>
+<polyline points="1118,331 1118,305 1665,305 1665,331" fill="none" stroke="#333"/>
+<text x="1127" y="321" fill="#a33" font-size="9" text-anchor="start">lane</text>
+<text x="1109" y="321" fill="#1a5" font-size="9" text-anchor="start">1</text>
+<text x="1674" y="321" fill="#a33" font-size="9" text-anchor="start">reservations</text>
+<text x="1656" y="321" fill="#1a5" font-size="9" text-anchor="start">0..*</text>
+<polyline points="1463,373 1523,373" fill="none" stroke="#333"/>
+<text x="1477" y="386" fill="#a33" font-size="9" text-anchor="start">schedule</text>
+<text x="1477" y="368" fill="#1a5" font-size="9" text-anchor="start">1</text>
+<text x="1509" y="368" fill="#a33" font-size="9" text-anchor="end">reservations</text>
+<text x="1509" y="386" fill="#1a5" font-size="9" text-anchor="end">0..*</text>
+<polyline points="1052,185 1594,185 1594,331" fill="none" stroke="#333"/>
+<text x="1066" y="198" fill="#a33" font-size="9" text-anchor="start">routeTemplate</text>
+<text x="1066" y="180" fill="#1a5" font-size="9" text-anchor="start">0..1</text>
+<text x="1603" y="321" fill="#a33" font-size="9" text-anchor="start">reservations</text>
+<text x="1585" y="321" fill="#1a5" font-size="9" text-anchor="start">0..*</text>
+<rect x="40" y="40" width="218" height="130" fill="#e3f2fd" stroke="#333"/>
+<line x1="40" y1="86" x2="258" y2="86" stroke="#333"/>
+<text x="149.0" y="58" text-anchor="middle">«aggregate root»</text>
+<text x="149.0" y="75" text-anchor="middle" font-weight="bold">NetworkRegion</text>
+<text x="48" y="104">-id : UUID</text>
+<text x="48" y="121">-code : String</text>
+<text x="48" y="138">-name : String</text>
+<text x="48" y="155">-status : NetworkRegionStatus</text>
+<rect x="318" y="40" width="205" height="130" fill="#e3f2fd" stroke="#333"/>
+<line x1="318" y1="86" x2="523" y2="86" stroke="#333"/>
+<text x="420.5" y="58" text-anchor="middle">«aggregate root»</text>
+<text x="420.5" y="75" text-anchor="middle" font-weight="bold">ServiceArea</text>
+<text x="326" y="104">-id : UUID</text>
+<text x="326" y="121">-code : String</text>
+<text x="326" y="138">-name : String</text>
+<text x="326" y="155">-status : ServiceAreaStatus</text>
+<rect x="583" y="40" width="191" height="147" fill="#e3f2fd" stroke="#333"/>
+<line x1="583" y1="86" x2="774" y2="86" stroke="#333"/>
+<text x="678.5" y="58" text-anchor="middle">«entity»</text>
+<text x="678.5" y="75" text-anchor="middle" font-weight="bold">ServiceAreaCoverage</text>
+<text x="591" y="104">-id : UUID</text>
+<text x="591" y="121">-provinceCode : String</text>
+<text x="591" y="138">-wardCode : String [0..1]</text>
+<text x="591" y="155">-tier : CoverageTier</text>
+<text x="591" y="172">-isActive : Boolean</text>
+<rect x="834" y="40" width="218" height="181" fill="#e3f2fd" stroke="#333"/>
+<line x1="834" y1="86" x2="1052" y2="86" stroke="#333"/>
+<text x="943.0" y="58" text-anchor="middle">«aggregate root»</text>
+<text x="943.0" y="75" text-anchor="middle" font-weight="bold">RouteTemplate</text>
+<text x="842" y="104">-id : UUID</text>
+<text x="842" y="121">-code : String</text>
+<text x="842" y="138">-name : String</text>
+<text x="842" y="155">-description : String [0..1]</text>
+<text x="842" y="172">-priority : Int</text>
+<text x="842" y="189">-status : RouteTemplateStatus</text>
+<text x="842" y="206">-revision : Int</text>
+<rect x="1112" y="40" width="150" height="96" fill="#e3f2fd" stroke="#333"/>
+<line x1="1112" y1="86" x2="1262" y2="86" stroke="#333"/>
+<text x="1187.0" y="58" text-anchor="middle">«entity»</text>
+<text x="1187.0" y="75" text-anchor="middle" font-weight="bold">RouteTemplateLeg</text>
+<text x="1120" y="104">-id : UUID</text>
+<text x="1120" y="121">-sequence : Int</text>
+<rect x="370" y="331" width="205" height="232" fill="#e3f2fd" stroke="#333"/>
+<line x1="370" y1="377" x2="575" y2="377" stroke="#333"/>
+<text x="472.5" y="349" text-anchor="middle">«aggregate root»</text>
+<text x="472.5" y="366" text-anchor="middle" font-weight="bold">Hub</text>
+<text x="378" y="395">-id : UUID</text>
+<text x="378" y="412">-code : String</text>
+<text x="378" y="429">-name : String</text>
+<text x="378" y="446">-type : HubType</text>
+<text x="378" y="463">-status : HubStatus</text>
+<text x="378" y="480">-addressLine : String</text>
+<text x="378" y="497">-provinceCode : String</text>
+<text x="378" y="514">-wardCode : String</text>
+<text x="378" y="531">-publicVisible : Boolean</text>
+<text x="378" y="548">-publicName : String [0..1]</text>
+<rect x="915" y="331" width="244" height="181" fill="#e3f2fd" stroke="#333"/>
+<line x1="915" y1="377" x2="1159" y2="377" stroke="#333"/>
+<text x="1037.0" y="349" text-anchor="middle">«aggregate root»</text>
+<text x="1037.0" y="366" text-anchor="middle" font-weight="bold">HubLane</text>
+<text x="923" y="395">-id : UUID</text>
+<text x="923" y="412">-code : String</text>
+<text x="923" y="429">-transportMode : TransportMode</text>
+<text x="923" y="446">-estimatedTransitMinutes : Int</text>
+<text x="923" y="463">-distanceKm : BigDecimal [0..1]</text>
+<text x="923" y="480">-maxShipmentWeightKg : BigDecimal</text>
+<text x="923" y="497">-status : HubLaneStatus</text>
+<rect x="1219" y="331" width="244" height="181" fill="#e3f2fd" stroke="#333"/>
+<line x1="1219" y1="377" x2="1463" y2="377" stroke="#333"/>
+<text x="1341.0" y="349" text-anchor="middle">«entity»</text>
+<text x="1341.0" y="366" text-anchor="middle" font-weight="bold">LaneSchedule</text>
+<text x="1227" y="395">-id : UUID</text>
+<text x="1227" y="412">-departureTime : LocalTime</text>
+<text x="1227" y="429">-operatingDays : DayOfWeek [1..7]</text>
+<text x="1227" y="446">-effectiveFrom : LocalDate</text>
+<text x="1227" y="463">-effectiveTo : LocalDate [0..1]</text>
+<text x="1227" y="480">-capacityKg : BigDecimal</text>
+<text x="1227" y="497">-status : LaneScheduleStatus</text>
+<rect x="1523" y="331" width="284" height="266" fill="#e3f2fd" stroke="#333"/>
+<line x1="1523" y1="377" x2="1807" y2="377" stroke="#333"/>
+<text x="1665.0" y="349" text-anchor="middle">«entity»</text>
+<text x="1665.0" y="366" text-anchor="middle" font-weight="bold">LaneCapacityReservation</text>
+<text x="1531" y="395">-id : UUID</text>
+<text x="1531" y="412">-batchId : UUID</text>
+<text x="1531" y="429">-routeRevision : Int</text>
+<text x="1531" y="446">-legSequence : Int</text>
+<text x="1531" y="463">-serviceDate : LocalDate</text>
+<text x="1531" y="480">-departureAt : Instant</text>
+<text x="1531" y="497">-arrivalAt : Instant</text>
+<text x="1531" y="514">-reservedWeightKg : BigDecimal</text>
+<text x="1531" y="531">-departureCapacityKg : BigDecimal</text>
+<text x="1531" y="548">-routeSource : CapacityRouteSource</text>
+<text x="1531" y="565">-routeTemplateRevision : Int [0..1]</text>
+<text x="1531" y="582">-status : LaneCapacityReservationStatus</text>
+<rect x="40" y="707" width="160" height="96" fill="#fff6d5" stroke="#333"/>
+<line x1="40" y1="753" x2="200" y2="753" stroke="#333"/>
+<text x="120.0" y="725" text-anchor="middle">«enumeration»</text>
+<text x="120.0" y="742" text-anchor="middle" font-weight="bold">NetworkRegionStatus</text>
+<text x="48" y="771">ACTIVE</text>
+<text x="48" y="788">INACTIVE</text>
+<rect x="260" y="707" width="150" height="96" fill="#fff6d5" stroke="#333"/>
+<line x1="260" y1="753" x2="410" y2="753" stroke="#333"/>
+<text x="335.0" y="725" text-anchor="middle">«enumeration»</text>
+<text x="335.0" y="742" text-anchor="middle" font-weight="bold">ServiceAreaStatus</text>
+<text x="268" y="771">ACTIVE</text>
+<text x="268" y="788">INACTIVE</text>
+<rect x="470" y="707" width="150" height="130" fill="#fff6d5" stroke="#333"/>
+<line x1="470" y1="753" x2="620" y2="753" stroke="#333"/>
+<text x="545.0" y="725" text-anchor="middle">«enumeration»</text>
+<text x="545.0" y="742" text-anchor="middle" font-weight="bold">CoverageTier</text>
+<text x="478" y="771">URBAN</text>
+<text x="478" y="788">SUBURBAN</text>
+<text x="478" y="805">REMOTE</text>
+<text x="478" y="822">ISLAND</text>
+<rect x="680" y="707" width="150" height="130" fill="#fff6d5" stroke="#333"/>
+<line x1="680" y1="753" x2="830" y2="753" stroke="#333"/>
+<text x="755.0" y="725" text-anchor="middle">«enumeration»</text>
+<text x="755.0" y="742" text-anchor="middle" font-weight="bold">HubType</text>
+<text x="688" y="771">SORTING_CENTER</text>
+<text x="688" y="788">TRANSIT_HUB</text>
+<text x="688" y="805">DELIVERY_STATION</text>
+<text x="688" y="822">POST_OFFICE</text>
+<rect x="890" y="707" width="150" height="113" fill="#fff6d5" stroke="#333"/>
+<line x1="890" y1="753" x2="1040" y2="753" stroke="#333"/>
+<text x="965.0" y="725" text-anchor="middle">«enumeration»</text>
+<text x="965.0" y="742" text-anchor="middle" font-weight="bold">HubStatus</text>
+<text x="898" y="771">ACTIVE</text>
+<text x="898" y="788">INACTIVE</text>
+<text x="898" y="805">CLOSED</text>
+<rect x="1100" y="707" width="150" height="130" fill="#fff6d5" stroke="#333"/>
+<line x1="1100" y1="753" x2="1250" y2="753" stroke="#333"/>
+<text x="1175.0" y="725" text-anchor="middle">«enumeration»</text>
+<text x="1175.0" y="742" text-anchor="middle" font-weight="bold">TransportMode</text>
+<text x="1108" y="771">ROAD</text>
+<text x="1108" y="788">AIR</text>
+<text x="1108" y="805">SEA</text>
+<text x="1108" y="822">RAIL</text>
+<rect x="40" y="877" width="150" height="96" fill="#fff6d5" stroke="#333"/>
+<line x1="40" y1="923" x2="190" y2="923" stroke="#333"/>
+<text x="115.0" y="895" text-anchor="middle">«enumeration»</text>
+<text x="115.0" y="912" text-anchor="middle" font-weight="bold">HubLaneStatus</text>
+<text x="48" y="941">ACTIVE</text>
+<text x="48" y="958">INACTIVE</text>
+<rect x="250" y="877" width="153" height="96" fill="#fff6d5" stroke="#333"/>
+<line x1="250" y1="923" x2="403" y2="923" stroke="#333"/>
+<text x="326.5" y="895" text-anchor="middle">«enumeration»</text>
+<text x="326.5" y="912" text-anchor="middle" font-weight="bold">LaneScheduleStatus</text>
+<text x="258" y="941">ACTIVE</text>
+<text x="258" y="958">INACTIVE</text>
+<rect x="463" y="877" width="160" height="113" fill="#fff6d5" stroke="#333"/>
+<line x1="463" y1="923" x2="623" y2="923" stroke="#333"/>
+<text x="543.0" y="895" text-anchor="middle">«enumeration»</text>
+<text x="543.0" y="912" text-anchor="middle" font-weight="bold">RouteTemplateStatus</text>
+<text x="471" y="941">DRAFT</text>
+<text x="471" y="958">ACTIVE</text>
+<text x="471" y="975">ARCHIVED</text>
+<rect x="683" y="877" width="160" height="96" fill="#fff6d5" stroke="#333"/>
+<line x1="683" y1="923" x2="843" y2="923" stroke="#333"/>
+<text x="763.0" y="895" text-anchor="middle">«enumeration»</text>
+<text x="763.0" y="912" text-anchor="middle" font-weight="bold">CapacityRouteSource</text>
+<text x="691" y="941">ROUTE_TEMPLATE</text>
+<text x="691" y="958">DIRECT_LANE</text>
+<rect x="903" y="877" width="226" height="113" fill="#fff6d5" stroke="#333"/>
+<line x1="903" y1="923" x2="1129" y2="923" stroke="#333"/>
+<text x="1016.0" y="895" text-anchor="middle">«enumeration»</text>
+<text x="1016.0" y="912" text-anchor="middle" font-weight="bold">LaneCapacityReservationStatus</text>
+<text x="911" y="941">RESERVED</text>
+<text x="911" y="958">CONSUMED</text>
+<text x="911" y="975">RELEASED</text>
+<rect x="1189" y="877" width="150" height="181" fill="#fff6d5" stroke="#333"/>
+<line x1="1189" y1="923" x2="1339" y2="923" stroke="#333"/>
+<text x="1264.0" y="895" text-anchor="middle">«enumeration»</text>
+<text x="1264.0" y="912" text-anchor="middle" font-weight="bold">DayOfWeek</text>
+<text x="1197" y="941">MONDAY</text>
+<text x="1197" y="958">TUESDAY</text>
+<text x="1197" y="975">WEDNESDAY</text>
+<text x="1197" y="992">THURSDAY</text>
+<text x="1197" y="1009">FRIDAY</text>
+<text x="1197" y="1026">SATURDAY</text>
+<text x="1197" y="1043">SUNDAY</text>
+</svg>
