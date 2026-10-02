@@ -4,6 +4,7 @@ import com.pavex.billing.client.OperationsClient
 import com.pavex.billing.dto.ApprovedCashResponse
 import com.pavex.billing.dto.CashCollectionResponse
 import com.pavex.billing.dto.CashRemittanceResponse
+import com.pavex.billing.messaging.BillingEventPublisher
 import com.pavex.billing.entity.CashCollection
 import com.pavex.billing.entity.CashCollectionStatus
 import com.pavex.billing.entity.CashRemittance
@@ -45,6 +46,7 @@ class CashService(
     private val feeCharges: MerchantFeeChargeRepository,
     transactionManager: PlatformTransactionManager,
     private val clock: Clock,
+    private val events: BillingEventPublisher? = null,
 ) {
     private val tx = TransactionTemplate(transactionManager)
     private val readTx = TransactionTemplate(transactionManager).apply { isReadOnly = true }
@@ -66,7 +68,7 @@ class CashService(
         if (!operations.canOperateAtHub(userId, hubId, OperationsCapability.LAST_MILE_DELIVERY)) {
             throw BillingForbiddenException("cash_hub_forbidden", "Only an active courier of this hub can submit cash to it.")
         }
-        return inTx {
+        val submitted = inTx {
             val selected = collections.findAllById(collectionIds)
             if (selected.size != collectionIds.size) throw BillingNotFoundException("cash_collection_not_found", "One or more cash collections were not found.")
             if (selected.any { !it.isHeldBy(userId) }) {
@@ -88,6 +90,8 @@ class CashService(
             collections.saveAllAndFlush(selected)
             CashRemittanceResponse.from(remittance)
         }
+        events?.remittanceSubmitted(submitted)
+        return submitted
     }
 
     fun myRemittances(userId: UUID, status: CashRemittanceStatus?): List<CashRemittanceResponse> = inReadTx {

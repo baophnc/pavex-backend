@@ -22,7 +22,7 @@ if command -v java >/dev/null 2>&1; then
   fi
 fi
 
-for module in auth identity partners network pricing shipment operations billing fleet platform/api-gateway platform/discovery-server; do
+for module in auth identity partners network pricing shipment operations billing fleet notifications platform/api-gateway platform/discovery-server; do
   config_dir="$repo_dir/$module/src/main/resources"
   [[ -f "$config_dir/application.yaml" ]] || problem "$module thiếu application.yaml."
   for profile in local prod; do
@@ -37,7 +37,7 @@ fi
 
 key_root="$HOME/.pavex/keys"
 if command -v openssl >/dev/null 2>&1; then
-  for issuer in auth identity partners pricing shipment operations billing fleet; do
+  for issuer in auth identity partners pricing shipment operations billing fleet notifications; do
     private="$key_root/$issuer/private.pem"
     public="$key_root/$issuer/public.pem"
     if [[ ! -s "$private" || ! -s "$public" ]]; then
@@ -58,7 +58,7 @@ if command -v docker >/dev/null 2>&1; then
   elif ! running_services="$(cd "$repo_dir" && docker compose ps --status running --services)"; then
     problem "Không đọc được trạng thái Docker Compose của PAVEX."
   else
-    for service in auth-db identity-db partners-db network-db pricing-db shipment-db operations-db billing-db fleet-db gateway-redis rabbitmq mailpit minio; do
+    for service in auth-db identity-db partners-db network-db pricing-db shipment-db operations-db billing-db fleet-db notifications-db gateway-redis rabbitmq mailpit minio; do
       if ! printf '%s\n' "$running_services" | grep -Fxq "$service"; then
         problem "$service chưa chạy. Chạy docker compose up -d --wait."
       fi

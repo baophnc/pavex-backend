@@ -114,3 +114,16 @@ data class WorkforceAssignmentSnapshot(
     val acceptedAt: java.time.Instant?,
     val startedAt: java.time.Instant?,
 )
+
+/** A user's work as Notifications sees it: their workforce kind (null if not staff) and active hubs. */
+data class WorkPersonSnapshot(
+    val userId: UUID,
+    val kind: String?,
+    val hubIds: List<UUID>,
+)
+
+/** One active person of a hub, to address a hub message to. */
+data class HubPersonSnapshot(
+    val userId: UUID,
+    val kind: String,
+)

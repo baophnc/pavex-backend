@@ -59,6 +59,9 @@ security:
     partners:
       issuer: ${PARTNERS_SERVICE_JWT_ISSUER:http://localhost:8083}
       public-key: file:${pavex.keys-dir}/partners/public.pem
+    notifications:
+      issuer: ${NOTIFICATIONS_SERVICE_JWT_ISSUER:http://localhost:8090}
+      public-key: file:${pavex.keys-dir}/notifications/public.pem
 
 operations:
   dispatch:

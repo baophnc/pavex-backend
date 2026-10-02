@@ -69,6 +69,22 @@ class SecurityConfig {
 
     @Bean
     @Order(0)
+    fun notificationsInternalSecurityFilterChain(
+        http: HttpSecurity,
+        @Qualifier("notificationsServiceJwtDecoder") notificationsServiceJwtDecoder: JwtDecoder,
+    ): SecurityFilterChain =
+        http
+            .securityMatcher("/internal/v1/operations/notifications/**")
+            .csrf { it.disable() }
+            .sessionManagement { it.sessionCreationPolicy(SessionCreationPolicy.STATELESS) }
+            .authorizeHttpRequests { it.anyRequest().authenticated() }
+            .oauth2ResourceServer { resourceServer ->
+                resourceServer.jwt { jwt -> jwt.decoder(notificationsServiceJwtDecoder) }
+            }
+            .build()
+
+    @Bean
+    @Order(0)
     fun fleetInternalSecurityFilterChain(
         http: HttpSecurity,
         @Qualifier("fleetServiceJwtDecoder") fleetServiceJwtDecoder: JwtDecoder,

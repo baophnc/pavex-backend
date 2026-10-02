@@ -181,6 +181,26 @@ services:
       timeout: 5s
       retries: 10
 
+  notifications-db:
+    image: postgres:18.6-alpine
+
+    environment:
+      POSTGRES_DB: pavex_notifications
+      POSTGRES_USER: pavex
+      POSTGRES_PASSWORD: pavex
+
+    ports:
+      - "5442:5432"
+
+    volumes:
+      - notifications_postgres_data:/var/lib/postgresql
+
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U pavex -d pavex_notifications"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
   mailpit:
     image: axllent/mailpit
 
@@ -261,5 +281,6 @@ volumes:
   operations_postgres_data:
   billing_postgres_data:
   fleet_postgres_data:
+  notifications_postgres_data:
   rabbitmq_data:
   minio_data:
