@@ -14,11 +14,11 @@ ON CONFLICT (id) DO UPDATE SET status = 'ACTIVE';
 
 -- Bưu cục Ba Đình (Hà Nội, phường 00004) và Bưu cục Tân Sơn Hoà (TP.HCM, phường 26977).
 INSERT INTO network.hubs (id, code, name, type, status, address_line, province_code, ward_code,
-                          parent_hub_id, public_visible, public_name, created_at, updated_at, version) VALUES
+                          parent_hub_id, public_visible, public_name, latitude, longitude, created_at, updated_at, version) VALUES
     ('5eed0001-0000-4000-8000-000000000001', 'HN-BD', 'Bưu cục Ba Đình', 'LOCAL', 'ACTIVE',
-     'Số 1 Đội Cấn, Phường Ba Đình, Hà Nội', '01', '00004', NULL, TRUE, 'Bưu cục Ba Đình', NOW(), NOW(), 0),
+     'Số 1 Đội Cấn, Phường Ba Đình, Hà Nội', '01', '00004', NULL, TRUE, 'Bưu cục Ba Đình', 21.0355, 105.8270, NOW(), NOW(), 0),
     ('5eed0001-0000-4000-8000-000000000002', 'HCM-TSH', 'Bưu cục Tân Sơn Hoà', 'LOCAL', 'ACTIVE',
-     'Số 10 Cộng Hoà, Phường Tân Sơn Hoà, TP. Hồ Chí Minh', '79', '26977', NULL, TRUE, 'Bưu cục Tân Sơn Hoà', NOW(), NOW(), 0);
+     'Số 10 Cộng Hoà, Phường Tân Sơn Hoà, TP. Hồ Chí Minh', '79', '26977', NULL, TRUE, 'Bưu cục Tân Sơn Hoà', 10.8013, 106.6522, NOW(), NOW(), 0);
 
 -- Mỗi bưu cục phục vụ toàn tỉnh (ward_code NULL): người nhận ở phường nào của 2 thành phố cũng giao được.
 INSERT INTO network.service_areas (id, code, name, region_id, primary_hub_id, status, created_at, updated_at, version) VALUES

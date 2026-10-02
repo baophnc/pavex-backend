@@ -19,6 +19,8 @@ data class HubDirectoryEntry(
     val status: HubStatus,
     val provinceCode: String,
     val wardCode: String,
+    val latitude: Double?,
+    val longitude: Double?,
 )
 
 /**
@@ -36,5 +38,5 @@ class HubDirectoryController(private val hubs: HubRepository) {
     )
     fun list(): List<HubDirectoryEntry> = hubs.findAll()
         .sortedBy { it.code }
-        .map { HubDirectoryEntry(it.id, it.code, it.name, it.type, it.status, it.provinceCode, it.wardCode) }
+        .map { HubDirectoryEntry(it.id, it.code, it.name, it.type, it.status, it.provinceCode, it.wardCode, it.latitude, it.longitude) }
 }

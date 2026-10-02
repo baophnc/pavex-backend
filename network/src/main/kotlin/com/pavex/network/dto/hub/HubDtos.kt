@@ -3,6 +3,8 @@ package com.pavex.network.dto.hub
 import com.pavex.network.entity.Hub
 import com.pavex.network.entity.HubStatus
 import com.pavex.network.entity.HubType
+import jakarta.validation.constraints.DecimalMax
+import jakarta.validation.constraints.DecimalMin
 import jakarta.validation.constraints.NotBlank
 import jakarta.validation.constraints.Pattern
 import jakarta.validation.constraints.Size
@@ -21,6 +23,9 @@ data class CreateHubRequest(
     val parentHubId: UUID? = null,
     val publicVisible: Boolean = false,
     @field:Size(max = 200) val publicName: String? = null,
+    /** Map position, e.g. copied from Google Maps; both or neither. */
+    @field:DecimalMin("-90") @field:DecimalMax("90") val latitude: Double? = null,
+    @field:DecimalMin("-180") @field:DecimalMax("180") val longitude: Double? = null,
 )
 
 data class UpdateHubRequest(
@@ -32,6 +37,9 @@ data class UpdateHubRequest(
     val parentHubId: UUID? = null,
     val publicVisible: Boolean = false,
     @field:Size(max = 200) val publicName: String? = null,
+    /** Map position, e.g. copied from Google Maps; both or neither. */
+    @field:DecimalMin("-90") @field:DecimalMax("90") val latitude: Double? = null,
+    @field:DecimalMin("-180") @field:DecimalMax("180") val longitude: Double? = null,
 )
 
 data class UpdateHubStatusRequest(val active: Boolean, @field:Size(max = 500) val reason: String? = null)
@@ -48,6 +56,8 @@ data class HubResponse(
     val parentHubId: UUID?,
     val publicVisible: Boolean,
     val publicName: String?,
+    val latitude: Double?,
+    val longitude: Double?,
     val createdAt: Instant,
     val updatedAt: Instant,
 ) {
@@ -55,7 +65,7 @@ data class HubResponse(
         fun from(hub: Hub) = HubResponse(
             hub.id, hub.code, hub.name, hub.type, hub.status, hub.addressLine,
             hub.provinceCode, hub.wardCode, hub.parentHubId, hub.publicVisible,
-            hub.publicName, hub.createdAt, hub.updatedAt,
+            hub.publicName, hub.latitude, hub.longitude, hub.createdAt, hub.updatedAt,
         )
     }
 }

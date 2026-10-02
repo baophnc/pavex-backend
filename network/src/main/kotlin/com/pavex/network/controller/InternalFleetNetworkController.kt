@@ -50,7 +50,7 @@ class InternalFleetNetworkController(
         }
     }
 
-    private fun Hub.toSnapshot() = FleetHubSnapshot(id, code, name, type.name)
+    private fun Hub.toSnapshot() = FleetHubSnapshot(id, code, name, type.name, latitude, longitude)
 
     companion object {
         private const val MAX_BATCH_SIZE = 500

@@ -16,6 +16,7 @@ import com.pavex.network.entity.NetworkAuditAction
 import com.pavex.network.entity.NetworkAuditEntityType
 import com.pavex.network.entity.ServiceAreaStatus
 import com.pavex.network.exception.ConflictException
+import com.pavex.network.exception.InvalidNetworkRequestException
 import com.pavex.network.exception.NotFoundException
 import com.pavex.network.repository.HubRepository
 import com.pavex.network.repository.HubLaneRepository
@@ -76,6 +77,7 @@ class HubService(
             throw ConflictException("hub_code_exists", "Hub code already exists.")
         }
         locations.validate(request.provinceCode, request.wardCode)
+        requireBothCoordinates(request.latitude, request.longitude)
         hierarchy.validateParent(null, request.parentHubId)
         val hub = hubs.save(
             Hub(
@@ -88,6 +90,8 @@ class HubService(
                 parentHubId = request.parentHubId,
                 publicVisible = request.publicVisible,
                 publicName = request.publicName?.trim()?.takeIf { it.isNotBlank() },
+                latitude = request.latitude,
+                longitude = request.longitude,
             ),
         )
         audit.record(NetworkAuditEntityType.HUB, hub.id, NetworkAuditAction.CREATED, actorUserId, after = HubResponse.from(hub))
@@ -99,6 +103,7 @@ class HubService(
         val hub = find(id)
         val before = HubResponse.from(hub)
         locations.validate(request.provinceCode, request.wardCode)
+        requireBothCoordinates(request.latitude, request.longitude)
         hierarchy.validateParent(id, request.parentHubId)
         hub.update(
             request.name,
@@ -109,6 +114,8 @@ class HubService(
             request.parentHubId,
             request.publicVisible,
             request.publicName,
+            request.latitude,
+            request.longitude,
         )
         val saved = hubs.save(hub)
         audit.record(NetworkAuditEntityType.HUB, id, NetworkAuditAction.UPDATED, actorUserId, before, HubResponse.from(saved))
@@ -137,6 +144,12 @@ class HubService(
             request.reason,
         )
         return HubResponse.from(saved)
+    }
+
+    private fun requireBothCoordinates(latitude: Double?, longitude: Double?) {
+        if ((latitude == null) != (longitude == null)) {
+            throw InvalidNetworkRequestException("hub_coordinates_incomplete", "Enter both latitude and longitude, or neither.")
+        }
     }
 
     fun find(id: UUID): Hub = hubs.findById(id).orElseThrow {
