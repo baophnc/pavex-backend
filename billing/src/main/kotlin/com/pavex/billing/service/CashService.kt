@@ -94,8 +94,8 @@ class CashService(
         remittances.search(null, userId, status, PageRequest.of(0, LIST_LIMIT)).map(CashRemittanceResponse::from)
     }
 
-    fun hubCollections(userId: UUID, hubId: UUID, status: CashCollectionStatus?): List<CashCollectionResponse> {
-        requireHubCashAccess(userId, hubId)
+    fun hubCollections(userId: UUID, hubId: UUID, status: CashCollectionStatus?, allHubs: Boolean = false): List<CashCollectionResponse> {
+        if (!allHubs) requireHubCashAccess(userId, hubId)
         return inReadTx {
             val page = PageRequest.of(0, LIST_LIMIT)
             val items = if (status == null) {
@@ -108,10 +108,10 @@ class CashService(
     }
 
     /** A hub sends cash that finance rejected back for review, e.g. after a recount. */
-    fun resubmitFromHub(userId: UUID, collectionId: UUID): CashCollectionResponse {
+    fun resubmitFromHub(userId: UUID, collectionId: UUID, allHubs: Boolean = false): CashCollectionResponse {
         val hubId = inReadTx { loadCollection(collectionId).currentHubId }
             ?: throw BillingConflictException("cash_not_at_hub", "Cash collection is not currently held at a hub.")
-        requireHubCashAccess(userId, hubId)
+        if (!allHubs) requireHubCashAccess(userId, hubId)
         return inTx {
             val collection = loadCollection(collectionId)
             if (collection.currentHubId != hubId) throw BillingConflictException("cash_collection_modified", "Cash collection moved. Reload and retry.")

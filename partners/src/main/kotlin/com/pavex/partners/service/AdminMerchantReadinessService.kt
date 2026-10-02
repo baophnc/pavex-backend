@@ -32,10 +32,11 @@ class AdminMerchantReadinessService(
     private val roleOutbox: MerchantRoleOutboxRepository,
 ) {
     @Transactional(readOnly = true)
-    fun readiness(merchantId: UUID): AdminMerchantReadinessResponse {
+    fun readiness(merchantId: UUID, scope: MerchantScope = MerchantScope(allHubs = true, hubIds = emptySet())): AdminMerchantReadinessResponse {
         val merchant = merchants.findById(merchantId).orElseThrow {
             ApiException(HttpStatus.NOT_FOUND, "merchant_not_found", "Merchant was not found.")
         }
+        if (!scope.covers(merchant)) throw ApiException(HttpStatus.NOT_FOUND, "merchant_not_found", "Merchant was not found.")
         // The review screen stays usable while Identity is down; the identity check shows as unknown.
         val identityEligible = try {
             identityClient.findMerchantEligibility(merchant.userId)?.eligible == true

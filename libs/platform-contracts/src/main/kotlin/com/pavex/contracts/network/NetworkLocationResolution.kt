@@ -17,3 +17,6 @@ data class NetworkLocationResolutionResponse(
 
 enum class NetworkCoverageTier { STANDARD, REMOTE, ISLAND }
 enum class NetworkCoverageMatch { WARD, PROVINCE }
+
+/** The hub that serves a ward: where its parcels are picked up and its customers are handled. */
+data class NetworkServingHubResponse(val hubId: UUID)

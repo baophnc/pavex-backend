@@ -73,6 +73,10 @@ security:
 partners:
   identity:
     service-url: ${IDENTITY_SERVICE_URL:http://identity-service}
+  network:
+    service-url: ${NETWORK_SERVICE_URL:http://network-service}
+  operations:
+    service-url: ${OPERATIONS_SERVICE_URL:http://operations-service}
   support:
     mail:
       enabled: ${SUPPORT_MAIL_ENABLED:true}

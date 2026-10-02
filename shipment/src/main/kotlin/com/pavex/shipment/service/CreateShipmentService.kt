@@ -104,10 +104,12 @@ class CreateShipmentService(
      * (no shop, no pickup address), the parcels are already in the hub, and the quote must start at
      * this hub; when the sender pays, the cash taken must be exactly the shipping fee.
      */
+    /** [allHubs]: head office books at any hub's counter; hub staff only at a hub they work at. */
     fun createAtCounter(
         actorUserId: UUID,
         idempotencyKeyHeader: String?,
         request: CreateCounterShipmentRequest,
+        allHubs: Boolean = false,
     ): CreateShipmentResult {
         val idempotencyKey = validateIdempotencyKey(idempotencyKeyHeader)
         val senderInput = normalizeAddress(request.sender)
@@ -119,7 +121,7 @@ class CreateShipmentService(
             return replayOrConflict(it, fingerprint)
         }
 
-        if (!operations.canOperateAtHub(actorUserId, request.hubId, OperationsCapability.PARCEL_SCANNING)) {
+        if (!allHubs && !operations.canOperateAtHub(actorUserId, request.hubId, OperationsCapability.PARCEL_SCANNING)) {
             throw ShipmentForbiddenException(
                 "counter_hub_forbidden",
                 "The current user does not serve the counter of this hub.",

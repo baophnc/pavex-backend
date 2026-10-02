@@ -21,8 +21,6 @@ CREATE TEMP TABLE seed_user (
 INSERT INTO seed_user VALUES
     ('5eed0010-0000-4000-8000-000000000001', 'admin@pavex.test',        'Quản Trị',  'Lê',     'MALE',   '1988-03-12', ARRAY['ADMIN']),
     ('5eed0010-0000-4000-8000-000000000002', 'vanhanh@pavex.test',      'Văn Hành',  'Phạm',   'MALE',   '1985-07-21', ARRAY['OPERATIONS_MANAGER']),
-    ('5eed0010-0000-4000-8000-000000000003', 'taichinh@pavex.test',     'Thu Hà',    'Nguyễn', 'FEMALE', '1990-11-02', ARRAY['FINANCE_ACCOUNTANT']),
-    ('5eed0010-0000-4000-8000-000000000004', 'cskh@pavex.test',         'Minh Anh',  'Trần',   'FEMALE', '1995-01-30', ARRAY['COMMERCIAL_MANAGER']),
     ('5eed0010-0000-4000-8000-000000000011', 'truongbc.hn@pavex.test',  'Đức Thắng', 'Hoàng',  'MALE',   '1982-05-09', ARRAY['HUB_MANAGER']),
     ('5eed0010-0000-4000-8000-000000000012', 'nhanvien.hn@pavex.test',  'Thị Lan',   'Vũ',     'FEMALE', '1996-08-17', ARRAY['WAREHOUSE_OPERATOR']),
     ('5eed0010-0000-4000-8000-000000000013', 'buuta.hn@pavex.test',     'Văn Nam',   'Đỗ',     'MALE',   '1998-02-25', ARRAY['COURIER']),

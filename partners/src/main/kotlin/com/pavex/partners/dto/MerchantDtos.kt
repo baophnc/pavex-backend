@@ -38,6 +38,8 @@ data class MerchantProfileResponse(
     val createdAt: Instant,
     val updatedAt: Instant,
     val version: Long,
+    /** The hub that looks after this merchant; null until it has a pickup point. */
+    val servingHubId: UUID? = null,
 )
 
 data class ChangeMerchantStatusRequest(

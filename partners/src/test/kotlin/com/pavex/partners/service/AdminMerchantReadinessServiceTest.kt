@@ -80,6 +80,23 @@ class AdminMerchantReadinessServiceTest {
         assertEquals("Identity unavailable", waiting.roleSync?.lastError)
     }
 
+    @Test
+    fun `hub staff only open merchants their hub looks after`() {
+        val hub = UUID.randomUUID()
+        merchant.servingHubId = hub
+        val service = service(eligible = true, addresses = listOf(usable))
+
+        service.readiness(merchant.id, MerchantScope(allHubs = false, hubIds = setOf(hub)))
+        val other = org.junit.jupiter.api.assertThrows<com.pavex.partners.exception.ApiException> {
+            service.readiness(merchant.id, MerchantScope(allHubs = false, hubIds = setOf(UUID.randomUUID())))
+        }
+        assertEquals("merchant_not_found", other.code)
+
+        merchant.servingHubId = null
+        assertFalse(MerchantScope(allHubs = false, hubIds = setOf(hub)).covers(merchant))
+        assertTrue(MerchantScope(allHubs = true, hubIds = emptySet()).covers(merchant))
+    }
+
     private fun pickup(name: String, phone: String, isDefault: Boolean) = MerchantPickupAddress(
         merchantId = merchant.id,
         name = name,

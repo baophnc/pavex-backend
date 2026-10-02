@@ -153,10 +153,10 @@ class ShipmentEventIngestionTest {
         assertEquals(hub, payout.hubId)
 
         val wrongPhone = assertThrows(InvalidBillingRequestException::class.java) {
-            counterCash.complete(clerk, payout.id, "0999999999", null)
+            counterCash.complete(clerk, false, payout.id, "0999999999", null)
         }
         assertEquals("counter_phone_mismatch", wrongPhone.code)
-        counterCash.complete(clerk, payout.id, "+84 912 345 678", "Đã trả đủ")
+        counterCash.complete(clerk, false, payout.id, "+84 912 345 678", "Đã trả đủ")
         assertEquals(CounterSettlementStatus.DONE, payout.status)
     }
 
@@ -171,7 +171,7 @@ class ShipmentEventIngestionTest {
         val fee = settlements.single()
         assertEquals(CounterSettlementKind.COLLECT_RETURN_FEE, fee.kind)
 
-        counterCash.complete(clerk, fee.id, "0912345678", null)
+        counterCash.complete(clerk, false, fee.id, "0912345678", null)
         val cash = collections.single()
         assertEquals(CashSource.COUNTER, cash.source)
         assertEquals("CNT-RET-${booked.trackingCode}", cash.reference)
