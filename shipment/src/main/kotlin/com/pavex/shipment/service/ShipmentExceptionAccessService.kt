@@ -16,6 +16,10 @@ class ShipmentExceptionAccessService(
     fun resolveRead(authentication: Authentication): ShipmentExceptionAccessScope =
         resolve(authentication, setOf(EXCEPTIONS_READ, EXCEPTIONS_MANAGE))
 
+    /** Asking for a return, forward or cancellation: hub staff may, and someone else approves. */
+    fun resolveRequest(authentication: Authentication): ShipmentExceptionAccessScope =
+        resolve(authentication, setOf(EXCEPTIONS_REQUEST, EXCEPTIONS_MANAGE))
+
     fun resolveManage(authentication: Authentication): ShipmentExceptionAccessScope =
         resolve(authentication, setOf(EXCEPTIONS_MANAGE))
 
@@ -41,6 +45,7 @@ class ShipmentExceptionAccessService(
     companion object {
         const val EXCEPTIONS_READ = "shipments.exceptions.read"
         const val EXCEPTIONS_MANAGE = "shipments.exceptions.manage"
+        const val EXCEPTIONS_REQUEST = "shipments.exceptions.request"
         const val WEIGHT_ADJUST = "shipments.weight.adjust"
         const val HUB_READ = "operations.hub.read"
         const val HUB_MANAGE = "operations.hub.manage"

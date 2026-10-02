@@ -86,6 +86,7 @@ class ShipmentCaseController(
             request.severity,
             request.title,
             request.description,
+            request.assignedToUserId,
         )
         return ResponseEntity.created(URI.create("/api/v1/admin/shipment-cases/${created.id}")).body(created)
     }
@@ -103,6 +104,7 @@ class ShipmentCaseController(
             request.title,
             request.description,
             request.externalBarcode,
+            request.assignedToUserId,
         )
         return ResponseEntity.status(HttpStatus.CREATED)
             .location(URI.create("/api/v1/admin/shipment-cases/${created.id}"))
@@ -147,7 +149,7 @@ class ShipmentCaseController(
         authentication: Authentication,
         @PathVariable caseId: UUID,
         @Valid @RequestBody request: ResolveShipmentCaseRequest,
-    ) = ResponseEntity.ok(service.resolve(authentication, caseId, request.resolution))
+    ) = ResponseEntity.ok(service.resolve(authentication, caseId, request.resolution, request.outcome))
 
     @PostMapping("/{caseId}/close")
     @PreAuthorize("hasAuthority('shipments.cases.manage')")

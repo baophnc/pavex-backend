@@ -10,7 +10,9 @@ import com.pavex.shipment.dto.ShipmentCaseMonitoringSummary
 import com.pavex.shipment.dto.ShipmentCaseResponse
 import com.pavex.shipment.dto.ShipmentCaseSummaryResponse
 import com.pavex.shipment.entity.ShipmentCase
+import com.pavex.shipment.entity.ShipmentCaseOutcome
 import com.pavex.shipment.entity.ShipmentCaseSeverity
+import com.pavex.shipment.entity.ShipmentLifecycleStatus
 import com.pavex.shipment.entity.ShipmentCaseStatus
 import com.pavex.shipment.entity.ShipmentCaseType
 import com.pavex.shipment.entity.Shipment
@@ -43,6 +45,7 @@ class ShipmentCaseService(
     private val adminShipmentQueries: AdminShipmentQueryService,
     private val outbox: ShipmentOutboxService,
     private val objectMapper: ObjectMapper,
+    private val exceptions: ShipmentExceptionWorkflowService,
     private val clock: Clock = Clock.systemUTC(),
 ) {
     @Transactional
@@ -54,6 +57,7 @@ class ShipmentCaseService(
         severity: ShipmentCaseSeverity,
         title: String,
         description: String,
+        assignedToUserId: UUID? = null,
     ): ShipmentCaseResponse {
         val scope = access.resolveManage(authentication)
         requireHub(scope, hubId)
@@ -67,6 +71,7 @@ class ShipmentCaseService(
         val now = clock.instant()
         val item = domain {
             ShipmentCase.createProblem(shipmentId, parcelId, hubId, severity, title, description, actor(authentication), now)
+                .also { created -> assignedToUserId?.let { created.assign(it, actor(authentication), null, now) } }
         }
         cases.saveAndFlush(item)
         publishLatest(item)
@@ -81,12 +86,14 @@ class ShipmentCaseService(
         title: String,
         description: String,
         externalBarcode: String?,
+        assignedToUserId: UUID? = null,
     ): ShipmentCaseResponse {
         val scope = access.resolveManage(authentication)
         requireHub(scope, hubId)
         val now = clock.instant()
         val item = domain {
             ShipmentCase.createUnidentified(hubId, severity, title, description, externalBarcode, actor(authentication), now)
+                .also { created -> assignedToUserId?.let { created.assign(it, actor(authentication), null, now) } }
         }
         cases.saveAndFlush(item)
         publishLatest(item)
@@ -233,8 +240,54 @@ class ShipmentCaseService(
     }
 
     @Transactional
-    fun resolve(authentication: Authentication, caseId: UUID, resolution: String): ShipmentCaseResponse =
-        mutate(authentication, caseId) { item, now -> item.resolve(actor(authentication), resolution, now) }
+    fun resolve(
+        authentication: Authentication,
+        caseId: UUID,
+        resolution: String,
+        outcome: ShipmentCaseOutcome? = null,
+    ): ShipmentCaseResponse {
+        val response = mutate(authentication, caseId) { item, now -> item.resolve(actor(authentication), resolution, now, outcome) }
+        followOnShipment(response, actor(authentication))
+        return response
+    }
+
+    /**
+     * The shipment follows the case's conclusion: its timeline says what was found, a return to the
+     * sender becomes a return request for the hub manager to approve, and a lost or damaged parcel
+     * holds the shipment so nobody keeps moving it.
+     */
+    private fun followOnShipment(case: ShipmentCaseResponse, actorUserId: UUID) {
+        val shipmentId = case.shipmentId ?: return
+        val shipment = shipments.findById(shipmentId).orElse(null) ?: return
+        if (shipment.lifecycleStatus != ShipmentLifecycleStatus.ACTIVE) return
+        val outcome = case.outcome
+        val label = outcome?.let(::outcomeLabel) ?: "Đã có kết luận"
+        val summary = "Hồ sơ ${case.caseNumber}: $label. ${case.resolution.orEmpty()}".trim().take(500)
+        val reason = summary.take(1000)
+        when (outcome) {
+            ShipmentCaseOutcome.RETURN_TO_SENDER -> exceptions.requestReturn(shipmentId, actorUserId, reason, case.hubId)
+            ShipmentCaseOutcome.LOST, ShipmentCaseOutcome.DAMAGED ->
+                if (shipment.isOnHold) {
+                    recordCaseEvent(shipment, summary, actorUserId, case.hubId)
+                } else {
+                    exceptions.placeHold(shipmentId, actorUserId, reason, case.hubId)
+                }
+            else -> recordCaseEvent(shipment, summary, actorUserId, case.hubId)
+        }
+    }
+
+    private fun recordCaseEvent(shipment: Shipment, summary: String, actorUserId: UUID, hubId: UUID) {
+        shipment.recordAdministrativeEvent("shipment.case-resolved", summary, actorUserId, hubId, clock.instant())
+        shipments.saveAndFlush(shipment)
+    }
+
+    private fun outcomeLabel(outcome: ShipmentCaseOutcome) = when (outcome) {
+        ShipmentCaseOutcome.CONTINUE -> "hàng ổn, giao tiếp"
+        ShipmentCaseOutcome.RETURN_TO_SENDER -> "hoàn về người gửi"
+        ShipmentCaseOutcome.LOST -> "thất lạc"
+        ShipmentCaseOutcome.DAMAGED -> "hư hỏng"
+        ShipmentCaseOutcome.OTHER -> "kết luận khác"
+    }
 
     @Transactional
     fun close(authentication: Authentication, caseId: UUID, note: String?): ShipmentCaseResponse =
@@ -400,6 +453,7 @@ class ShipmentCaseService(
         reportedByUserId = item.reportedByUserId,
         assignedToUserId = item.assignedToUserId,
         resolution = item.resolution,
+        outcome = item.outcome,
         createdAt = item.createdAt,
         updatedAt = item.updatedAt,
         resolvedAt = item.resolvedAt,

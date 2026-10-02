@@ -169,7 +169,7 @@ class ScopedShipmentExceptionWorkflowService(
         requestedHubId: UUID?,
         action: (UUID, UUID?) -> ShipmentExceptionStateResponse,
     ): ShipmentExceptionStateResponse {
-        val scope = access.resolveManage(authentication)
+        val scope = access.resolveRequest(authentication)
         val shipment = load(shipmentId)
         val hubId = resolveActionHub(scope, shipment, requestedHubId)
         return filterState(scope, action(scope.actorUserId, hubId))
