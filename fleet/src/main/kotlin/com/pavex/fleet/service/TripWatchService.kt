@@ -1,6 +1,7 @@
 package com.pavex.fleet.service
 
 import com.pavex.common.security.PavexActor
+import com.pavex.fleet.client.NetworkFleetClient
 import com.pavex.fleet.client.OperationsFleetClient
 import com.pavex.fleet.config.FleetTrackingProperties
 import com.pavex.fleet.dto.DriverTripStatus
@@ -40,6 +41,7 @@ class TripWatchService(
     private val accessLog: TripAccessLogRepository,
     private val locations: TripLocationStore,
     private val operations: OperationsFleetClient,
+    private val network: NetworkFleetClient,
     private val properties: FleetTrackingProperties,
     private val clock: Clock,
 ) {
@@ -65,6 +67,21 @@ class TripWatchService(
     @Transactional(readOnly = true)
     fun detail(actor: PavexActor, tripId: UUID): TripSummaryResponse =
         TripViews.summary(visible(actor, tripId), clock.instant(), properties.signalLostAfter)
+
+    /**
+     * The truck a parcel rides on: the trip of its route leg's lane departure. Null until the truck
+     * leaves (or when its driver runs it without a trip record).
+     */
+    @Transactional(readOnly = true)
+    fun forRouteLeg(actor: PavexActor, routeLegId: UUID): TripSummaryResponse? {
+        val leg = network.routeLegs(listOf(routeLegId)).firstOrNull() ?: return null
+        val scope = scope(actor)
+        val trip = trips.findAllByLaneIdAndPlannedDepartureAt(leg.laneId, leg.departureAt)
+            .filter(scope::covers)
+            .minByOrNull { if (it.inProgress) 0 else 1 }
+            ?: return null
+        return TripViews.summary(trip, clock.instant(), properties.signalLostAfter)
+    }
 
     @Transactional
     fun track(actor: PavexActor, tripId: UUID): TripTrackResponse {

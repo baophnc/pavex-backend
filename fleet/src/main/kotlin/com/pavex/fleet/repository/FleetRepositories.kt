@@ -25,6 +25,8 @@ interface FleetTripRepository : JpaRepository<FleetTrip, UUID> {
 
     fun findAllByDriverUserIdAndStartedAtAfterOrderByStartedAtDesc(driverUserId: UUID, after: Instant): List<FleetTrip>
 
+    fun findAllByLaneIdAndPlannedDepartureAt(laneId: UUID, plannedDepartureAt: Instant): List<FleetTrip>
+
     fun findAllByStatusOrderByStartedAtAsc(status: FleetTripStatus, pageable: Pageable): List<FleetTrip>
 
     @Query(

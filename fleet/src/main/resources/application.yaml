@@ -25,6 +25,22 @@ spring:
   flyway:
     enabled: true
 
+  rabbitmq:
+    host: ${RABBITMQ_HOST:localhost}
+    port: ${RABBITMQ_PORT:5672}
+    username: ${RABBITMQ_USERNAME:pavex}
+    password: ${RABBITMQ_PASSWORD:pavex}
+    virtual-host: ${RABBITMQ_VHOST:pavex}
+    listener:
+      simple:
+        default-requeue-rejected: false
+        retry:
+          enabled: true
+          max-attempts: ${FLEET_EVENTS_MAX_ATTEMPTS:5}
+          initial-interval: 1s
+          multiplier: 2
+          max-interval: 30s
+
 server:
   port: ${FLEET_SERVER_PORT:8089}
 
@@ -51,6 +67,16 @@ fleet:
     retention-days: ${FLEET_LOCATION_RETENTION_DAYS:30}
     # How often in-progress trips are checked for "every parcel received at the destination hub".
     arrival-check-interval: ${FLEET_ARRIVAL_CHECK_INTERVAL:PT1M}
+  messaging:
+    exchange: ${FLEET_EVENTS_EXCHANGE:pavex.events}
+    shipment-queue: ${FLEET_SHIPMENT_QUEUE:fleet.shipment-events}
+  # Moves every running truck along its lane when no phone sends its position, so the maps and
+  # arrivals can be tested without driving. Local and test environments only.
+  simulator:
+    enabled: ${FLEET_SIMULATOR_ENABLED:false}
+    # 60 km/h is 10 km every 10 minutes.
+    speed-kmh: ${FLEET_SIMULATOR_SPEED_KMH:60}
+    tick: ${FLEET_SIMULATOR_TICK:PT30S}
 
 pavex:
   keys-dir: ${user.home}/.pavex/keys

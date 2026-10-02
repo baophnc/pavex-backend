@@ -87,6 +87,11 @@ class TripWatchController(
     fun detail(authentication: JwtAuthenticationToken, @PathVariable tripId: UUID): TripSummaryResponse =
         watch.detail(authentication.actor(), tripId)
 
+    /** The truck a parcel on [routeLegId] rides on; 204 until the truck leaves. */
+    @GetMapping("/by-route-leg/{routeLegId}")
+    fun forRouteLeg(authentication: JwtAuthenticationToken, @PathVariable routeLegId: UUID): ResponseEntity<TripSummaryResponse> =
+        watch.forRouteLeg(authentication.actor(), routeLegId)?.let { ResponseEntity.ok(it) } ?: ResponseEntity.noContent().build()
+
     @GetMapping("/{tripId}/track")
     fun track(authentication: JwtAuthenticationToken, @PathVariable tripId: UUID): TripTrackResponse =
         watch.track(authentication.actor(), tripId)

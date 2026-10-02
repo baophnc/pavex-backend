@@ -1,9 +1,11 @@
 package com.pavex.fleet.service
 
+import com.pavex.contracts.fleet.FleetHubSnapshot
 import com.pavex.contracts.fleet.FleetRouteLegSnapshot
 import com.pavex.contracts.operations.OperationsAssignmentStatus
 import com.pavex.contracts.operations.OperationsAssignmentType
 import com.pavex.contracts.operations.WorkforceAssignmentSnapshot
+import com.pavex.fleet.entity.GeoPoint
 import com.pavex.fleet.entity.TripLeg
 import java.time.Instant
 import java.util.UUID
@@ -35,9 +37,11 @@ object TripPlanner {
             .filter { it.type == OperationsAssignmentType.LINE_HAUL }
             .mapNotNull { assignment -> assignment.routeLegId?.let(legsById::get)?.let { it to assignment } }
             .groupBy { (leg, _) -> DepartureKey(leg.laneId, leg.departureAt) }
-            .map { (_, pairs) -> PlannedDeparture(pairs.first().first.toTripLeg(), pairs.map { it.second }) }
+            .map { (_, pairs) -> PlannedDeparture(leg(pairs.first().first), pairs.map { it.second }) }
             .sortedBy { it.leg.plannedDepartureAt }
     }
+
+    fun leg(snapshot: FleetRouteLegSnapshot): TripLeg = snapshot.toTripLeg()
 
     private fun FleetRouteLegSnapshot.toTripLeg() = TripLeg(
         laneId = laneId,
@@ -51,5 +55,10 @@ object TripPlanner {
         plannedDepartureAt = departureAt,
         plannedArrivalAt = arrivalAt,
         distanceKm = distanceKm,
+        from = fromHub.point(),
+        to = toHub.point(),
     )
+
+    private fun FleetHubSnapshot.point(): GeoPoint? =
+        latitude?.let { lat -> longitude?.let { GeoPoint(lat, it) } }
 }
