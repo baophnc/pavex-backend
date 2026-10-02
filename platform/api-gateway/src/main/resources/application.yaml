@@ -132,6 +132,14 @@ spring:
               filters:
                 - SetPath=/v3/api-docs
 
+            - id: notifications-openapi
+              order: -991
+              uri: lb://notifications-service
+              predicates:
+                - Path=/openapi/notifications
+              filters:
+                - SetPath=/v3/api-docs
+
             - id: fleet-openapi
               order: -992
               uri: lb://fleet-service
@@ -377,6 +385,19 @@ spring:
                     redis-rate-limiter.burstCapacity: ${GATEWAY_BILLING_BURST_CAPACITY:40}
                     redis-rate-limiter.requestedTokens: 1
 
+            # Inbox and messages. The bell polls the unread count, so the limit is per user.
+            - id: notifications-api
+              uri: lb://notifications-service
+              predicates:
+                - Path=/api/v1/notifications/**
+              filters:
+                - name: RequestRateLimiter
+                  args:
+                    key-resolver: "#{@userOrClientIpKeyResolver}"
+                    redis-rate-limiter.replenishRate: ${GATEWAY_NOTIFICATIONS_REPLENISH_RATE:5}
+                    redis-rate-limiter.burstCapacity: ${GATEWAY_NOTIFICATIONS_BURST_CAPACITY:30}
+                    redis-rate-limiter.requestedTokens: 1
+
             # Line-haul trip tracking. The driver app sends a GPS batch about every 30 s; limit per
             # user so drivers behind the same carrier NAT do not throttle each other.
             - id: fleet-api
@@ -418,6 +439,8 @@ springdoc:
         url: /openapi/billing
       - name: Fleet API
         url: /openapi/fleet
+      - name: Notifications API
+        url: /openapi/notifications
     operations-sorter: method
     tags-sorter: alpha
     display-request-duration: true

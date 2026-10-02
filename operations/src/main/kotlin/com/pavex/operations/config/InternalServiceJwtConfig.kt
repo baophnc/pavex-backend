@@ -34,7 +34,30 @@ class InternalServiceJwtConfig(
     private val partnersPublicKey: Resource,
     @Value("\${security.trusted-services.partners.issuer}")
     private val partnersIssuer: String,
+    @Value("\${security.trusted-services.notifications.public-key}")
+    private val notificationsPublicKey: Resource,
+    @Value("\${security.trusted-services.notifications.issuer}")
+    private val notificationsIssuer: String,
 ) {
+    /** Notifications may only read who works where, to address hub messages and alerts. */
+    @Bean("notificationsServiceJwtDecoder")
+    fun notificationsServiceJwtDecoder(): JwtDecoder {
+        val publicKey = notificationsPublicKey.inputStream.use {
+            requireNotNull(RsaKeyConverters.x509().convert(it))
+        }
+        val decoder = NimbusJwtDecoder.withPublicKey(publicKey).build()
+        decoder.setJwtValidator(
+            DelegatingOAuth2TokenValidator(
+                JwtValidators.createDefaultWithIssuer(notificationsIssuer),
+                exactClaim("sub", NOTIFICATIONS_SERVICE),
+                exactClaim(PavexJwtClaims.TOKEN_TYPE, PavexTokenTypes.SERVICE),
+                audience(OPERATIONS_SERVICE),
+                scope(OPERATIONS_PEOPLE_READ),
+            ),
+        )
+        return decoder
+    }
+
     /** Partners may only ask which hubs a user works at, to scope merchant lists. */
     @Bean("partnersServiceJwtDecoder")
     fun partnersServiceJwtDecoder(): JwtDecoder {
@@ -136,5 +159,7 @@ class InternalServiceJwtConfig(
         private const val OPERATIONS_FLEET_READ_SCOPE = "operations.fleet.read"
         private const val PARTNERS_SERVICE = "partners-service"
         private const val OPERATIONS_HUB_SCOPE_READ = "operations.hub-scope.read"
+        private const val NOTIFICATIONS_SERVICE = "notifications-service"
+        private const val OPERATIONS_PEOPLE_READ = "operations.people.read"
     }
 }

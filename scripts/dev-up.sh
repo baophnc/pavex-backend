@@ -109,6 +109,7 @@ start_app operations-service operations/target/operations-service-0.0.1-SNAPSHOT
 start_app shipment-service shipment/target/shipment-service-0.0.1-SNAPSHOT.jar http://localhost:8084/actuator/health/readiness
 start_app billing-service billing/target/billing-service-0.0.1-SNAPSHOT.jar http://localhost:8088/actuator/health/readiness
 start_app fleet-service fleet/target/fleet-service-0.0.1-SNAPSHOT.jar http://localhost:8089/actuator/health/readiness
+start_app notifications-service notifications/target/notifications-service-0.0.1-SNAPSHOT.jar http://localhost:8090/actuator/health/readiness
 start_app api-gateway platform/api-gateway/target/api-gateway-0.0.1-SNAPSHOT.jar http://localhost:8080/actuator/health/readiness
 
 trap - ERR
