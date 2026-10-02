@@ -50,7 +50,7 @@ class AdminShipmentExceptionController(
     ) = ResponseEntity.ok(workflow.releaseHold(authentication, shipmentId, request.reason, request.hubId))
 
     @PostMapping("/return-requests")
-    @PreAuthorize("hasAuthority('shipments.exceptions.manage')")
+    @PreAuthorize("hasAnyAuthority('shipments.exceptions.request','shipments.exceptions.manage')")
     fun requestReturn(
         authentication: Authentication,
         @PathVariable shipmentId: UUID,
@@ -76,7 +76,7 @@ class AdminShipmentExceptionController(
     ) = ResponseEntity.ok(workflow.completeRoutingRequest(authentication, shipmentId, requestId, request.note))
 
     @PostMapping("/forward-requests")
-    @PreAuthorize("hasAuthority('shipments.exceptions.manage')")
+    @PreAuthorize("hasAnyAuthority('shipments.exceptions.request','shipments.exceptions.manage')")
     fun requestForward(
         authentication: Authentication,
         @PathVariable shipmentId: UUID,
@@ -104,7 +104,7 @@ class AdminShipmentExceptionController(
     ) = ResponseEntity.ok(workflow.completeRoutingRequest(authentication, shipmentId, requestId, request.note))
 
     @PostMapping("/cancellation-requests")
-    @PreAuthorize("hasAuthority('shipments.exceptions.manage')")
+    @PreAuthorize("hasAnyAuthority('shipments.exceptions.request','shipments.exceptions.manage')")
     fun requestCancellation(
         authentication: Authentication,
         @PathVariable shipmentId: UUID,

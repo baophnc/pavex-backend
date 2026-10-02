@@ -22,6 +22,9 @@ enum class ShipmentCaseType { PROBLEM_PARCEL, UNIDENTIFIED_PARCEL }
 enum class ShipmentCaseStatus { OPEN, ASSIGNED, INVESTIGATING, RESOLVED, CLOSED }
 enum class ShipmentCaseSeverity { LOW, MEDIUM, HIGH, CRITICAL }
 
+/** What the investigation concluded; the shipment follows it (see ShipmentCaseService.resolve). */
+enum class ShipmentCaseOutcome { CONTINUE, RETURN_TO_SENDER, LOST, DAMAGED, OTHER }
+
 @Entity
 @Table(name = "shipment_cases", schema = "shipments")
 class ShipmentCase(
@@ -56,6 +59,9 @@ class ShipmentCase(
     var assignedToUserId: UUID? = null,
     @Column(length = 2000)
     var resolution: String? = null,
+    @Enumerated(EnumType.STRING)
+    @Column(length = 30)
+    var outcome: ShipmentCaseOutcome? = null,
     @Column(name = "created_at", nullable = false)
     var createdAt: Instant = Instant.now(),
     @Column(name = "updated_at", nullable = false)
@@ -123,10 +129,11 @@ class ShipmentCase(
         )
     }
 
-    fun resolve(actorUserId: UUID, resolution: String, now: Instant) {
+    fun resolve(actorUserId: UUID, resolution: String, now: Instant, outcome: ShipmentCaseOutcome? = null) {
         ensureMutable()
         requireUuid(actorUserId, "actorUserId")
         this.resolution = requireText(resolution, 2000, "resolution")
+        this.outcome = outcome
         status = ShipmentCaseStatus.RESOLVED
         resolvedAt = now
         touch(now)

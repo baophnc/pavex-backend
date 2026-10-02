@@ -1,5 +1,6 @@
 package com.pavex.shipment.dto
 
+import com.pavex.shipment.entity.ShipmentCaseOutcome
 import com.pavex.shipment.entity.ShipmentCaseSeverity
 import com.pavex.shipment.entity.ShipmentCaseStatus
 import com.pavex.shipment.entity.ShipmentCaseType
@@ -16,6 +17,8 @@ data class CreateProblemParcelCaseRequest(
     @field:NotNull val severity: ShipmentCaseSeverity,
     @field:NotBlank @field:Size(max = 160) val title: String,
     @field:NotBlank @field:Size(max = 2000) val description: String,
+    /** Someone at the hub to look into it, assigned as the case opens. */
+    val assignedToUserId: UUID? = null,
 )
 
 data class CreateUnidentifiedParcelCaseRequest(
@@ -24,6 +27,7 @@ data class CreateUnidentifiedParcelCaseRequest(
     @field:NotBlank @field:Size(max = 160) val title: String,
     @field:NotBlank @field:Size(max = 2000) val description: String,
     @field:Size(max = 120) val externalBarcode: String? = null,
+    val assignedToUserId: UUID? = null,
 )
 
 data class AssignShipmentCaseRequest(
@@ -38,7 +42,11 @@ data class LinkShipmentCaseRequest(
     val parcelId: UUID? = null,
     @field:Size(max = 1000) val note: String? = null,
 )
-data class ResolveShipmentCaseRequest(@field:NotBlank @field:Size(max = 2000) val resolution: String)
+data class ResolveShipmentCaseRequest(
+    @field:NotBlank @field:Size(max = 2000) val resolution: String,
+    /** Optional so older clients still resolve; without it the shipment is only told in its timeline. */
+    val outcome: ShipmentCaseOutcome? = null,
+)
 
 data class ShipmentCaseEventResponse(
     val id: UUID,
@@ -66,6 +74,7 @@ data class ShipmentCaseResponse(
     val reportedByUserId: UUID,
     val assignedToUserId: UUID?,
     val resolution: String?,
+    val outcome: ShipmentCaseOutcome?,
     val createdAt: Instant,
     val updatedAt: Instant,
     val resolvedAt: Instant?,
