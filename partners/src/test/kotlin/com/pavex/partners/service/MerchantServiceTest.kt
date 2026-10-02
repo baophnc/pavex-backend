@@ -105,6 +105,9 @@ class MerchantServiceTest {
         assertEquals("https://shopee.vn/hoasen", updated.salesChannel)
         assertEquals(MerchantBusinessType.HOUSEHOLD, updated.businessType, "A form without the business form keeps it")
 
+        val filled = service.updateMine(merchant.userId, base.copy(registrationNumber = "01A8000123"))
+        assertEquals("01A8000123", filled.registrationNumber, "A detail never given may be filled in once")
+
         val locked = assertThrows<ApiException> {
             service.updateMine(merchant.userId, base.copy(representativeName = "Người khác"))
         }

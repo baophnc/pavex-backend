@@ -109,10 +109,12 @@ class MerchantService(
         val representativeName = normalize(request.representativeName)
         // A form sent without the newer fields keeps what is stored rather than clearing it.
         val businessType = request.businessType ?: merchant.businessType
+        // Verified details may be filled in once when they were never given, never changed after.
+        fun replaces(stored: Any?, incoming: Any?) = stored != null && incoming != null && stored != incoming
         val verifiedFieldsChanged = merchant.businessName != businessName || merchant.taxCode != taxCode ||
-            merchant.businessType != businessType ||
-            (registrationNumber != null && merchant.registrationNumber != registrationNumber) ||
-            (representativeName != null && merchant.representativeName != representativeName)
+            replaces(merchant.businessType, businessType) ||
+            replaces(merchant.registrationNumber, registrationNumber) ||
+            replaces(merchant.representativeName, representativeName)
         if (merchant.status in setOf(MerchantStatus.ACTIVE, MerchantStatus.SUSPENDED) && verifiedFieldsChanged) {
             throw ApiException(
                 HttpStatus.CONFLICT,
