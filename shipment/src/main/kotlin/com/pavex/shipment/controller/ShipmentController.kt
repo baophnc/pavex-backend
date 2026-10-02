@@ -11,6 +11,8 @@ import com.pavex.shipment.dto.UpdateShipmentRequest
 import com.pavex.shipment.service.CancelShipmentService
 import com.pavex.shipment.service.CreateShipmentService
 import com.pavex.shipment.service.ShipmentQueryService
+import com.pavex.shipment.service.ShopStatsResponse
+import com.pavex.shipment.service.ShopStatsService
 import com.pavex.shipment.service.UpdateShipmentService
 import jakarta.validation.Valid
 import org.springframework.http.HttpHeaders
@@ -28,6 +30,7 @@ import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
 import java.net.URI
+import java.time.LocalDate
 import java.util.UUID
 
 @RestController
@@ -37,6 +40,7 @@ class ShipmentController(
     private val queries: ShipmentQueryService,
     private val cancellations: CancelShipmentService,
     private val updates: UpdateShipmentService,
+    private val shopStats: ShopStatsService,
 ) {
     @PostMapping
     @PreAuthorize("hasAuthority('shipments.create')")
@@ -68,6 +72,15 @@ class ShipmentController(
     ): ResponseEntity<ShipmentPageResponse> = ResponseEntity.ok(
         queries.listOwned(UUID.fromString(jwt.subject), status, cursor, limit, q),
     )
+
+    /** The shop's own daily figures and open orders, for its dashboard. */
+    @GetMapping("/stats")
+    @PreAuthorize("hasAuthority('shipments.read-own')")
+    fun stats(
+        @AuthenticationPrincipal jwt: Jwt,
+        @RequestParam from: LocalDate,
+        @RequestParam to: LocalDate,
+    ): ShopStatsResponse = shopStats.stats(UUID.fromString(jwt.subject), from, to)
 
     @GetMapping("/{trackingCode}")
     @PreAuthorize("hasAuthority('shipments.read-own')")
