@@ -22,7 +22,7 @@ from vpxml import Project, parse_attr
 
 OUT = pathlib.Path(__file__).resolve().parent.parent
 
-p = Project("PAVEX Domain Model", "PVXD")
+p = Project("PAVEX Domain Model", "PAVEXDM")
 
 # --------------------------------------------------------------------------
 # primitives & stereotypes

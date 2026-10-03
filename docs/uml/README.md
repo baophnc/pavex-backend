@@ -14,9 +14,11 @@ Hai file XML import thẳng vào **Visual Paradigm**. Đây là bản viết l�
 
 ## Cách import vào Visual Paradigm
 
-1. Mở một project, nên là project trống: **Project ▸ Import ▸ XML…** (bản cũ dùng **File ▸ Import ▸ XML…**).
+1. **Tạo project mới, trống** (**Project ▸ New**). Đừng import đè lên project đã có bản cũ: VP gộp theo ID,
+   nên các sơ đồ và use case cũ không bị xóa mà vẫn nằm lại trong project.
+   Sau đó chọn **Project ▸ Import ▸ XML…** (bản cũ dùng **File ▸ Import ▸ XML…**).
 2. Chọn `pavex-domain-model.xml`, giữ tùy chọn mặc định rồi bấm **Import**. Làm tương tự với `pavex-usecase-model.xml`.
-   Hai file dùng tiền tố ID khác nhau (`PVXD_` và `PVXU_`), nên import cả hai vào cùng một project được.
+   Hai file dùng tiền tố ID khác nhau (`PAVEXDM_` và `PAVEXUC_`), nên import cả hai vào cùng một project được.
 3. Mỗi file có 1 sơ đồ, nằm trong **Diagram Navigator**. Nếu đường nối trông rối, dùng
    **Diagram ▸ Layout ▸ Orthogonal / Hierarchic**, hoặc kéo lại vài shape cho gọn.
 

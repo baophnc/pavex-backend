@@ -21,7 +21,7 @@ from vpxml import Project
 
 OUT = pathlib.Path(__file__).resolve().parent.parent
 
-p = Project("PAVEX Use Case Model", "PVXU")
+p = Project("PAVEX Use Case Model", "PAVEXUC")
 
 # --------------------------------------------------------------------------
 # actors
