@@ -2,7 +2,8 @@
 
 Structure
 ---------
-* UC-00  Phân cấp tác nhân (actor generalization only).
+* UC-00  Phân cấp tác nhân: 10 vai trò backend + 1 tác nhân abstract cho mỗi frame
+         (cổng khách hàng, cổng quản trị, ứng dụng vận hành) có chức năng dùng chung.
 * UC-01  Biểu đồ use case tổng quát: mọi tác nhân + use case mức người dùng
          (user-goal) trong ranh giới hệ thống "PAVEX Logistics Platform".
 * UC-02..UC-10  Biểu đồ phân rã theo nhóm chức năng: use case gốc + use case
@@ -25,36 +26,32 @@ p = Project("PAVEX Use Case Model", "PVXU")
 # actors
 # --------------------------------------------------------------------------
 actors_pkg = p.add("Package", "Actors", doc="Tác nhân của hệ thống PAVEX.", key="pkg:actors")
+# 10 concrete actors = the roles of the backend (as in the original diagram).
+# An abstract actor is added only where several roles of the SAME frame
+# (client portal / management portal / operations app) share use cases.
 ACTORS = [
     # key, abstract, doc
-    ("Public User", True, "Bất kỳ ai truy cập cổng công khai (chưa cần đăng nhập)."),
-    ("Guest", False, "Khách vãng lai chưa có tài khoản."),
-    ("Authenticated User", True, "Người dùng đã có tài khoản và đăng nhập (mọi vai trò)."),
-    ("Customer", False, "Khách hàng cá nhân đã đăng ký tài khoản."),
-    ("Merchant", False, "Chủ cửa hàng đã được xác minh; gửi hàng thương mại."),
-    ("Platform Admin", False, "Quản trị nền tảng: người dùng, vai trò, cửa hàng, bảng giá, mạng lưới."),
-    ("Operations Supervisor", True, "Nhóm quản lý vận hành (giám sát vận đơn & tổng quan)."),
-    ("Hub Coordinator", True, "Nhóm điều phối tại hub: điều phối công việc, xử lý ngoại lệ."),
-    ("Workforce Manager", True, "Nhóm quản lý nhân sự & ca làm việc."),
-    ("Hub Dispatch", False, "Điều phối viên hub; có thể tạo đơn tại quầy."),
-    ("Hub Manager", False, "Trưởng hub: điều phối + quản lý nhân sự + duyệt điều chỉnh khối lượng."),
-    ("Operations Manager", False, "Quản lý vận hành vùng: nhân sự, ca và hồ sơ sự cố."),
-    ("Operational Staff", True, "Nhân sự vận hành tuyến đầu (WorkforceMember)."),
-    ("Courier", False, "Bưu tá lấy/giao hàng (WorkforceMemberKind.COURIER)."),
-    ("Line-haul Driver", False, "Tài xế trung chuyển giữa các hub (LINE_HAUL_DRIVER)."),
-    ("Warehouse Operator", False, "Nhân viên kho/khai thác tại hub (WAREHOUSE_OPERATOR)."),
+    ("Public User", True, "[Cổng khách hàng] Tác nhân trừu tượng: chức năng tra cứu công khai dùng chung cho Guest và Customer."),
+    ("Guest", False, "[Cổng khách hàng] Khách vãng lai, chưa có tài khoản."),
+    ("Customer", False, "[Cổng khách hàng] Khách hàng đã có tài khoản."),
+    ("Merchant", False, "[Cổng khách hàng] Khách hàng sở hữu cửa hàng đã xác minh; kế thừa mọi chức năng của Customer."),
+    ("Back-office User", True, "[Cổng quản trị] Tác nhân trừu tượng: đăng nhập, hồ sơ cá nhân, bảng điều hành dùng chung cho mọi tài khoản nội bộ."),
+    ("Platform Admin", False, "[Cổng quản trị] Quản trị nền tảng: người dùng, vai trò & quyền, cửa hàng, bảng giá, mạng lưới."),
+    ("Hub Dispatch", False, "[Cổng quản trị] Điều phối viên hub: điều phối công việc, xử lý ngoại lệ, tạo đơn tại quầy."),
+    ("Hub Manager", False, "[Cổng quản trị] Trưởng hub: kế thừa Hub Dispatch + quản lý nhân sự, ca, duyệt điều chỉnh khối lượng."),
+    ("Operations Manager", False, "[Cổng quản trị] Quản lý vận hành vùng: nhân sự, ca, giám sát vận đơn, hồ sơ sự cố."),
+    ("Operational Staff", True, "[Ứng dụng vận hành] Tác nhân trừu tượng: chức năng chung của nhân sự tuyến đầu (WorkforceMember)."),
+    ("Courier", False, "[Ứng dụng vận hành] Bưu tá lấy/giao hàng (WorkforceMemberKind.COURIER)."),
+    ("Line-haul Driver", False, "[Ứng dụng vận hành] Tài xế trung chuyển giữa các hub (LINE_HAUL_DRIVER)."),
+    ("Warehouse Operator", False, "[Ứng dụng vận hành] Nhân viên kho/khai thác tại hub (WAREHOUSE_OPERATOR)."),
 ]
 for name, abstract, doc in ACTORS:
     p.add("Actor", name, parent=actors_pkg, doc=doc, tag="ACT", Abstract="true" if abstract else "false")
 
-GENERALIZATIONS = [
-    ("Public User", "Guest"), ("Public User", "Customer"),
-    ("Authenticated User", "Customer"), ("Authenticated User", "Platform Admin"),
-    ("Authenticated User", "Operations Supervisor"), ("Authenticated User", "Operational Staff"),
-    ("Customer", "Merchant"),
-    ("Operations Supervisor", "Hub Coordinator"), ("Operations Supervisor", "Workforce Manager"),
-    ("Hub Coordinator", "Hub Dispatch"), ("Hub Coordinator", "Hub Manager"),
-    ("Workforce Manager", "Hub Manager"), ("Workforce Manager", "Operations Manager"),
+GENERALIZATIONS = [  # (general, specific)
+    ("Public User", "Guest"), ("Public User", "Customer"), ("Customer", "Merchant"),
+    ("Back-office User", "Platform Admin"), ("Back-office User", "Hub Dispatch"),
+    ("Back-office User", "Operations Manager"), ("Hub Dispatch", "Hub Manager"),
     ("Operational Staff", "Courier"), ("Operational Staff", "Line-haul Driver"), ("Operational Staff", "Warehouse Operator"),
 ]
 for g, s in GENERALIZATIONS:
@@ -70,12 +67,12 @@ system = p.add("System", "PAVEX Logistics Platform", doc="Ranh giới hệ thố
 # subs: (code, name, "include"|"extend", description) ; a sub given as ("=Name", kind) reuses an existing UC.
 GROUPS = [
     ("UC-02", "Xác thực & tài khoản cá nhân", [
-        ("UC01", "Đăng nhập", ["Authenticated User"], "Đăng nhập bằng email + mật khẩu; nhận access/refresh token (POST /api/v1/auth/login, /auth/refresh). Tài khoản SUSPENDED/DISABLED bị từ chối.", "UserAccount", [
-            ("UC01.1", "Quên mật khẩu", "extend", "Yêu cầu đặt lại mật khẩu qua email khi không nhớ mật khẩu.")]),
-        ("UC02", "Đăng xuất", ["Authenticated User"], "Thu hồi refresh token, kết thúc phiên (POST /api/v1/auth/logout).", "UserAccount", []),
         ("UC03", "Đăng ký tài khoản", ["Guest"], "Tạo tài khoản khách hàng mới; profileStatus = INCOMPLETE.", "UserAccount, UserProfile", [
             ("UC03.1", "Xác minh email", "include", "Xác nhận email qua liên kết/mã; emailVerified = true.")]),
-        ("UC04", "Quản lý hồ sơ cá nhân", ["Authenticated User"], "Xem và cập nhật hồ sơ cá nhân của chính mình (GET /api/v1/auth/me).", "UserProfile", [
+        ("UC01", "Đăng nhập", ["Customer", "Back-office User", "Operational Staff"], "Đăng nhập bằng email + mật khẩu; nhận access/refresh token (POST /api/v1/auth/login, /auth/refresh). Tài khoản SUSPENDED/DISABLED bị từ chối.", "UserAccount", [
+            ("UC01.1", "Quên mật khẩu", "extend", "Yêu cầu đặt lại mật khẩu qua email khi không nhớ mật khẩu.")]),
+        ("UC02", "Đăng xuất", ["Customer", "Back-office User", "Operational Staff"], "Thu hồi refresh token, kết thúc phiên (POST /api/v1/auth/logout).", "UserAccount", []),
+        ("UC04", "Quản lý hồ sơ cá nhân", ["Customer", "Back-office User", "Operational Staff"], "Xem và cập nhật hồ sơ cá nhân của chính mình (GET /api/v1/auth/me).", "UserProfile", [
             ("UC04.1", "Xem hồ sơ cá nhân", "extend", "Xem thông tin tài khoản, vai trò, quyền."),
             ("UC04.2", "Cập nhật thông tin cá nhân", "extend", "Sửa họ tên, tên hiển thị, giới tính, ngày sinh."),
             ("UC04.3", "Cập nhật ảnh đại diện", "extend", "Tải lên/đổi avatarUrl."),
@@ -139,7 +136,7 @@ GROUPS = [
             ("UC18.3", "Hủy đơn hàng", "extend", "Hủy khi chưa lấy hàng; ghi cancellationReason.")]),
         ("UC19", "Theo dõi vận đơn", ["Merchant"], "Theo dõi tiến trình các vận đơn của cửa hàng.", "Shipment, ShipmentEvent, DeliveryAttempt", [
             ("=Xem hành trình vận đơn", "include")]),
-        ("UC20", "Yêu cầu xử lý ngoại lệ vận đơn", ["Merchant", "Hub Coordinator"], "Tạo ShipmentExceptionRequest (status PENDING) chờ duyệt.", "ShipmentExceptionRequest", [
+        ("UC20", "Yêu cầu xử lý ngoại lệ vận đơn", ["Merchant", "Hub Dispatch"], "Tạo ShipmentExceptionRequest (status PENDING) chờ duyệt.", "ShipmentExceptionRequest", [
             ("UC20.1", "Yêu cầu hoàn hàng", "extend", "kind = RETURN_TO_SENDER."),
             ("UC20.2", "Yêu cầu chuyển tiếp địa chỉ mới", "extend", "kind = FORWARD_TO_NEW_ADDRESS; nhập forwardAddress."),
             ("UC20.3", "Yêu cầu giao lại", "extend", "kind = REDELIVERY."),
@@ -163,13 +160,13 @@ GROUPS = [
             ("UC22.6", "Quản lý mẫu lộ trình", "extend", "RouteTemplate + chặng (RouteTemplateLeg) theo thứ tự.")]),
     ]),
     ("UC-08", "Nhân sự vận hành & ca làm việc", [
-        ("UC23", "Quản lý nhân sự vận hành", ["Workforce Manager"], "Quản lý hồ sơ WorkforceMember và gán hub.", "WorkforceMember, HubMembership", [
+        ("UC23", "Quản lý nhân sự vận hành", ["Hub Manager", "Operations Manager"], "Quản lý hồ sơ WorkforceMember và gán hub.", "WorkforceMember, HubMembership", [
             ("UC23.1", "Tạo hồ sơ nhân sự", "extend", "Liên kết tài khoản nhân viên, mã nhân viên, loại nhân sự."),
             ("UC23.2", "Gán nhân sự vào hub", "extend", "Tạo HubMembership (hub chính/phụ)."),
             ("UC23.3", "Gỡ nhân sự khỏi hub", "extend", "Kết thúc HubMembership (unassignedAt)."),
             ("UC23.4", "Cập nhật trạng thái nhân sự", "extend", "ACTIVE / ON_LEAVE / INACTIVE.")]),
         ("UC24", "Xem nhân sự vận hành", ["Hub Dispatch"], "Xem nhân sự tại hub và trạng thái sẵn sàng/tải việc hiện tại.", "WorkforceMember, WorkforceAvailability", []),
-        ("UC25", "Quản lý ca làm việc", ["Workforce Manager"], "Lập và điều chỉnh ca tại hub.", "WorkShift, WorkforceShiftAssignment", [
+        ("UC25", "Quản lý ca làm việc", ["Hub Manager", "Operations Manager"], "Lập và điều chỉnh ca tại hub.", "WorkShift, WorkforceShiftAssignment", [
             ("UC25.1", "Tạo ca làm việc", "extend", "Mã, tên, giờ bắt đầu/kết thúc tại hub."),
             ("UC25.2", "Phân công nhân sự vào ca", "extend", "Tạo WorkforceShiftAssignment (ASSIGNED)."),
             ("UC25.3", "Hủy ca làm việc", "extend", "Ghi cancelReason, cancelledBy."),
@@ -179,11 +176,11 @@ GROUPS = [
         ("UC28", "Cập nhật trạng thái sẵn sàng", ["Operational Staff"], "AVAILABLE / BUSY / OFFLINE.", "WorkforceAvailability", []),
     ]),
     ("UC-09", "Điều phối & thực hiện vận hành", [
-        ("UC29", "Xem tổng quan vận hành", ["Operations Supervisor"], "Bảng điều hành: sản lượng, vận đơn trễ/tạm giữ, công việc tồn, nhân sự.", "Shipment, OperationalAssignment", []),
-        ("UC30", "Theo dõi vận đơn vận hành", ["Operations Supervisor"], "Tra cứu vận đơn nội bộ (kiện, custody, định tuyến, assignment).", "Shipment, Parcel, OperationalAssignment", [
+        ("UC29", "Xem tổng quan vận hành", ["Back-office User"], "Bảng điều hành: sản lượng, vận đơn trễ/tạm giữ, công việc tồn, nhân sự.", "Shipment, OperationalAssignment", []),
+        ("UC30", "Theo dõi vận đơn vận hành", ["Hub Dispatch", "Operations Manager"], "Tra cứu vận đơn nội bộ (kiện, custody, định tuyến, assignment).", "Shipment, Parcel, OperationalAssignment", [
             ("UC30.1", "Tạm giữ vận đơn", "extend", "isOnHold = true, ghi lý do, hub."),
             ("UC30.2", "Giải phóng vận đơn", "extend", "Bỏ tạm giữ.")]),
-        ("UC31", "Điều phối công việc", ["Hub Coordinator"], "Phân công OperationalAssignment cho nhân sự phù hợp (requiredKind).", "OperationalAssignment, WorkforceMember", [
+        ("UC31", "Điều phối công việc", ["Hub Dispatch"], "Phân công OperationalAssignment cho nhân sự phù hợp (requiredKind).", "OperationalAssignment, WorkforceMember", [
             ("=Xem nhân sự vận hành", "include"),
             ("UC31.1", "Phân công công việc", "extend", "PENDING → ASSIGNED."),
             ("UC31.2", "Phân công lại công việc", "extend", "Đổi người thực hiện."),
@@ -204,8 +201,8 @@ GROUPS = [
         ("UC38", "Duyệt điều chỉnh khối lượng", ["Hub Manager"], "Duyệt/ghi chú điều chỉnh khối lượng; cập nhật hasPendingWeightReview.", "ShipmentWeightAdjustment", []),
     ]),
     ("UC-10", "Ngoại lệ & sự cố", [
-        ("UC39", "Xem ngoại lệ vận đơn", ["Hub Coordinator"], "Danh sách vận đơn có ngoại lệ: giao thất bại, tạm giữ, chờ duyệt khối lượng, yêu cầu ngoại lệ.", "Shipment, ShipmentExceptionRequest", []),
-        ("UC40", "Xử lý yêu cầu ngoại lệ", ["Hub Coordinator"], "Duyệt và hoàn tất ShipmentExceptionRequest.", "ShipmentExceptionRequest", [
+        ("UC39", "Xem ngoại lệ vận đơn", ["Hub Dispatch"], "Danh sách vận đơn có ngoại lệ: giao thất bại, tạm giữ, chờ duyệt khối lượng, yêu cầu ngoại lệ.", "Shipment, ShipmentExceptionRequest", []),
+        ("UC40", "Xử lý yêu cầu ngoại lệ", ["Hub Dispatch"], "Duyệt và hoàn tất ShipmentExceptionRequest.", "ShipmentExceptionRequest", [
             ("UC40.1", "Phê duyệt yêu cầu", "extend", "PENDING → APPROVED."),
             ("UC40.2", "Từ chối yêu cầu", "extend", "PENDING → REJECTED kèm reviewNote."),
             ("UC40.3", "Hoàn tất yêu cầu", "extend", "APPROVED → COMPLETED."),
@@ -230,7 +227,7 @@ def mkuc(code, name, doc, level):
 for gcode, gname, ucs in GROUPS:
     for code, name, actors, desc, data, subs in ucs:
         doc = (f"Mã: {code}\nNhóm: {gname}\nTác nhân: {', '.join(actors)}\nMô tả: {desc}\n"
-               f"Tiền điều kiện: {'Không' if set(actors) <= {'Public User', 'Guest'} else 'Đã đăng nhập, có quyền tương ứng'}\n"
+               f"Tiền điều kiện: {'Không' if set(actors) <= {'Public User', 'Guest'} else ('Chưa đăng nhập' if code == 'UC01' else 'Đã đăng nhập, có quyền tương ứng')}\n"
                f"Dữ liệu (domain): {data}")
         if name not in p.by_name:
             mkuc(code, name, doc, "User")
@@ -264,13 +261,13 @@ def no_generalization(d):
 
 
 # UC-00 actor hierarchy -----------------------------------------------------
-d = p.diagram("UseCaseDiagram", "UC-00 Phân cấp tác nhân", "Quan hệ tổng quát hóa giữa các tác nhân. Tác nhân in nghiêng là trừu tượng.")
+d = p.diagram("UseCaseDiagram", "UC-00 Phân cấp tác nhân", "Tổng quát hóa tác nhân theo 3 frame: cổng khách hàng | cổng quản trị | ứng dụng vận hành. Tác nhân in nghiêng là trừu tượng.")
 d.only_rels = {r.id for r in p.rels if r.kind == "Generalization"}
-levels = [
-    [("Public User", 160), ("Authenticated User", 820)],
-    [("Guest", 40), ("Customer", 300), ("Platform Admin", 560), ("Operations Supervisor", 900), ("Operational Staff", 1380)],
-    [("Merchant", 300), ("Hub Coordinator", 760), ("Workforce Manager", 1040), ("Courier", 1240), ("Line-haul Driver", 1400), ("Warehouse Operator", 1560)],
-    [("Hub Dispatch", 640), ("Hub Manager", 900), ("Operations Manager", 1160)],
+levels = [  # columns: cổng khách hàng | cổng quản trị | ứng dụng vận hành
+    [("Public User", 170), ("Back-office User", 760), ("Operational Staff", 1360)],
+    [("Guest", 60), ("Customer", 280), ("Platform Admin", 520), ("Hub Dispatch", 760), ("Operations Manager", 1000),
+     ("Courier", 1180), ("Line-haul Driver", 1360), ("Warehouse Operator", 1540)],
+    [("Merchant", 280), ("Hub Manager", 760)],
 ]
 for i, row in enumerate(levels):
     for name, x in row:
@@ -280,38 +277,61 @@ for i, row in enumerate(levels):
 d = p.diagram("UseCaseDiagram", "UC-01 Biểu đồ use case tổng quát",
               "Tất cả tác nhân và use case mức người dùng. Quan hệ tổng quát hóa tác nhân xem UC-00; phân rã chi tiết xem UC-02..UC-10.")
 d.only_rels = {r.id for r in p.rels if r.kind == "Association"}
-LEFT = ["Guest", "Public User", "Authenticated User", "Customer", "Merchant", "Platform Admin"]
-RIGHT = ["Operations Supervisor", "Workforce Manager", "Hub Manager", "Operations Manager", "Hub Dispatch",
-         "Hub Coordinator", "Operational Staff", "Courier", "Line-haul Driver", "Warehouse Operator"]
-ROW, BAND_MIN = 64, 120
+ROW = 64
 BX, BW = 200, 1100
-side_ucs = {"L": [], "R": []}
+LX, LUC, MID, RUC, RX = 40, BX + 50, BX + BW / 2 - 115, BX + BW - 290, BX + BW + 90
+by_actor = {}
 for uc, actors, _g in TOP:
-    shared = any(a in LEFT for a in actors) and any(a in RIGHT for a in actors)
-    side_ucs["L" if actors[0] in LEFT else "R"].append((uc, actors[0], shared))
+    by_actor.setdefault(actors[0], []).append(uc)
+SHARED_ACCOUNT = [p.get(n) for n in ("Đăng nhập", "Đăng xuất", "Quản lý hồ sơ cá nhân")]
+
+
+def band(actor, ucs, x_uc, x_actor, y, sign, actor_at="center", gap=None):
+    """Stack an actor's use cases in one column (zig-zag) and put the actor beside them.
+    gap=(row, n): leave n empty rows starting at `row` so lines to the middle column pass freely."""
+    rows = list(range(len(ucs) + (gap[1] if gap else 0)))
+    if gap:
+        rows = [r for r in rows if not gap[0] <= r < gap[0] + gap[1]]
+    for i, (uc, r) in enumerate(zip(ucs, rows)):
+        d.place(uc, x_uc + (i % 2) * 70 * sign, y + r * ROW, 230, 46)
+    h = max((len(ucs) + (gap[1] if gap else 0)) * ROW, 120)
+    d.place(actor, x_actor, y + (h / 2 - 50 if actor_at == "center" else 0))
+    return y + h + 18
+
+
 sysshape = d.place("sys", BX, 50, BW, 100)
-bottom = 0
-middle = []
-for side, order, ax, ucx in (("L", LEFT, 40, BX + 50), ("R", RIGHT, BX + BW + 90, BX + BW - 290)):
-    y = 90
-    for actor in order:
-        mine = [(uc, sh) for uc, a, sh in side_ucs[side] if a == actor]
-        start, row = y, 0
-        for i, (uc, shared) in enumerate(mine):
-            if shared:  # used by actors on both sides -> middle column, aligned later
-                middle.append(uc)
-                continue
-            jig = (row % 2) * 70 * (1 if side == "L" else -1)
-            d.place(uc, ucx + jig, start + row * ROW, 230, 46)
-            row += 1
-        band = max(row * ROW, BAND_MIN)
-        d.place(actor, ax, start + band / 2 - 50)
-        y = start + band + 18
-    bottom = max(bottom, y)
-sysshape.h = bottom - 40
-for uc in middle:  # vertically between the actors that use it
-    ys = [d.by_elem[p.get(a).id].cy for a in next(acts for u, acts, _ in TOP if u is uc)]
-    d.place(uc, BX + BW / 2 - 115, sum(ys) / len(ys) - 23, 230, 46)
+# -- upper part: merchant/public (left) and hub roles (right); UCs shared by Merchant & Hub Dispatch in the middle
+yl = band("Merchant", [u for u in by_actor["Merchant"] if len(next(a for x, a, _ in TOP if x is u)) == 1], LUC, LX, 90, 1, gap=(3, 2))
+for i, name in enumerate(("Tạo đơn hàng", "Yêu cầu xử lý ngoại lệ vận đơn")):
+    d.place(name, MID, 90 + (3 + i) * ROW, 230, 46)
+yl = band("Public User", by_actor["Public User"], LUC, LX, yl, 1)
+yl = band("Guest", by_actor["Guest"], LUC, LX, yl, 1)
+customer_own = [u for u in by_actor["Customer"] if u not in SHARED_ACCOUNT]
+yl = band("Customer", customer_own, LUC, LX, yl, 1, actor_at="none")  # actor re-placed in the corridor
+yr = band("Hub Dispatch", [u for u in by_actor["Hub Dispatch"] if u.name not in ("Tạo đơn hàng", "Yêu cầu xử lý ngoại lệ vận đơn")], RUC, RX, 90, -1, gap=(3, 2))
+yr = band("Hub Manager", by_actor["Hub Manager"], RUC, RX, yr, -1)
+yr = band("Operations Manager", by_actor["Operations Manager"], RUC, RX, yr, -1)
+# -- corridor: account use cases in the middle, the three "signed-in" actors level with them
+yc = max(yl, yr) + 10
+corridor = [p.get("Xem tổng quan vận hành")] + SHARED_ACCOUNT
+for i, uc in enumerate(corridor):
+    d.place(uc, MID, yc + i * ROW, 230, 46)
+d.by_elem.pop(p.get("Customer").id)
+d.shapes = [sh for sh in d.shapes if sh.elem is not p.get("Customer")]
+d.place("Customer", LX, yc + 1.5 * ROW - 17)
+d.place("Back-office User", RX, yc + 0.5 * ROW - 17)
+d.place("Operational Staff", RX, yc + 2.6 * ROW - 17)
+y = yc + len(corridor) * ROW + 30
+# -- lower part
+yl = band("Platform Admin", by_actor["Platform Admin"], LUC, LX, y, 1)
+yr = y
+ops_own = [u for u in by_actor["Operational Staff"] if u not in SHARED_ACCOUNT]
+for i, uc in enumerate(ops_own):
+    d.place(uc, RUC - (i % 2) * 70, yr + i * ROW, 230, 46)
+yr += len(ops_own) * ROW + 18
+for actor in ("Courier", "Line-haul Driver", "Warehouse Operator"):
+    yr = band(actor, by_actor[actor], RUC, RX, yr, -1)
+sysshape.h = max(yl, yr) - 40
 
 # UC-02..UC-10 decomposition ------------------------------------------------
 for gcode, gname, ucs in GROUPS:

@@ -4,14 +4,20 @@
 <text x="20" y="22" font-size="14" font-weight="bold">UC-02 Phân rã: Xác thực &amp; tài khoản cá nhân</text>
 <rect x="200" y="40" width="900" height="962" fill="#f4fbff" stroke="#333"/>
 <text x="650.0" y="58" text-anchor="middle" font-weight="bold">PAVEX Logistics Platform</text>
-<polyline points="100,288 363,152" fill="none" stroke="#333"/>
-<polyline points="681,125 519,129" fill="none" stroke="#333" stroke-dasharray="6,4" marker-end="url(#open)"/>
-<text x="600" y="124" text-anchor="middle" fill="#555" font-size="10">«extend»</text>
-<polyline points="100,294 324,249" fill="none" stroke="#333"/>
-<polyline points="100,438 346,355" fill="none" stroke="#333"/>
-<polyline points="519,333 681,329" fill="none" stroke="#333" stroke-dasharray="6,4" marker-end="url(#open)"/>
-<text x="600" y="328" text-anchor="middle" fill="#555" font-size="10">«include»</text>
-<polyline points="100,312 374,508" fill="none" stroke="#333"/>
+<polyline points="100,131 290,131" fill="none" stroke="#333"/>
+<polyline points="519,129 681,125" fill="none" stroke="#333" stroke-dasharray="6,4" marker-end="url(#open)"/>
+<text x="600" y="124" text-anchor="middle" fill="#555" font-size="10">«include»</text>
+<polyline points="100,464 376,255" fill="none" stroke="#333"/>
+<polyline points="100,358 355,254" fill="none" stroke="#333"/>
+<polyline points="100,668 389,256" fill="none" stroke="#333"/>
+<polyline points="681,227 519,231" fill="none" stroke="#333" stroke-dasharray="6,4" marker-end="url(#open)"/>
+<text x="600" y="226" text-anchor="middle" fill="#555" font-size="10">«extend»</text>
+<polyline points="100,470 358,356" fill="none" stroke="#333"/>
+<polyline points="100,364 301,345" fill="none" stroke="#333"/>
+<polyline points="100,674 385,358" fill="none" stroke="#333"/>
+<polyline points="100,482 315,516" fill="none" stroke="#333"/>
+<polyline points="100,376 363,509" fill="none" stroke="#333"/>
+<polyline points="100,686 363,551" fill="none" stroke="#333"/>
 <polyline points="725,447 475,512" fill="none" stroke="#333" stroke-dasharray="6,4" marker-end="url(#open)"/>
 <text x="600" y="476" text-anchor="middle" fill="#555" font-size="10">«extend»</text>
 <polyline points="749,500 511,521" fill="none" stroke="#333" stroke-dasharray="6,4" marker-end="url(#open)"/>
@@ -20,7 +26,7 @@
 <text x="600" y="538" text-anchor="middle" fill="#555" font-size="10">«extend»</text>
 <polyline points="771,599 489,546" fill="none" stroke="#333" stroke-dasharray="6,4" marker-end="url(#open)"/>
 <text x="630" y="570" text-anchor="middle" fill="#555" font-size="10">«extend»</text>
-<polyline points="100,818 290,818" fill="none" stroke="#333"/>
+<polyline points="100,500 383,795" fill="none" stroke="#333"/>
 <polyline points="725,735 475,800" fill="none" stroke="#333" stroke-dasharray="6,4" marker-end="url(#open)"/>
 <text x="600" y="764" text-anchor="middle" fill="#555" font-size="10">«extend»</text>
 <polyline points="749,788 511,809" fill="none" stroke="#333" stroke-dasharray="6,4" marker-end="url(#open)"/>
@@ -30,15 +36,15 @@
 <polyline points="771,887 489,834" fill="none" stroke="#333" stroke-dasharray="6,4" marker-end="url(#open)"/>
 <text x="630" y="858" text-anchor="middle" fill="#555" font-size="10">«extend»</text>
 <ellipse cx="405.0" cy="131.0" rx="115.0" ry="23.0" fill="#e3f2fd" stroke="#333"/>
-<text x="405.0" y="135.0" text-anchor="middle">Đăng nhập</text>
+<text x="405.0" y="135.0" text-anchor="middle">Đăng ký tài khoản</text>
 <ellipse cx="795.0" cy="123.0" rx="115.0" ry="23.0" fill="#e3f2fd" stroke="#333"/>
-<text x="795.0" y="127.0" text-anchor="middle">Quên mật khẩu</text>
+<text x="795.0" y="127.0" text-anchor="middle">Xác minh email</text>
 <ellipse cx="405.0" cy="233.0" rx="115.0" ry="23.0" fill="#e3f2fd" stroke="#333"/>
-<text x="405.0" y="237.0" text-anchor="middle">Đăng xuất</text>
+<text x="405.0" y="237.0" text-anchor="middle">Đăng nhập</text>
+<ellipse cx="795.0" cy="225.0" rx="115.0" ry="23.0" fill="#e3f2fd" stroke="#333"/>
+<text x="795.0" y="229.0" text-anchor="middle">Quên mật khẩu</text>
 <ellipse cx="405.0" cy="335.0" rx="115.0" ry="23.0" fill="#e3f2fd" stroke="#333"/>
-<text x="405.0" y="339.0" text-anchor="middle">Đăng ký tài khoản</text>
-<ellipse cx="795.0" cy="327.0" rx="115.0" ry="23.0" fill="#e3f2fd" stroke="#333"/>
-<text x="795.0" y="331.0" text-anchor="middle">Xác minh email</text>
+<text x="405.0" y="339.0" text-anchor="middle">Đăng xuất</text>
 <ellipse cx="405.0" cy="530.0" rx="115.0" ry="23.0" fill="#e3f2fd" stroke="#333"/>
 <text x="405.0" y="534.0" text-anchor="middle">Quản lý hồ sơ cá nhân</text>
 <ellipse cx="795.0" cy="429.0" rx="115.0" ry="23.0" fill="#e3f2fd" stroke="#333"/>
@@ -59,13 +65,16 @@
 <text x="795.0" y="845.0" text-anchor="middle">Xóa địa chỉ</text>
 <ellipse cx="855.0" cy="903.0" rx="115.0" ry="23.0" fill="#e3f2fd" stroke="#333"/>
 <text x="855.0" y="907.0" text-anchor="middle">Đặt địa chỉ mặc định</text>
-<circle cx="80.0" cy="268.0" r="10" fill="#fff" stroke="#333"/>
-<path d="M80.0,278.0 L80.0,308.0 M62.0,288.0 L98.0,288.0 M80.0,308.0 L65.0,336.0 M80.0,308.0 L95.0,336.0" stroke="#333" fill="none"/>
-<text x="80.0" y="352.0" text-anchor="middle" font-style="italic">Authenticated User</text>
-<circle cx="80.0" cy="415.0" r="10" fill="#fff" stroke="#333"/>
-<path d="M80.0,425.0 L80.0,455.0 M62.0,435.0 L98.0,435.0 M80.0,455.0 L65.0,483.0 M80.0,455.0 L95.0,483.0" stroke="#333" fill="none"/>
-<text x="80.0" y="499.0" text-anchor="middle">Guest</text>
-<circle cx="80.0" cy="788.0" r="10" fill="#fff" stroke="#333"/>
-<path d="M80.0,798.0 L80.0,828.0 M62.0,808.0 L98.0,808.0 M80.0,828.0 L65.0,856.0 M80.0,828.0 L95.0,856.0" stroke="#333" fill="none"/>
-<text x="80.0" y="872.0" text-anchor="middle">Customer</text>
+<circle cx="80.0" cy="101.0" r="10" fill="#fff" stroke="#333"/>
+<path d="M80.0,111.0 L80.0,141.0 M62.0,121.0 L98.0,121.0 M80.0,141.0 L65.0,169.0 M80.0,141.0 L95.0,169.0" stroke="#333" fill="none"/>
+<text x="80.0" y="185.0" text-anchor="middle">Guest</text>
+<circle cx="80.0" cy="449.0" r="10" fill="#fff" stroke="#333"/>
+<path d="M80.0,459.0 L80.0,489.0 M62.0,469.0 L98.0,469.0 M80.0,489.0 L65.0,517.0 M80.0,489.0 L95.0,517.0" stroke="#333" fill="none"/>
+<text x="80.0" y="533.0" text-anchor="middle">Customer</text>
+<circle cx="80.0" cy="336.0" r="10" fill="#fff" stroke="#333"/>
+<path d="M80.0,346.0 L80.0,376.0 M62.0,356.0 L98.0,356.0 M80.0,376.0 L65.0,404.0 M80.0,376.0 L95.0,404.0" stroke="#333" fill="none"/>
+<text x="80.0" y="420.0" text-anchor="middle" font-style="italic">Back-office User</text>
+<circle cx="80.0" cy="666.0" r="10" fill="#fff" stroke="#333"/>
+<path d="M80.0,676.0 L80.0,706.0 M62.0,686.0 L98.0,686.0 M80.0,706.0 L65.0,734.0 M80.0,706.0 L95.0,734.0" stroke="#333" fill="none"/>
+<text x="80.0" y="750.0" text-anchor="middle" font-style="italic">Operational Staff</text>
 </svg>

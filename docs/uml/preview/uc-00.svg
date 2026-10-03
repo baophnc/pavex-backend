@@ -1,69 +1,54 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1660" height="734" viewBox="0 0 1660 734" font-family="DejaVu Sans, Arial, sans-serif" font-size="11">
+<svg xmlns="http://www.w3.org/2000/svg" width="1640" height="564" viewBox="0 0 1640 564" font-family="DejaVu Sans, Arial, sans-serif" font-size="11">
 <defs><marker id="open" markerWidth="12" markerHeight="12" refX="11" refY="6" orient="auto"><path d="M0,0 L11,6 L0,12" fill="none" stroke="#333"/></marker><marker id="tri" markerWidth="16" markerHeight="16" refX="15" refY="8" orient="auto"><path d="M0,0 L15,8 L0,16 Z" fill="#fff" stroke="#333"/></marker><marker id="dia" markerWidth="20" markerHeight="12" refX="1" refY="6" orient="auto"><path d="M1,6 L10,1 L19,6 L10,11 Z" fill="#333" stroke="#333"/></marker><marker id="odia" markerWidth="20" markerHeight="12" refX="1" refY="6" orient="auto"><path d="M1,6 L10,1 L19,6 L10,11 Z" fill="#fff" stroke="#333"/></marker></defs>
-<rect width="1660" height="734" fill="#fff"/>
+<rect width="1640" height="564" fill="#fff"/>
 <text x="20" y="22" font-size="14" font-weight="bold">UC-00 Phân cấp tác nhân</text>
-<polyline points="80,242 160,128" fill="none" stroke="#333" marker-end="url(#tri)"/>
-<polyline points="300,246 200,124" fill="none" stroke="#333" marker-end="url(#tri)"/>
-<polyline points="340,263 820,107" fill="none" stroke="#333" marker-end="url(#tri)"/>
-<polyline points="600,257 820,113" fill="none" stroke="#333" marker-end="url(#tri)"/>
-<polyline points="901,230 859,140" fill="none" stroke="#333" marker-end="url(#tri)"/>
-<polyline points="1380,264 860,106" fill="none" stroke="#333" marker-end="url(#tri)"/>
-<polyline points="320,400 320,310" fill="none" stroke="#333" marker-end="url(#tri)"/>
-<polyline points="800,416 900,294" fill="none" stroke="#333" marker-end="url(#tri)"/>
-<polyline points="1040,416 940,294" fill="none" stroke="#333" marker-end="url(#tri)"/>
-<polyline points="680,582 760,468" fill="none" stroke="#333" marker-end="url(#tri)"/>
-<polyline points="900,586 800,464" fill="none" stroke="#333" marker-end="url(#tri)"/>
-<polyline points="940,586 1040,464" fill="none" stroke="#333" marker-end="url(#tri)"/>
-<polyline points="1160,582 1080,468" fill="none" stroke="#333" marker-end="url(#tri)"/>
-<polyline points="1280,416 1380,294" fill="none" stroke="#333" marker-end="url(#tri)"/>
-<polyline points="1415,400 1405,310" fill="none" stroke="#333" marker-end="url(#tri)"/>
-<polyline points="1560,421 1420,289" fill="none" stroke="#333" marker-end="url(#tri)"/>
-<circle cx="180.0" cy="70" r="10" fill="#fff" stroke="#333"/>
-<path d="M180.0,80 L180.0,110 M162.0,90 L198.0,90 M180.0,110 L165.0,138 M180.0,110 L195.0,138" stroke="#333" fill="none"/>
-<text x="180.0" y="154" text-anchor="middle" font-style="italic">Public User</text>
-<circle cx="840.0" cy="70" r="10" fill="#fff" stroke="#333"/>
-<path d="M840.0,80 L840.0,110 M822.0,90 L858.0,90 M840.0,110 L825.0,138 M840.0,110 L855.0,138" stroke="#333" fill="none"/>
-<text x="840.0" y="154" text-anchor="middle" font-style="italic">Authenticated User</text>
-<circle cx="60.0" cy="240" r="10" fill="#fff" stroke="#333"/>
-<path d="M60.0,250 L60.0,280 M42.0,260 L78.0,260 M60.0,280 L45.0,308 M60.0,280 L75.0,308" stroke="#333" fill="none"/>
-<text x="60.0" y="324" text-anchor="middle">Guest</text>
-<circle cx="320.0" cy="240" r="10" fill="#fff" stroke="#333"/>
-<path d="M320.0,250 L320.0,280 M302.0,260 L338.0,260 M320.0,280 L305.0,308 M320.0,280 L335.0,308" stroke="#333" fill="none"/>
-<text x="320.0" y="324" text-anchor="middle">Customer</text>
-<circle cx="580.0" cy="240" r="10" fill="#fff" stroke="#333"/>
-<path d="M580.0,250 L580.0,280 M562.0,260 L598.0,260 M580.0,280 L565.0,308 M580.0,280 L595.0,308" stroke="#333" fill="none"/>
-<text x="580.0" y="324" text-anchor="middle">Platform Admin</text>
-<circle cx="920.0" cy="240" r="10" fill="#fff" stroke="#333"/>
-<path d="M920.0,250 L920.0,280 M902.0,260 L938.0,260 M920.0,280 L905.0,308 M920.0,280 L935.0,308" stroke="#333" fill="none"/>
-<text x="920.0" y="324" text-anchor="middle" font-style="italic">Operations Supervisor</text>
-<circle cx="1400.0" cy="240" r="10" fill="#fff" stroke="#333"/>
-<path d="M1400.0,250 L1400.0,280 M1382.0,260 L1418.0,260 M1400.0,280 L1385.0,308 M1400.0,280 L1415.0,308" stroke="#333" fill="none"/>
-<text x="1400.0" y="324" text-anchor="middle" font-style="italic">Operational Staff</text>
-<circle cx="320.0" cy="410" r="10" fill="#fff" stroke="#333"/>
-<path d="M320.0,420 L320.0,450 M302.0,430 L338.0,430 M320.0,450 L305.0,478 M320.0,450 L335.0,478" stroke="#333" fill="none"/>
-<text x="320.0" y="494" text-anchor="middle">Merchant</text>
+<polyline points="100,239 170,131" fill="none" stroke="#333" marker-end="url(#tri)"/>
+<polyline points="280,239 210,131" fill="none" stroke="#333" marker-end="url(#tri)"/>
+<polyline points="300,400 300,310" fill="none" stroke="#333" marker-end="url(#tri)"/>
+<polyline points="560,256 760,114" fill="none" stroke="#333" marker-end="url(#tri)"/>
+<polyline points="780,230 780,140" fill="none" stroke="#333" marker-end="url(#tri)"/>
+<polyline points="1000,256 800,114" fill="none" stroke="#333" marker-end="url(#tri)"/>
+<polyline points="780,400 780,310" fill="none" stroke="#333" marker-end="url(#tri)"/>
+<polyline points="1220,251 1360,119" fill="none" stroke="#333" marker-end="url(#tri)"/>
+<polyline points="1380,230 1380,140" fill="none" stroke="#333" marker-end="url(#tri)"/>
+<polyline points="1540,251 1400,119" fill="none" stroke="#333" marker-end="url(#tri)"/>
+<circle cx="190.0" cy="70" r="10" fill="#fff" stroke="#333"/>
+<path d="M190.0,80 L190.0,110 M172.0,90 L208.0,90 M190.0,110 L175.0,138 M190.0,110 L205.0,138" stroke="#333" fill="none"/>
+<text x="190.0" y="154" text-anchor="middle" font-style="italic">Public User</text>
+<circle cx="780.0" cy="70" r="10" fill="#fff" stroke="#333"/>
+<path d="M780.0,80 L780.0,110 M762.0,90 L798.0,90 M780.0,110 L765.0,138 M780.0,110 L795.0,138" stroke="#333" fill="none"/>
+<text x="780.0" y="154" text-anchor="middle" font-style="italic">Back-office User</text>
+<circle cx="1380.0" cy="70" r="10" fill="#fff" stroke="#333"/>
+<path d="M1380.0,80 L1380.0,110 M1362.0,90 L1398.0,90 M1380.0,110 L1365.0,138 M1380.0,110 L1395.0,138" stroke="#333" fill="none"/>
+<text x="1380.0" y="154" text-anchor="middle" font-style="italic">Operational Staff</text>
+<circle cx="80.0" cy="240" r="10" fill="#fff" stroke="#333"/>
+<path d="M80.0,250 L80.0,280 M62.0,260 L98.0,260 M80.0,280 L65.0,308 M80.0,280 L95.0,308" stroke="#333" fill="none"/>
+<text x="80.0" y="324" text-anchor="middle">Guest</text>
+<circle cx="300.0" cy="240" r="10" fill="#fff" stroke="#333"/>
+<path d="M300.0,250 L300.0,280 M282.0,260 L318.0,260 M300.0,280 L285.0,308 M300.0,280 L315.0,308" stroke="#333" fill="none"/>
+<text x="300.0" y="324" text-anchor="middle">Customer</text>
+<circle cx="540.0" cy="240" r="10" fill="#fff" stroke="#333"/>
+<path d="M540.0,250 L540.0,280 M522.0,260 L558.0,260 M540.0,280 L525.0,308 M540.0,280 L555.0,308" stroke="#333" fill="none"/>
+<text x="540.0" y="324" text-anchor="middle">Platform Admin</text>
+<circle cx="780.0" cy="240" r="10" fill="#fff" stroke="#333"/>
+<path d="M780.0,250 L780.0,280 M762.0,260 L798.0,260 M780.0,280 L765.0,308 M780.0,280 L795.0,308" stroke="#333" fill="none"/>
+<text x="780.0" y="324" text-anchor="middle">Hub Dispatch</text>
+<circle cx="1020.0" cy="240" r="10" fill="#fff" stroke="#333"/>
+<path d="M1020.0,250 L1020.0,280 M1002.0,260 L1038.0,260 M1020.0,280 L1005.0,308 M1020.0,280 L1035.0,308" stroke="#333" fill="none"/>
+<text x="1020.0" y="324" text-anchor="middle">Operations Manager</text>
+<circle cx="1200.0" cy="240" r="10" fill="#fff" stroke="#333"/>
+<path d="M1200.0,250 L1200.0,280 M1182.0,260 L1218.0,260 M1200.0,280 L1185.0,308 M1200.0,280 L1215.0,308" stroke="#333" fill="none"/>
+<text x="1200.0" y="324" text-anchor="middle">Courier</text>
+<circle cx="1380.0" cy="240" r="10" fill="#fff" stroke="#333"/>
+<path d="M1380.0,250 L1380.0,280 M1362.0,260 L1398.0,260 M1380.0,280 L1365.0,308 M1380.0,280 L1395.0,308" stroke="#333" fill="none"/>
+<text x="1380.0" y="324" text-anchor="middle">Line-haul Driver</text>
+<circle cx="1560.0" cy="240" r="10" fill="#fff" stroke="#333"/>
+<path d="M1560.0,250 L1560.0,280 M1542.0,260 L1578.0,260 M1560.0,280 L1545.0,308 M1560.0,280 L1575.0,308" stroke="#333" fill="none"/>
+<text x="1560.0" y="324" text-anchor="middle">Warehouse Operator</text>
+<circle cx="300.0" cy="410" r="10" fill="#fff" stroke="#333"/>
+<path d="M300.0,420 L300.0,450 M282.0,430 L318.0,430 M300.0,450 L285.0,478 M300.0,450 L315.0,478" stroke="#333" fill="none"/>
+<text x="300.0" y="494" text-anchor="middle">Merchant</text>
 <circle cx="780.0" cy="410" r="10" fill="#fff" stroke="#333"/>
 <path d="M780.0,420 L780.0,450 M762.0,430 L798.0,430 M780.0,450 L765.0,478 M780.0,450 L795.0,478" stroke="#333" fill="none"/>
-<text x="780.0" y="494" text-anchor="middle" font-style="italic">Hub Coordinator</text>
-<circle cx="1060.0" cy="410" r="10" fill="#fff" stroke="#333"/>
-<path d="M1060.0,420 L1060.0,450 M1042.0,430 L1078.0,430 M1060.0,450 L1045.0,478 M1060.0,450 L1075.0,478" stroke="#333" fill="none"/>
-<text x="1060.0" y="494" text-anchor="middle" font-style="italic">Workforce Manager</text>
-<circle cx="1260.0" cy="410" r="10" fill="#fff" stroke="#333"/>
-<path d="M1260.0,420 L1260.0,450 M1242.0,430 L1278.0,430 M1260.0,450 L1245.0,478 M1260.0,450 L1275.0,478" stroke="#333" fill="none"/>
-<text x="1260.0" y="494" text-anchor="middle">Courier</text>
-<circle cx="1420.0" cy="410" r="10" fill="#fff" stroke="#333"/>
-<path d="M1420.0,420 L1420.0,450 M1402.0,430 L1438.0,430 M1420.0,450 L1405.0,478 M1420.0,450 L1435.0,478" stroke="#333" fill="none"/>
-<text x="1420.0" y="494" text-anchor="middle">Line-haul Driver</text>
-<circle cx="1580.0" cy="410" r="10" fill="#fff" stroke="#333"/>
-<path d="M1580.0,420 L1580.0,450 M1562.0,430 L1598.0,430 M1580.0,450 L1565.0,478 M1580.0,450 L1595.0,478" stroke="#333" fill="none"/>
-<text x="1580.0" y="494" text-anchor="middle">Warehouse Operator</text>
-<circle cx="660.0" cy="580" r="10" fill="#fff" stroke="#333"/>
-<path d="M660.0,590 L660.0,620 M642.0,600 L678.0,600 M660.0,620 L645.0,648 M660.0,620 L675.0,648" stroke="#333" fill="none"/>
-<text x="660.0" y="664" text-anchor="middle">Hub Dispatch</text>
-<circle cx="920.0" cy="580" r="10" fill="#fff" stroke="#333"/>
-<path d="M920.0,590 L920.0,620 M902.0,600 L938.0,600 M920.0,620 L905.0,648 M920.0,620 L935.0,648" stroke="#333" fill="none"/>
-<text x="920.0" y="664" text-anchor="middle">Hub Manager</text>
-<circle cx="1180.0" cy="580" r="10" fill="#fff" stroke="#333"/>
-<path d="M1180.0,590 L1180.0,620 M1162.0,600 L1198.0,600 M1180.0,620 L1165.0,648 M1180.0,620 L1195.0,648" stroke="#333" fill="none"/>
-<text x="1180.0" y="664" text-anchor="middle">Operations Manager</text>
+<text x="780.0" y="494" text-anchor="middle">Hub Manager</text>
 </svg>

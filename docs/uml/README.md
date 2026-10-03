@@ -6,7 +6,7 @@ Hai file XML import thẳng vào **Visual Paradigm**. Đây là bản viết l�
 | File | Nội dung |
 |---|---|
 | [`pavex-domain-model.xml`](pavex-domain-model.xml) | Domain model gồm 8 package (bounded context), 95 class (entity, value object, enum) và 72 quan hệ. Có 10 sơ đồ, từ DM-00 đến DM-09. |
-| [`pavex-usecase-model.xml`](pavex-usecase-model.xml) | Use case model gồm 16 tác nhân và 125 use case: 41 use case mức người dùng, phần còn lại là use case con. Có 11 sơ đồ, từ UC-00 đến UC-10. |
+| [`pavex-usecase-model.xml`](pavex-usecase-model.xml) | Use case model gồm 13 tác nhân (10 vai trò thật + 3 tác nhân abstract) và 125 use case: 41 use case mức người dùng, phần còn lại là use case con. Có 11 sơ đồ, từ UC-00 đến UC-10. |
 | [`domain-catalog.md`](domain-catalog.md) | Bảng tra cứu class, thuộc tính, giá trị enum và quan hệ (sinh tự động). |
 | [`usecase-catalog.md`](usecase-catalog.md) | Bảng tra cứu use case: mã, tác nhân, mô tả, dữ liệu và include/extend (sinh tự động). |
 | [`preview/`](preview) | Ảnh xem trước từng sơ đồ (SVG/PNG) để xem nhanh, không cần mở VP. |
@@ -68,11 +68,22 @@ So với bản `.vpp` cũ, ngoài việc tái cấu trúc còn sửa và bổ su
 
 ## Use case model: cấu trúc
 
-- **UC-00 Phân cấp tác nhân**: quan hệ tổng quát hóa. Tác nhân in nghiêng là tác nhân trừu tượng.
-  Bổ sung tác nhân trừu tượng **Authenticated User**, cha của Customer, Platform Admin, Operations Supervisor
-  và Operational Staff. Các use case Đăng nhập, Đăng xuất, Hồ sơ cá nhân chỉ cần nối một lần với tác nhân này.
+- **Tác nhân**: giữ đúng **10 vai trò** như trong backend (theo diagram gốc): Guest, Customer, Merchant,
+  Platform Admin, Hub Dispatch, Hub Manager, Operations Manager, Courier, Line-haul Driver, Warehouse Operator.
+  Chỉ thêm tác nhân **abstract** khi các vai trò **cùng một frame** dùng chung chức năng:
+
+  | Frame | Tác nhân abstract | Kế thừa | Chức năng dùng chung |
+  |---|---|---|---|
+  | Cổng khách hàng | *Public User* | Guest, Customer (Merchant kế thừa Customer) | Tra cứu vận đơn, giá cước, bưu cục |
+  | Cổng quản trị | *Back-office User* | Platform Admin, Hub Dispatch, Operations Manager (Hub Manager kế thừa Hub Dispatch) | Đăng nhập, Đăng xuất, Hồ sơ cá nhân, Xem tổng quan vận hành |
+  | Ứng dụng vận hành | *Operational Staff* | Courier, Line-haul Driver, Warehouse Operator | Đăng nhập, ca làm việc, công việc được giao, quét kiện, báo sự cố |
+
+  Các nhóm trung gian cũ không ứng với vai trò backend (Authenticated User, Operations Supervisor, Hub Coordinator,
+  Workforce Manager) đã bị bỏ.
+- **UC-00 Phân cấp tác nhân**: vẽ tổng quát hóa theo 3 cột frame. Tác nhân in nghiêng là abstract.
 - **UC-01 Biểu đồ use case tổng quát**: tất cả tác nhân và 41 use case mức người dùng, nằm trong ranh giới
-  *PAVEX Logistics Platform*.
+  *PAVEX Logistics Platform*. Các use case tài khoản dùng chung cho 3 frame được đặt ở giữa, ngang hàng với
+  Customer, Back-office User và Operational Staff.
 - **UC-02 đến UC-10 Biểu đồ phân rã**, mỗi sơ đồ một nhóm chức năng:
   Xác thực; Quản trị người dùng & phân quyền; Cửa hàng; Tra cứu công khai; Đơn hàng; Bảng giá & mạng lưới;
   Nhân sự & ca; Điều phối & thực hiện; Ngoại lệ & sự cố.
