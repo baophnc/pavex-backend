@@ -375,6 +375,14 @@ class Diagram:
             k = pairs.get(key, 0)
             pairs[key] = k + 1
             lane = (k + 1) // 2 * (1 if k % 2 else -1)  # 0, 1, -1, 2, -2 ...
+            lanes = getattr(self, "lanes", {})
+            if r.id in lanes:  # route via a vertical lane beside the actor column
+                lx = lanes[r.id]
+                ya, yb = a.cy - 10, b.cy - 10
+                xa = a.x if lx < a.x else a.x + a.w
+                xb = b.x if lx < b.x else b.x + b.w
+                out.append((r, a, b, [(xa, ya), (lx, ya), (lx, yb), (xb, yb)]))
+                continue
             out.append((r, a, b, self._route(a, b, lane, n)))
         self._routed = out
         return out
@@ -519,8 +527,9 @@ class Diagram:
 
     # ------------------------------------------------------------------ SVG
     def to_svg(self) -> str:
-        W = int(max(s.x + s.w for s in self.shapes) + 60)
-        H = int(max(s.y + s.h + (24 if s.elem.kind == "Actor" else 0) for s in self.shapes) + 60)
+        pts = [pt for *_x, route in self.connectors() for pt in route]
+        W = int(max([s.x + s.w for s in self.shapes] + [x for x, _ in pts]) + 60)
+        H = int(max([s.y + s.h + (24 if s.elem.kind == "Actor" else 0) for s in self.shapes] + [y for _, y in pts]) + 60)
         o = [
             f'<svg xmlns="http://www.w3.org/2000/svg" width="{W}" height="{H}" viewBox="0 0 {W} {H}" '
             'font-family="DejaVu Sans, Arial, sans-serif" font-size="11">',

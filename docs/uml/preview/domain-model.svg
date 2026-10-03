@@ -1,7 +1,7 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="2498" height="2534" viewBox="0 0 2498 2534" font-family="DejaVu Sans, Arial, sans-serif" font-size="11">
+<svg xmlns="http://www.w3.org/2000/svg" width="2498" height="4201" viewBox="0 0 2498 4201" font-family="DejaVu Sans, Arial, sans-serif" font-size="11">
 <defs><marker id="open" markerWidth="12" markerHeight="12" refX="11" refY="6" orient="auto"><path d="M0,0 L11,6 L0,12" fill="none" stroke="#333"/></marker><marker id="tri" markerWidth="16" markerHeight="16" refX="15" refY="8" orient="auto"><path d="M0,0 L15,8 L0,16 Z" fill="#fff" stroke="#333"/></marker><marker id="dia" markerWidth="20" markerHeight="12" refX="1" refY="6" orient="auto"><path d="M1,6 L10,1 L19,6 L10,11 Z" fill="#333" stroke="#333"/></marker><marker id="odia" markerWidth="20" markerHeight="12" refX="1" refY="6" orient="auto"><path d="M1,6 L10,1 L19,6 L10,11 Z" fill="#fff" stroke="#333"/></marker></defs>
-<rect width="2498" height="2534" fill="#fff"/>
-<text x="20" y="22" font-size="14" font-weight="bold">DM-09 Full Domain Model (entities)</text>
+<rect width="2498" height="4201" fill="#fff"/>
+<text x="20" y="22" font-size="14" font-weight="bold">PAVEX Domain Model</text>
 <polyline points="341,82 271,82" fill="none" stroke="#333" marker-start="url(#dia)"/>
 <text x="327" y="77" fill="#a33" font-size="9" text-anchor="end">account</text>
 <text x="327" y="95" fill="#1a5" font-size="9" text-anchor="end">1</text>
@@ -729,4 +729,497 @@
 <text x="1627.0" y="2328" text-anchor="middle" font-weight="bold">RouteTemplateLeg</text>
 <text x="1560" y="2357">-id : UUID</text>
 <text x="1560" y="2374">-sequence : Int</text>
+<rect x="40" y="2614" width="172" height="147" fill="#e8f5e9" stroke="#333"/>
+<line x1="40" y1="2660" x2="212" y2="2660" stroke="#333"/>
+<text x="126.0" y="2632" text-anchor="middle">«value object»</text>
+<text x="126.0" y="2649" text-anchor="middle" font-weight="bold">ContactAddress</text>
+<text x="48" y="2678">-contactName : String</text>
+<text x="48" y="2695">-contactPhone : String</text>
+<text x="48" y="2712">-addressLine : String</text>
+<text x="48" y="2729">-provinceCode : String</text>
+<text x="48" y="2746">-wardCode : String</text>
+<rect x="272" y="2614" width="238" height="113" fill="#e8f5e9" stroke="#333"/>
+<line x1="272" y1="2660" x2="510" y2="2660" stroke="#333"/>
+<text x="391.0" y="2632" text-anchor="middle">«value object»</text>
+<text x="391.0" y="2649" text-anchor="middle" font-weight="bold">Weight</text>
+<text x="280" y="2678">-actualWeightKg : BigDecimal</text>
+<text x="280" y="2695">-volumetricWeightKg : BigDecimal</text>
+<text x="280" y="2712">-chargeableWeightKg : BigDecimal</text>
+<rect x="570" y="2614" width="172" height="113" fill="#e8f5e9" stroke="#333"/>
+<line x1="570" y1="2660" x2="742" y2="2660" stroke="#333"/>
+<text x="656.0" y="2632" text-anchor="middle">«value object»</text>
+<text x="656.0" y="2649" text-anchor="middle" font-weight="bold">Dimensions</text>
+<text x="578" y="2678">-lengthCm : BigDecimal</text>
+<text x="578" y="2695">-widthCm : BigDecimal</text>
+<text x="578" y="2712">-heightCm : BigDecimal</text>
+<rect x="802" y="2614" width="205" height="164" fill="#e8f5e9" stroke="#333"/>
+<line x1="802" y1="2660" x2="1007" y2="2660" stroke="#333"/>
+<text x="904.5" y="2632" text-anchor="middle">«value object»</text>
+<text x="904.5" y="2649" text-anchor="middle" font-weight="bold">FeeBreakdown</text>
+<text x="810" y="2678">-baseFee : Long</text>
+<text x="810" y="2695">-additionalWeightFee : Long</text>
+<text x="810" y="2712">-areaSurcharge : Long</text>
+<text x="810" y="2729">-codFee : Long</text>
+<text x="810" y="2746">-insuranceFee : Long</text>
+<text x="810" y="2763">-total : Long</text>
+<rect x="1067" y="2614" width="178" height="96" fill="#e8f5e9" stroke="#333"/>
+<line x1="1067" y1="2660" x2="1245" y2="2660" stroke="#333"/>
+<text x="1156.0" y="2632" text-anchor="middle">«value object»</text>
+<text x="1156.0" y="2649" text-anchor="middle" font-weight="bold">DeliveryEstimate</text>
+<text x="1075" y="2678">-estimatedMinDays : Int</text>
+<text x="1075" y="2695">-estimatedMaxDays : Int</text>
+<rect x="1305" y="2614" width="178" height="96" fill="#e8f5e9" stroke="#333"/>
+<line x1="1305" y1="2660" x2="1483" y2="2660" stroke="#333"/>
+<text x="1394.0" y="2632" text-anchor="middle">«value object»</text>
+<text x="1394.0" y="2649" text-anchor="middle" font-weight="bold">GeoPoint</text>
+<text x="1313" y="2678">-latitude : BigDecimal</text>
+<text x="1313" y="2695">-longitude : BigDecimal</text>
+<rect x="1543" y="2614" width="165" height="130" fill="#e8f5e9" stroke="#333"/>
+<line x1="1543" y1="2660" x2="1708" y2="2660" stroke="#333"/>
+<text x="1625.5" y="2632" text-anchor="middle">«value object»</text>
+<text x="1625.5" y="2649" text-anchor="middle" font-weight="bold">CodPolicy</text>
+<text x="1551" y="2678">-freeThreshold : Long</text>
+<text x="1551" y="2695">-rate : BigDecimal</text>
+<text x="1551" y="2712">-minimumFee : Long</text>
+<text x="1551" y="2729">-maximumCod : Long</text>
+<rect x="40" y="2828" width="211" height="113" fill="#e8f5e9" stroke="#333"/>
+<line x1="40" y1="2874" x2="251" y2="2874" stroke="#333"/>
+<text x="145.5" y="2846" text-anchor="middle">«value object»</text>
+<text x="145.5" y="2863" text-anchor="middle" font-weight="bold">InsurancePolicy</text>
+<text x="48" y="2892">-freeThreshold : Long</text>
+<text x="48" y="2909">-rate : BigDecimal</text>
+<text x="48" y="2926">-maximumDeclaredValue : Long</text>
+<rect x="311" y="2828" width="310" height="113" fill="#e8f5e9" stroke="#333"/>
+<line x1="311" y1="2874" x2="621" y2="2874" stroke="#333"/>
+<text x="466.0" y="2846" text-anchor="middle">«value object»</text>
+<text x="466.0" y="2863" text-anchor="middle" font-weight="bold">ShipmentLimits</text>
+<text x="319" y="2892">-maxParcelWeightKg : BigDecimal</text>
+<text x="319" y="2909">-maxShipmentChargeableWeightKg : BigDecimal</text>
+<text x="319" y="2926">-maxDimensionCm : BigDecimal</text>
+<rect x="681" y="2828" width="211" height="164" fill="#e8f5e9" stroke="#333"/>
+<line x1="681" y1="2874" x2="892" y2="2874" stroke="#333"/>
+<text x="786.5" y="2846" text-anchor="middle">«value object»</text>
+<text x="786.5" y="2863" text-anchor="middle" font-weight="bold">QuoteEndpoint</text>
+<text x="689" y="2892">-provinceCode : String</text>
+<text x="689" y="2909">-wardCode : String</text>
+<text x="689" y="2926">-serviceAreaId : UUID</text>
+<text x="689" y="2943">-regionId : UUID</text>
+<text x="689" y="2960">-primaryHubId : UUID</text>
+<text x="689" y="2977">-coverageTier : CoverageTier</text>
+<rect x="952" y="2828" width="186" height="181" fill="#e8f5e9" stroke="#333"/>
+<line x1="952" y1="2874" x2="1138" y2="2874" stroke="#333"/>
+<text x="1045.0" y="2846" text-anchor="middle">«value object»</text>
+<text x="1045.0" y="2863" text-anchor="middle" font-weight="bold">ShipmentAddressSnapshot</text>
+<text x="960" y="2892">-contactName : String</text>
+<text x="960" y="2909">-contactPhone : String</text>
+<text x="960" y="2926">-addressLine : String</text>
+<text x="960" y="2943">-provinceCode : String</text>
+<text x="960" y="2960">-provinceName : String</text>
+<text x="960" y="2977">-wardCode : String</text>
+<text x="960" y="2994">-wardName : String</text>
+<rect x="1198" y="2828" width="264" height="147" fill="#e8f5e9" stroke="#333"/>
+<line x1="1198" y1="2874" x2="1462" y2="2874" stroke="#333"/>
+<text x="1330.0" y="2846" text-anchor="middle">«value object»</text>
+<text x="1330.0" y="2863" text-anchor="middle" font-weight="bold">ShipmentEndpoint</text>
+<text x="1206" y="2892">-serviceAreaId : UUID</text>
+<text x="1206" y="2909">-regionId : UUID</text>
+<text x="1206" y="2926">-hubCode : String</text>
+<text x="1206" y="2943">-hubName : String</text>
+<text x="1206" y="2960">-coverageTier : ShipmentCoverageTier</text>
+<rect x="1522" y="2828" width="158" height="130" fill="#e8f5e9" stroke="#333"/>
+<line x1="1522" y1="2874" x2="1680" y2="2874" stroke="#333"/>
+<text x="1601.0" y="2846" text-anchor="middle">«value object»</text>
+<text x="1601.0" y="2863" text-anchor="middle" font-weight="bold">ShipmentHold</text>
+<text x="1530" y="2892">-reason : String</text>
+<text x="1530" y="2909">-actorUserId : UUID</text>
+<text x="1530" y="2926">-hubId : UUID [0..1]</text>
+<text x="1530" y="2943">-heldAt : Instant</text>
+<rect x="40" y="3059" width="150" height="181" fill="#fff6d5" stroke="#333"/>
+<line x1="40" y1="3105" x2="190" y2="3105" stroke="#333"/>
+<text x="115.0" y="3077" text-anchor="middle">«enumeration»</text>
+<text x="115.0" y="3094" text-anchor="middle" font-weight="bold">DayOfWeek</text>
+<text x="48" y="3123">MONDAY</text>
+<text x="48" y="3140">TUESDAY</text>
+<text x="48" y="3157">WEDNESDAY</text>
+<text x="48" y="3174">THURSDAY</text>
+<text x="48" y="3191">FRIDAY</text>
+<text x="48" y="3208">SATURDAY</text>
+<text x="48" y="3225">SUNDAY</text>
+<rect x="250" y="3059" width="150" height="113" fill="#fff6d5" stroke="#333"/>
+<line x1="250" y1="3105" x2="400" y2="3105" stroke="#333"/>
+<text x="325.0" y="3077" text-anchor="middle">«enumeration»</text>
+<text x="325.0" y="3094" text-anchor="middle" font-weight="bold">AccountStatus</text>
+<text x="258" y="3123">ACTIVE</text>
+<text x="258" y="3140">SUSPENDED</text>
+<text x="258" y="3157">DISABLED</text>
+<rect x="460" y="3059" width="158" height="130" fill="#fff6d5" stroke="#333"/>
+<line x1="460" y1="3105" x2="618" y2="3105" stroke="#333"/>
+<text x="539.0" y="3077" text-anchor="middle">«enumeration»</text>
+<text x="539.0" y="3094" text-anchor="middle" font-weight="bold">ProfileStatus</text>
+<text x="468" y="3123">INCOMPLETE</text>
+<text x="468" y="3140">COMPLETED</text>
+<text x="468" y="3157">PENDING_VERIFICATION</text>
+<text x="468" y="3174">REJECTED</text>
+<rect x="678" y="3059" width="150" height="113" fill="#fff6d5" stroke="#333"/>
+<line x1="678" y1="3105" x2="828" y2="3105" stroke="#333"/>
+<text x="753.0" y="3077" text-anchor="middle">«enumeration»</text>
+<text x="753.0" y="3094" text-anchor="middle" font-weight="bold">Gender</text>
+<text x="686" y="3123">MALE</text>
+<text x="686" y="3140">FEMALE</text>
+<text x="686" y="3157">OTHER</text>
+<rect x="888" y="3059" width="158" height="147" fill="#fff6d5" stroke="#333"/>
+<line x1="888" y1="3105" x2="1046" y2="3105" stroke="#333"/>
+<text x="967.0" y="3077" text-anchor="middle">«enumeration»</text>
+<text x="967.0" y="3094" text-anchor="middle" font-weight="bold">MerchantStatus</text>
+<text x="896" y="3123">PENDING_VERIFICATION</text>
+<text x="896" y="3140">ACTIVE</text>
+<text x="896" y="3157">REJECTED</text>
+<text x="896" y="3174">SUSPENDED</text>
+<text x="896" y="3191">CLOSED</text>
+<rect x="1106" y="3059" width="166" height="164" fill="#fff6d5" stroke="#333"/>
+<line x1="1106" y1="3105" x2="1272" y2="3105" stroke="#333"/>
+<text x="1189.0" y="3077" text-anchor="middle">«enumeration»</text>
+<text x="1189.0" y="3094" text-anchor="middle" font-weight="bold">MerchantStatusReason</text>
+<text x="1114" y="3123">MISSING_DOCUMENTS</text>
+<text x="1114" y="3140">INVALID_INFORMATION</text>
+<text x="1114" y="3157">POLICY_VIOLATION</text>
+<text x="1114" y="3174">FRAUD_SUSPECTED</text>
+<text x="1114" y="3191">OWNER_REQUEST</text>
+<text x="1114" y="3208">OTHER</text>
+<rect x="1332" y="3059" width="160" height="96" fill="#fff6d5" stroke="#333"/>
+<line x1="1332" y1="3105" x2="1492" y2="3105" stroke="#333"/>
+<text x="1412.0" y="3077" text-anchor="middle">«enumeration»</text>
+<text x="1412.0" y="3094" text-anchor="middle" font-weight="bold">NetworkRegionStatus</text>
+<text x="1340" y="3123">ACTIVE</text>
+<text x="1340" y="3140">INACTIVE</text>
+<rect x="1552" y="3059" width="150" height="96" fill="#fff6d5" stroke="#333"/>
+<line x1="1552" y1="3105" x2="1702" y2="3105" stroke="#333"/>
+<text x="1627.0" y="3077" text-anchor="middle">«enumeration»</text>
+<text x="1627.0" y="3094" text-anchor="middle" font-weight="bold">ServiceAreaStatus</text>
+<text x="1560" y="3123">ACTIVE</text>
+<text x="1560" y="3140">INACTIVE</text>
+<rect x="1762" y="3059" width="150" height="130" fill="#fff6d5" stroke="#333"/>
+<line x1="1762" y1="3105" x2="1912" y2="3105" stroke="#333"/>
+<text x="1837.0" y="3077" text-anchor="middle">«enumeration»</text>
+<text x="1837.0" y="3094" text-anchor="middle" font-weight="bold">CoverageTier</text>
+<text x="1770" y="3123">URBAN</text>
+<text x="1770" y="3140">SUBURBAN</text>
+<text x="1770" y="3157">REMOTE</text>
+<text x="1770" y="3174">ISLAND</text>
+<rect x="1972" y="3059" width="150" height="130" fill="#fff6d5" stroke="#333"/>
+<line x1="1972" y1="3105" x2="2122" y2="3105" stroke="#333"/>
+<text x="2047.0" y="3077" text-anchor="middle">«enumeration»</text>
+<text x="2047.0" y="3094" text-anchor="middle" font-weight="bold">HubType</text>
+<text x="1980" y="3123">SORTING_CENTER</text>
+<text x="1980" y="3140">TRANSIT_HUB</text>
+<text x="1980" y="3157">DELIVERY_STATION</text>
+<text x="1980" y="3174">POST_OFFICE</text>
+<rect x="40" y="3280" width="150" height="113" fill="#fff6d5" stroke="#333"/>
+<line x1="40" y1="3326" x2="190" y2="3326" stroke="#333"/>
+<text x="115.0" y="3298" text-anchor="middle">«enumeration»</text>
+<text x="115.0" y="3315" text-anchor="middle" font-weight="bold">HubStatus</text>
+<text x="48" y="3344">ACTIVE</text>
+<text x="48" y="3361">INACTIVE</text>
+<text x="48" y="3378">CLOSED</text>
+<rect x="250" y="3280" width="150" height="130" fill="#fff6d5" stroke="#333"/>
+<line x1="250" y1="3326" x2="400" y2="3326" stroke="#333"/>
+<text x="325.0" y="3298" text-anchor="middle">«enumeration»</text>
+<text x="325.0" y="3315" text-anchor="middle" font-weight="bold">TransportMode</text>
+<text x="258" y="3344">ROAD</text>
+<text x="258" y="3361">AIR</text>
+<text x="258" y="3378">SEA</text>
+<text x="258" y="3395">RAIL</text>
+<rect x="460" y="3280" width="150" height="96" fill="#fff6d5" stroke="#333"/>
+<line x1="460" y1="3326" x2="610" y2="3326" stroke="#333"/>
+<text x="535.0" y="3298" text-anchor="middle">«enumeration»</text>
+<text x="535.0" y="3315" text-anchor="middle" font-weight="bold">HubLaneStatus</text>
+<text x="468" y="3344">ACTIVE</text>
+<text x="468" y="3361">INACTIVE</text>
+<rect x="670" y="3280" width="153" height="96" fill="#fff6d5" stroke="#333"/>
+<line x1="670" y1="3326" x2="823" y2="3326" stroke="#333"/>
+<text x="746.5" y="3298" text-anchor="middle">«enumeration»</text>
+<text x="746.5" y="3315" text-anchor="middle" font-weight="bold">LaneScheduleStatus</text>
+<text x="678" y="3344">ACTIVE</text>
+<text x="678" y="3361">INACTIVE</text>
+<rect x="883" y="3280" width="160" height="113" fill="#fff6d5" stroke="#333"/>
+<line x1="883" y1="3326" x2="1043" y2="3326" stroke="#333"/>
+<text x="963.0" y="3298" text-anchor="middle">«enumeration»</text>
+<text x="963.0" y="3315" text-anchor="middle" font-weight="bold">RouteTemplateStatus</text>
+<text x="891" y="3344">DRAFT</text>
+<text x="891" y="3361">ACTIVE</text>
+<text x="891" y="3378">ARCHIVED</text>
+<rect x="1103" y="3280" width="160" height="96" fill="#fff6d5" stroke="#333"/>
+<line x1="1103" y1="3326" x2="1263" y2="3326" stroke="#333"/>
+<text x="1183.0" y="3298" text-anchor="middle">«enumeration»</text>
+<text x="1183.0" y="3315" text-anchor="middle" font-weight="bold">CapacityRouteSource</text>
+<text x="1111" y="3344">ROUTE_TEMPLATE</text>
+<text x="1111" y="3361">DIRECT_LANE</text>
+<rect x="1323" y="3280" width="226" height="113" fill="#fff6d5" stroke="#333"/>
+<line x1="1323" y1="3326" x2="1549" y2="3326" stroke="#333"/>
+<text x="1436.0" y="3298" text-anchor="middle">«enumeration»</text>
+<text x="1436.0" y="3315" text-anchor="middle" font-weight="bold">LaneCapacityReservationStatus</text>
+<text x="1331" y="3344">RESERVED</text>
+<text x="1331" y="3361">CONSUMED</text>
+<text x="1331" y="3378">RELEASED</text>
+<rect x="1609" y="3280" width="150" height="113" fill="#fff6d5" stroke="#333"/>
+<line x1="1609" y1="3326" x2="1759" y2="3326" stroke="#333"/>
+<text x="1684.0" y="3298" text-anchor="middle">«enumeration»</text>
+<text x="1684.0" y="3315" text-anchor="middle" font-weight="bold">RatePlanStatus</text>
+<text x="1617" y="3344">DRAFT</text>
+<text x="1617" y="3361">ACTIVE</text>
+<text x="1617" y="3378">RETIRED</text>
+<rect x="1819" y="3280" width="150" height="113" fill="#fff6d5" stroke="#333"/>
+<line x1="1819" y1="3326" x2="1969" y2="3326" stroke="#333"/>
+<text x="1894.0" y="3298" text-anchor="middle">«enumeration»</text>
+<text x="1894.0" y="3315" text-anchor="middle" font-weight="bold">ServiceLevel</text>
+<text x="1827" y="3344">ECONOMY</text>
+<text x="1827" y="3361">STANDARD</text>
+<text x="1827" y="3378">EXPRESS</text>
+<rect x="2029" y="3280" width="150" height="113" fill="#fff6d5" stroke="#333"/>
+<line x1="2029" y1="3326" x2="2179" y2="3326" stroke="#333"/>
+<text x="2104.0" y="3298" text-anchor="middle">«enumeration»</text>
+<text x="2104.0" y="3315" text-anchor="middle" font-weight="bold">PricingZone</text>
+<text x="2037" y="3344">INTRA_PROVINCE</text>
+<text x="2037" y="3361">INTRA_REGION</text>
+<text x="2037" y="3378">INTER_REGION</text>
+<rect x="40" y="3450" width="150" height="96" fill="#fff6d5" stroke="#333"/>
+<line x1="40" y1="3496" x2="190" y2="3496" stroke="#333"/>
+<text x="115.0" y="3468" text-anchor="middle">«enumeration»</text>
+<text x="115.0" y="3485" text-anchor="middle" font-weight="bold">ShippingFeePayer</text>
+<text x="48" y="3514">SENDER</text>
+<text x="48" y="3531">RECIPIENT</text>
+<rect x="250" y="3450" width="166" height="113" fill="#fff6d5" stroke="#333"/>
+<line x1="250" y1="3496" x2="416" y2="3496" stroke="#333"/>
+<text x="333.0" y="3468" text-anchor="middle">«enumeration»</text>
+<text x="333.0" y="3485" text-anchor="middle" font-weight="bold">ShipmentServiceLevel</text>
+<text x="258" y="3514">ECONOMY</text>
+<text x="258" y="3531">STANDARD</text>
+<text x="258" y="3548">EXPRESS</text>
+<rect x="476" y="3450" width="160" height="113" fill="#fff6d5" stroke="#333"/>
+<line x1="476" y1="3496" x2="636" y2="3496" stroke="#333"/>
+<text x="556.0" y="3468" text-anchor="middle">«enumeration»</text>
+<text x="556.0" y="3485" text-anchor="middle" font-weight="bold">ShipmentPricingZone</text>
+<text x="484" y="3514">INTRA_PROVINCE</text>
+<text x="484" y="3531">INTRA_REGION</text>
+<text x="484" y="3548">INTER_REGION</text>
+<rect x="696" y="3450" width="166" height="130" fill="#fff6d5" stroke="#333"/>
+<line x1="696" y1="3496" x2="862" y2="3496" stroke="#333"/>
+<text x="779.0" y="3468" text-anchor="middle">«enumeration»</text>
+<text x="779.0" y="3485" text-anchor="middle" font-weight="bold">ShipmentCoverageTier</text>
+<text x="704" y="3514">URBAN</text>
+<text x="704" y="3531">SUBURBAN</text>
+<text x="704" y="3548">REMOTE</text>
+<text x="704" y="3565">ISLAND</text>
+<rect x="922" y="3450" width="173" height="130" fill="#fff6d5" stroke="#333"/>
+<line x1="922" y1="3496" x2="1095" y2="3496" stroke="#333"/>
+<text x="1008.5" y="3468" text-anchor="middle">«enumeration»</text>
+<text x="1008.5" y="3485" text-anchor="middle" font-weight="bold">ShipmentRoutingStatus</text>
+<text x="930" y="3514">PENDING</text>
+<text x="930" y="3531">ROUTE_READY</text>
+<text x="930" y="3548">ROUTING_FAILED</text>
+<text x="930" y="3565">REROUTING</text>
+<rect x="1155" y="3450" width="150" height="266" fill="#fff6d5" stroke="#333"/>
+<line x1="1155" y1="3496" x2="1305" y2="3496" stroke="#333"/>
+<text x="1230.0" y="3468" text-anchor="middle">«enumeration»</text>
+<text x="1230.0" y="3485" text-anchor="middle" font-weight="bold">ShipmentStatus</text>
+<text x="1163" y="3514">CREATED</text>
+<text x="1163" y="3531">AWAITING_PICKUP</text>
+<text x="1163" y="3548">PICKED_UP</text>
+<text x="1163" y="3565">AT_ORIGIN_HUB</text>
+<text x="1163" y="3582">IN_TRANSIT</text>
+<text x="1163" y="3599">AT_DESTINATION_HUB</text>
+<text x="1163" y="3616">OUT_FOR_DELIVERY</text>
+<text x="1163" y="3633">DELIVERED</text>
+<text x="1163" y="3650">DELIVERY_FAILED</text>
+<text x="1163" y="3667">RETURNING</text>
+<text x="1163" y="3684">RETURNED</text>
+<text x="1163" y="3701">CANCELLED</text>
+<rect x="1365" y="3450" width="186" height="113" fill="#fff6d5" stroke="#333"/>
+<line x1="1365" y1="3496" x2="1551" y2="3496" stroke="#333"/>
+<text x="1458.0" y="3468" text-anchor="middle">«enumeration»</text>
+<text x="1458.0" y="3485" text-anchor="middle" font-weight="bold">ShipmentLifecycleStatus</text>
+<text x="1373" y="3514">OPEN</text>
+<text x="1373" y="3531">COMPLETED</text>
+<text x="1373" y="3548">CANCELLED</text>
+<rect x="1611" y="3450" width="150" height="181" fill="#fff6d5" stroke="#333"/>
+<line x1="1611" y1="3496" x2="1761" y2="3496" stroke="#333"/>
+<text x="1686.0" y="3468" text-anchor="middle">«enumeration»</text>
+<text x="1686.0" y="3485" text-anchor="middle" font-weight="bold">GoodsCategory</text>
+<text x="1619" y="3514">DOCUMENT</text>
+<text x="1619" y="3531">FASHION</text>
+<text x="1619" y="3548">ELECTRONICS</text>
+<text x="1619" y="3565">COSMETICS</text>
+<text x="1619" y="3582">FOOD</text>
+<text x="1619" y="3599">HOUSEHOLD</text>
+<text x="1619" y="3616">OTHER</text>
+<rect x="1821" y="3450" width="150" height="181" fill="#fff6d5" stroke="#333"/>
+<line x1="1821" y1="3496" x2="1971" y2="3496" stroke="#333"/>
+<text x="1896.0" y="3468" text-anchor="middle">«enumeration»</text>
+<text x="1896.0" y="3485" text-anchor="middle" font-weight="bold">ParcelStatus</text>
+<text x="1829" y="3514">CREATED</text>
+<text x="1829" y="3531">IN_NETWORK</text>
+<text x="1829" y="3548">DELIVERED</text>
+<text x="1829" y="3565">RETURNED</text>
+<text x="1829" y="3582">LOST</text>
+<text x="1829" y="3599">DAMAGED</text>
+<text x="1829" y="3616">CANCELLED</text>
+<rect x="2031" y="3450" width="150" height="164" fill="#fff6d5" stroke="#333"/>
+<line x1="2031" y1="3496" x2="2181" y2="3496" stroke="#333"/>
+<text x="2106.0" y="3468" text-anchor="middle">«enumeration»</text>
+<text x="2106.0" y="3485" text-anchor="middle" font-weight="bold">ParcelStage</text>
+<text x="2039" y="3514">FIRST_MILE</text>
+<text x="2039" y="3531">ORIGIN_HUB</text>
+<text x="2039" y="3548">LINE_HAUL</text>
+<text x="2039" y="3565">DESTINATION_HUB</text>
+<text x="2039" y="3582">LAST_MILE</text>
+<text x="2039" y="3599">COMPLETED</text>
+<rect x="40" y="3756" width="160" height="96" fill="#fff6d5" stroke="#333"/>
+<line x1="40" y1="3802" x2="200" y2="3802" stroke="#333"/>
+<text x="120.0" y="3774" text-anchor="middle">«enumeration»</text>
+<text x="120.0" y="3791" text-anchor="middle" font-weight="bold">ParcelFlowDirection</text>
+<text x="48" y="3820">FORWARD</text>
+<text x="48" y="3837">RETURN</text>
+<rect x="260" y="3756" width="153" height="147" fill="#fff6d5" stroke="#333"/>
+<line x1="260" y1="3802" x2="413" y2="3802" stroke="#333"/>
+<text x="336.5" y="3774" text-anchor="middle">«enumeration»</text>
+<text x="336.5" y="3791" text-anchor="middle" font-weight="bold">ParcelLocationType</text>
+<text x="268" y="3820">SENDER</text>
+<text x="268" y="3837">HUB</text>
+<text x="268" y="3854">IN_TRANSIT</text>
+<text x="268" y="3871">WITH_COURIER</text>
+<text x="268" y="3888">RECIPIENT</text>
+<rect x="473" y="3756" width="150" height="130" fill="#fff6d5" stroke="#333"/>
+<line x1="473" y1="3802" x2="623" y2="3802" stroke="#333"/>
+<text x="548.0" y="3774" text-anchor="middle">«enumeration»</text>
+<text x="548.0" y="3791" text-anchor="middle" font-weight="bold">ParcelCustodyType</text>
+<text x="481" y="3820">MERCHANT</text>
+<text x="481" y="3837">HUB</text>
+<text x="481" y="3854">WORKFORCE_MEMBER</text>
+<text x="481" y="3871">RECIPIENT</text>
+<rect x="683" y="3756" width="180" height="96" fill="#fff6d5" stroke="#333"/>
+<line x1="683" y1="3802" x2="863" y2="3802" stroke="#333"/>
+<text x="773.0" y="3774" text-anchor="middle">«enumeration»</text>
+<text x="773.0" y="3791" text-anchor="middle" font-weight="bold">DeliveryAttemptOutcome</text>
+<text x="691" y="3820">DELIVERED</text>
+<text x="691" y="3837">FAILED</text>
+<rect x="923" y="3756" width="173" height="164" fill="#fff6d5" stroke="#333"/>
+<line x1="923" y1="3802" x2="1096" y2="3802" stroke="#333"/>
+<text x="1009.5" y="3774" text-anchor="middle">«enumeration»</text>
+<text x="1009.5" y="3791" text-anchor="middle" font-weight="bold">DeliveryFailureReason</text>
+<text x="931" y="3820">RECIPIENT_UNAVAILABLE</text>
+<text x="931" y="3837">UNREACHABLE_PHONE</text>
+<text x="931" y="3854">WRONG_ADDRESS</text>
+<text x="931" y="3871">RECIPIENT_REFUSED</text>
+<text x="931" y="3888">RESCHEDULE_REQUESTED</text>
+<text x="931" y="3905">OTHER</text>
+<rect x="1156" y="3756" width="160" height="113" fill="#fff6d5" stroke="#333"/>
+<line x1="1156" y1="3802" x2="1316" y2="3802" stroke="#333"/>
+<text x="1236.0" y="3774" text-anchor="middle">«enumeration»</text>
+<text x="1236.0" y="3791" text-anchor="middle" font-weight="bold">DeliveryProofMethod</text>
+<text x="1164" y="3820">SIGNATURE</text>
+<text x="1164" y="3837">PHOTO</text>
+<text x="1164" y="3854">OTP</text>
+<rect x="1376" y="3756" width="219" height="130" fill="#fff6d5" stroke="#333"/>
+<line x1="1376" y1="3802" x2="1595" y2="3802" stroke="#333"/>
+<text x="1485.5" y="3774" text-anchor="middle">«enumeration»</text>
+<text x="1485.5" y="3791" text-anchor="middle" font-weight="bold">ShipmentExceptionRequestKind</text>
+<text x="1384" y="3820">RETURN_TO_SENDER</text>
+<text x="1384" y="3837">FORWARD_TO_NEW_ADDRESS</text>
+<text x="1384" y="3854">REDELIVERY</text>
+<text x="1384" y="3871">CANCEL_SHIPMENT</text>
+<rect x="1655" y="3756" width="232" height="147" fill="#fff6d5" stroke="#333"/>
+<line x1="1655" y1="3802" x2="1887" y2="3802" stroke="#333"/>
+<text x="1771.0" y="3774" text-anchor="middle">«enumeration»</text>
+<text x="1771.0" y="3791" text-anchor="middle" font-weight="bold">ShipmentExceptionRequestStatus</text>
+<text x="1663" y="3820">PENDING</text>
+<text x="1663" y="3837">APPROVED</text>
+<text x="1663" y="3854">REJECTED</text>
+<text x="1663" y="3871">COMPLETED</text>
+<text x="1663" y="3888">CANCELLED</text>
+<rect x="1947" y="3756" width="152" height="164" fill="#fff6d5" stroke="#333"/>
+<line x1="1947" y1="3802" x2="2099" y2="3802" stroke="#333"/>
+<text x="2023.0" y="3774" text-anchor="middle">«enumeration»</text>
+<text x="2023.0" y="3791" text-anchor="middle" font-weight="bold">ShipmentCaseType</text>
+<text x="1955" y="3820">DAMAGED</text>
+<text x="1955" y="3837">LOST</text>
+<text x="1955" y="3854">MISSORTED</text>
+<text x="1955" y="3871">UNIDENTIFIED_PARCEL</text>
+<text x="1955" y="3888">ADDRESS_ISSUE</text>
+<text x="1955" y="3905">OTHER</text>
+<rect x="2159" y="3756" width="153" height="130" fill="#fff6d5" stroke="#333"/>
+<line x1="2159" y1="3802" x2="2312" y2="3802" stroke="#333"/>
+<text x="2235.5" y="3774" text-anchor="middle">«enumeration»</text>
+<text x="2235.5" y="3791" text-anchor="middle" font-weight="bold">ShipmentCaseStatus</text>
+<text x="2167" y="3820">OPEN</text>
+<text x="2167" y="3837">IN_PROGRESS</text>
+<text x="2167" y="3854">RESOLVED</text>
+<text x="2167" y="3871">CLOSED</text>
+<rect x="40" y="3960" width="166" height="130" fill="#fff6d5" stroke="#333"/>
+<line x1="40" y1="4006" x2="206" y2="4006" stroke="#333"/>
+<text x="123.0" y="3978" text-anchor="middle">«enumeration»</text>
+<text x="123.0" y="3995" text-anchor="middle" font-weight="bold">ShipmentCaseSeverity</text>
+<text x="48" y="4024">LOW</text>
+<text x="48" y="4041">MEDIUM</text>
+<text x="48" y="4058">HIGH</text>
+<text x="48" y="4075">CRITICAL</text>
+<rect x="266" y="3960" width="160" height="113" fill="#fff6d5" stroke="#333"/>
+<line x1="266" y1="4006" x2="426" y2="4006" stroke="#333"/>
+<text x="346.0" y="3978" text-anchor="middle">«enumeration»</text>
+<text x="346.0" y="3995" text-anchor="middle" font-weight="bold">WorkforceMemberKind</text>
+<text x="274" y="4024">COURIER</text>
+<text x="274" y="4041">LINE_HAUL_DRIVER</text>
+<text x="274" y="4058">WAREHOUSE_OPERATOR</text>
+<rect x="486" y="3960" width="173" height="113" fill="#fff6d5" stroke="#333"/>
+<line x1="486" y1="4006" x2="659" y2="4006" stroke="#333"/>
+<text x="572.5" y="3978" text-anchor="middle">«enumeration»</text>
+<text x="572.5" y="3995" text-anchor="middle" font-weight="bold">WorkforceMemberStatus</text>
+<text x="494" y="4024">ACTIVE</text>
+<text x="494" y="4041">ON_LEAVE</text>
+<text x="494" y="4058">INACTIVE</text>
+<rect x="719" y="3960" width="213" height="113" fill="#fff6d5" stroke="#333"/>
+<line x1="719" y1="4006" x2="932" y2="4006" stroke="#333"/>
+<text x="825.5" y="3978" text-anchor="middle">«enumeration»</text>
+<text x="825.5" y="3995" text-anchor="middle" font-weight="bold">WorkforceAvailabilityStatus</text>
+<text x="727" y="4024">AVAILABLE</text>
+<text x="727" y="4041">BUSY</text>
+<text x="727" y="4058">OFFLINE</text>
+<rect x="992" y="3960" width="150" height="130" fill="#fff6d5" stroke="#333"/>
+<line x1="992" y1="4006" x2="1142" y2="4006" stroke="#333"/>
+<text x="1067.0" y="3978" text-anchor="middle">«enumeration»</text>
+<text x="1067.0" y="3995" text-anchor="middle" font-weight="bold">WorkShiftStatus</text>
+<text x="1000" y="4024">SCHEDULED</text>
+<text x="1000" y="4041">IN_PROGRESS</text>
+<text x="1000" y="4058">COMPLETED</text>
+<text x="1000" y="4075">CANCELLED</text>
+<rect x="1202" y="3960" width="232" height="147" fill="#fff6d5" stroke="#333"/>
+<line x1="1202" y1="4006" x2="1434" y2="4006" stroke="#333"/>
+<text x="1318.0" y="3978" text-anchor="middle">«enumeration»</text>
+<text x="1318.0" y="3995" text-anchor="middle" font-weight="bold">WorkforceShiftAssignmentStatus</text>
+<text x="1210" y="4024">ASSIGNED</text>
+<text x="1210" y="4041">CHECKED_IN</text>
+<text x="1210" y="4058">CHECKED_OUT</text>
+<text x="1210" y="4075">ABSENT</text>
+<text x="1210" y="4092">CANCELLED</text>
+<rect x="1494" y="3960" width="199" height="181" fill="#fff6d5" stroke="#333"/>
+<line x1="1494" y1="4006" x2="1693" y2="4006" stroke="#333"/>
+<text x="1593.5" y="3978" text-anchor="middle">«enumeration»</text>
+<text x="1593.5" y="3995" text-anchor="middle" font-weight="bold">OperationalAssignmentType</text>
+<text x="1502" y="4024">PICKUP</text>
+<text x="1502" y="4041">HUB_INBOUND</text>
+<text x="1502" y="4058">SORTING</text>
+<text x="1502" y="4075">LINE_HAUL</text>
+<text x="1502" y="4092">HUB_OUTBOUND</text>
+<text x="1502" y="4109">LAST_MILE_DELIVERY</text>
+<text x="1502" y="4126">RETURN_TO_SENDER</text>
+<rect x="1753" y="3960" width="213" height="181" fill="#fff6d5" stroke="#333"/>
+<line x1="1753" y1="4006" x2="1966" y2="4006" stroke="#333"/>
+<text x="1859.5" y="3978" text-anchor="middle">«enumeration»</text>
+<text x="1859.5" y="3995" text-anchor="middle" font-weight="bold">OperationalAssignmentStatus</text>
+<text x="1761" y="4024">PENDING</text>
+<text x="1761" y="4041">ASSIGNED</text>
+<text x="1761" y="4058">ACCEPTED</text>
+<text x="1761" y="4075">IN_PROGRESS</text>
+<text x="1761" y="4092">COMPLETED</text>
+<text x="1761" y="4109">FAILED</text>
+<text x="1761" y="4126">CANCELLED</text>
 </svg>

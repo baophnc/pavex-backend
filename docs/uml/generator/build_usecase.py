@@ -2,12 +2,13 @@
 
 Structure
 ---------
-* UC-00  Phân cấp tác nhân: 10 vai trò backend + 1 tác nhân abstract cho mỗi frame
-         (cổng khách hàng, cổng quản trị, ứng dụng vận hành) có chức năng dùng chung.
-* UC-01  Biểu đồ use case tổng quát: mọi tác nhân + use case mức người dùng
-         (user-goal) trong ranh giới hệ thống "PAVEX Logistics Platform".
-* UC-02..UC-10  Biểu đồ phân rã theo nhóm chức năng: use case gốc + use case
-         con nối bằng «include» (bước bắt buộc) / «extend» (chức năng tùy chọn).
+One single use case diagram ("PAVEX Use Case Diagram"):
+* 10 actors = backend roles, plus one abstract actor per frame (client portal,
+  management portal, operations app) where roles of that frame share use cases;
+  actor generalizations are routed in lanes outside the actor columns.
+* The 41 user-goal use cases inside the "PAVEX Logistics Platform" boundary.
+* Sub-functions shared by several use cases become their own use case
+  («include»/«extend»); the others are listed in the base use case documentation.
 All use cases are owned by the System (subject) element; actors live in an
 "Actors" package. Generalization: From = general actor, To = specialized actor.
 """
@@ -66,7 +67,7 @@ system = p.add("System", "PAVEX Logistics Platform", doc="Ranh giới hệ thố
 # (code, name, actors, description, data, subs)
 # subs: (code, name, "include"|"extend", description) ; a sub given as ("=Name", kind) reuses an existing UC.
 GROUPS = [
-    ("UC-02", "Xác thực & tài khoản cá nhân", [
+    ("Nhóm 1", "Xác thực & tài khoản cá nhân", [
         ("UC03", "Đăng ký tài khoản", ["Guest"], "Tạo tài khoản khách hàng mới; profileStatus = INCOMPLETE.", "UserAccount, UserProfile", [
             ("UC03.1", "Xác minh email", "include", "Xác nhận email qua liên kết/mã; emailVerified = true.")]),
         ("UC01", "Đăng nhập", ["Customer", "Back-office User", "Operational Staff"], "Đăng nhập bằng email + mật khẩu; nhận access/refresh token (POST /api/v1/auth/login, /auth/refresh). Tài khoản SUSPENDED/DISABLED bị từ chối.", "UserAccount", [
@@ -83,7 +84,7 @@ GROUPS = [
             ("UC05.3", "Xóa địa chỉ", "extend", "Xóa địa chỉ."),
             ("UC05.4", "Đặt địa chỉ mặc định", "extend", "Đánh dấu isDefault.")]),
     ]),
-    ("UC-03", "Quản trị người dùng & phân quyền", [
+    ("Nhóm 2", "Quản trị người dùng & phân quyền", [
         ("UC06", "Quản lý người dùng", ["Platform Admin"], "Quản lý tài khoản người dùng (GET /api/v1/users; quyền identity.users.read).", "UserAccount, UserProfile, Role", [
             ("UC06.1", "Tìm kiếm & lọc người dùng", "extend", "Tìm theo email/tên; lọc theo vai trò, trạng thái tài khoản, trạng thái hồ sơ; phân trang."),
             ("UC06.2", "Xem chi tiết người dùng", "extend", "Xem hồ sơ, vai trò, lịch sử trạng thái."),
@@ -99,7 +100,7 @@ GROUPS = [
             ("UC08.4", "Xóa vai trò", "extend", "Xóa vai trò không phải hệ thống."),
             ("UC08.5", "Phân quyền cho vai trò", "extend", "Gán/bỏ Permission cho vai trò.")]),
     ]),
-    ("UC-04", "Cửa hàng (Merchant)", [
+    ("Nhóm 3", "Cửa hàng (Merchant)", [
         ("UC09", "Đăng ký cửa hàng", ["Customer"], "Khách hàng đăng ký cửa hàng (tên kinh doanh, liên hệ, MST). Merchant ở trạng thái chờ xác minh.", "Merchant", []),
         ("UC10", "Quản lý thông tin cửa hàng", ["Merchant"], "Xem/cập nhật thông tin cửa hàng.", "Merchant", [
             ("UC10.1", "Xem thông tin cửa hàng", "extend", "Xem mã cửa hàng, trạng thái, lý do trạng thái."),
@@ -117,13 +118,13 @@ GROUPS = [
             ("UC13.4", "Tạm ngưng cửa hàng", "extend", "ACTIVE → SUSPENDED kèm lý do."),
             ("UC13.5", "Khôi phục cửa hàng", "extend", "SUSPENDED → ACTIVE.")]),
     ]),
-    ("UC-05", "Tra cứu công khai", [
+    ("Nhóm 4", "Tra cứu công khai", [
         ("UC14", "Tra cứu vận đơn", ["Public User"], "Tra cứu trạng thái theo mã vận đơn (trackingCode).", "Shipment, ShipmentEvent", [
             ("UC14.1", "Xem hành trình vận đơn", "include", "Xem timeline ShipmentEvent (trạng thái, địa điểm, thời gian).")]),
         ("UC16", "Tra cứu bưu cục", ["Public User"], "Tìm hub/bưu cục công khai (publicVisible) theo tỉnh/phường.", "Hub", []),
         ("UC15", "Tra cứu giá cước", ["Public User"], "Nhập điểm đi/đến, kiện hàng (khối lượng, kích thước), COD, giá trị khai báo → các phương án giá theo mức dịch vụ; báo giá có hạn (quoteTtlMinutes).", "QuoteRequest, QuoteParcel, QuoteOption, RatePlan", []),
     ]),
-    ("UC-06", "Đơn hàng & vận đơn", [
+    ("Nhóm 5", "Đơn hàng & vận đơn", [
         ("UC17", "Tạo đơn hàng", ["Merchant", "Hub Dispatch"], "Tạo vận đơn từ báo giá còn hiệu lực; hệ thống snapshot giá & địa chỉ, sinh trackingCode và định tuyến/giữ chỗ tải.", "Shipment, Parcel, QuoteRequest, LaneCapacityReservation", [
             ("=Tra cứu giá cước", "include"),
             ("UC17.1", "Khai báo kiện hàng", "include", "Mô tả, loại hàng, dễ vỡ, khối lượng, kích thước từng kiện."),
@@ -142,7 +143,7 @@ GROUPS = [
             ("UC20.3", "Yêu cầu giao lại", "extend", "kind = REDELIVERY."),
             ("UC20.4", "Yêu cầu hủy vận đơn", "extend", "kind = CANCEL_SHIPMENT.")]),
     ]),
-    ("UC-07", "Bảng giá & mạng lưới", [
+    ("Nhóm 6", "Bảng giá & mạng lưới", [
         ("UC21", "Quản lý bảng giá", ["Platform Admin"], "Quản lý RatePlan có phiên bản; chỉ một revision ACTIVE.", "RatePlan, RateRule", [
             ("UC21.1", "Xem danh sách bảng giá", "extend", "Xem các revision và trạng thái."),
             ("UC21.2", "Tạo bảng giá", "extend", "Tạo RatePlan DRAFT."),
@@ -159,7 +160,7 @@ GROUPS = [
             ("UC22.5", "Quản lý lịch chạy tuyến", "extend", "LaneSchedule: giờ khởi hành, ngày chạy, hiệu lực, tải trọng."),
             ("UC22.6", "Quản lý mẫu lộ trình", "extend", "RouteTemplate + chặng (RouteTemplateLeg) theo thứ tự.")]),
     ]),
-    ("UC-08", "Nhân sự vận hành & ca làm việc", [
+    ("Nhóm 7", "Nhân sự vận hành & ca làm việc", [
         ("UC23", "Quản lý nhân sự vận hành", ["Hub Manager", "Operations Manager"], "Quản lý hồ sơ WorkforceMember và gán hub.", "WorkforceMember, HubMembership", [
             ("UC23.1", "Tạo hồ sơ nhân sự", "extend", "Liên kết tài khoản nhân viên, mã nhân viên, loại nhân sự."),
             ("UC23.2", "Gán nhân sự vào hub", "extend", "Tạo HubMembership (hub chính/phụ)."),
@@ -175,7 +176,7 @@ GROUPS = [
         ("UC27", "Check-in / Check-out ca", ["Operational Staff"], "Ghi nhận checkedInAt/checkedOutAt.", "WorkforceShiftAssignment", []),
         ("UC28", "Cập nhật trạng thái sẵn sàng", ["Operational Staff"], "AVAILABLE / BUSY / OFFLINE.", "WorkforceAvailability", []),
     ]),
-    ("UC-09", "Điều phối & thực hiện vận hành", [
+    ("Nhóm 8", "Điều phối & thực hiện vận hành", [
         ("UC29", "Xem tổng quan vận hành", ["Back-office User"], "Bảng điều hành: sản lượng, vận đơn trễ/tạm giữ, công việc tồn, nhân sự.", "Shipment, OperationalAssignment", []),
         ("UC30", "Theo dõi vận đơn vận hành", ["Hub Dispatch", "Operations Manager"], "Tra cứu vận đơn nội bộ (kiện, custody, định tuyến, assignment).", "Shipment, Parcel, OperationalAssignment", [
             ("UC30.1", "Tạm giữ vận đơn", "extend", "isOnHold = true, ghi lý do, hub."),
@@ -200,7 +201,7 @@ GROUPS = [
         ("UC37", "Điều chỉnh khối lượng kiện", ["Warehouse Operator"], "Cân lại kiện tại hub; tạo ShipmentWeightAdjustment, vận đơn chờ duyệt.", "ShipmentWeightAdjustment, Parcel", []),
         ("UC38", "Duyệt điều chỉnh khối lượng", ["Hub Manager"], "Duyệt/ghi chú điều chỉnh khối lượng; cập nhật hasPendingWeightReview.", "ShipmentWeightAdjustment", []),
     ]),
-    ("UC-10", "Ngoại lệ & sự cố", [
+    ("Nhóm 9", "Ngoại lệ & sự cố", [
         ("UC39", "Xem ngoại lệ vận đơn", ["Hub Dispatch"], "Danh sách vận đơn có ngoại lệ: giao thất bại, tạm giữ, chờ duyệt khối lượng, yêu cầu ngoại lệ.", "Shipment, ShipmentExceptionRequest", []),
         ("UC40", "Xử lý yêu cầu ngoại lệ", ["Hub Dispatch"], "Duyệt và hoàn tất ShipmentExceptionRequest.", "ShipmentExceptionRequest", [
             ("UC40.1", "Phê duyệt yêu cầu", "extend", "PENDING → APPROVED."),
@@ -217,22 +218,28 @@ GROUPS = [
 ]
 
 TOP = []  # (uc elem, actors, group code)
-SUBS = {}  # top name -> [(sub elem, kind)]
+SUBS = {}  # top name -> [(code, name, kind, elem or None)]
+
+# A sub-function becomes its own use case only when several use cases share it;
+# the others are listed in the documentation of their base use case.
+REFS = {}
+for _g, _n, _ucs in GROUPS:
+    for *_x, _subs in _ucs:
+        for sub in _subs:
+            key = sub[0][1:] if sub[0].startswith("=") else sub[1]
+            REFS[key] = REFS.get(key, 0) + 1
 
 
-def mkuc(code, name, doc, level):
+def mkuc(code, name, doc):
     return p.add("UseCase", name, parent=system, doc=doc, tag="UC", UserID=code, key=name)
 
 
+SPEC = {}
 for gcode, gname, ucs in GROUPS:
     for code, name, actors, desc, data, subs in ucs:
-        doc = (f"Mã: {code}\nNhóm: {gname}\nTác nhân: {', '.join(actors)}\nMô tả: {desc}\n"
-               f"Tiền điều kiện: {'Không' if set(actors) <= {'Public User', 'Guest'} else ('Chưa đăng nhập' if code == 'UC01' else 'Đã đăng nhập, có quyền tương ứng')}\n"
-               f"Dữ liệu (domain): {data}")
+        SPEC[name] = (code, gname, actors, desc, data)
         if name not in p.by_name:
-            mkuc(code, name, doc, "User")
-        else:
-            p.get(name).doc = doc
+            mkuc(code, name, "")
         uc = p.get(name)
         TOP.append((uc, actors, gcode))
         for a in actors:
@@ -241,138 +248,129 @@ for gcode, gname, ucs in GROUPS:
         for sub in subs:
             if sub[0].startswith("="):
                 target = p.get(sub[0][1:])
-                kind = sub[1]
+                scode, sname, kind = target.attrs.get("UserID", ""), target.name, sub[1]
             else:
                 scode, sname, kind, sdesc = sub
-                target = p.by_name.get(sname) or mkuc(scode, sname, f"Mã: {scode}\nThuộc: {code} {name}\nMô tả: {sdesc}", "Subfunction")
-            SUBS[name].append((target, kind))
-            if kind == "include":  # base --include--> included
-                p.rel("Include", uc, target)
-            else:  # extension --extend--> base
-                p.rel("Extend", target, uc)
+                target = None
+                if REFS[sname] > 1:
+                    target = p.by_name.get(sname) or mkuc(scode, sname, f"Mã: {scode}\nMô tả: {sdesc}")
+            SUBS[name].append((scode, sname, kind, target))
+            if target is not None:
+                if kind == "include":  # base --include--> included
+                    p.rel("Include", uc, target)
+                else:  # extension --extend--> base
+                    p.rel("Extend", target, uc)
+
+for name, (code, gname, actors, desc, data) in SPEC.items():
+    subs = "".join(f"\n  - «{k}» {c} {n}" for c, n, k, _t in SUBS[name])
+    pre = "Không" if set(actors) <= {"Public User", "Guest"} else ("Chưa đăng nhập" if code == "UC01" else "Đã đăng nhập, có quyền tương ứng")
+    p.get(name).doc = (f"Mã: {code}\nNhóm: {gname}\nTác nhân: {', '.join(actors)}\nMô tả: {desc}\n"
+                       f"Tiền điều kiện: {pre}\nDữ liệu (domain): {data}" + (f"\nChức năng con:{subs}" if subs else ""))
 
 # --------------------------------------------------------------------------
-# diagrams
+# the single use case diagram
 # --------------------------------------------------------------------------
-
-
-def no_generalization(d):
-    d.only_rels = {r.id for r in p.rels if r.kind != "Generalization"}
-
-
-# UC-00 actor hierarchy -----------------------------------------------------
-d = p.diagram("UseCaseDiagram", "UC-00 Phân cấp tác nhân", "Tổng quát hóa tác nhân theo 3 frame: cổng khách hàng | cổng quản trị | ứng dụng vận hành. Tác nhân in nghiêng là trừu tượng.")
-d.only_rels = {r.id for r in p.rels if r.kind == "Generalization"}
-levels = [  # columns: cổng khách hàng | cổng quản trị | ứng dụng vận hành
-    [("Public User", 170), ("Back-office User", 760), ("Operational Staff", 1360)],
-    [("Guest", 60), ("Customer", 280), ("Platform Admin", 520), ("Hub Dispatch", 760), ("Operations Manager", 1000),
-     ("Courier", 1180), ("Line-haul Driver", 1360), ("Warehouse Operator", 1540)],
-    [("Merchant", 280), ("Hub Manager", 760)],
-]
-for i, row in enumerate(levels):
-    for name, x in row:
-        d.place(name, x, 60 + i * 170)
-
-# UC-01 overview ------------------------------------------------------------
-d = p.diagram("UseCaseDiagram", "UC-01 Biểu đồ use case tổng quát",
-              "Tất cả tác nhân và use case mức người dùng. Quan hệ tổng quát hóa tác nhân xem UC-00; phân rã chi tiết xem UC-02..UC-10.")
-d.only_rels = {r.id for r in p.rels if r.kind == "Association"}
+d = p.diagram("UseCaseDiagram", "PAVEX Use Case Diagram",
+              "Toàn bộ tác nhân (kế thừa theo frame), use case và quan hệ include/extend trên một sơ đồ. "
+              "Chức năng con của từng use case xem phần Documentation.")
 ROW = 64
-BX, BW = 200, 1100
-LX, LUC, MID, RUC, RX = 40, BX + 50, BX + BW / 2 - 115, BX + BW - 290, BX + BW + 90
+BX, BW = 290, 1100
+LX, LUC, MID, RUC, RX = 110, BX + 30, BX + BW / 2 - 115, BX + BW - 260, BX + BW + 90
 by_actor = {}
 for uc, actors, _g in TOP:
     by_actor.setdefault(actors[0], []).append(uc)
 SHARED_ACCOUNT = [p.get(n) for n in ("Đăng nhập", "Đăng xuất", "Quản lý hồ sơ cá nhân")]
 
 
+def arc(actor_shape, ucs, ys, sign, dx_min=300):
+    """Place use cases on an arc around the actor: every association line then runs
+    radially and never cuts through a neighbouring ellipse."""
+    acx, acy = actor_shape.cx, actor_shape.cy - 10
+    max_dy = max(abs(y_ + 23 - acy) for y_ in ys)
+    R = (dx_min ** 2 + max_dy ** 2) ** 0.5
+    for uc, y_ in zip(ucs, ys):
+        dx = (R ** 2 - (y_ + 23 - acy) ** 2) ** 0.5
+        d.place(uc, acx + sign * dx - 115, y_, 230, 46)
+
+
 def band(actor, ucs, x_uc, x_actor, y, sign, actor_at="center", gap=None):
-    """Stack an actor's use cases in one column (zig-zag) and put the actor beside them.
+    """One actor with its use cases stacked beside it.
     gap=(row, n): leave n empty rows starting at `row` so lines to the middle column pass freely."""
     rows = list(range(len(ucs) + (gap[1] if gap else 0)))
     if gap:
         rows = [r for r in rows if not gap[0] <= r < gap[0] + gap[1]]
-    for i, (uc, r) in enumerate(zip(ucs, rows)):
-        d.place(uc, x_uc + (i % 2) * 70 * sign, y + r * ROW, 230, 46)
-    h = max((len(ucs) + (gap[1] if gap else 0)) * ROW, 120)
-    d.place(actor, x_actor, y + (h / 2 - 50 if actor_at == "center" else 0))
+    n = len(ucs) + (gap[1] if gap else 0)
+    h = max(n * ROW, 120)
+    ys = [y + r * ROW for r in rows[:len(ucs)]]
+    if actor_at == "center":
+        arc(d.place(actor, x_actor, y + h / 2 - 50), ucs, ys, sign)
+    else:
+        for uc, y_ in zip(ucs, ys):
+            d.place(uc, x_uc, y_, 230, 46)
     return y + h + 18
 
 
+def mid(name, y_):
+    """Place a use case in the middle column near y_, below anything already there."""
+    taken = [s.y for s in d.shapes if s.elem.kind == "UseCase" and s.x == MID]
+    while any(abs(y_ - t) < 60 for t in taken):
+        y_ += 62
+    d.place(name, MID, y_, 230, 46)
+
+
 sysshape = d.place("sys", BX, 50, BW, 100)
-# -- upper part: merchant/public (left) and hub roles (right); UCs shared by Merchant & Hub Dispatch in the middle
-yl = band("Merchant", [u for u in by_actor["Merchant"] if len(next(a for x, a, _ in TOP if x is u)) == 1], LUC, LX, 90, 1, gap=(3, 2))
-for i, name in enumerate(("Tạo đơn hàng", "Yêu cầu xử lý ngoại lệ vận đơn")):
+ORDER_SHARED = ("Tạo đơn hàng", "Yêu cầu xử lý ngoại lệ vận đơn")
+# upper part --------------------------------------------------------------
+yl = band("Merchant", [u for u in by_actor["Merchant"] if u.name not in ORDER_SHARED], LUC, LX, 90, 1, gap=(3, 2))
+for i, name in enumerate(ORDER_SHARED):
     d.place(name, MID, 90 + (3 + i) * ROW, 230, 46)
-yl = band("Public User", by_actor["Public User"], LUC, LX, yl, 1)
+yl = band("Public User", sorted(by_actor["Public User"], key=lambda u: u.name != "Tra cứu giá cước"), LUC, LX, yl, 1)
 yl = band("Guest", by_actor["Guest"], LUC, LX, yl, 1)
 customer_own = [u for u in by_actor["Customer"] if u not in SHARED_ACCOUNT]
-yl = band("Customer", customer_own, LUC, LX, yl, 1, actor_at="none")  # actor re-placed in the corridor
-yr = band("Hub Dispatch", [u for u in by_actor["Hub Dispatch"] if u.name not in ("Tạo đơn hàng", "Yêu cầu xử lý ngoại lệ vận đơn")], RUC, RX, 90, -1, gap=(3, 2))
+customer_ys = [yl + i * ROW for i in range(len(customer_own))]
+yl += len(customer_own) * ROW + 18
+yr = band("Hub Dispatch", [u for u in by_actor["Hub Dispatch"] if u.name not in ORDER_SHARED], RUC, RX, 90, -1, gap=(3, 2))
 yr = band("Hub Manager", by_actor["Hub Manager"], RUC, RX, yr, -1)
 yr = band("Operations Manager", by_actor["Operations Manager"], RUC, RX, yr, -1)
-# -- corridor: account use cases in the middle, the three "signed-in" actors level with them
+mid("Xem hành trình vận đơn", (d.by_elem[p.get("Theo dõi vận đơn").id].y + d.by_elem[p.get("Tra cứu vận đơn").id].y) / 2)
+# corridor: account use cases in the middle, the "signed-in" actors level with them
 yc = max(yl, yr) + 10
-corridor = [p.get("Xem tổng quan vận hành")] + SHARED_ACCOUNT
-for i, uc in enumerate(corridor):
+for i, uc in enumerate([p.get("Xem tổng quan vận hành")] + SHARED_ACCOUNT):
     d.place(uc, MID, yc + i * ROW, 230, 46)
-d.by_elem.pop(p.get("Customer").id)
-d.shapes = [sh for sh in d.shapes if sh.elem is not p.get("Customer")]
-d.place("Customer", LX, yc + 1.5 * ROW - 17)
-d.place("Back-office User", RX, yc + 0.5 * ROW - 17)
-d.place("Operational Staff", RX, yc + 2.6 * ROW - 17)
-y = yc + len(corridor) * ROW + 30
-# -- lower part
-yl = band("Platform Admin", by_actor["Platform Admin"], LUC, LX, y, 1)
-yr = y
-ops_own = [u for u in by_actor["Operational Staff"] if u not in SHARED_ACCOUNT]
-for i, uc in enumerate(ops_own):
-    d.place(uc, RUC - (i % 2) * 70, yr + i * ROW, 230, 46)
-yr += len(ops_own) * ROW + 18
+d.place("Customer", LX, yc + 0.6 * ROW - 17)
+arc(d.by_elem[p.get("Customer").id], customer_own, customer_ys, 1)
+d.place("Operational Staff", LX, yc + 2.6 * ROW - 17)
+d.place("Back-office User", RX, yc + 1.5 * ROW - 17)
+y = yc + 4 * ROW + 30
+# lower part --------------------------------------------------------------
+admin = by_actor["Platform Admin"]
+admin.insert(1, p.get("Gán vai trò cho người dùng"))  # between the two use cases that extend/include it
+yr = band("Platform Admin", admin, RUC, RX, y, -1)
+ops_own = by_actor["Operational Staff"]
+arc(d.by_elem[p.get("Operational Staff").id], ops_own, [y + i * ROW for i in range(len(ops_own))], 1)
+yl = y + len(ops_own) * ROW + 18
 for actor in ("Courier", "Line-haul Driver", "Warehouse Operator"):
-    yr = band(actor, by_actor[actor], RUC, RX, yr, -1)
+    yl = band(actor, by_actor[actor], LUC, LX, yl, 1)
+mid("Quét kiện hàng", (d.by_elem[p.get("Thực hiện công việc").id].y + d.by_elem[p.get("Bàn giao hàng trung chuyển").id].y) / 2)
 sysshape.h = max(yl, yr) - 40
 
-# UC-02..UC-10 decomposition ------------------------------------------------
-for gcode, gname, ucs in GROUPS:
-    d = p.diagram("UseCaseDiagram", f"{gcode} Phân rã: {gname}",
-                  "Use case gốc liên kết tác nhân; «include» = bước bắt buộc, «extend» = chức năng tùy chọn mở rộng use case gốc.")
-    no_generalization(d)
-    sysshape = d.place("sys", 200, 40, 900, 100)
-    y = 100
-    placed_subs = set()
-    actor_y = {}
-    for code, name, actors, *_ in ucs:
-        subs = [s for s in SUBS[name] if s[0].id not in placed_subs and s[0].id not in d.by_elem]
-        band = max(1, len(subs)) * 62
-        base_y = y + band / 2 - 23
-        d.place(name, 290, base_y, 230, 46)
-        for i, (sub, kind) in enumerate(subs):
-            d.place(sub, 680 + (i % 2) * 60, y + i * 62, 230, 46)
-            placed_subs.add(sub.id)
-        for a in actors:
-            actor_y.setdefault(a, []).append(base_y)
-        y += band + 40
-    sysshape.h = y - 20
-    # actors on the left, next to the use cases they start
-    used = []
-    for a, ys in actor_y.items():
-        ay = sum(ys) / len(ys) - 17
-        while any(abs(ay - u) < 110 for u in used):
-            ay += 110
-        used.append(ay)
-        d.place(a, 60, ay)
+# actor generalizations run in vertical lanes outside the actor columns
+d.lanes = {}
+lane_no = {"Customer": 0, "Operational Staff": 0, "Public User": 1, "Back-office User": 0, "Hub Dispatch": 1}
+for r in p.rels:
+    if r.kind == "Generalization":
+        s_ = d.by_elem[r.src.id]
+        k = lane_no[r.src.name]
+        d.lanes[r.id] = s_.x - 60 - 14 * k if s_.x < BX else s_.x + s_.w + 60 + 14 * k
 
 if __name__ == "__main__":
     (OUT / "pavex-usecase-model.xml").write_bytes(p.to_xml())
-    for dg in p.diagrams:
-        slug = dg.name.split(" ")[0].lower()
-        (OUT / "preview" / f"{slug}.svg").write_text(dg.to_svg(), encoding="utf-8")
+    (OUT / "preview" / "usecase-diagram.svg").write_text(d.to_svg(), encoding="utf-8")
     lines = ["# Danh mục use case PAVEX", "", "> Sinh tự động bởi `generator/build_usecase.py` — đừng sửa tay.", ""]
     for gcode, gname, ucs in GROUPS:
-        lines += [f"## {gcode} · {gname}", "", "| Mã | Use case | Tác nhân | Mô tả | Use case con |", "|---|---|---|---|---|"]
+        lines += [f"## {gcode} · {gname}", "", "| Mã | Use case | Tác nhân | Mô tả | Chức năng con |", "|---|---|---|---|---|"]
         for code, name, actors, desc, data, subs in ucs:
-            sub_txt = "<br>".join(f"«{k}» {t.attrs.get('UserID', '')} {t.name}" for t, k in SUBS[name]) or "—"
+            sub_txt = "<br>".join(f"«{k}» {c} {n}" for c, n, k, _t in SUBS[name]) or "—"
             lines.append(f"| {code} | {name} | {', '.join(actors)} | {desc} *(Dữ liệu: {data})* | {sub_txt} |")
         lines.append("")
     lines += ["## Tác nhân", "", "| Tác nhân | Trừu tượng | Mô tả |", "|---|---|---|"]

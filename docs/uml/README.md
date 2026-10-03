@@ -5,11 +5,11 @@ Hai file XML import thẳng vào **Visual Paradigm**. Đây là bản viết l�
 
 | File | Nội dung |
 |---|---|
-| [`pavex-domain-model.xml`](pavex-domain-model.xml) | Domain model gồm 8 package (bounded context), 95 class (entity, value object, enum) và 72 quan hệ. Có 10 sơ đồ, từ DM-00 đến DM-09. |
-| [`pavex-usecase-model.xml`](pavex-usecase-model.xml) | Use case model gồm 13 tác nhân (10 vai trò thật + 3 tác nhân abstract) và 125 use case: 41 use case mức người dùng, phần còn lại là use case con. Có 11 sơ đồ, từ UC-00 đến UC-10. |
+| [`pavex-domain-model.xml`](pavex-domain-model.xml) | Domain model gồm 8 package (bounded context), 95 class (entity, value object, enum) và 56 quan hệ, vẽ trên **1 sơ đồ duy nhất**. |
+| [`pavex-usecase-model.xml`](pavex-usecase-model.xml) | Use case model gồm 13 tác nhân (10 vai trò thật + 3 tác nhân abstract) và 44 use case, vẽ trên **1 sơ đồ duy nhất**. |
 | [`domain-catalog.md`](domain-catalog.md) | Bảng tra cứu class, thuộc tính, giá trị enum và quan hệ (sinh tự động). |
 | [`usecase-catalog.md`](usecase-catalog.md) | Bảng tra cứu use case: mã, tác nhân, mô tả, dữ liệu và include/extend (sinh tự động). |
-| [`preview/`](preview) | Ảnh xem trước từng sơ đồ (SVG/PNG) để xem nhanh, không cần mở VP. |
+| [`preview/`](preview) | Ảnh xem trước 2 sơ đồ (SVG/PNG) để xem nhanh, không cần mở VP. |
 | [`generator/`](generator) | Script Python sinh ra toàn bộ các file trên. |
 
 ## Cách import vào Visual Paradigm
@@ -17,7 +17,7 @@ Hai file XML import thẳng vào **Visual Paradigm**. Đây là bản viết l�
 1. Mở một project, nên là project trống: **Project ▸ Import ▸ XML…** (bản cũ dùng **File ▸ Import ▸ XML…**).
 2. Chọn `pavex-domain-model.xml`, giữ tùy chọn mặc định rồi bấm **Import**. Làm tương tự với `pavex-usecase-model.xml`.
    Hai file dùng tiền tố ID khác nhau (`PVXD_` và `PVXU_`), nên import cả hai vào cùng một project được.
-3. Các sơ đồ hiện trong **Diagram Navigator**. Nếu đường nối trông rối, chọn sơ đồ rồi dùng
+3. Mỗi file có 1 sơ đồ, nằm trong **Diagram Navigator**. Nếu đường nối trông rối, dùng
    **Diagram ▸ Layout ▸ Orthogonal / Hierarchic**, hoặc kéo lại vài shape cho gọn.
 
 > Định dạng dùng ở đây là VP XML "simple structure" (`Xml_structure="simple"`), giống file domain đã import trước đó
@@ -38,12 +38,8 @@ Mô hình viết theo kiểu DDD. Mỗi package là một bounded context:
 | **Workforce & Operations** | WorkforceMember, HubMembership, WorkforceAvailability, WorkShift, WorkforceShiftAssignment, OperationalAssignment |
 | **Shared Kernel** | Các value object dùng chung: ContactAddress, Weight, Dimensions, FeeBreakdown, DeliveryEstimate, GeoPoint, DayOfWeek |
 
-Các sơ đồ:
-
-- **DM-00**: context map, cho thấy package nào phụ thuộc package nào.
-- **DM-01 đến DM-07**: mỗi package một sơ đồ, kèm các class của package khác có liên kết trực tiếp và các enum của package đó.
-- **DM-08**: tất cả value object.
-- **DM-09**: toàn bộ entity và quan hệ trên một sơ đồ.
+Sơ đồ duy nhất **PAVEX Domain Model** xếp các entity theo cụm bounded context; bên dưới là các value object
+và enumeration. Các package vẫn giữ trong cây model (Model Explorer) để tra cứu.
 
 Quy ước:
 
@@ -80,17 +76,18 @@ So với bản `.vpp` cũ, ngoài việc tái cấu trúc còn sửa và bổ su
 
   Các nhóm trung gian cũ không ứng với vai trò backend (Authenticated User, Operations Supervisor, Hub Coordinator,
   Workforce Manager) đã bị bỏ.
-- **UC-00 Phân cấp tác nhân**: vẽ tổng quát hóa theo 3 cột frame. Tác nhân in nghiêng là abstract.
-- **UC-01 Biểu đồ use case tổng quát**: tất cả tác nhân và 41 use case mức người dùng, nằm trong ranh giới
-  *PAVEX Logistics Platform*. Các use case tài khoản dùng chung cho 3 frame được đặt ở giữa, ngang hàng với
-  Customer, Back-office User và Operational Staff.
-- **UC-02 đến UC-10 Biểu đồ phân rã**, mỗi sơ đồ một nhóm chức năng:
-  Xác thực; Quản trị người dùng & phân quyền; Cửa hàng; Tra cứu công khai; Đơn hàng; Bảng giá & mạng lưới;
-  Nhân sự & ca; Điều phối & thực hiện; Ngoại lệ & sự cố.
-  - `«include»` dùng cho bước bắt buộc. Ví dụ: Tạo đơn hàng → Tra cứu giá cước, Khai báo kiện hàng.
-  - `«extend»` dùng cho chức năng tùy chọn, mở rộng use case gốc. Ví dụ: Quản lý người dùng ← Cập nhật trạng thái tài khoản.
-- Mỗi use case có **User ID** (UC01, UC17.3…) và phần **Documentation** ghi: nhóm, tác nhân, mô tả,
-  tiền điều kiện và các entity domain liên quan.
+- **Sơ đồ duy nhất PAVEX Use Case Diagram** gồm: tất cả tác nhân cùng quan hệ kế thừa (vẽ ở hai mép ngoài),
+  41 use case chính trong ranh giới *PAVEX Logistics Platform*, và các quan hệ «include»/«extend».
+  Các use case tài khoản dùng chung cho 3 frame được đặt ở giữa, ngang hàng với Customer, Back-office User
+  và Operational Staff.
+- Chỉ 3 chức năng con được tách thành use case riêng vì nhiều use case dùng chung:
+  *Xem hành trình vận đơn* (Tra cứu vận đơn, Theo dõi vận đơn «include»),
+  *Quét kiện hàng* (Thực hiện công việc, Bàn giao hàng trung chuyển «include»),
+  *Gán vai trò cho người dùng* («extend» Quản lý người dùng, «include» từ Tạo tài khoản nhân viên).
+  Các chức năng con khác (thêm/sửa/xóa, duyệt/từ chối…) được ghi trong **Documentation** của use case gốc
+  và trong `usecase-catalog.md`.
+- Mỗi use case có **User ID** (UC01…UC42) và phần **Documentation** ghi: nhóm, tác nhân, mô tả,
+  tiền điều kiện, các entity domain liên quan và danh sách chức năng con.
 
 ## ⚠️ Giả định cần đối chiếu
 
@@ -109,8 +106,8 @@ Cần đối chiếu với enum trong backend, rồi sửa trong `generator/buil
 
 ```bash
 cd docs/uml/generator
-python3 build_domain.py     # tạo pavex-domain-model.xml, domain-catalog.md, preview/dm-*.svg
-python3 build_usecase.py    # tạo pavex-usecase-model.xml, usecase-catalog.md, preview/uc-*.svg
+python3 build_domain.py     # tạo pavex-domain-model.xml, domain-catalog.md, preview/domain-model.svg
+python3 build_usecase.py    # tạo pavex-usecase-model.xml, usecase-catalog.md, preview/usecase-diagram.svg
 ```
 
 Script chỉ dùng thư viện chuẩn của Python 3. Ảnh PNG trong `preview/` được render từ file SVG bằng Chromium headless.

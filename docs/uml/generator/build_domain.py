@@ -389,102 +389,34 @@ for e in list(p.by_name.values()):
             raise SystemExit(f"{e.name}.{name}: unknown type {typ}")
         e.features.append(("Attribute", p.nid("ATT"), name, typ, mult, doc))
 
-# package dependencies (context map)
-for a, b in [("partner", "identity"), ("workforce", "identity"), ("shipment", "partner"), ("shipment", "pricing"),
-             ("shipment", "network"), ("pricing", "network"), ("workforce", "network"), ("workforce", "shipment"),
-             ("exception", "shipment"), ("exception", "network")]:
-    p.rel("Dependency", f"pkg:{a}", f"pkg:{b}", name="")
-for k in ["identity", "partner", "pricing", "shipment", "exception", "network"]:
-    p.rel("Dependency", f"pkg:{k}", "pkg:shared", name="")
-
 # --------------------------------------------------------------------------
 # diagrams
 # --------------------------------------------------------------------------
-
-
-def enums_of(key):
-    return [c.name for c in PKGS[key].children if any(s.name == "enumeration" for s in c.stereotypes)]
 
 
 def chunks(xs, n):
     return [xs[i:i + n] for i in range(0, len(xs), n)]
 
 
-d = p.diagram("ClassDiagram", "DM-00 Context Map",
-              "Bản đồ bounded context và phụ thuộc giữa các gói. Mọi context đều dùng Shared Kernel (không vẽ để tránh rối).")
-d.rows([["pkg:identity", ("pkg:partner", 80), ("pkg:pricing", 80)],
-        [("pkg:workforce", 0), ("pkg:shipment", 80), ("pkg:network", 80)],
-        [("pkg:exception", 360)]], hgap=80, vgap=120)
+VALUE_OBJECTS = [c.name for pk in PKGS.values() for c in pk.children if c.stereotypes[0].name == "value object"]
+ENUMS = [c.name for pk in PKGS.values() for c in pk.children if c.stereotypes[0].name == "enumeration"]
 
-
-def own(d, key):
-    """Package diagram: draw only relationships touching a class of that package."""
-    mine = {c.id for c in PKGS[key].children}
-    d.only_rels = {r.id for r in p.rels if r.src.id in mine or r.dst.id in mine}
-
-d = p.diagram("ClassDiagram", "DM-01 Identity & Access")
-own(d, "identity")
-y = d.rows([["UserProfile", "UserAccount", "UserAddress"], ["Permission", "Role", ("Merchant", 60), "WorkforceMember"]])
-d.rows([enums_of("identity") + ["ContactAddress"]], y0=y)
-
-d = p.diagram("ClassDiagram", "DM-02 Partner")
-own(d, "partner")
-y = d.rows([["UserAccount", "Merchant", "MerchantPickupAddress"], [("Shipment", 260)]])
-d.rows([enums_of("partner") + ["ContactAddress"]], y0=y)
-
-d = p.diagram("ClassDiagram", "DM-03 Network")
-own(d, "network")
-y = d.rows([["NetworkRegion", "ServiceArea", "ServiceAreaCoverage", "RouteTemplate", "RouteTemplateLeg"],
-            [("Hub", 330), ("HubLane", 280), "LaneSchedule", "LaneCapacityReservation"]], vgap=110)
-for row in chunks(enums_of("network") + ["DayOfWeek"], 6):
+d = p.diagram("ClassDiagram", "PAVEX Domain Model",
+              "Toàn bộ domain model trên một sơ đồ: entity/aggregate root (theo cụm bounded context), "
+              "value object và enumeration ở phía dưới.")
+y = d.rows([["UserProfile", "UserAccount", "UserAddress", "Role", "Permission", ("Merchant", 60), "MerchantPickupAddress"],
+            ["RateRule", "RatePlan", "QuoteRequest", "QuoteParcel", "QuoteOption", ("WorkforceMember", 60), "WorkforceAvailability", "HubMembership"],
+            ["DeliveryAttempt", "ShipmentEvent", "Shipment", "Parcel", "OperationalAssignment", "WorkforceShiftAssignment", "WorkShift"],
+            ["ShipmentExceptionRequest", "ShipmentCase", "ShipmentWeightAdjustment", ("Hub", 80), "HubLane", "LaneSchedule", "LaneCapacityReservation"],
+            ["NetworkRegion", "ServiceArea", "ServiceAreaCoverage", ("RouteTemplate", 400), "RouteTemplateLeg"]], vgap=140, hgap=70)
+for row in chunks(VALUE_OBJECTS, 7):
+    y = d.rows([row], y0=y, vgap=50)
+for row in chunks(ENUMS, 10):
     y = d.rows([row], y0=y, vgap=40)
-
-d = p.diagram("ClassDiagram", "DM-04 Pricing")
-own(d, "pricing")
-y = d.rows([["RatePlan", "RateRule", "CodPolicy", "InsurancePolicy", "ShipmentLimits"],
-            [("QuoteRequest", 0), "QuoteParcel", "QuoteOption", "QuoteEndpoint", ("Shipment", 40)]], vgap=100)
-d.rows([enums_of("pricing") + ["Weight", "Dimensions", "FeeBreakdown", "DeliveryEstimate"]], y0=y)
-
-d = p.diagram("ClassDiagram", "DM-05 Shipment")
-own(d, "shipment")
-y = d.rows([["Merchant", "QuoteRequest", "RatePlan", ("Hub", 120)],
-            ["Shipment", ("Parcel", 40), ("ShipmentEvent", 40), "DeliveryAttempt"],
-            ["ShipmentAddressSnapshot", "ShipmentEndpoint", "ShipmentHold", ("OperationalAssignment", 60), "LaneCapacityReservation"]],
-           vgap=100)
-for row in chunks(enums_of("shipment"), 7):
-    y = d.rows([row], y0=y, vgap=40)
-
-d = p.diagram("ClassDiagram", "DM-06 Exception Handling")
-own(d, "exception")
-y = d.rows([[("Shipment", 0), ("Parcel", 80), ("Hub", 80)],
-            ["ShipmentExceptionRequest", ("ShipmentCase", 60), ("ShipmentWeightAdjustment", 60)]], vgap=110)
-d.rows([enums_of("exception") + ["ContactAddress"]], y0=y)
-
-d = p.diagram("ClassDiagram", "DM-07 Workforce & Operations")
-own(d, "workforce")
-y = d.rows([["UserAccount", ("WorkforceMember", 40), "WorkforceAvailability", ("Hub", 120)],
-            ["HubMembership", ("WorkforceShiftAssignment", 40), "WorkShift", ("OperationalAssignment", 60), "Shipment", "Parcel"]],
-           vgap=110)
-for row in chunks(enums_of("workforce"), 7):
-    y = d.rows([row], y0=y, vgap=40)
-
-d = p.diagram("ClassDiagram", "DM-08 Shared Kernel & Value Objects")
-d.rows([["ContactAddress", "Weight", "Dimensions", "FeeBreakdown", "DeliveryEstimate", "GeoPoint", "DayOfWeek"],
-        ["ShipmentAddressSnapshot", "ShipmentEndpoint", "ShipmentHold", "QuoteEndpoint", "CodPolicy", "InsurancePolicy", "ShipmentLimits"]])
-
-d = p.diagram("ClassDiagram", "DM-09 Full Domain Model (entities)",
-              "Toàn bộ entity/aggregate root và quan hệ; enum & value object xem ở các sơ đồ theo gói.")
-d.rows([["UserProfile", "UserAccount", "UserAddress", "Role", "Permission", ("Merchant", 60), "MerchantPickupAddress"],
-        ["RateRule", "RatePlan", "QuoteRequest", "QuoteParcel", "QuoteOption", ("WorkforceMember", 60), "WorkforceAvailability", "HubMembership"],
-        ["DeliveryAttempt", "ShipmentEvent", "Shipment", "Parcel", "OperationalAssignment", "WorkforceShiftAssignment", "WorkShift"],
-        ["ShipmentExceptionRequest", "ShipmentCase", "ShipmentWeightAdjustment", ("Hub", 80), "HubLane", "LaneSchedule", "LaneCapacityReservation"],
-        ["NetworkRegion", "ServiceArea", "ServiceAreaCoverage", ("RouteTemplate", 400), "RouteTemplateLeg"]], vgap=140, hgap=70)
 
 if __name__ == "__main__":
     (OUT / "pavex-domain-model.xml").write_bytes(p.to_xml())
-    for dg in p.diagrams:
-        slug = dg.name.split(" ")[0].lower()
-        (OUT / "preview" / f"{slug}.svg").write_text(dg.to_svg(), encoding="utf-8")
+    (OUT / "preview" / "domain-model.svg").write_text(d.to_svg(), encoding="utf-8")
     lines = ["# Danh mục domain model PAVEX", "", "> Sinh tự động bởi `generator/build_domain.py` — đừng sửa tay.", ""]
     for key, pk in PKGS.items():
         lines += [f"## {pk.name}", "", pk.doc, ""]
