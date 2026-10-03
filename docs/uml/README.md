@@ -22,8 +22,9 @@ Hai file XML import thẳng vào **Visual Paradigm**. Đây là bản viết l�
 3. Mỗi file có 1 sơ đồ, nằm trong **Diagram Navigator**. Nếu đường nối trông rối, dùng
    **Diagram ▸ Layout ▸ Orthogonal / Hierarchic**, hoặc kéo lại vài shape cho gọn.
 
-> Định dạng dùng ở đây là VP XML "simple structure" (`Xml_structure="simple"`), giống file domain đã import trước đó
-> (trong file `.vpp` cũ có `simplexml/importedIds`).
+> Định dạng dùng ở đây là VP XML "simple structure" (`Xml_structure="simple"`), viết theo đúng mẫu do chính
+> VP 16.1 xuất ra (`project.xml` của use case v2): use case nằm trong `DiagramElementChildren` của khung System,
+> mỗi shape có `ZOrder`, tác nhân có `Caption` hiện tên bên dưới, và model có `MasterView`.
 
 ## Domain model: cấu trúc
 

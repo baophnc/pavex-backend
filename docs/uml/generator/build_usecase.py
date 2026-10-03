@@ -26,7 +26,6 @@ p = Project("PAVEX Use Case Model", "PAVEXUC")
 # --------------------------------------------------------------------------
 # actors
 # --------------------------------------------------------------------------
-actors_pkg = p.add("Package", "Actors", doc="Tác nhân của hệ thống PAVEX.", key="pkg:actors")
 # 10 concrete actors = the roles of the backend (as in the original diagram).
 # An abstract actor is added only where several roles of the SAME frame
 # (client portal / management portal / operations app) share use cases.
@@ -47,7 +46,7 @@ ACTORS = [
     ("Warehouse Operator", False, "[Ứng dụng vận hành] Nhân viên kho/khai thác tại hub (WAREHOUSE_OPERATOR)."),
 ]
 for name, abstract, doc in ACTORS:
-    p.add("Actor", name, parent=actors_pkg, doc=doc, tag="ACT", Abstract="true" if abstract else "false")
+    p.add("Actor", name, doc=doc, tag="ACT", Abstract="true" if abstract else "false")
 
 GENERALIZATIONS = [  # (general, specific)
     ("Public User", "Guest"), ("Public User", "Customer"), ("Customer", "Merchant"),

@@ -13,7 +13,7 @@ from dataclasses import dataclass, field
 from html import escape
 
 AUTHOR = "baophuc"
-STAMP = "1790931600000"  # epoch millis (VP format)
+STAMP = "2026-10-03T09:00:00.000"  # format used by VP exports
 
 # ---------------------------------------------------------------------------
 # Model
@@ -98,13 +98,20 @@ class Project:
                 "CommentTableSortColumn": "Date Time",
                 "DocumentationType": "html",
                 "ExportedFromDifferentName": "false",
-                "ExporterVersion": "17.2",
+                "ExporterVersion": "16.1.1",
                 "Name": self.name,
                 "TextualAnalysisHighlightOptionCaseSensitive": "false",
                 "UmlVersion": "2.x",
                 "Xml_structure": "simple",
             },
         )
+        # master views (first shape / connector of each element) as in VP exports
+        self._master = {}
+        for dg in self.diagrams:
+            for sh in dg.shapes:
+                self._master.setdefault(sh.elem.id, (sh.elem.kind, sh.id, sh.elem.name))
+            for r, *_x in dg.connectors():
+                self._master.setdefault(r.id, (r.kind, dg.conn_id(r.id), r.name))
         models = ET.SubElement(root, "Models")
         for e in self.roots:
             self._elem_xml(models, e)
@@ -142,9 +149,16 @@ class Project:
         if e.kind == "Class":
             a.update({"Active": "false", "BusinessKeyMutable": "false"})
         if e.kind == "UseCase":
-            a.update({"Rank": "Unspecified"})
+            a.update({"Status": "Identify", "UcRank": "Unspecified"})
         a.update(e.attrs)
         x = ET.SubElement(parent, e.kind, a)
+        for tag, side in (("FromSimpleRelationships", "src"), ("ToSimpleRelationships", "dst")):
+            refs = [r for r in self.rels if r.kind != "Association" and getattr(r, side) is e]
+            if refs:
+                holder = ET.SubElement(x, tag)
+                for r in refs:
+                    ET.SubElement(holder, r.kind, {"Idref": r.id, "Name": r.name})
+        self._master_view(x, e.id)
         if e.stereotypes:
             st = ET.SubElement(x, "Stereotypes")
             for s in e.stereotypes:
@@ -178,6 +192,11 @@ class Project:
             for c in e.children:
                 self._elem_xml(mc, c)
 
+    def _master_view(self, x, model_id):
+        mv = getattr(self, "_master", {}).get(model_id)
+        if mv:
+            ET.SubElement(ET.SubElement(x, "MasterView"), mv[0], {"Idref": mv[1], "Name": mv[2]})
+
     def _rels_xml(self, models):
         if not self.rels:
             return
@@ -209,7 +228,7 @@ class Project:
                                 "DerivedUnion": "false",
                                 "JavaDistinct": "0",
                                 "Leaf": "false",
-                                "Multiplicity": mult,
+                                "Multiplicity": mult or "Unspecified",
                                 "Navigable": "Unspecified",
                                 "ProvidePropertyGetterMethod": "false",
                                 "ProvidePropertySetterMethod": "false",
@@ -222,11 +241,12 @@ class Project:
                         ET.SubElement(ET.SubElement(ex, "Qualifier"), "Qualifier", self._common(end_id + "Q", "", ""))
                         holder = ET.SubElement(ex, "Type")
                         ET.SubElement(holder, el.kind, {"Idref": el.id, "Name": el.name})
+                    self._master_view(x, r.id)
                 else:
-                    a.update({"From": r.src.id, "To": r.dst.id})
+                    a.update({"From": r.src.id, "To": r.dst.id, "Visibility": "Unspecified"})
                     if k == "Generalization":
-                        a["Substitutable"] = "false"
-                    ET.SubElement(smc, k, a)
+                        a.update({"ConnectToCodeModel": "1", "Substitutable": "false"})
+                    self._master_view(ET.SubElement(smc, k, a), r.id)
 
 
 # ---------------------------------------------------------------------------
@@ -319,7 +339,7 @@ class Diagram:
             elif e.kind == "UseCase":
                 w, h = usecase_size(e)
             elif e.kind == "Actor":
-                w, h = 40, 80
+                w, h = 30, 60
             elif e.kind == "Package":
                 w, h = max(160, text_w(e.name) + 40), 90
         s = Shape(self.p.nid("SHP"), e, x, y, w, h)
@@ -351,6 +371,7 @@ class Diagram:
         """[(rel, from_shape, to_shape, points)] with simple obstacle-avoiding routes."""
         if getattr(self, "_routed", None) is not None:
             return self._routed
+        self._conn_ids = {}
         pairs: dict[frozenset, int] = {}
         items = []
         for n, r in enumerate(self.p.rels):
@@ -384,6 +405,8 @@ class Diagram:
                 out.append((r, a, b, [(xa, ya), (lx, ya), (lx, yb), (xb, yb)]))
                 continue
             out.append((r, a, b, self._route(a, b, lane, n)))
+        for r, *_rest in out:
+            self._conn_ids[r.id] = self.p.nid("CON")
         self._routed = out
         return out
 
@@ -476,54 +499,137 @@ class Diagram:
         return min(cands, key=score)
 
     # ------------------------------------------------------------------ XML
+    def conn_id(self, rel_id):
+        self.connectors()
+        return self._conn_ids.get(rel_id)
+
     def to_xml(self, parent):
         d = ET.SubElement(
             parent,
             self.kind,
             {
-                "Author": AUTHOR,
-                "ConnectionPointType": "2",
-                "ConnectorStyle": "Rectilinear" if self.kind == "ClassDiagram" else "Straight",
-                "CreateDateTime": STAMP,
+                "AlignToGrid": "false",
+                "AutoFitShapesSize": "false",
+                "ConnectionPointStyle": "0",
+                "DiagramBackground": "rgb(255, 255, 255)",
                 "Documentation_plain": self.doc,
+                "Editable": "true",
                 "Id": self.id,
                 "Name": self.name,
-                "ShowActivityStateNodeCaption": "true",
+                "PmAuthor": AUTHOR,
+                "PmCreateDateTime": STAMP,
+                "PmLastModified": STAMP,
+                "QualityScore": "-1",
+                "ShowDiagramFrame": "false",
             },
         )
+        z = iter(range(1, 100000))
+        systems = [sh for sh in self.shapes if sh.elem.kind == "System"]
+
+        def container_of(sh):
+            for sy in systems:
+                if sh.elem.parent is sy.elem:
+                    return sy
+            return None
+
+        def font_line(x):
+            ET.SubElement(x, "ElementFont", {"Color": "rgb(0, 0, 0)", "Name": "Dialog", "Size": "11", "Style": "0"})
+            line = ET.SubElement(x, "Line", {"Cap": "0", "Color": "rgb(0, 0, 0)", "Transparency": "0", "Weight": "1.0"})
+            ET.SubElement(line, "Stroke")
+
+        def shape_xml(parent_el, sh):
+            k = sh.elem.kind
+            fill = {"Class": "rgb(255, 255, 192)", "Package": "rgb(255, 255, 192)"}.get(k, "rgb(122, 207, 245)")
+            attrs = {
+                "Background": fill,
+                "ConnectToPoint": "false",
+                "ConnectionPointType": "2",
+                "CoverConnector": "false",
+                "Foreground": "rgb(0, 0, 0)",
+                "Height": str(int(sh.h)),
+                "Id": sh.id,
+                "MetaModelElement": sh.elem.id,
+                "Model": sh.elem.id,
+                "ModelElementNameAlignment": "1" if k == "System" else "9",
+                "Name": sh.elem.name,
+                "OverrideAppearanceWithStereotypeIcon": "true",
+                "PresentationOption": "4",
+                "PrimitiveShapeType": "0",
+                "RequestDefaultSize": "false",
+                "RequestFitSize": "false",
+                "RequestResetCaption": "false",
+                "Selectable": "true",
+                "Width": str(int(sh.w)),
+                "X": str(int(sh.x)),
+                "Y": str(int(sh.y)),
+                "ZOrder": str(next(z)),
+            }
+            if k in ("UseCase", "Actor"):
+                attrs["DisplayOption"] = "3"
+            if k == "UseCase":
+                attrs["ShowExtensionPoint"] = "true"
+            x = ET.SubElement(parent_el, k, attrs)
+            font_line(x)
+            if k == "Actor":
+                cw = max(80, int(text_w(sh.elem.name)) + 10)
+                ET.SubElement(x, "Caption", {"Height": "14", "InternalHeight": "-2147483648", "InternalWidth": "-2147483648",
+                                             "Side": "South", "Visible": "true", "Width": str(cw),
+                                             "X": str(int(sh.cx - cw / 2)), "Y": str(int(sh.y + sh.h))})
+            elif k == "UseCase":
+                ET.SubElement(x, "Caption", {"Height": str(int(sh.h)), "InternalHeight": "-2147483648", "InternalWidth": "-2147483648",
+                                             "Side": "Center", "Visible": "true", "Width": str(int(sh.w)), "X": "0", "Y": "0"})
+            elif k == "System":
+                ET.SubElement(x, "Caption", {"Height": "14", "InternalHeight": "-2147483648", "InternalWidth": "-2147483648",
+                                             "Side": "InsideNorth", "Visible": "true", "Width": str(int(sh.w)), "X": "0", "Y": "0"})
+            if k != "System":
+                ET.SubElement(x, "FillColor", {"Color": fill, "Style": "1", "Transparency": "0", "Type": "1"})
+            return x
+
         shapes = ET.SubElement(d, "Shapes")
-        for s in self.shapes:
-            ET.SubElement(
-                shapes,
-                s.elem.kind,
-                {
-                    "Height": str(int(s.h)),
-                    "Id": s.id,
-                    "MetaModelElement": s.elem.id,
-                    "Model": s.elem.id,
-                    "Name": s.elem.name,
-                    "Width": str(int(s.w)),
-                    "X": str(int(s.x)),
-                    "Y": str(int(s.y)),
-                },
-            )
+        # containers first (lowest ZOrder) with their children nested, like VP's own export
+        for sy in systems:
+            sx = shape_xml(shapes, sy)
+            kids = [sh for sh in self.shapes if container_of(sh) is sy]
+            if kids:
+                holder = ET.SubElement(sx, "DiagramElementChildren")
+                for sh in kids:
+                    shape_xml(holder, sh)
+        for sh in self.shapes:
+            if sh.elem.kind != "System" and container_of(sh) is None:
+                shape_xml(shapes, sh)
         conns = ET.SubElement(d, "Connectors")
         for r, a, b, route in self.connectors():
+            routed = len(route) > 2
             c = ET.SubElement(
                 conns,
                 r.kind,
                 {
+                    "Background": "rgb(122, 207, 245)",
+                    "ConnectorStyle": "Rectilinear" if routed else "Follow Diagram",
+                    "Foreground": "rgb(0, 0, 0)",
                     "From": a.id,
-                    "Id": self.p.nid("CON"),
+                    "FromConnectType": "0",
+                    "FromPinType": "1",
+                    "Id": self._conn_ids[r.id],
                     "MetaModelElement": r.id,
                     "Model": r.id,
+                    "ModelElementNameAlignment": "9",
                     "Name": r.name,
+                    "Selectable": "true",
                     "To": b.id,
+                    "ToConnectType": "0",
+                    "ToPinType": "1",
+                    "UseFromShapeCenter": "false" if routed else "true",
+                    "UseToShapeCenter": "false" if routed else "true",
+                    "ZOrder": str(next(z)),
                 },
             )
+            font_line(c)
+            ET.SubElement(c, "Caption", {"Height": "0", "InternalHeight": "-2147483648", "InternalWidth": "-2147483648",
+                                         "Side": "None", "Visible": "true", "Width": "20", "X": "0", "Y": "0"})
             pts = ET.SubElement(c, "Points")
             for px, py in route:
-                ET.SubElement(pts, "Point", {"X": str(int(px)), "Y": str(int(py))})
+                ET.SubElement(pts, "Point", {"X": f"{px:.1f}", "Y": f"{py:.1f}"})
 
     # ------------------------------------------------------------------ SVG
     def to_svg(self) -> str:
@@ -605,10 +711,10 @@ class Diagram:
                     o.append(f'<text x="{s.cx}" y="{y0 + i * 14}" text-anchor="middle">{escape(t)}</text>')
             elif k == "Actor":
                 cx, y = s.cx, s.y
-                o.append(f'<circle cx="{cx}" cy="{y + 10}" r="10" fill="#fff" stroke="#333"/>')
-                o.append(f'<path d="M{cx},{y + 20} L{cx},{y + 50} M{cx - 18},{y + 30} L{cx + 18},{y + 30} M{cx},{y + 50} L{cx - 15},{y + 78} M{cx},{y + 50} L{cx + 15},{y + 78}" stroke="#333" fill="none"/>')
+                o.append(f'<circle cx="{cx}" cy="{y + 8}" r="8" fill="#fff" stroke="#333"/>')
+                o.append(f'<path d="M{cx},{y + 16} L{cx},{y + 38} M{cx - 15},{y + 24} L{cx + 15},{y + 24} M{cx},{y + 38} L{cx - 13},{y + 60} M{cx},{y + 38} L{cx + 13},{y + 60}" stroke="#333" fill="none"/>')
                 style = ' font-style="italic"' if s.elem.attrs.get("Abstract") == "true" else ""
-                o.append(f'<text x="{cx}" y="{y + 94}" text-anchor="middle"{style}>{escape(s.elem.name)}</text>')
+                o.append(f'<text x="{cx}" y="{y + s.h + 13}" text-anchor="middle"{style}>{escape(s.elem.name)}</text>')
             elif k == "Package":
                 o.append(f'<rect x="{s.x}" y="{s.y}" width="{min(90, s.w / 2)}" height="18" fill="#ede7f6" stroke="#333"/>')
                 o.append(f'<rect x="{s.x}" y="{s.y + 18}" width="{s.w}" height="{s.h - 18}" fill="#ede7f6" stroke="#333"/>')
