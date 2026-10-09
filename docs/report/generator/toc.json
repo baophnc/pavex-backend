@@ -1,0 +1,237 @@
+[
+ {
+  "level": 1,
+  "text": "CHƯƠNG 1. GIỚI THIỆU",
+  "page": 5
+ },
+ {
+  "level": 2,
+  "text": "1.1. Lý do chọn đề tài",
+  "page": 5
+ },
+ {
+  "level": 2,
+  "text": "1.2. Mục tiêu đề tài",
+  "page": 5
+ },
+ {
+  "level": 2,
+  "text": "1.3. Đối tượng và phạm vi nghiên cứu",
+  "page": 5
+ },
+ {
+  "level": 2,
+  "text": "1.4. Phương pháp nghiên cứu",
+  "page": 5
+ },
+ {
+  "level": 2,
+  "text": "1.5. Bố cục báo cáo",
+  "page": 6
+ },
+ {
+  "level": 1,
+  "text": "CHƯƠNG 2. CƠ SỞ LÝ THUYẾT",
+  "page": 7
+ },
+ {
+  "level": 2,
+  "text": "2.1. Bài toán vận chuyển chặng đầu – chặng giữa – chặng cuối",
+  "page": 7
+ },
+ {
+  "level": 2,
+  "text": "2.2. Thiết kế hướng miền (Domain-Driven Design)",
+  "page": 7
+ },
+ {
+  "level": 2,
+  "text": "2.3. REST API, JWT và phân quyền theo vai trò",
+  "page": 7
+ },
+ {
+  "level": 2,
+  "text": "2.4. Ứng dụng web hiện đại và mô hình Backend-for-Frontend",
+  "page": 7
+ },
+ {
+  "level": 2,
+  "text": "2.5. Mã kiện hàng và chuỗi giám sát (chain of custody)",
+  "page": 8
+ },
+ {
+  "level": 2,
+  "text": "2.6. Kiểm thử hộp đen",
+  "page": 8
+ },
+ {
+  "level": 1,
+  "text": "CHƯƠNG 3. PHÂN TÍCH YÊU CẦU",
+  "page": 9
+ },
+ {
+  "level": 2,
+  "text": "3.1. Phân tích yêu cầu kinh doanh",
+  "page": 9
+ },
+ {
+  "level": 2,
+  "text": "3.2. Phân tích yêu cầu người dùng",
+  "page": 9
+ },
+ {
+  "level": 2,
+  "text": "3.3. Yêu cầu chức năng hệ thống",
+  "page": 10
+ },
+ {
+  "level": 2,
+  "text": "3.4. Yêu cầu phi chức năng hệ thống",
+  "page": 12
+ },
+ {
+  "level": 1,
+  "text": "CHƯƠNG 4. THIẾT KẾ HỆ THỐNG",
+  "page": 13
+ },
+ {
+  "level": 2,
+  "text": "4.1. Sơ đồ use case tổng thể",
+  "page": 13
+ },
+ {
+  "level": 2,
+  "text": "4.2. Đặc tả chi tiết các use case cốt lõi",
+  "page": 15
+ },
+ {
+  "level": 3,
+  "text": "4.2.1. Nhóm use case dùng chung và cổng khách hàng",
+  "page": 15
+ },
+ {
+  "level": 3,
+  "text": "4.2.2. Nhóm use case của cổng quản trị",
+  "page": 28
+ },
+ {
+  "level": 3,
+  "text": "4.2.3. Nhóm use case của ứng dụng vận hành",
+  "page": 42
+ },
+ {
+  "level": 2,
+  "text": "4.3. Thiết kế kiến trúc và cơ sở dữ liệu",
+  "page": 48
+ },
+ {
+  "level": 3,
+  "text": "4.3.1. Mô hình miền",
+  "page": 48
+ },
+ {
+  "level": 3,
+  "text": "4.3.2. Kiến trúc tổng thể",
+  "page": 50
+ },
+ {
+  "level": 1,
+  "text": "CHƯƠNG 5. GIẢI PHÁP CÔNG NGHỆ",
+  "page": 51
+ },
+ {
+  "level": 2,
+  "text": "5.1. Kiến trúc client – BFF – backend",
+  "page": 51
+ },
+ {
+  "level": 2,
+  "text": "5.2. Xác thực, phân quyền và toàn vẹn dữ liệu",
+  "page": 51
+ },
+ {
+  "level": 2,
+  "text": "5.3. Định giá có phiên bản và báo giá có thời hạn",
+  "page": 51
+ },
+ {
+  "level": 2,
+  "text": "5.4. Định tuyến và giữ chỗ tải trọng",
+  "page": 52
+ },
+ {
+  "level": 2,
+  "text": "5.5. Điều phối công việc theo ca và năng lực nhân sự",
+  "page": 52
+ },
+ {
+  "level": 2,
+  "text": "5.6. Quét mã kiện hàng và hành trình vận đơn",
+  "page": 52
+ },
+ {
+  "level": 1,
+  "text": "CHƯƠNG 6. HIỆN THỰC, TRIỂN KHAI VÀ KIỂM THỬ",
+  "page": 53
+ },
+ {
+  "level": 2,
+  "text": "6.1. Môi trường phát triển và công cụ",
+  "page": 53
+ },
+ {
+  "level": 2,
+  "text": "6.2. Giao diện cổng khách hàng",
+  "page": 53
+ },
+ {
+  "level": 2,
+  "text": "6.3. Giao diện cổng quản trị",
+  "page": 54
+ },
+ {
+  "level": 2,
+  "text": "6.4. Giao diện ứng dụng vận hành",
+  "page": 56
+ },
+ {
+  "level": 2,
+  "text": "6.5. Kiểm thử hệ thống",
+  "page": 57
+ },
+ {
+  "level": 1,
+  "text": "CHƯƠNG 7. ĐÁNH GIÁ VÀ THẢO LUẬN",
+  "page": 73
+ },
+ {
+  "level": 2,
+  "text": "7.1. Kết quả đạt được",
+  "page": 73
+ },
+ {
+  "level": 2,
+  "text": "7.2. Hạn chế còn tồn tại",
+  "page": 73
+ },
+ {
+  "level": 2,
+  "text": "7.3. Thảo luận và bài học kinh nghiệm",
+  "page": 73
+ },
+ {
+  "level": 1,
+  "text": "CHƯƠNG 8. KẾT LUẬN",
+  "page": 74
+ },
+ {
+  "level": 2,
+  "text": "8.1. Kết luận",
+  "page": 74
+ },
+ {
+  "level": 2,
+  "text": "8.2. Hướng phát triển",
+  "page": 74
+ }
+]

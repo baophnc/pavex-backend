@@ -1,0 +1,5792 @@
+[
+ {
+  "t": "cover"
+ },
+ {
+  "t": "front",
+  "text": "LỜI CẢM ƠN"
+ },
+ {
+  "t": "p",
+  "text": "Lời đầu tiên, nhóm thực hiện đề tài xin gửi lời cảm ơn chân thành đến Ban Giám hiệu Trường Đại học Công nghiệp Thành phố Hồ Chí Minh và Ban lãnh đạo Khoa Công nghệ Thông tin đã tạo điều kiện về cơ sở vật chất và môi trường học tập để nhóm hoàn thành đồ án."
+ },
+ {
+  "t": "p",
+  "text": "Đặc biệt, nhóm xin bày tỏ lòng biết ơn sâu sắc tới Thầy Võ Ngọc Tấn Phước – người đã trực tiếp giảng dạy, tận tình hướng dẫn và đưa ra những định hướng quan trọng cho nhóm trong suốt quá trình thực hiện môn học Công nghệ mới trong phát triển ứng dụng CNTT. Những góp ý và yêu cầu nghiêm túc của Thầy đã giúp nhóm hoàn thiện hệ thống PAVEX một cách bài bản."
+ },
+ {
+  "t": "p",
+  "text": "Mặc dù đã nỗ lực hoàn thành báo cáo với tất cả sự nghiêm túc, do giới hạn về thời gian và kinh nghiệm thực tế, đồ án không tránh khỏi những thiếu sót. Nhóm kính mong nhận được những ý kiến góp ý của quý Thầy/Cô để đề tài được hoàn thiện hơn."
+ },
+ {
+  "t": "front",
+  "text": "MỤC LỤC"
+ },
+ {
+  "t": "toc"
+ },
+ {
+  "t": "h1",
+  "text": "CHƯƠNG 1. GIỚI THIỆU"
+ },
+ {
+  "t": "h2",
+  "text": "1.1. Lý do chọn đề tài"
+ },
+ {
+  "t": "p",
+  "text": "Thương mại điện tử tăng trưởng mạnh kéo theo nhu cầu vận chuyển hàng hóa nhanh, minh bạch và có thể theo dõi theo thời gian thực. Với một doanh nghiệp chuyển phát, mỗi đơn hàng phải đi qua nhiều công đoạn: lấy hàng tại người gửi, nhập hub, phân loại, trung chuyển giữa các hub, giao chặng cuối và có thể phát sinh hoàn hàng, đổi địa chỉ hoặc sự cố. Nếu các công đoạn này được quản lý thủ công hoặc rời rạc, doanh nghiệp rất khó kiểm soát vị trí kiện hàng, năng lực tuyến vận chuyển và trách nhiệm của từng nhân sự."
+ },
+ {
+  "t": "p",
+  "text": "Xuất phát từ thực tế đó, nhóm thực hiện đề tài “Xây dựng hệ thống quản lý vận chuyển PAVEX”: một nền tảng gồm cổng khách hàng, cổng quản trị và ứng dụng vận hành dùng chung một backend, quản lý toàn bộ vòng đời vận đơn từ báo giá, tạo đơn, định tuyến, điều phối công việc đến giao hàng và xử lý ngoại lệ."
+ },
+ {
+  "t": "h2",
+  "text": "1.2. Mục tiêu đề tài"
+ },
+ {
+  "t": "bullets",
+  "items": [
+   "Xây dựng hệ thống gồm 3 phân hệ: Cổng khách hàng (khách vãng lai, khách hàng, chủ cửa hàng), Cổng quản trị (quản trị nền tảng, điều phối viên, trưởng hub, quản lý vận hành) và Ứng dụng vận hành (bưu tá, tài xế trung chuyển, nhân viên kho).",
+   "Tính cước tự động theo bảng giá có phiên bản: vùng giá, khối lượng quy đổi, phụ phí vùng xa/hải đảo, phí thu hộ (COD) và bảo hiểm.",
+   "Tự động định tuyến vận đơn qua mạng lưới hub, giữ chỗ tải trọng trên từng chuyến và sinh công việc vận hành cho từng chặng.",
+   "Quét mã kiện hàng để ghi nhận chuyển giao trách nhiệm (custody), vị trí và hành trình của từng kiện.",
+   "Phân quyền chi tiết theo vai trò (RBAC) cho từng chức năng, bảo mật bằng JWT."
+  ]
+ },
+ {
+  "t": "h2",
+  "text": "1.3. Đối tượng và phạm vi nghiên cứu"
+ },
+ {
+  "t": "bullets",
+  "items": [
+   "Đối tượng: doanh nghiệp chuyển phát, các hub/bưu cục, nhân sự vận hành và khách hàng gửi hàng (cá nhân và cửa hàng).",
+   "Phạm vi: backend cung cấp REST API cho toàn hệ thống; cổng khách hàng và cổng quản trị trên nền web; ứng dụng vận hành tối ưu cho thiết bị di động. Hệ thống quản lý vận chuyển nội địa theo đơn vị hành chính 2 cấp (tỉnh/thành – phường/xã)."
+  ]
+ },
+ {
+  "t": "h2",
+  "text": "1.4. Phương pháp nghiên cứu"
+ },
+ {
+  "t": "bullets",
+  "items": [
+   "Phân tích, thiết kế hướng đối tượng với UML: sơ đồ use case, đặc tả use case, sơ đồ hoạt động (activity), sơ đồ tuần tự (sequence) và mô hình miền (domain model).",
+   "Thiết kế hướng miền (Domain-Driven Design): chia hệ thống thành các bounded context, xác định aggregate, entity và value object.",
+   "Phát triển theo mô hình Agile/Scrum, quản lý mã nguồn bằng Git.",
+   "Kiểm thử hộp đen (black-box testing) dựa trên use case."
+  ]
+ },
+ {
+  "t": "h2",
+  "text": "1.5. Bố cục báo cáo"
+ },
+ {
+  "t": "bullets",
+  "items": [
+   "Chương 1 – Giới thiệu: lý do, mục tiêu, phạm vi và phương pháp.",
+   "Chương 2 – Cơ sở lý thuyết: bài toán vận chuyển, DDD, REST/JWT, kiến trúc web và mã kiện hàng.",
+   "Chương 3 – Phân tích yêu cầu: yêu cầu kinh doanh, người dùng, chức năng và phi chức năng.",
+   "Chương 4 – Thiết kế hệ thống: sơ đồ use case, đặc tả use case cốt lõi kèm activity và sequence, mô hình miền.",
+   "Chương 5 – Giải pháp công nghệ: kiến trúc, bảo mật, định giá, định tuyến và quét mã.",
+   "Chương 6 – Hiện thực, triển khai và kiểm thử: môi trường, giao diện và bộ test case.",
+   "Chương 7 – Đánh giá và thảo luận. Chương 8 – Kết luận và hướng phát triển."
+  ]
+ },
+ {
+  "t": "h1",
+  "text": "CHƯƠNG 2. CƠ SỞ LÝ THUYẾT"
+ },
+ {
+  "t": "h2",
+  "text": "2.1. Bài toán vận chuyển chặng đầu – chặng giữa – chặng cuối"
+ },
+ {
+  "t": "p",
+  "text": "Một vận đơn trong mạng lưới chuyển phát đi qua ba chặng: chặng đầu (first mile) lấy hàng từ người gửi về hub gốc; chặng giữa (middle mile / line-haul) trung chuyển giữa các hub theo tuyến và lịch chạy cố định; chặng cuối (last mile) giao từ hub đích đến người nhận. Mô hình hub-and-spoke giúp gom hàng theo tuyến để tối ưu chi phí, nhưng đòi hỏi hệ thống phải biết năng lực (tải trọng) của từng chuyến và vị trí của từng kiện tại mọi thời điểm. Chặng cuối là chặng tốn kém và dễ phát sinh ngoại lệ nhất (không liên lạc được người nhận, sai địa chỉ, từ chối nhận), vì vậy cần cơ chế ghi nhận lần giao và xử lý ngoại lệ rõ ràng."
+ },
+ {
+  "t": "h2",
+  "text": "2.2. Thiết kế hướng miền (Domain-Driven Design)"
+ },
+ {
+  "t": "p",
+  "text": "Domain-Driven Design tổ chức phần mềm xoay quanh nghiệp vụ. Hệ thống được chia thành các bounded context – mỗi context có mô hình và ngôn ngữ riêng. Trong mỗi context, aggregate root là thực thể gốc bảo vệ tính nhất quán của một cụm dữ liệu (ví dụ Shipment cùng các Parcel, ShipmentEvent, DeliveryAttempt); entity có định danh riêng; value object là giá trị bất biến không có định danh (ví dụ Weight, FeeBreakdown, ContactAddress). Các aggregate khác nhau tham chiếu nhau bằng định danh, giúp mỗi phần của hệ thống có thể phát triển độc lập."
+ },
+ {
+  "t": "h2",
+  "text": "2.3. REST API, JWT và phân quyền theo vai trò"
+ },
+ {
+  "t": "p",
+  "text": "REST API cung cấp tài nguyên qua HTTP với các phương thức GET, POST, PUT, PATCH, DELETE và được phiên bản hóa theo đường dẫn (/api/v1/...). JSON Web Token (JWT) cho phép xác thực không trạng thái: sau khi đăng nhập, máy chủ cấp access token có thời hạn ngắn và refresh token có thời hạn dài hơn; client gửi access token trong header Authorization: Bearer cho mỗi yêu cầu và dùng refresh token để lấy token mới khi hết hạn. Phân quyền theo vai trò (RBAC) gán quyền nguyên tử (ví dụ identity.users.read) cho vai trò, rồi gán vai trò cho tài khoản."
+ },
+ {
+  "t": "h2",
+  "text": "2.4. Ứng dụng web hiện đại và mô hình Backend-for-Frontend"
+ },
+ {
+  "t": "p",
+  "text": "Các cổng web được xây dựng bằng Next.js (React, TypeScript). Next.js cho phép kết hợp giao diện chạy trên trình duyệt với các route chạy trên máy chủ. PAVEX tận dụng điều này theo mô hình Backend-for-Frontend (BFF): trình duyệt chỉ gọi các route nội bộ của cổng web, còn route này giữ token trong cookie httpOnly, đính kèm token khi chuyển tiếp yêu cầu đến backend và tự động làm mới token khi nhận lỗi 401. Nhờ vậy token không bị lộ cho mã JavaScript phía trình duyệt."
+ },
+ {
+  "t": "h2",
+  "text": "2.5. Mã kiện hàng và chuỗi giám sát (chain of custody)"
+ },
+ {
+  "t": "p",
+  "text": "Mỗi kiện hàng được gắn mã (mã vạch hoặc QR) in trên nhãn. Khi nhân sự quét mã ở mỗi công đoạn, hệ thống ghi nhận ai đang giữ kiện (custody), kiện đang ở hub nào và ở công đoạn nào, đồng thời thêm một sự kiện vào hành trình của vận đơn. Chuỗi các lần quét tạo thành chuỗi giám sát giúp truy vết trách nhiệm khi xảy ra thất lạc hoặc hư hỏng."
+ },
+ {
+  "t": "h2",
+  "text": "2.6. Kiểm thử hộp đen"
+ },
+ {
+  "t": "p",
+  "text": "Kiểm thử hộp đen kiểm tra phần mềm dựa trên đặc tả mà không cần biết mã nguồn. Các kỹ thuật được dùng gồm phân vùng tương đương (dữ liệu hợp lệ/không hợp lệ), phân tích giá trị biên (khối lượng tối đa, mức COD tối đa) và kiểm thử theo luồng use case (luồng chính và luồng thay thế)."
+ },
+ {
+  "t": "h1",
+  "text": "CHƯƠNG 3. PHÂN TÍCH YÊU CẦU"
+ },
+ {
+  "t": "h2",
+  "text": "3.1. Phân tích yêu cầu kinh doanh"
+ },
+ {
+  "t": "p",
+  "text": "Doanh nghiệp cần một hệ thống quản lý vận chuyển khép kín: khách hàng tự tra cứu giá và tạo đơn; mạng lưới hub, tuyến và lịch chạy được cấu hình tập trung; vận đơn được định tuyến và giữ chỗ tải tự động; công việc tại từng hub được điều phối cho đúng nhân sự trong ca; mọi lần chuyển giao kiện hàng đều được ghi nhận; các ngoại lệ (hoàn hàng, đổi địa chỉ, giao thất bại, sự cố, sai lệch khối lượng) được xử lý theo quy trình có kiểm soát. Bảng giá phải có phiên bản để mọi vận đơn giữ đúng giá tại thời điểm tạo."
+ },
+ {
+  "t": "h2",
+  "text": "3.2. Phân tích yêu cầu người dùng"
+ },
+ {
+  "t": "p",
+  "text": "Hệ thống phục vụ 10 vai trò, thuộc 3 frame (phân hệ). Các vai trò cùng frame có chức năng dùng chung được gom vào một tác nhân trừu tượng để kế thừa."
+ },
+ {
+  "t": "caption",
+  "text": "Bảng 3.1. Tác nhân của hệ thống"
+ },
+ {
+  "t": "table",
+  "header": [
+   "Frame",
+   "Tác nhân",
+   "Nhu cầu chính"
+  ],
+  "rows": [
+   [
+    "Cổng khách hàng",
+    "Public User (trừu tượng)",
+    "Tra cứu vận đơn, giá cước, bưu cục mà không cần đăng nhập"
+   ],
+   [
+    "",
+    "Guest",
+    "Đăng ký tài khoản"
+   ],
+   [
+    "",
+    "Customer",
+    "Đăng nhập, hồ sơ, sổ địa chỉ, đăng ký cửa hàng"
+   ],
+   [
+    "",
+    "Merchant",
+    "Tạo và quản lý đơn hàng, theo dõi vận đơn, yêu cầu xử lý ngoại lệ"
+   ],
+   [
+    "Cổng quản trị",
+    "Back-office User (trừu tượng)",
+    "Đăng nhập, hồ sơ, bảng điều hành"
+   ],
+   [
+    "",
+    "Platform Admin",
+    "Quản trị người dùng, vai trò, cửa hàng, bảng giá, mạng lưới"
+   ],
+   [
+    "",
+    "Hub Dispatch",
+    "Điều phối công việc, theo dõi vận đơn, xử lý ngoại lệ, tạo đơn tại quầy"
+   ],
+   [
+    "",
+    "Hub Manager",
+    "Kế thừa Hub Dispatch; quản lý nhân sự, ca làm việc, duyệt điều chỉnh khối lượng"
+   ],
+   [
+    "",
+    "Operations Manager",
+    "Nhân sự, ca làm việc, giám sát vận đơn, hồ sơ sự cố"
+   ],
+   [
+    "Ứng dụng vận hành",
+    "Operational Staff (trừu tượng)",
+    "Ca làm việc, check-in/out, công việc được giao, quét kiện, báo sự cố"
+   ],
+   [
+    "",
+    "Courier",
+    "Lấy hàng và giao hàng chặng cuối"
+   ],
+   [
+    "",
+    "Line-haul Driver",
+    "Trung chuyển hàng giữa các hub"
+   ],
+   [
+    "",
+    "Warehouse Operator",
+    "Nhập/xuất hub, phân loại, cân lại kiện"
+   ]
+  ],
+  "widths": [
+   2300,
+   2600,
+   3406
+  ],
+  "size": 11
+ },
+ {
+  "t": "h2",
+  "text": "3.3. Yêu cầu chức năng hệ thống"
+ },
+ {
+  "t": "p",
+  "text": "Bảng sau liệt kê toàn bộ 41 chức năng (use case mức người dùng) của hệ thống, nhóm theo phân hệ. Các use case con (thêm, sửa, xóa, duyệt, từ chối…) được mô tả trong phần đặc tả và bộ test case."
+ },
+ {
+  "t": "caption",
+  "text": "Bảng 3.2. Danh sách chức năng của hệ thống"
+ },
+ {
+  "t": "table",
+  "header": [
+   "Mã",
+   "Chức năng",
+   "Tác nhân",
+   "Mô tả"
+  ],
+  "rows": [
+   [
+    "UC03",
+    "Đăng ký tài khoản",
+    "Guest",
+    "Tạo tài khoản khách hàng mới; profileStatus = INCOMPLETE."
+   ],
+   [
+    "UC01",
+    "Đăng nhập",
+    "Customer, Back-office User, Operational Staff",
+    "Đăng nhập bằng email + mật khẩu; nhận access/refresh token (POST /api/v1/auth/login, /auth/refresh). Tài khoản SUSPENDED/DISABLED bị từ chối."
+   ],
+   [
+    "UC02",
+    "Đăng xuất",
+    "Customer, Back-office User, Operational Staff",
+    "Thu hồi refresh token, kết thúc phiên (POST /api/v1/auth/logout)."
+   ],
+   [
+    "UC04",
+    "Quản lý hồ sơ cá nhân",
+    "Customer, Back-office User, Operational Staff",
+    "Xem và cập nhật hồ sơ cá nhân của chính mình (GET /api/v1/auth/me)."
+   ],
+   [
+    "UC05",
+    "Quản lý sổ địa chỉ",
+    "Customer",
+    "Quản lý danh sách địa chỉ gửi/nhận thường dùng."
+   ],
+   [
+    "UC06",
+    "Quản lý người dùng",
+    "Platform Admin",
+    "Quản lý tài khoản người dùng (GET /api/v1/users; quyền identity.users.read)."
+   ],
+   [
+    "UC07",
+    "Tạo tài khoản nhân viên",
+    "Platform Admin",
+    "Tạo tài khoản nội bộ cho nhân sự vận hành/quản lý."
+   ],
+   [
+    "UC08",
+    "Quản lý vai trò & quyền",
+    "Platform Admin",
+    "Quản lý RBAC (GET /api/v1/roles; quyền identity.roles.read). Vai trò hệ thống không sửa/xóa."
+   ],
+   [
+    "UC09",
+    "Đăng ký cửa hàng",
+    "Customer",
+    "Khách hàng đăng ký cửa hàng (tên kinh doanh, liên hệ, MST). Merchant ở trạng thái chờ xác minh."
+   ],
+   [
+    "UC10",
+    "Quản lý thông tin cửa hàng",
+    "Merchant",
+    "Xem/cập nhật thông tin cửa hàng."
+   ],
+   [
+    "UC11",
+    "Quản lý địa chỉ lấy hàng",
+    "Merchant",
+    "Quản lý kho/điểm lấy hàng."
+   ],
+   [
+    "UC12",
+    "Yêu cầu xác minh cửa hàng",
+    "Merchant",
+    "Gửi hồ sơ để quản trị xác minh (status → PENDING_VERIFICATION)."
+   ],
+   [
+    "UC13",
+    "Duyệt & quản lý cửa hàng",
+    "Platform Admin",
+    "Quản trị vòng đời cửa hàng; mọi thay đổi ghi statusReasonCode/Detail, statusChangedBy."
+   ],
+   [
+    "UC14",
+    "Tra cứu vận đơn",
+    "Public User",
+    "Tra cứu trạng thái theo mã vận đơn (trackingCode)."
+   ],
+   [
+    "UC16",
+    "Tra cứu bưu cục",
+    "Public User",
+    "Tìm hub/bưu cục công khai (publicVisible) theo tỉnh/phường."
+   ],
+   [
+    "UC15",
+    "Tra cứu giá cước",
+    "Public User",
+    "Nhập điểm đi/đến, kiện hàng (khối lượng, kích thước), COD, giá trị khai báo → các phương án giá theo mức dịch vụ; báo giá có hạn (quoteTtlMinutes)."
+   ],
+   [
+    "UC17",
+    "Tạo đơn hàng",
+    "Merchant, Hub Dispatch",
+    "Tạo vận đơn từ báo giá còn hiệu lực; hệ thống snapshot giá & địa chỉ, sinh trackingCode và định tuyến/giữ chỗ tải."
+   ],
+   [
+    "UC18",
+    "Quản lý đơn hàng",
+    "Merchant",
+    "Quản lý các vận đơn của cửa hàng."
+   ],
+   [
+    "UC19",
+    "Theo dõi vận đơn",
+    "Merchant",
+    "Theo dõi tiến trình các vận đơn của cửa hàng."
+   ],
+   [
+    "UC20",
+    "Yêu cầu xử lý ngoại lệ vận đơn",
+    "Merchant, Hub Dispatch",
+    "Tạo ShipmentExceptionRequest (status PENDING) chờ duyệt."
+   ],
+   [
+    "UC21",
+    "Quản lý bảng giá",
+    "Platform Admin",
+    "Quản lý RatePlan có phiên bản; chỉ một revision ACTIVE."
+   ],
+   [
+    "UC22",
+    "Quản lý mạng lưới",
+    "Platform Admin",
+    "Cấu hình mạng lưới vận hành."
+   ],
+   [
+    "UC23",
+    "Quản lý nhân sự vận hành",
+    "Hub Manager, Operations Manager",
+    "Quản lý hồ sơ WorkforceMember và gán hub."
+   ],
+   [
+    "UC24",
+    "Xem nhân sự vận hành",
+    "Hub Dispatch",
+    "Xem nhân sự tại hub và trạng thái sẵn sàng/tải việc hiện tại."
+   ],
+   [
+    "UC25",
+    "Quản lý ca làm việc",
+    "Hub Manager, Operations Manager",
+    "Lập và điều chỉnh ca tại hub."
+   ],
+   [
+    "UC26",
+    "Xem ca làm việc",
+    "Operational Staff",
+    "Xem lịch ca được phân công."
+   ],
+   [
+    "UC27",
+    "Check-in / Check-out ca",
+    "Operational Staff",
+    "Ghi nhận checkedInAt/checkedOutAt."
+   ],
+   [
+    "UC28",
+    "Cập nhật trạng thái sẵn sàng",
+    "Operational Staff",
+    "AVAILABLE / BUSY / OFFLINE."
+   ],
+   [
+    "UC29",
+    "Xem tổng quan vận hành",
+    "Back-office User",
+    "Bảng điều hành: sản lượng, vận đơn trễ/tạm giữ, công việc tồn, nhân sự."
+   ],
+   [
+    "UC30",
+    "Theo dõi vận đơn vận hành",
+    "Hub Dispatch, Operations Manager",
+    "Tra cứu vận đơn nội bộ (kiện, custody, định tuyến, assignment)."
+   ],
+   [
+    "UC31",
+    "Điều phối công việc",
+    "Hub Dispatch",
+    "Phân công OperationalAssignment cho nhân sự phù hợp (requiredKind)."
+   ],
+   [
+    "UC32",
+    "Xem công việc được giao",
+    "Operational Staff",
+    "Danh sách assignment của tôi theo ưu tiên."
+   ],
+   [
+    "UC33",
+    "Thực hiện công việc",
+    "Operational Staff",
+    "Thực hiện assignment (lấy hàng, nhập/xuất hub, phân loại, trung chuyển, giao, hoàn)."
+   ],
+   [
+    "UC36",
+    "Bàn giao hàng trung chuyển",
+    "Line-haul Driver",
+    "Nhận hàng tại hub đi và bàn giao tại hub đến theo chuyến (LINE_HAUL)."
+   ],
+   [
+    "UC35",
+    "Ghi nhận kết quả giao hàng",
+    "Courier",
+    "Tạo DeliveryAttempt cho từng kiện."
+   ],
+   [
+    "UC37",
+    "Điều chỉnh khối lượng kiện",
+    "Warehouse Operator",
+    "Cân lại kiện tại hub; tạo ShipmentWeightAdjustment, vận đơn chờ duyệt."
+   ],
+   [
+    "UC38",
+    "Duyệt điều chỉnh khối lượng",
+    "Hub Manager",
+    "Duyệt/ghi chú điều chỉnh khối lượng; cập nhật hasPendingWeightReview."
+   ],
+   [
+    "UC39",
+    "Xem ngoại lệ vận đơn",
+    "Hub Dispatch",
+    "Danh sách vận đơn có ngoại lệ: giao thất bại, tạm giữ, chờ duyệt khối lượng, yêu cầu ngoại lệ."
+   ],
+   [
+    "UC40",
+    "Xử lý yêu cầu ngoại lệ",
+    "Hub Dispatch",
+    "Duyệt và hoàn tất ShipmentExceptionRequest."
+   ],
+   [
+    "UC41",
+    "Báo cáo sự cố",
+    "Operational Staff",
+    "Tạo ShipmentCase (hư hỏng, thất lạc, kiện không xác định...) tại hub."
+   ],
+   [
+    "UC42",
+    "Quản lý hồ sơ sự cố",
+    "Operations Manager",
+    "Theo dõi và xử lý hồ sơ sự cố."
+   ]
+  ],
+  "widths": [
+   800,
+   2000,
+   1700,
+   3806
+  ],
+  "size": 10
+ },
+ {
+  "t": "h2",
+  "text": "3.4. Yêu cầu phi chức năng hệ thống"
+ },
+ {
+  "t": "bullets",
+  "items": [
+   "Bảo mật: mật khẩu được mã hóa một chiều; xác thực bằng JWT (access/refresh token); token phía web được giữ trong cookie httpOnly; mọi API kiểm tra quyền theo RBAC.",
+   "Toàn vẹn dữ liệu: khóa lạc quan (version) khi cập nhật để tránh ghi đè; khóa chống lặp (Idempotency-Key) cho các thao tác tạo mới.",
+   "Hiệu năng: tra cứu vận đơn và tính cước phản hồi dưới 1 giây trong điều kiện bình thường; danh sách lớn được phân trang.",
+   "Khả dụng: giao diện responsive trên máy tính và điện thoại; ứng dụng vận hành tối ưu cho thao tác quét mã.",
+   "Truy vết: mọi thay đổi trạng thái quan trọng đều ghi người thao tác và thời điểm; lỗi trả về kèm mã lỗi và traceId.",
+   "Khả năng mở rộng: chia module theo bounded context; API phiên bản hóa để mở rộng mà không phá vỡ client cũ."
+  ]
+ },
+ {
+  "t": "h1",
+  "text": "CHƯƠNG 4. THIẾT KẾ HỆ THỐNG"
+ },
+ {
+  "t": "h2",
+  "text": "4.1. Sơ đồ use case tổng thể"
+ },
+ {
+  "t": "p",
+  "text": "Sơ đồ use case tổng thể gồm 13 tác nhân (10 vai trò và 3 tác nhân trừu tượng theo frame) và 41 use case trong ranh giới hệ thống PAVEX Logistics Platform. Quan hệ «include» thể hiện bước bắt buộc dùng chung (Xem hành trình vận đơn, Quét kiện hàng, Gán vai trò cho người dùng, Tra cứu giá cước, Xem nhân sự vận hành); quan hệ «extend» thể hiện chức năng mở rộng tùy chọn."
+ },
+ {
+  "t": "img",
+  "path": "/home/user/pavex-backend/docs/uml/preview/usecase-diagram.png",
+  "w": 16,
+  "maxh": 22.5,
+  "caption": "Hình 4.1. Sơ đồ use case tổng thể hệ thống PAVEX"
+ },
+ {
+  "t": "h2",
+  "text": "4.2. Đặc tả chi tiết các use case cốt lõi"
+ },
+ {
+  "t": "p",
+  "text": "Phần này đặc tả 12 use case cốt lõi – các luồng nghiệp vụ chính của hệ thống. Mỗi use case gồm bảng đặc tả, sơ đồ hoạt động và sơ đồ tuần tự. Trong sơ đồ tuần tự, lớp giao diện được đặt tiền tố GD_, lớp điều khiển CTRL_, lớp thực thể dùng tên trong mô hình miền."
+ },
+ {
+  "t": "h3",
+  "text": "4.2.1. Nhóm use case dùng chung và cổng khách hàng"
+ },
+ {
+  "t": "h4",
+  "text": "Use case đăng nhập (UC01)"
+ },
+ {
+  "t": "spec",
+  "uc": {
+   "code": "UC01",
+   "name": "Đăng nhập",
+   "group": "Chung (cả 3 phân hệ)",
+   "desc": "Người dùng đã có tài khoản đăng nhập bằng email và mật khẩu để sử dụng cổng khách hàng, cổng quản trị hoặc ứng dụng vận hành. Hệ thống cấp access token và refresh token, sau đó điều hướng theo vai trò và quyền.",
+   "actor": "Customer, Back-office User, Operational Staff",
+   "sub": "Không",
+   "pre": "Người dùng đã có tài khoản; tài khoản chưa bị khóa.",
+   "post": "Người dùng được cấp phiên làm việc (access token, refresh token) và được chuyển đến trang chính tương ứng với vai trò.",
+   "main": [
+    [
+     "A",
+     "Người dùng truy cập trang “Đăng nhập”."
+    ],
+    [
+     "S",
+     "Hệ thống hiển thị form gồm email và mật khẩu."
+    ],
+    [
+     "A",
+     "Người dùng nhập email, mật khẩu và nhấn “Đăng nhập”."
+    ],
+    [
+     "S",
+     "Hệ thống kiểm tra dữ liệu bắt buộc và định dạng email."
+    ],
+    [
+     "S",
+     "Hệ thống tìm tài khoản theo email, đối chiếu mật khẩu đã mã hóa và kiểm tra trạng thái tài khoản."
+    ],
+    [
+     "S",
+     "Hệ thống tạo access token, refresh token và lưu phiên đăng nhập."
+    ],
+    [
+     "S",
+     "Hệ thống lấy thông tin người dùng, vai trò, quyền và chuyển đến trang chính theo vai trò."
+    ]
+   ],
+   "alt": [
+    [
+     "4a. Thiếu email/mật khẩu hoặc email sai định dạng",
+     "Hệ thống báo lỗi tại trường nhập, quay lại bước 3."
+    ],
+    [
+     "5a. Email hoặc mật khẩu không đúng",
+     "Hệ thống thông báo “Email hoặc mật khẩu không đúng”, quay lại bước 3."
+    ],
+    [
+     "5b. Tài khoản bị tạm khóa (SUSPENDED) hoặc vô hiệu hóa (DISABLED)",
+     "Hệ thống thông báo tài khoản bị khóa và kết thúc use case."
+    ],
+    [
+     "7a. Access token hết hạn trong khi sử dụng",
+     "Hệ thống dùng refresh token để cấp token mới; nếu refresh thất bại thì yêu cầu đăng nhập lại."
+    ],
+    [
+     "3a. Người dùng chọn “Quên mật khẩu”",
+     "Chuyển sang use case Quên mật khẩu (extend)."
+    ]
+   ],
+   "activity": [
+    [
+     "A",
+     "Truy cập trang Đăng nhập"
+    ],
+    [
+     "S",
+     "Hiển thị form đăng nhập"
+    ],
+    [
+     "A",
+     "Nhập email, mật khẩu và nhấn Đăng nhập"
+    ],
+    [
+     "S",
+     "Kiểm tra dữ liệu nhập"
+    ],
+    [
+     "?",
+     "Hợp lệ?",
+     [
+      "S",
+      "Báo lỗi tại trường nhập"
+     ],
+     2
+    ],
+    [
+     "S",
+     "Xác thực email, mật khẩu và trạng thái tài khoản"
+    ],
+    [
+     "?",
+     "Đúng và đang hoạt động?",
+     [
+      "S",
+      "Thông báo sai thông tin hoặc tài khoản bị khóa"
+     ],
+     2
+    ],
+    [
+     "S",
+     "Cấp access token và refresh token"
+    ],
+    [
+     "S",
+     "Chuyển đến trang chính theo vai trò"
+    ]
+   ],
+   "seq": {
+    "parts": [
+     [
+      "actor",
+      "Người dùng"
+     ],
+     [
+      "boundary",
+      "GD_DangNhap"
+     ],
+     [
+      "control",
+      "CTRL_XacThuc"
+     ],
+     [
+      "entity",
+      "UserAccount"
+     ],
+     [
+      "entity",
+      "Role / Permission"
+     ]
+    ],
+    "msgs": [
+     [
+      0,
+      1,
+      "Nhập email, mật khẩu, nhấn Đăng nhập"
+     ],
+     [
+      1,
+      2,
+      "login(email, password)"
+     ],
+     [
+      2,
+      3,
+      "findByEmail(email)"
+     ],
+     [
+      3,
+      2,
+      "account",
+      "ret"
+     ],
+     [
+      2,
+      2,
+      "Kiểm tra mật khẩu và trạng thái"
+     ],
+     [
+      2,
+      4,
+      "getRolesAndPermissions(userId)"
+     ],
+     [
+      4,
+      2,
+      "roles, permissions",
+      "ret"
+     ],
+     [
+      2,
+      2,
+      "Tạo access token, refresh token"
+     ],
+     [
+      2,
+      1,
+      "tokens, currentUser",
+      "ret"
+     ],
+     [
+      1,
+      0,
+      "Chuyển đến trang chính theo vai trò"
+     ],
+     [
+      2,
+      1,
+      "401 – sai thông tin hoặc tài khoản bị khóa",
+      "ret"
+     ],
+     [
+      1,
+      0,
+      "Hiển thị thông báo lỗi"
+     ]
+    ],
+    "frags": [
+     [
+      4,
+      11,
+      "alt",
+      "[thông tin đúng, tài khoản ACTIVE]",
+      10,
+      "[sai thông tin / bị khóa]"
+     ]
+    ]
+   }
+  }
+ },
+ {
+  "t": "img",
+  "path": "/home/user/pavex-backend/docs/report/figures/uc01-act.png",
+  "w": 15,
+  "maxh": 20,
+  "caption": "Hình 4.2. Sơ đồ hoạt động – Đăng nhập"
+ },
+ {
+  "t": "img",
+  "path": "/home/user/pavex-backend/docs/report/figures/uc01-seq.png",
+  "w": 16,
+  "maxh": 18,
+  "caption": "Hình 4.3. Sơ đồ tuần tự – Đăng nhập"
+ },
+ {
+  "t": "h4",
+  "text": "Use case đăng ký tài khoản (UC03)"
+ },
+ {
+  "t": "spec",
+  "uc": {
+   "code": "UC03",
+   "name": "Đăng ký tài khoản",
+   "group": "Cổng khách hàng",
+   "desc": "Khách vãng lai tạo tài khoản khách hàng mới để tạo đơn, quản lý sổ địa chỉ và đăng ký cửa hàng.",
+   "actor": "Guest",
+   "sub": "Không",
+   "pre": "Khách chưa đăng nhập; email chưa được đăng ký trong hệ thống.",
+   "post": "Tài khoản khách hàng được tạo (hồ sơ ở trạng thái INCOMPLETE), email xác minh được gửi; sau khi xác minh, tài khoản có emailVerified = true.",
+   "main": [
+    [
+     "A",
+     "Khách chọn “Đăng ký tài khoản”."
+    ],
+    [
+     "S",
+     "Hệ thống hiển thị form gồm họ tên, email, mật khẩu và xác nhận mật khẩu."
+    ],
+    [
+     "A",
+     "Khách nhập thông tin và nhấn “Đăng ký”."
+    ],
+    [
+     "S",
+     "Hệ thống kiểm tra thông tin bắt buộc, định dạng email, độ mạnh mật khẩu và mật khẩu xác nhận."
+    ],
+    [
+     "S",
+     "Hệ thống kiểm tra email chưa tồn tại."
+    ],
+    [
+     "S",
+     "Hệ thống tạo UserAccount (vai trò khách hàng, hồ sơ INCOMPLETE) và UserProfile, mã hóa mật khẩu."
+    ],
+    [
+     "S",
+     "Hệ thống gửi email xác minh và thông báo đăng ký thành công."
+    ],
+    [
+     "A",
+     "Khách mở liên kết xác minh trong email."
+    ],
+    [
+     "S",
+     "Hệ thống xác nhận email (emailVerified = true) và chuyển đến trang đăng nhập."
+    ]
+   ],
+   "alt": [
+    [
+     "4a. Thiếu thông tin hoặc dữ liệu không hợp lệ",
+     "Hệ thống báo lỗi tại từng trường, quay lại bước 3."
+    ],
+    [
+     "5a. Email đã được đăng ký",
+     "Hệ thống thông báo email đã tồn tại và gợi ý Đăng nhập / Quên mật khẩu."
+    ],
+    [
+     "8a. Liên kết xác minh hết hạn",
+     "Hệ thống cho phép gửi lại email xác minh."
+    ],
+    [
+     "3a. Khách nhấn “Hủy”",
+     "Kết thúc use case, không lưu dữ liệu."
+    ]
+   ],
+   "activity": [
+    [
+     "A",
+     "Chọn Đăng ký tài khoản"
+    ],
+    [
+     "S",
+     "Hiển thị form đăng ký"
+    ],
+    [
+     "A",
+     "Nhập họ tên, email, mật khẩu và nhấn Đăng ký"
+    ],
+    [
+     "S",
+     "Kiểm tra dữ liệu nhập"
+    ],
+    [
+     "?",
+     "Hợp lệ?",
+     [
+      "S",
+      "Báo lỗi từng trường"
+     ],
+     2
+    ],
+    [
+     "S",
+     "Kiểm tra email đã tồn tại"
+    ],
+    [
+     "?",
+     "Email mới?",
+     [
+      "S",
+      "Thông báo email đã được đăng ký"
+     ],
+     "end"
+    ],
+    [
+     "S",
+     "Tạo tài khoản và hồ sơ (INCOMPLETE)"
+    ],
+    [
+     "S",
+     "Gửi email xác minh, báo đăng ký thành công"
+    ],
+    [
+     "A",
+     "Mở liên kết xác minh"
+    ],
+    [
+     "S",
+     "Xác nhận email, chuyển đến Đăng nhập"
+    ]
+   ],
+   "seq": {
+    "parts": [
+     [
+      "actor",
+      "Guest"
+     ],
+     [
+      "boundary",
+      "GD_DangKy"
+     ],
+     [
+      "control",
+      "CTRL_TaiKhoan"
+     ],
+     [
+      "entity",
+      "UserAccount"
+     ],
+     [
+      "system",
+      "Dịch vụ Email"
+     ]
+    ],
+    "msgs": [
+     [
+      0,
+      1,
+      "Nhập thông tin, nhấn Đăng ký"
+     ],
+     [
+      1,
+      1,
+      "Kiểm tra dữ liệu nhập"
+     ],
+     [
+      1,
+      2,
+      "register(fullName, email, password)"
+     ],
+     [
+      2,
+      3,
+      "existsByEmail(email)"
+     ],
+     [
+      3,
+      2,
+      "false",
+      "ret"
+     ],
+     [
+      2,
+      3,
+      "create(account, profile INCOMPLETE)"
+     ],
+     [
+      3,
+      2,
+      "userId",
+      "ret"
+     ],
+     [
+      2,
+      4,
+      "sendVerificationEmail(email, token)"
+     ],
+     [
+      2,
+      1,
+      "Đăng ký thành công",
+      "ret"
+     ],
+     [
+      1,
+      0,
+      "Thông báo, yêu cầu xác minh email"
+     ],
+     [
+      2,
+      1,
+      "409 – email đã tồn tại",
+      "ret"
+     ],
+     [
+      1,
+      0,
+      "Hiển thị lỗi email đã đăng ký"
+     ]
+    ],
+    "frags": [
+     [
+      4,
+      11,
+      "alt",
+      "[email chưa tồn tại]",
+      10,
+      "[email đã tồn tại]"
+     ]
+    ]
+   }
+  }
+ },
+ {
+  "t": "img",
+  "path": "/home/user/pavex-backend/docs/report/figures/uc03-act.png",
+  "w": 15,
+  "maxh": 20,
+  "caption": "Hình 4.4. Sơ đồ hoạt động – Đăng ký tài khoản"
+ },
+ {
+  "t": "img",
+  "path": "/home/user/pavex-backend/docs/report/figures/uc03-seq.png",
+  "w": 16,
+  "maxh": 18,
+  "caption": "Hình 4.5. Sơ đồ tuần tự – Đăng ký tài khoản"
+ },
+ {
+  "t": "h4",
+  "text": "Use case tra cứu giá cước (UC15)"
+ },
+ {
+  "t": "spec",
+  "uc": {
+   "code": "UC15",
+   "name": "Tra cứu giá cước",
+   "group": "Cổng khách hàng",
+   "desc": "Người dùng nhập điểm gửi, điểm nhận và thông tin kiện hàng để nhận các phương án giá theo mức dịch vụ (Tiết kiệm, Tiêu chuẩn, Nhanh). Báo giá được lưu và có thời hạn sử dụng khi tạo đơn.",
+   "actor": "Public User (Guest, Customer, Merchant)",
+   "sub": "Không",
+   "pre": "Hệ thống có bảng giá đang áp dụng (RatePlan ACTIVE) và khu vực phục vụ cho điểm gửi/nhận.",
+   "post": "QuoteRequest được lưu cùng các QuoteOption và thời điểm hết hạn; người dùng xem được cước phí và thời gian giao dự kiến.",
+   "main": [
+    [
+     "A",
+     "Người dùng mở trang “Tính cước vận chuyển”."
+    ],
+    [
+     "S",
+     "Hệ thống hiển thị form: tỉnh/phường gửi, tỉnh/phường nhận, loại hàng, khối lượng, kích thước, tiền thu hộ (COD), giá trị khai báo."
+    ],
+    [
+     "A",
+     "Người dùng nhập thông tin và nhấn “Tính cước”."
+    ],
+    [
+     "S",
+     "Hệ thống kiểm tra dữ liệu và giới hạn nhận gửi (khối lượng, kích thước tối đa)."
+    ],
+    [
+     "S",
+     "Hệ thống xác định khu vực phục vụ, hub chính và hạng phủ sóng của điểm gửi và điểm nhận, từ đó suy ra vùng giá (nội tỉnh / nội vùng / liên vùng)."
+    ],
+    [
+     "S",
+     "Hệ thống tính khối lượng quy đổi theo thể tích và khối lượng tính cước = max(thực tế, quy đổi)."
+    ],
+    [
+     "S",
+     "Hệ thống áp dụng quy tắc giá cho từng mức dịch vụ; cộng phụ phí vùng xa/hải đảo, phí COD và phí bảo hiểm."
+    ],
+    [
+     "S",
+     "Hệ thống lưu báo giá và hiển thị bảng phương án gồm phí chi tiết, tổng cước, thời gian giao dự kiến và hạn báo giá."
+    ]
+   ],
+   "alt": [
+    [
+     "4a. Thiếu thông tin hoặc sai định dạng",
+     "Hệ thống báo lỗi, quay lại bước 3."
+    ],
+    [
+     "4b. Vượt khối lượng/kích thước tối đa",
+     "Hệ thống thông báo kiện hàng vượt giới hạn nhận gửi."
+    ],
+    [
+     "4c. Tiền COD hoặc giá trị khai báo vượt mức tối đa",
+     "Hệ thống thông báo mức tối đa cho phép."
+    ],
+    [
+     "5a. Địa chỉ ngoài vùng phục vụ",
+     "Hệ thống thông báo “Chưa hỗ trợ khu vực này”."
+    ],
+    [
+     "7a. Không có bảng giá đang áp dụng",
+     "Hệ thống thông báo lỗi và đề nghị thử lại sau."
+    ]
+   ],
+   "activity": [
+    [
+     "A",
+     "Mở trang Tính cước"
+    ],
+    [
+     "S",
+     "Hiển thị form tính cước"
+    ],
+    [
+     "A",
+     "Nhập điểm gửi, điểm nhận, kiện hàng, COD và nhấn Tính cước"
+    ],
+    [
+     "S",
+     "Kiểm tra dữ liệu và giới hạn nhận gửi"
+    ],
+    [
+     "?",
+     "Hợp lệ?",
+     [
+      "S",
+      "Báo lỗi hoặc vượt giới hạn"
+     ],
+     2
+    ],
+    [
+     "S",
+     "Xác định khu vực phục vụ và vùng giá"
+    ],
+    [
+     "?",
+     "Trong vùng phục vụ?",
+     [
+      "S",
+      "Thông báo chưa hỗ trợ khu vực"
+     ],
+     "end"
+    ],
+    [
+     "S",
+     "Tính khối lượng quy đổi và khối lượng tính cước"
+    ],
+    [
+     "S",
+     "Áp dụng quy tắc giá, phụ phí, COD, bảo hiểm"
+    ],
+    [
+     "S",
+     "Lưu báo giá, hiển thị các phương án dịch vụ"
+    ]
+   ],
+   "seq": {
+    "parts": [
+     [
+      "actor",
+      "Public User"
+     ],
+     [
+      "boundary",
+      "GD_TinhCuoc"
+     ],
+     [
+      "control",
+      "CTRL_BaoGia"
+     ],
+     [
+      "entity",
+      "ServiceAreaCoverage"
+     ],
+     [
+      "entity",
+      "RatePlan / RateRule"
+     ],
+     [
+      "entity",
+      "QuoteRequest"
+     ]
+    ],
+    "msgs": [
+     [
+      0,
+      1,
+      "Nhập thông tin, nhấn Tính cước"
+     ],
+     [
+      1,
+      2,
+      "createQuote(origin, destination, parcels, cod, declaredValue)"
+     ],
+     [
+      2,
+      2,
+      "Kiểm tra giới hạn nhận gửi"
+     ],
+     [
+      2,
+      3,
+      "resolve(province, ward) cho điểm gửi và nhận"
+     ],
+     [
+      3,
+      2,
+      "serviceArea, primaryHub, coverageTier",
+      "ret"
+     ],
+     [
+      2,
+      4,
+      "findActivePlan(); rules(zone)"
+     ],
+     [
+      4,
+      2,
+      "ratePlan, rateRules",
+      "ret"
+     ],
+     [
+      2,
+      2,
+      "Tính khối lượng tính cước, phí, phụ phí"
+     ],
+     [
+      2,
+      5,
+      "save(quoteRequest, options, expiresAt)"
+     ],
+     [
+      2,
+      1,
+      "quoteId, options[]",
+      "ret"
+     ],
+     [
+      1,
+      0,
+      "Hiển thị bảng phương án và hạn báo giá"
+     ]
+    ],
+    "frags": [
+     [
+      3,
+      4,
+      "opt",
+      "[địa chỉ ngoài vùng phục vụ → báo lỗi]"
+     ]
+    ]
+   }
+  }
+ },
+ {
+  "t": "img",
+  "path": "/home/user/pavex-backend/docs/report/figures/uc15-act.png",
+  "w": 15,
+  "maxh": 20,
+  "caption": "Hình 4.6. Sơ đồ hoạt động – Tra cứu giá cước"
+ },
+ {
+  "t": "img",
+  "path": "/home/user/pavex-backend/docs/report/figures/uc15-seq.png",
+  "w": 16,
+  "maxh": 18,
+  "caption": "Hình 4.7. Sơ đồ tuần tự – Tra cứu giá cước"
+ },
+ {
+  "t": "h4",
+  "text": "Use case tạo đơn hàng (UC17)"
+ },
+ {
+  "t": "spec",
+  "uc": {
+   "code": "UC17",
+   "name": "Tạo đơn hàng",
+   "group": "Cổng khách hàng / Cổng quản trị",
+   "desc": "Chủ cửa hàng (hoặc điều phối viên hub tạo tại quầy) tạo vận đơn từ báo giá còn hiệu lực. Hệ thống lưu ảnh chụp giá và địa chỉ, sinh mã vận đơn, định tuyến, giữ chỗ tải trên các tuyến và tạo công việc lấy hàng.",
+   "actor": "Merchant",
+   "sub": "Hub Dispatch (tạo đơn tại quầy)",
+   "pre": "Người dùng đã đăng nhập; cửa hàng ở trạng thái ACTIVE (với Merchant); có địa chỉ lấy hàng.",
+   "post": "Shipment và các Parcel được tạo với mã vận đơn; giá và địa chỉ được snapshot; lộ trình và giữ chỗ tải được ghi nhận; công việc lấy hàng (PICKUP) được tạo tại hub gốc; sự kiện “Tạo đơn” được ghi vào hành trình.",
+   "main": [
+    [
+     "A",
+     "Người dùng chọn “Tạo đơn hàng”."
+    ],
+    [
+     "S",
+     "Hệ thống hiển thị bước 1: người gửi (mặc định là địa chỉ lấy hàng) và người nhận."
+    ],
+    [
+     "A",
+     "Người dùng chọn địa chỉ gửi và nhập (hoặc chọn từ sổ địa chỉ) thông tin người nhận."
+    ],
+    [
+     "S",
+     "Hệ thống kiểm tra số điện thoại và địa chỉ hành chính."
+    ],
+    [
+     "A",
+     "Người dùng khai báo kiện hàng: mô tả, loại hàng, dễ vỡ, khối lượng, kích thước."
+    ],
+    [
+     "S",
+     "Hệ thống kiểm tra giới hạn từng kiện."
+    ],
+    [
+     "A",
+     "Người dùng nhập tiền thu hộ (COD), giá trị khai báo, người trả cước và ghi chú."
+    ],
+    [
+     "S",
+     "Hệ thống tính cước (include Tra cứu giá cước) và hiển thị các phương án dịch vụ."
+    ],
+    [
+     "A",
+     "Người dùng chọn mức dịch vụ và nhấn “Xác nhận tạo đơn”."
+    ],
+    [
+     "S",
+     "Hệ thống kiểm tra báo giá còn hiệu lực."
+    ],
+    [
+     "S",
+     "Hệ thống tạo Shipment và Parcel, sinh mã vận đơn, lưu snapshot giá và địa chỉ."
+    ],
+    [
+     "S",
+     "Hệ thống định tuyến và giữ chỗ tải trên các chuyến của từng chặng."
+    ],
+    [
+     "S",
+     "Hệ thống tạo công việc lấy hàng tại hub gốc và ghi sự kiện “Tạo đơn”."
+    ],
+    [
+     "S",
+     "Hệ thống hiển thị mã vận đơn và trạng thái “Chờ lấy hàng”."
+    ]
+   ],
+   "alt": [
+    [
+     "4a. Số điện thoại hoặc địa chỉ không hợp lệ",
+     "Hệ thống báo lỗi, quay lại bước 3."
+    ],
+    [
+     "6a. Kiện hàng vượt giới hạn",
+     "Hệ thống báo lỗi, quay lại bước 5."
+    ],
+    [
+     "7a. COD hoặc giá trị khai báo vượt mức tối đa của bảng giá",
+     "Hệ thống báo mức tối đa, quay lại bước 7."
+    ],
+    [
+     "10a. Báo giá đã hết hạn",
+     "Hệ thống tính lại cước và quay lại bước 8."
+    ],
+    [
+     "12a. Không tìm được lộ trình hoặc hết tải trọng",
+     "Đơn vẫn được tạo với trạng thái định tuyến ROUTING_FAILED và được đưa vào danh sách ngoại lệ để điều phối viên xử lý."
+    ],
+    [
+     "1a. Cửa hàng chưa được xác minh",
+     "Hệ thống không cho tạo đơn và hướng dẫn gửi yêu cầu xác minh."
+    ]
+   ],
+   "activity": [
+    [
+     "A",
+     "Chọn Tạo đơn hàng"
+    ],
+    [
+     "S",
+     "Hiển thị form người gửi / người nhận"
+    ],
+    [
+     "A",
+     "Nhập người gửi, người nhận"
+    ],
+    [
+     "S",
+     "Kiểm tra số điện thoại, địa chỉ"
+    ],
+    [
+     "?",
+     "Hợp lệ?",
+     [
+      "S",
+      "Báo lỗi thông tin liên hệ"
+     ],
+     2
+    ],
+    [
+     "A",
+     "Khai báo kiện hàng, COD, giá trị khai báo"
+    ],
+    [
+     "S",
+     "Kiểm tra giới hạn, tính cước các phương án"
+    ],
+    [
+     "?",
+     "Hợp lệ?",
+     [
+      "S",
+      "Báo vượt giới hạn / mức COD"
+     ],
+     5
+    ],
+    [
+     "A",
+     "Chọn dịch vụ, nhấn Xác nhận tạo đơn"
+    ],
+    [
+     "S",
+     "Kiểm tra báo giá còn hiệu lực"
+    ],
+    [
+     "?",
+     "Còn hạn?",
+     [
+      "S",
+      "Tính lại cước"
+     ],
+     8
+    ],
+    [
+     "S",
+     "Tạo vận đơn, kiện hàng, sinh mã vận đơn"
+    ],
+    [
+     "S",
+     "Định tuyến và giữ chỗ tải"
+    ],
+    [
+     "S",
+     "Tạo công việc lấy hàng, ghi sự kiện"
+    ],
+    [
+     "S",
+     "Hiển thị mã vận đơn, trạng thái Chờ lấy hàng"
+    ]
+   ],
+   "seq": {
+    "parts": [
+     [
+      "actor",
+      "Merchant"
+     ],
+     [
+      "boundary",
+      "GD_TaoDonHang"
+     ],
+     [
+      "control",
+      "CTRL_DonHang"
+     ],
+     [
+      "control",
+      "CTRL_BaoGia"
+     ],
+     [
+      "entity",
+      "Shipment / Parcel"
+     ],
+     [
+      "entity",
+      "LaneCapacityReservation"
+     ],
+     [
+      "entity",
+      "OperationalAssignment"
+     ]
+    ],
+    "msgs": [
+     [
+      0,
+      1,
+      "Nhập người gửi, người nhận, kiện hàng, COD"
+     ],
+     [
+      1,
+      3,
+      "createQuote(...)"
+     ],
+     [
+      3,
+      1,
+      "options[], quoteId",
+      "ret"
+     ],
+     [
+      0,
+      1,
+      "Chọn dịch vụ, Xác nhận tạo đơn"
+     ],
+     [
+      1,
+      2,
+      "createShipment(quoteId, serviceLevel, sender, recipient, parcels)"
+     ],
+     [
+      2,
+      3,
+      "validateQuote(quoteId)"
+     ],
+     [
+      3,
+      2,
+      "quote còn hiệu lực",
+      "ret"
+     ],
+     [
+      2,
+      4,
+      "save(shipment, parcels, trackingCode)"
+     ],
+     [
+      2,
+      2,
+      "Tìm lộ trình (RouteTemplate / tuyến)"
+     ],
+     [
+      2,
+      5,
+      "reserve(lane, schedule, weight) cho từng chặng"
+     ],
+     [
+      5,
+      2,
+      "batchId",
+      "ret"
+     ],
+     [
+      2,
+      6,
+      "create(PICKUP, originHub)"
+     ],
+     [
+      2,
+      1,
+      "trackingCode, status",
+      "ret"
+     ],
+     [
+      1,
+      0,
+      "Hiển thị mã vận đơn, Chờ lấy hàng"
+     ]
+    ],
+    "frags": [
+     [
+      8,
+      10,
+      "opt",
+      "[có lộ trình và còn tải; ngược lại: ROUTING_FAILED]"
+     ]
+    ]
+   }
+  }
+ },
+ {
+  "t": "img",
+  "path": "/home/user/pavex-backend/docs/report/figures/uc17-act.png",
+  "w": 15,
+  "maxh": 20,
+  "caption": "Hình 4.8. Sơ đồ hoạt động – Tạo đơn hàng"
+ },
+ {
+  "t": "img",
+  "path": "/home/user/pavex-backend/docs/report/figures/uc17-seq.png",
+  "w": 16,
+  "maxh": 18,
+  "caption": "Hình 4.9. Sơ đồ tuần tự – Tạo đơn hàng"
+ },
+ {
+  "t": "h4",
+  "text": "Use case tra cứu và theo dõi vận đơn (UC14 / UC19)"
+ },
+ {
+  "t": "spec",
+  "uc": {
+   "code": "UC14 / UC19",
+   "name": "Tra cứu và theo dõi vận đơn",
+   "group": "Cổng khách hàng",
+   "desc": "Người dùng tra cứu vận đơn bằng mã vận đơn để xem trạng thái hiện tại, tiến trình và hành trình (timeline). Chủ cửa hàng xem thêm chi tiết kiện hàng, cước phí và các lần giao.",
+   "actor": "Public User, Merchant",
+   "sub": "Không",
+   "pre": "Người dùng có mã vận đơn hợp lệ (Merchant: vận đơn thuộc cửa hàng của mình).",
+   "post": "Hệ thống hiển thị trạng thái, thanh tiến trình, thời gian giao dự kiến và các sự kiện hành trình theo thứ tự thời gian.",
+   "main": [
+    [
+     "A",
+     "Người dùng truy cập “Tra cứu vận đơn” (hoặc chọn một đơn trong “Đơn hàng của tôi”)."
+    ],
+    [
+     "S",
+     "Hệ thống hiển thị ô nhập mã vận đơn."
+    ],
+    [
+     "A",
+     "Người dùng nhập mã vận đơn và nhấn “Tra cứu”."
+    ],
+    [
+     "S",
+     "Hệ thống kiểm tra định dạng mã vận đơn."
+    ],
+    [
+     "S",
+     "Hệ thống tìm vận đơn theo mã."
+    ],
+    [
+     "S",
+     "Hệ thống lấy các sự kiện hành trình (include Xem hành trình vận đơn)."
+    ],
+    [
+     "S",
+     "Hệ thống hiển thị trạng thái hiện tại, các bước tiến trình, thời gian giao dự kiến và timeline sự kiện."
+    ],
+    [
+     "A",
+     "Merchant chọn “Chi tiết” để xem kiện hàng, cước phí, COD và các lần giao."
+    ],
+    [
+     "S",
+     "Hệ thống hiển thị thông tin chi tiết của vận đơn."
+    ]
+   ],
+   "alt": [
+    [
+     "4a. Mã vận đơn trống hoặc sai định dạng",
+     "Hệ thống báo lỗi, quay lại bước 3."
+    ],
+    [
+     "5a. Không tìm thấy vận đơn",
+     "Hệ thống thông báo “Vận đơn không tồn tại”."
+    ],
+    [
+     "7a. Người tra cứu không phải chủ vận đơn",
+     "Hệ thống chỉ hiển thị thông tin rút gọn, ẩn số điện thoại và địa chỉ chi tiết."
+    ]
+   ],
+   "activity": [
+    [
+     "A",
+     "Truy cập Tra cứu vận đơn"
+    ],
+    [
+     "S",
+     "Hiển thị ô nhập mã vận đơn"
+    ],
+    [
+     "A",
+     "Nhập mã vận đơn, nhấn Tra cứu"
+    ],
+    [
+     "S",
+     "Kiểm tra định dạng mã"
+    ],
+    [
+     "?",
+     "Hợp lệ?",
+     [
+      "S",
+      "Báo lỗi mã vận đơn"
+     ],
+     2
+    ],
+    [
+     "S",
+     "Tìm vận đơn theo mã"
+    ],
+    [
+     "?",
+     "Tồn tại?",
+     [
+      "S",
+      "Thông báo vận đơn không tồn tại"
+     ],
+     "end"
+    ],
+    [
+     "S",
+     "Lấy sự kiện hành trình"
+    ],
+    [
+     "S",
+     "Hiển thị trạng thái, tiến trình, timeline"
+    ]
+   ],
+   "seq": {
+    "parts": [
+     [
+      "actor",
+      "Người tra cứu"
+     ],
+     [
+      "boundary",
+      "GD_TraCuuVanDon"
+     ],
+     [
+      "control",
+      "CTRL_VanDon"
+     ],
+     [
+      "entity",
+      "Shipment"
+     ],
+     [
+      "entity",
+      "ShipmentEvent"
+     ]
+    ],
+    "msgs": [
+     [
+      0,
+      1,
+      "Nhập mã vận đơn, nhấn Tra cứu"
+     ],
+     [
+      1,
+      2,
+      "track(trackingCode)"
+     ],
+     [
+      2,
+      3,
+      "findByTrackingCode(code)"
+     ],
+     [
+      3,
+      2,
+      "shipment",
+      "ret"
+     ],
+     [
+      2,
+      4,
+      "findByShipment(id) order by occurredAt"
+     ],
+     [
+      4,
+      2,
+      "events[]",
+      "ret"
+     ],
+     [
+      2,
+      2,
+      "Ẩn thông tin cá nhân nếu không phải chủ đơn"
+     ],
+     [
+      2,
+      1,
+      "trackingView",
+      "ret"
+     ],
+     [
+      1,
+      0,
+      "Hiển thị trạng thái và timeline"
+     ],
+     [
+      2,
+      1,
+      "404 – không tìm thấy",
+      "ret"
+     ],
+     [
+      1,
+      0,
+      "Thông báo vận đơn không tồn tại"
+     ]
+    ],
+    "frags": [
+     [
+      4,
+      10,
+      "alt",
+      "[tìm thấy vận đơn]",
+      9,
+      "[không tìm thấy]"
+     ]
+    ]
+   }
+  }
+ },
+ {
+  "t": "img",
+  "path": "/home/user/pavex-backend/docs/report/figures/uc14-act.png",
+  "w": 15,
+  "maxh": 20,
+  "caption": "Hình 4.10. Sơ đồ hoạt động – Tra cứu và theo dõi vận đơn"
+ },
+ {
+  "t": "img",
+  "path": "/home/user/pavex-backend/docs/report/figures/uc14-seq.png",
+  "w": 16,
+  "maxh": 18,
+  "caption": "Hình 4.11. Sơ đồ tuần tự – Tra cứu và theo dõi vận đơn"
+ },
+ {
+  "t": "h3",
+  "text": "4.2.2. Nhóm use case của cổng quản trị"
+ },
+ {
+  "t": "h4",
+  "text": "Use case duyệt và quản lý cửa hàng (UC13)"
+ },
+ {
+  "t": "spec",
+  "uc": {
+   "code": "UC13",
+   "name": "Duyệt và quản lý cửa hàng",
+   "group": "Cổng quản trị",
+   "desc": "Quản trị nền tảng xem các cửa hàng chờ xác minh, duyệt hoặc từ chối kèm lý do, và tạm ngưng / khôi phục cửa hàng đang hoạt động.",
+   "actor": "Platform Admin",
+   "sub": "Merchant (nhận thông báo)",
+   "pre": "Admin đã đăng nhập và có quyền quản lý cửa hàng; có cửa hàng ở trạng thái PENDING_VERIFICATION.",
+   "post": "Cửa hàng chuyển sang ACTIVE (ghi verifiedAt, verifiedBy) hoặc REJECTED/SUSPENDED kèm mã lý do; người thay đổi và thời điểm được ghi nhận; chủ cửa hàng được thông báo.",
+   "main": [
+    [
+     "A",
+     "Admin mở “Quản lý cửa hàng”."
+    ],
+    [
+     "S",
+     "Hệ thống hiển thị danh sách cửa hàng, cho phép lọc theo trạng thái và tìm theo mã/tên."
+    ],
+    [
+     "A",
+     "Admin chọn một cửa hàng đang chờ xác minh."
+    ],
+    [
+     "S",
+     "Hệ thống hiển thị chi tiết: tên kinh doanh, mã số thuế, người liên hệ, địa chỉ lấy hàng."
+    ],
+    [
+     "A",
+     "Admin kiểm tra thông tin và chọn “Duyệt”."
+    ],
+    [
+     "S",
+     "Hệ thống kiểm tra trạng thái hiện tại cho phép chuyển sang ACTIVE."
+    ],
+    [
+     "S",
+     "Hệ thống cập nhật trạng thái ACTIVE, ghi verifiedAt, verifiedBy, statusChangedAt."
+    ],
+    [
+     "S",
+     "Hệ thống thông báo cho chủ cửa hàng và hiển thị “Duyệt cửa hàng thành công”."
+    ]
+   ],
+   "alt": [
+    [
+     "5a. Admin chọn “Từ chối”",
+     "Admin chọn mã lý do (thiếu giấy tờ, thông tin không hợp lệ…) và nhập chi tiết; hệ thống chuyển REJECTED và thông báo cho chủ cửa hàng."
+    ],
+    [
+     "5b. Admin tạm ngưng cửa hàng đang hoạt động",
+     "Hệ thống yêu cầu lý do và chuyển SUSPENDED; cửa hàng không thể tạo đơn mới."
+    ],
+    [
+     "5c. Admin khôi phục cửa hàng bị tạm ngưng",
+     "Hệ thống chuyển lại ACTIVE."
+    ],
+    [
+     "6a. Trạng thái đã bị người khác thay đổi",
+     "Hệ thống báo xung đột dữ liệu và tải lại chi tiết."
+    ]
+   ],
+   "activity": [
+    [
+     "A",
+     "Mở Quản lý cửa hàng"
+    ],
+    [
+     "S",
+     "Hiển thị danh sách, lọc theo trạng thái"
+    ],
+    [
+     "A",
+     "Chọn cửa hàng chờ xác minh"
+    ],
+    [
+     "S",
+     "Hiển thị chi tiết cửa hàng"
+    ],
+    [
+     "A",
+     "Chọn Duyệt hoặc Từ chối"
+    ],
+    [
+     "?",
+     "Duyệt?",
+     [
+      "S",
+      "Yêu cầu lý do, chuyển REJECTED, thông báo"
+     ],
+     "end"
+    ],
+    [
+     "S",
+     "Kiểm tra trạng thái cho phép chuyển"
+    ],
+    [
+     "?",
+     "Hợp lệ?",
+     [
+      "S",
+      "Báo xung đột, tải lại chi tiết"
+     ],
+     3
+    ],
+    [
+     "S",
+     "Chuyển ACTIVE, ghi người duyệt"
+    ],
+    [
+     "S",
+     "Thông báo cho chủ cửa hàng"
+    ]
+   ],
+   "seq": {
+    "parts": [
+     [
+      "actor",
+      "Platform Admin"
+     ],
+     [
+      "boundary",
+      "GD_QuanLyCuaHang"
+     ],
+     [
+      "control",
+      "CTRL_CuaHang"
+     ],
+     [
+      "entity",
+      "Merchant"
+     ],
+     [
+      "system",
+      "Dịch vụ thông báo"
+     ]
+    ],
+    "msgs": [
+     [
+      0,
+      1,
+      "Mở Quản lý cửa hàng, lọc Chờ xác minh"
+     ],
+     [
+      1,
+      2,
+      "list(status=PENDING_VERIFICATION)"
+     ],
+     [
+      2,
+      3,
+      "findByStatus(...)"
+     ],
+     [
+      3,
+      2,
+      "merchants[]",
+      "ret"
+     ],
+     [
+      0,
+      1,
+      "Chọn cửa hàng, nhấn Duyệt"
+     ],
+     [
+      1,
+      2,
+      "verify(merchantId)"
+     ],
+     [
+      2,
+      3,
+      "findById(merchantId)"
+     ],
+     [
+      3,
+      2,
+      "merchant",
+      "ret"
+     ],
+     [
+      2,
+      2,
+      "Kiểm tra chuyển trạng thái hợp lệ"
+     ],
+     [
+      2,
+      3,
+      "update(status=ACTIVE, verifiedAt, verifiedBy)"
+     ],
+     [
+      2,
+      4,
+      "notify(owner, MERCHANT_VERIFIED)"
+     ],
+     [
+      2,
+      1,
+      "ok",
+      "ret"
+     ],
+     [
+      1,
+      0,
+      "Thông báo duyệt thành công"
+     ]
+    ]
+   }
+  }
+ },
+ {
+  "t": "img",
+  "path": "/home/user/pavex-backend/docs/report/figures/uc13-act.png",
+  "w": 15,
+  "maxh": 20,
+  "caption": "Hình 4.12. Sơ đồ hoạt động – Duyệt và quản lý cửa hàng"
+ },
+ {
+  "t": "img",
+  "path": "/home/user/pavex-backend/docs/report/figures/uc13-seq.png",
+  "w": 16,
+  "maxh": 18,
+  "caption": "Hình 4.13. Sơ đồ tuần tự – Duyệt và quản lý cửa hàng"
+ },
+ {
+  "t": "h4",
+  "text": "Use case điều phối công việc (UC31)"
+ },
+ {
+  "t": "spec",
+  "uc": {
+   "code": "UC31",
+   "name": "Điều phối công việc",
+   "group": "Cổng quản trị",
+   "desc": "Điều phối viên hub phân công các công việc vận hành (lấy hàng, nhập hub, phân loại, trung chuyển, giao hàng, hoàn hàng) cho nhân sự phù hợp; có thể phân công lại hoặc hủy công việc.",
+   "actor": "Hub Dispatch (Hub Manager kế thừa)",
+   "sub": "Operational Staff (nhận công việc)",
+   "pre": "Điều phối viên đã đăng nhập và thuộc hub; có công việc ở trạng thái PENDING tại hub.",
+   "post": "Công việc chuyển ASSIGNED với người thực hiện, người phân công và thời điểm phân công; nhân sự nhận được công việc trên ứng dụng vận hành.",
+   "main": [
+    [
+     "A",
+     "Điều phối viên mở “Điều phối công việc”."
+    ],
+    [
+     "S",
+     "Hệ thống hiển thị các công việc chờ tại hub, sắp theo mức ưu tiên và loại công việc."
+    ],
+    [
+     "A",
+     "Điều phối viên chọn một hoặc nhiều công việc."
+    ],
+    [
+     "S",
+     "Hệ thống hiển thị nhân sự phù hợp (include Xem nhân sự vận hành): đúng loại nhân sự yêu cầu, thuộc hub, đã check-in ca, đang sẵn sàng và chưa vượt số việc đồng thời."
+    ],
+    [
+     "A",
+     "Điều phối viên chọn nhân sự và nhấn “Phân công”."
+    ],
+    [
+     "S",
+     "Hệ thống kiểm tra lại điều kiện của nhân sự."
+    ],
+    [
+     "S",
+     "Hệ thống cập nhật công việc ASSIGNED, gán người thực hiện, ghi người phân công và thời điểm."
+    ],
+    [
+     "S",
+     "Hệ thống đẩy công việc đến ứng dụng của nhân sự và hiển thị “Phân công thành công”."
+    ]
+   ],
+   "alt": [
+    [
+     "4a. Không có nhân sự phù hợp",
+     "Hệ thống thông báo không có nhân sự sẵn sàng; công việc giữ nguyên PENDING."
+    ],
+    [
+     "6a. Nhân sự vừa quá tải hoặc đã kết thúc ca",
+     "Hệ thống cảnh báo và yêu cầu chọn nhân sự khác."
+    ],
+    [
+     "3a. Phân công lại",
+     "Điều phối viên chọn công việc ASSIGNED/ACCEPTED và đổi người thực hiện; hệ thống ghi lại người thao tác."
+    ],
+    [
+     "3b. Hủy công việc",
+     "Điều phối viên nhập ghi chú; hệ thống chuyển CANCELLED."
+    ]
+   ],
+   "activity": [
+    [
+     "A",
+     "Mở Điều phối công việc"
+    ],
+    [
+     "S",
+     "Hiển thị công việc chờ tại hub"
+    ],
+    [
+     "A",
+     "Chọn công việc"
+    ],
+    [
+     "S",
+     "Lọc nhân sự phù hợp (loại, ca, sẵn sàng, tải việc)"
+    ],
+    [
+     "?",
+     "Có nhân sự?",
+     [
+      "S",
+      "Thông báo không có nhân sự sẵn sàng"
+     ],
+     "end"
+    ],
+    [
+     "A",
+     "Chọn nhân sự, nhấn Phân công"
+    ],
+    [
+     "S",
+     "Kiểm tra lại điều kiện nhân sự"
+    ],
+    [
+     "?",
+     "Còn hợp lệ?",
+     [
+      "S",
+      "Cảnh báo, yêu cầu chọn nhân sự khác"
+     ],
+     5
+    ],
+    [
+     "S",
+     "Cập nhật ASSIGNED, gán người thực hiện"
+    ],
+    [
+     "S",
+     "Gửi công việc đến ứng dụng nhân sự"
+    ]
+   ],
+   "seq": {
+    "parts": [
+     [
+      "actor",
+      "Hub Dispatch"
+     ],
+     [
+      "boundary",
+      "GD_DieuPhoi"
+     ],
+     [
+      "control",
+      "CTRL_PhanCong"
+     ],
+     [
+      "entity",
+      "OperationalAssignment"
+     ],
+     [
+      "entity",
+      "WorkforceMember / Availability"
+     ],
+     [
+      "system",
+      "Ứng dụng vận hành"
+     ]
+    ],
+    "msgs": [
+     [
+      0,
+      1,
+      "Mở Điều phối công việc"
+     ],
+     [
+      1,
+      2,
+      "listPending(hubId)"
+     ],
+     [
+      2,
+      3,
+      "findByHubAndStatus(hubId, PENDING)"
+     ],
+     [
+      3,
+      2,
+      "assignments[]",
+      "ret"
+     ],
+     [
+      0,
+      1,
+      "Chọn công việc"
+     ],
+     [
+      1,
+      2,
+      "eligibleMembers(assignmentId)"
+     ],
+     [
+      2,
+      4,
+      "find(kind, hub, checkedIn, AVAILABLE, load < max)"
+     ],
+     [
+      4,
+      2,
+      "members[]",
+      "ret"
+     ],
+     [
+      0,
+      1,
+      "Chọn nhân sự, nhấn Phân công"
+     ],
+     [
+      1,
+      2,
+      "assign(assignmentId, memberId)"
+     ],
+     [
+      2,
+      2,
+      "Kiểm tra lại điều kiện"
+     ],
+     [
+      2,
+      3,
+      "update(ASSIGNED, assignee, assignedBy, assignedAt)"
+     ],
+     [
+      2,
+      5,
+      "push(newAssignment)"
+     ],
+     [
+      2,
+      1,
+      "ok",
+      "ret"
+     ],
+     [
+      1,
+      0,
+      "Thông báo phân công thành công"
+     ]
+    ]
+   }
+  }
+ },
+ {
+  "t": "img",
+  "path": "/home/user/pavex-backend/docs/report/figures/uc31-act.png",
+  "w": 15,
+  "maxh": 20,
+  "caption": "Hình 4.14. Sơ đồ hoạt động – Điều phối công việc"
+ },
+ {
+  "t": "img",
+  "path": "/home/user/pavex-backend/docs/report/figures/uc31-seq.png",
+  "w": 16,
+  "maxh": 18,
+  "caption": "Hình 4.15. Sơ đồ tuần tự – Điều phối công việc"
+ },
+ {
+  "t": "h4",
+  "text": "Use case xử lý yêu cầu ngoại lệ (UC40)"
+ },
+ {
+  "t": "spec",
+  "uc": {
+   "code": "UC40",
+   "name": "Xử lý yêu cầu ngoại lệ",
+   "group": "Cổng quản trị",
+   "desc": "Điều phối viên hub xem và xử lý các yêu cầu ngoại lệ của vận đơn (hoàn hàng, chuyển tiếp địa chỉ mới, giao lại, hủy vận đơn): phê duyệt hoặc từ chối, định tuyến lại khi cần và hoàn tất yêu cầu.",
+   "actor": "Hub Dispatch",
+   "sub": "Merchant (người gửi yêu cầu)",
+   "pre": "Điều phối viên đã đăng nhập; có yêu cầu ngoại lệ PENDING thuộc hub.",
+   "post": "Yêu cầu ở trạng thái COMPLETED hoặc REJECTED với ghi chú duyệt; nếu cần định tuyến lại, vận đơn có lộ trình và giữ chỗ tải mới; người yêu cầu được thông báo.",
+   "main": [
+    [
+     "A",
+     "Điều phối viên mở “Yêu cầu ngoại lệ”."
+    ],
+    [
+     "S",
+     "Hệ thống hiển thị các yêu cầu đang chờ của hub."
+    ],
+    [
+     "A",
+     "Điều phối viên chọn một yêu cầu."
+    ],
+    [
+     "S",
+     "Hệ thống hiển thị loại yêu cầu, lý do, vận đơn liên quan và địa chỉ mới (nếu có)."
+    ],
+    [
+     "A",
+     "Điều phối viên chọn “Phê duyệt” và nhập ghi chú."
+    ],
+    [
+     "S",
+     "Hệ thống kiểm tra vận đơn còn cho phép thay đổi và chuyển yêu cầu sang APPROVED."
+    ],
+    [
+     "S",
+     "Nếu cần định tuyến lại: hệ thống giải phóng giữ chỗ cũ, tìm lộ trình và giữ chỗ tải mới."
+    ],
+    [
+     "S",
+     "Hệ thống cập nhật vận đơn theo loại yêu cầu (chiều hoàn, người nhận mới, giao lại hoặc hủy) và tạo công việc tương ứng."
+    ],
+    [
+     "S",
+     "Hệ thống chuyển yêu cầu sang COMPLETED và thông báo cho người yêu cầu."
+    ]
+   ],
+   "alt": [
+    [
+     "5a. Điều phối viên chọn “Từ chối”",
+     "Hệ thống yêu cầu ghi chú, chuyển REJECTED và thông báo cho người yêu cầu."
+    ],
+    [
+     "6a. Vận đơn đã giao hoặc đã hủy",
+     "Hệ thống không cho phê duyệt và thông báo lý do."
+    ],
+    [
+     "7a. Không tìm được lộ trình mới",
+     "Yêu cầu giữ APPROVED, vận đơn ở trạng thái định tuyến lại thất bại và được cảnh báo cho điều phối viên."
+    ]
+   ],
+   "activity": [
+    [
+     "A",
+     "Mở danh sách yêu cầu ngoại lệ"
+    ],
+    [
+     "S",
+     "Hiển thị yêu cầu đang chờ"
+    ],
+    [
+     "A",
+     "Chọn yêu cầu, xem chi tiết"
+    ],
+    [
+     "A",
+     "Chọn Phê duyệt hoặc Từ chối"
+    ],
+    [
+     "?",
+     "Phê duyệt?",
+     [
+      "S",
+      "Ghi chú, chuyển REJECTED, thông báo"
+     ],
+     "end"
+    ],
+    [
+     "S",
+     "Kiểm tra vận đơn còn cho phép thay đổi"
+    ],
+    [
+     "?",
+     "Cho phép?",
+     [
+      "S",
+      "Thông báo không thể phê duyệt"
+     ],
+     "end"
+    ],
+    [
+     "S",
+     "Chuyển APPROVED, định tuyến lại nếu cần"
+    ],
+    [
+     "S",
+     "Cập nhật vận đơn, tạo công việc"
+    ],
+    [
+     "S",
+     "Chuyển COMPLETED, thông báo người yêu cầu"
+    ]
+   ],
+   "seq": {
+    "parts": [
+     [
+      "actor",
+      "Hub Dispatch"
+     ],
+     [
+      "boundary",
+      "GD_YeuCauNgoaiLe"
+     ],
+     [
+      "control",
+      "CTRL_NgoaiLe"
+     ],
+     [
+      "entity",
+      "ShipmentExceptionRequest"
+     ],
+     [
+      "control",
+      "CTRL_DinhTuyen"
+     ],
+     [
+      "entity",
+      "Shipment"
+     ]
+    ],
+    "msgs": [
+     [
+      0,
+      1,
+      "Chọn yêu cầu, nhấn Phê duyệt"
+     ],
+     [
+      1,
+      2,
+      "approve(requestId, note)"
+     ],
+     [
+      2,
+      3,
+      "findById(requestId)"
+     ],
+     [
+      3,
+      2,
+      "request",
+      "ret"
+     ],
+     [
+      2,
+      5,
+      "checkModifiable(shipmentId)"
+     ],
+     [
+      2,
+      3,
+      "update(APPROVED, reviewedBy, reviewedAt)"
+     ],
+     [
+      2,
+      4,
+      "reroute(shipmentId, newEndpoint)"
+     ],
+     [
+      4,
+      2,
+      "routeRevision mới",
+      "ret"
+     ],
+     [
+      2,
+      5,
+      "apply(kind: RETURN / FORWARD / REDELIVERY / CANCEL)"
+     ],
+     [
+      2,
+      3,
+      "update(COMPLETED, completedBy, completedAt)"
+     ],
+     [
+      2,
+      1,
+      "ok",
+      "ret"
+     ],
+     [
+      1,
+      0,
+      "Thông báo xử lý thành công"
+     ]
+    ],
+    "frags": [
+     [
+      6,
+      7,
+      "opt",
+      "[routingRequired = true]"
+     ]
+    ]
+   }
+  }
+ },
+ {
+  "t": "img",
+  "path": "/home/user/pavex-backend/docs/report/figures/uc40-act.png",
+  "w": 15,
+  "maxh": 20,
+  "caption": "Hình 4.16. Sơ đồ hoạt động – Xử lý yêu cầu ngoại lệ"
+ },
+ {
+  "t": "img",
+  "path": "/home/user/pavex-backend/docs/report/figures/uc40-seq.png",
+  "w": 16,
+  "maxh": 18,
+  "caption": "Hình 4.17. Sơ đồ tuần tự – Xử lý yêu cầu ngoại lệ"
+ },
+ {
+  "t": "h4",
+  "text": "Use case quản lý ca làm việc (UC25)"
+ },
+ {
+  "t": "spec",
+  "uc": {
+   "code": "UC25",
+   "name": "Quản lý ca làm việc",
+   "group": "Cổng quản trị",
+   "desc": "Trưởng hub hoặc quản lý vận hành tạo ca làm việc tại hub, phân công nhân sự vào ca, hủy ca hoặc đánh dấu vắng mặt.",
+   "actor": "Hub Manager, Operations Manager",
+   "sub": "Operational Staff (nhận lịch ca)",
+   "pre": "Người quản lý đã đăng nhập; hub có nhân sự đang hoạt động.",
+   "post": "Ca làm việc được tạo ở trạng thái SCHEDULED cùng danh sách phân công ASSIGNED; nhân sự nhận được lịch ca.",
+   "main": [
+    [
+     "A",
+     "Người quản lý mở “Ca làm việc”."
+    ],
+    [
+     "S",
+     "Hệ thống hiển thị lịch ca theo hub và theo ngày."
+    ],
+    [
+     "A",
+     "Người quản lý chọn “Tạo ca”, nhập mã ca, tên ca, giờ bắt đầu, giờ kết thúc."
+    ],
+    [
+     "S",
+     "Hệ thống kiểm tra thời gian (kết thúc sau bắt đầu) và mã ca không trùng."
+    ],
+    [
+     "S",
+     "Hệ thống lưu ca ở trạng thái SCHEDULED."
+    ],
+    [
+     "A",
+     "Người quản lý chọn “Phân công nhân sự” và chọn các nhân sự."
+    ],
+    [
+     "S",
+     "Hệ thống kiểm tra nhân sự đang hoạt động, thuộc hub và không trùng ca khác."
+    ],
+    [
+     "S",
+     "Hệ thống tạo các phân công ca (ASSIGNED), gửi thông báo lịch ca cho nhân sự và hiển thị kết quả."
+    ]
+   ],
+   "alt": [
+    [
+     "4a. Thời gian không hợp lệ hoặc trùng mã ca",
+     "Hệ thống báo lỗi, quay lại bước 3."
+    ],
+    [
+     "7a. Nhân sự đã có ca trùng thời gian",
+     "Hệ thống cảnh báo và bỏ qua nhân sự đó."
+    ],
+    [
+     "5a. Hủy ca",
+     "Người quản lý nhập lý do; hệ thống chuyển ca CANCELLED và hủy các phân công."
+    ],
+    [
+     "5b. Đánh dấu vắng mặt",
+     "Người quản lý chọn nhân sự không đến ca; hệ thống chuyển phân công sang ABSENT."
+    ]
+   ],
+   "activity": [
+    [
+     "A",
+     "Mở Ca làm việc"
+    ],
+    [
+     "S",
+     "Hiển thị lịch ca theo hub"
+    ],
+    [
+     "A",
+     "Tạo ca: mã, tên, giờ bắt đầu, kết thúc"
+    ],
+    [
+     "S",
+     "Kiểm tra thời gian, mã ca"
+    ],
+    [
+     "?",
+     "Hợp lệ?",
+     [
+      "S",
+      "Báo lỗi thời gian / trùng mã"
+     ],
+     2
+    ],
+    [
+     "S",
+     "Lưu ca SCHEDULED"
+    ],
+    [
+     "A",
+     "Chọn nhân sự để phân công"
+    ],
+    [
+     "S",
+     "Kiểm tra nhân sự thuộc hub, không trùng ca"
+    ],
+    [
+     "?",
+     "Hợp lệ?",
+     [
+      "S",
+      "Cảnh báo trùng ca, bỏ qua nhân sự"
+     ],
+     6
+    ],
+    [
+     "S",
+     "Tạo phân công ca, thông báo nhân sự"
+    ]
+   ],
+   "seq": {
+    "parts": [
+     [
+      "actor",
+      "Hub Manager"
+     ],
+     [
+      "boundary",
+      "GD_CaLamViec"
+     ],
+     [
+      "control",
+      "CTRL_CaLamViec"
+     ],
+     [
+      "entity",
+      "WorkShift"
+     ],
+     [
+      "entity",
+      "WorkforceShiftAssignment"
+     ],
+     [
+      "system",
+      "Ứng dụng vận hành"
+     ]
+    ],
+    "msgs": [
+     [
+      0,
+      1,
+      "Nhập thông tin ca, nhấn Tạo"
+     ],
+     [
+      1,
+      2,
+      "createShift(hubId, code, name, startsAt, endsAt)"
+     ],
+     [
+      2,
+      2,
+      "Kiểm tra thời gian, mã ca"
+     ],
+     [
+      2,
+      3,
+      "save(SCHEDULED, createdBy)"
+     ],
+     [
+      3,
+      2,
+      "shiftId",
+      "ret"
+     ],
+     [
+      0,
+      1,
+      "Chọn nhân sự, nhấn Phân công"
+     ],
+     [
+      1,
+      2,
+      "assignMembers(shiftId, memberIds)"
+     ],
+     [
+      2,
+      4,
+      "existsOverlap(memberId, startsAt, endsAt)"
+     ],
+     [
+      4,
+      2,
+      "false",
+      "ret"
+     ],
+     [
+      2,
+      4,
+      "save(ASSIGNED, assignedBy)"
+     ],
+     [
+      2,
+      5,
+      "notify(member, shift)"
+     ],
+     [
+      2,
+      1,
+      "ok",
+      "ret"
+     ],
+     [
+      1,
+      0,
+      "Hiển thị lịch ca đã phân công"
+     ]
+    ],
+    "frags": [
+     [
+      7,
+      10,
+      "loop",
+      "[với mỗi nhân sự được chọn]"
+     ]
+    ]
+   }
+  }
+ },
+ {
+  "t": "img",
+  "path": "/home/user/pavex-backend/docs/report/figures/uc25-act.png",
+  "w": 15,
+  "maxh": 20,
+  "caption": "Hình 4.18. Sơ đồ hoạt động – Quản lý ca làm việc"
+ },
+ {
+  "t": "img",
+  "path": "/home/user/pavex-backend/docs/report/figures/uc25-seq.png",
+  "w": 16,
+  "maxh": 18,
+  "caption": "Hình 4.19. Sơ đồ tuần tự – Quản lý ca làm việc"
+ },
+ {
+  "t": "h4",
+  "text": "Use case quản lý người dùng và phân quyền (UC06 / UC08)"
+ },
+ {
+  "t": "spec",
+  "uc": {
+   "code": "UC06 / UC08",
+   "name": "Quản lý người dùng và phân quyền",
+   "group": "Cổng quản trị",
+   "desc": "Quản trị nền tảng tra cứu, lọc và xem chi tiết tài khoản; thay đổi trạng thái tài khoản (hoạt động, tạm khóa, vô hiệu hóa), gán vai trò và phân quyền cho vai trò.",
+   "actor": "Platform Admin",
+   "sub": "Không",
+   "pre": "Admin đã đăng nhập và có quyền identity.users.read / identity.roles.read cùng quyền cập nhật tương ứng.",
+   "post": "Thông tin tài khoản, trạng thái hoặc vai trò được cập nhật; phiên bản dữ liệu tăng; nếu tài khoản bị khóa thì các phiên đăng nhập bị vô hiệu.",
+   "main": [
+    [
+     "A",
+     "Admin mở “Người dùng”."
+    ],
+    [
+     "S",
+     "Hệ thống hiển thị danh sách tài khoản có phân trang: email, tên, vai trò, trạng thái tài khoản, trạng thái hồ sơ, ngày tạo."
+    ],
+    [
+     "A",
+     "Admin tìm theo email/tên và lọc theo vai trò, trạng thái tài khoản, trạng thái hồ sơ."
+    ],
+    [
+     "S",
+     "Hệ thống trả về danh sách đã lọc."
+    ],
+    [
+     "A",
+     "Admin chọn một tài khoản."
+    ],
+    [
+     "S",
+     "Hệ thống hiển thị chi tiết tài khoản, hồ sơ và vai trò."
+    ],
+    [
+     "A",
+     "Admin thay đổi trạng thái hoặc vai trò và nhấn “Lưu”."
+    ],
+    [
+     "S",
+     "Hệ thống kiểm tra quyền thao tác và phiên bản dữ liệu (version)."
+    ],
+    [
+     "S",
+     "Hệ thống cập nhật tài khoản; nếu tài khoản bị khóa thì thu hồi các phiên đăng nhập."
+    ],
+    [
+     "S",
+     "Hệ thống thông báo “Cập nhật thành công”."
+    ]
+   ],
+   "alt": [
+    [
+     "8a. Dữ liệu đã bị thay đổi bởi người khác (xung đột version)",
+     "Hệ thống báo xung đột và tải lại dữ liệu mới nhất."
+    ],
+    [
+     "8b. Admin tự khóa tài khoản của chính mình",
+     "Hệ thống không cho phép."
+    ],
+    [
+     "8c. Sửa hoặc xóa vai trò hệ thống",
+     "Hệ thống không cho phép thay đổi vai trò hệ thống."
+    ],
+    [
+     "1a. Không đủ quyền",
+     "Hệ thống trả lỗi 403 và hiển thị thông báo chưa được cấp quyền."
+    ]
+   ],
+   "activity": [
+    [
+     "A",
+     "Mở Người dùng"
+    ],
+    [
+     "S",
+     "Hiển thị danh sách có phân trang"
+    ],
+    [
+     "A",
+     "Tìm kiếm, lọc theo vai trò / trạng thái"
+    ],
+    [
+     "S",
+     "Trả về danh sách đã lọc"
+    ],
+    [
+     "A",
+     "Chọn tài khoản, đổi trạng thái hoặc vai trò, nhấn Lưu"
+    ],
+    [
+     "S",
+     "Kiểm tra quyền và phiên bản dữ liệu"
+    ],
+    [
+     "?",
+     "Hợp lệ?",
+     [
+      "S",
+      "Báo xung đột / không đủ quyền, tải lại"
+     ],
+     4
+    ],
+    [
+     "S",
+     "Cập nhật tài khoản, thu hồi phiên nếu bị khóa"
+    ],
+    [
+     "S",
+     "Thông báo cập nhật thành công"
+    ]
+   ],
+   "seq": {
+    "parts": [
+     [
+      "actor",
+      "Platform Admin"
+     ],
+     [
+      "boundary",
+      "GD_NguoiDung"
+     ],
+     [
+      "control",
+      "CTRL_NguoiDung"
+     ],
+     [
+      "entity",
+      "UserAccount"
+     ],
+     [
+      "entity",
+      "Role"
+     ],
+     [
+      "entity",
+      "RefreshToken"
+     ]
+    ],
+    "msgs": [
+     [
+      0,
+      1,
+      "Tìm kiếm, lọc người dùng"
+     ],
+     [
+      1,
+      2,
+      "listUsers(page, search, role, status, profileStatus)"
+     ],
+     [
+      2,
+      3,
+      "search(criteria)"
+     ],
+     [
+      3,
+      2,
+      "page<UserListItem>",
+      "ret"
+     ],
+     [
+      0,
+      1,
+      "Đổi trạng thái / vai trò, nhấn Lưu"
+     ],
+     [
+      1,
+      2,
+      "updateUser(userId, status, roles, version)"
+     ],
+     [
+      2,
+      3,
+      "findById(userId)"
+     ],
+     [
+      3,
+      2,
+      "account(version)",
+      "ret"
+     ],
+     [
+      2,
+      2,
+      "Kiểm tra quyền, so sánh version"
+     ],
+     [
+      2,
+      4,
+      "findByCodes(roles)"
+     ],
+     [
+      2,
+      3,
+      "save(status, roles, version + 1)"
+     ],
+     [
+      2,
+      5,
+      "revokeAll(userId) nếu tài khoản bị khóa"
+     ],
+     [
+      2,
+      1,
+      "ok",
+      "ret"
+     ],
+     [
+      1,
+      0,
+      "Thông báo cập nhật thành công"
+     ]
+    ],
+    "frags": [
+     [
+      11,
+      11,
+      "opt",
+      "[status = SUSPENDED hoặc DISABLED]"
+     ]
+    ]
+   }
+  }
+ },
+ {
+  "t": "img",
+  "path": "/home/user/pavex-backend/docs/report/figures/uc06-act.png",
+  "w": 15,
+  "maxh": 20,
+  "caption": "Hình 4.20. Sơ đồ hoạt động – Quản lý người dùng và phân quyền"
+ },
+ {
+  "t": "img",
+  "path": "/home/user/pavex-backend/docs/report/figures/uc06-seq.png",
+  "w": 16,
+  "maxh": 18,
+  "caption": "Hình 4.21. Sơ đồ tuần tự – Quản lý người dùng và phân quyền"
+ },
+ {
+  "t": "h3",
+  "text": "4.2.3. Nhóm use case của ứng dụng vận hành"
+ },
+ {
+  "t": "h4",
+  "text": "Use case thực hiện công việc và quét kiện hàng (UC33 / UC34)"
+ },
+ {
+  "t": "spec",
+  "uc": {
+   "code": "UC33 / UC34",
+   "name": "Thực hiện công việc và quét kiện hàng",
+   "group": "Ứng dụng vận hành",
+   "desc": "Nhân sự vận hành nhận công việc được giao, bắt đầu thực hiện, quét mã từng kiện để chuyển giao trách nhiệm (custody) và cập nhật vị trí, sau đó hoàn thành công việc.",
+   "actor": "Operational Staff (Courier, Line-haul Driver, Warehouse Operator)",
+   "sub": "Không",
+   "pre": "Nhân sự đã đăng nhập ứng dụng vận hành, đã check-in ca và có công việc ở trạng thái ASSIGNED.",
+   "post": "Công việc ở trạng thái COMPLETED (hoặc FAILED); các kiện được cập nhật custody, vị trí, công đoạn; sự kiện hành trình được ghi; công việc chặng tiếp theo được tạo.",
+   "main": [
+    [
+     "A",
+     "Nhân sự mở “Công việc của tôi”."
+    ],
+    [
+     "S",
+     "Hệ thống hiển thị các công việc được giao theo mức ưu tiên."
+    ],
+    [
+     "A",
+     "Nhân sự chọn công việc và nhấn “Nhận việc”."
+    ],
+    [
+     "S",
+     "Hệ thống chuyển công việc sang ACCEPTED."
+    ],
+    [
+     "A",
+     "Nhân sự nhấn “Bắt đầu”."
+    ],
+    [
+     "S",
+     "Hệ thống chuyển công việc sang IN_PROGRESS và bật màn hình quét mã."
+    ],
+    [
+     "A",
+     "Nhân sự quét mã từng kiện hàng."
+    ],
+    [
+     "S",
+     "Hệ thống giải mã, kiểm tra kiện thuộc vận đơn của công việc và đúng hub/công đoạn."
+    ],
+    [
+     "S",
+     "Hệ thống cập nhật custody, vị trí, công đoạn của kiện và ghi sự kiện hành trình."
+    ],
+    [
+     "A",
+     "Sau khi quét đủ, nhân sự nhấn “Hoàn thành”."
+    ],
+    [
+     "S",
+     "Hệ thống kiểm tra đã quét đủ kiện."
+    ],
+    [
+     "S",
+     "Hệ thống chuyển công việc sang COMPLETED, cập nhật trạng thái vận đơn và tạo công việc cho chặng tiếp theo."
+    ]
+   ],
+   "alt": [
+    [
+     "7a. Chưa cấp quyền camera",
+     "Ứng dụng yêu cầu cấp quyền hoặc cho phép nhập mã thủ công."
+    ],
+    [
+     "8a. Mã không hợp lệ hoặc kiện không thuộc công việc",
+     "Hệ thống cảnh báo và không ghi nhận lần quét."
+    ],
+    [
+     "8b. Kiện đã được quét trước đó",
+     "Hệ thống báo quét trùng và bỏ qua."
+    ],
+    [
+     "8c. Kiện không xác định được vận đơn",
+     "Nhân sự chọn “Báo cáo sự cố” (loại UNIDENTIFIED_PARCEL)."
+    ],
+    [
+     "11a. Chưa quét đủ kiện",
+     "Hệ thống không cho hoàn thành và hiển thị danh sách kiện còn thiếu."
+    ],
+    [
+     "10a. Không thể hoàn thành công việc",
+     "Nhân sự chọn “Báo không hoàn thành” và nhập lý do; hệ thống chuyển FAILED."
+    ]
+   ],
+   "activity": [
+    [
+     "A",
+     "Mở Công việc của tôi"
+    ],
+    [
+     "S",
+     "Hiển thị công việc được giao"
+    ],
+    [
+     "A",
+     "Nhận việc và nhấn Bắt đầu"
+    ],
+    [
+     "S",
+     "Chuyển IN_PROGRESS, bật quét mã"
+    ],
+    [
+     "A",
+     "Quét mã kiện hàng"
+    ],
+    [
+     "S",
+     "Kiểm tra kiện thuộc công việc, đúng hub"
+    ],
+    [
+     "?",
+     "Hợp lệ?",
+     [
+      "S",
+      "Cảnh báo mã sai hoặc quét trùng"
+     ],
+     4
+    ],
+    [
+     "S",
+     "Cập nhật custody, vị trí, ghi sự kiện"
+    ],
+    [
+     "A",
+     "Nhấn Hoàn thành"
+    ],
+    [
+     "S",
+     "Kiểm tra đã quét đủ kiện"
+    ],
+    [
+     "?",
+     "Đủ kiện?",
+     [
+      "S",
+      "Hiển thị kiện còn thiếu"
+     ],
+     4
+    ],
+    [
+     "S",
+     "Chuyển COMPLETED, tạo công việc chặng tiếp"
+    ]
+   ],
+   "seq": {
+    "parts": [
+     [
+      "actor",
+      "Operational Staff"
+     ],
+     [
+      "boundary",
+      "GD_QuetMa"
+     ],
+     [
+      "control",
+      "CTRL_CongViec"
+     ],
+     [
+      "entity",
+      "OperationalAssignment"
+     ],
+     [
+      "entity",
+      "Parcel"
+     ],
+     [
+      "entity",
+      "ShipmentEvent"
+     ]
+    ],
+    "msgs": [
+     [
+      0,
+      1,
+      "Nhận việc, nhấn Bắt đầu"
+     ],
+     [
+      1,
+      2,
+      "start(assignmentId)"
+     ],
+     [
+      2,
+      3,
+      "update(IN_PROGRESS, startedAt)"
+     ],
+     [
+      0,
+      1,
+      "Quét mã kiện"
+     ],
+     [
+      1,
+      2,
+      "scan(assignmentId, parcelCode)"
+     ],
+     [
+      2,
+      4,
+      "findByCode(parcelCode)"
+     ],
+     [
+      4,
+      2,
+      "parcel",
+      "ret"
+     ],
+     [
+      2,
+      2,
+      "Kiểm tra kiện thuộc công việc, đúng hub"
+     ],
+     [
+      2,
+      4,
+      "updateCustody(member, hub, stage)"
+     ],
+     [
+      2,
+      5,
+      "append(SCANNED, hub, actor)"
+     ],
+     [
+      2,
+      1,
+      "Đã ghi nhận kiện",
+      "ret"
+     ],
+     [
+      0,
+      1,
+      "Nhấn Hoàn thành"
+     ],
+     [
+      1,
+      2,
+      "complete(assignmentId)"
+     ],
+     [
+      2,
+      3,
+      "update(COMPLETED, completedAt); tạo công việc chặng tiếp"
+     ],
+     [
+      2,
+      1,
+      "ok",
+      "ret"
+     ]
+    ],
+    "frags": [
+     [
+      3,
+      10,
+      "loop",
+      "[với mỗi kiện của công việc]"
+     ]
+    ]
+   }
+  }
+ },
+ {
+  "t": "img",
+  "path": "/home/user/pavex-backend/docs/report/figures/uc33-act.png",
+  "w": 15,
+  "maxh": 20,
+  "caption": "Hình 4.22. Sơ đồ hoạt động – Thực hiện công việc và quét kiện hàng"
+ },
+ {
+  "t": "img",
+  "path": "/home/user/pavex-backend/docs/report/figures/uc33-seq.png",
+  "w": 16,
+  "maxh": 18,
+  "caption": "Hình 4.23. Sơ đồ tuần tự – Thực hiện công việc và quét kiện hàng"
+ },
+ {
+  "t": "h4",
+  "text": "Use case ghi nhận kết quả giao hàng (UC35)"
+ },
+ {
+  "t": "spec",
+  "uc": {
+   "code": "UC35",
+   "name": "Ghi nhận kết quả giao hàng",
+   "group": "Ứng dụng vận hành",
+   "desc": "Bưu tá ghi nhận kết quả giao từng kiện cho người nhận: giao thành công kèm bằng chứng (chữ ký, ảnh hoặc OTP) và thu COD, hoặc giao thất bại kèm lý do.",
+   "actor": "Courier",
+   "sub": "Không",
+   "pre": "Bưu tá đã đăng nhập; công việc giao hàng (LAST_MILE_DELIVERY) đang IN_PROGRESS; kiện đang do bưu tá giữ.",
+   "post": "DeliveryAttempt được ghi nhận; vận đơn chuyển DELIVERED (ghi completedAt) hoặc DELIVERY_FAILED; sự kiện hành trình được ghi; công việc giao hoàn tất.",
+   "main": [
+    [
+     "A",
+     "Bưu tá đến địa chỉ người nhận và mở vận đơn trong công việc."
+    ],
+    [
+     "S",
+     "Hệ thống hiển thị thông tin người nhận, số tiền COD cần thu và danh sách kiện."
+    ],
+    [
+     "A",
+     "Bưu tá giao hàng và chọn “Giao thành công”."
+    ],
+    [
+     "S",
+     "Hệ thống yêu cầu bằng chứng giao (chữ ký, ảnh hoặc OTP) và tên người nhận."
+    ],
+    [
+     "A",
+     "Bưu tá cung cấp bằng chứng và xác nhận đã thu COD."
+    ],
+    [
+     "S",
+     "Hệ thống kiểm tra bằng chứng."
+    ],
+    [
+     "S",
+     "Hệ thống ghi DeliveryAttempt (DELIVERED, tọa độ GPS) và cập nhật kiện, vận đơn sang DELIVERED."
+    ],
+    [
+     "S",
+     "Hệ thống ghi sự kiện “Giao thành công”, hoàn tất công việc và hiển thị kết quả."
+    ]
+   ],
+   "alt": [
+    [
+     "3a. Không giao được",
+     "Bưu tá chọn “Giao thất bại” và lý do (không liên lạc được, sai địa chỉ, người nhận từ chối, hẹn giao lại…); hệ thống ghi DeliveryAttempt FAILED, vận đơn DELIVERY_FAILED và đưa vào danh sách ngoại lệ."
+    ],
+    [
+     "6a. Thiếu bằng chứng giao",
+     "Hệ thống yêu cầu bổ sung trước khi xác nhận."
+    ],
+    [
+     "5a. Số tiền COD thu không khớp",
+     "Hệ thống cảnh báo và yêu cầu kiểm tra lại."
+    ]
+   ],
+   "activity": [
+    [
+     "A",
+     "Mở vận đơn tại địa chỉ người nhận"
+    ],
+    [
+     "S",
+     "Hiển thị người nhận, COD, danh sách kiện"
+    ],
+    [
+     "A",
+     "Chọn kết quả giao"
+    ],
+    [
+     "?",
+     "Giao thành công?",
+     [
+      "S",
+      "Ghi lần giao thất bại kèm lý do, đưa vào ngoại lệ"
+     ],
+     "end"
+    ],
+    [
+     "S",
+     "Yêu cầu bằng chứng giao, tên người nhận"
+    ],
+    [
+     "A",
+     "Cung cấp bằng chứng, xác nhận thu COD"
+    ],
+    [
+     "S",
+     "Kiểm tra bằng chứng"
+    ],
+    [
+     "?",
+     "Đầy đủ?",
+     [
+      "S",
+      "Yêu cầu bổ sung bằng chứng"
+     ],
+     5
+    ],
+    [
+     "S",
+     "Ghi DeliveryAttempt, vận đơn DELIVERED"
+    ],
+    [
+     "S",
+     "Ghi sự kiện, hoàn tất công việc"
+    ]
+   ],
+   "seq": {
+    "parts": [
+     [
+      "actor",
+      "Courier"
+     ],
+     [
+      "boundary",
+      "GD_GiaoHang"
+     ],
+     [
+      "control",
+      "CTRL_GiaoHang"
+     ],
+     [
+      "entity",
+      "DeliveryAttempt"
+     ],
+     [
+      "entity",
+      "Shipment / Parcel"
+     ],
+     [
+      "entity",
+      "ShipmentEvent"
+     ]
+    ],
+    "msgs": [
+     [
+      0,
+      1,
+      "Chọn Giao thành công, gửi bằng chứng"
+     ],
+     [
+      1,
+      2,
+      "recordDelivery(parcelId, proof, recipientName, gps)"
+     ],
+     [
+      2,
+      2,
+      "Kiểm tra bằng chứng, COD"
+     ],
+     [
+      2,
+      3,
+      "save(DELIVERED, attemptNumber, proof)"
+     ],
+     [
+      2,
+      4,
+      "markDelivered(completedAt)"
+     ],
+     [
+      2,
+      5,
+      "append(DELIVERED)"
+     ],
+     [
+      2,
+      1,
+      "ok",
+      "ret"
+     ],
+     [
+      1,
+      0,
+      "Hiển thị giao thành công"
+     ],
+     [
+      0,
+      1,
+      "Chọn Giao thất bại, chọn lý do"
+     ],
+     [
+      1,
+      2,
+      "recordFailure(parcelId, reason, note)"
+     ],
+     [
+      2,
+      3,
+      "save(FAILED, failureReason)"
+     ],
+     [
+      2,
+      4,
+      "update(status=DELIVERY_FAILED)"
+     ],
+     [
+      2,
+      1,
+      "ok",
+      "ret"
+     ]
+    ],
+    "frags": [
+     [
+      0,
+      12,
+      "alt",
+      "[giao thành công]",
+      8,
+      "[giao thất bại]"
+     ]
+    ]
+   }
+  }
+ },
+ {
+  "t": "img",
+  "path": "/home/user/pavex-backend/docs/report/figures/uc35-act.png",
+  "w": 15,
+  "maxh": 20,
+  "caption": "Hình 4.24. Sơ đồ hoạt động – Ghi nhận kết quả giao hàng"
+ },
+ {
+  "t": "img",
+  "path": "/home/user/pavex-backend/docs/report/figures/uc35-seq.png",
+  "w": 16,
+  "maxh": 18,
+  "caption": "Hình 4.25. Sơ đồ tuần tự – Ghi nhận kết quả giao hàng"
+ },
+ {
+  "t": "h2",
+  "text": "4.3. Thiết kế kiến trúc và cơ sở dữ liệu"
+ },
+ {
+  "t": "h3",
+  "text": "4.3.1. Mô hình miền"
+ },
+ {
+  "t": "p",
+  "text": "Mô hình miền được thiết kế theo DDD gồm 8 package (bounded context): Identity & Access, Partner, Network, Pricing, Shipment, Exception Handling, Workforce & Operations và Shared Kernel. Quan hệ giữa các entity được biểu diễn bằng association có tên vai trò và bội số; composition (hình thoi đặc) thể hiện phần tử sống và mất cùng aggregate."
+ },
+ {
+  "t": "img",
+  "path": "/home/user/pavex-backend/docs/report/figures/domain-entities.png",
+  "w": 16,
+  "maxh": 22,
+  "caption": "Hình 4.26. Mô hình miền – các entity và aggregate root"
+ },
+ {
+  "t": "caption",
+  "text": "Bảng 4.1. Các bounded context của mô hình miền"
+ },
+ {
+  "t": "table",
+  "header": [
+   "Bounded context",
+   "Aggregate root / entity chính",
+   "Vai trò"
+  ],
+  "rows": [
+   [
+    "Identity & Access",
+    "UserAccount, UserProfile, UserAddress, Role, Permission",
+    "Tài khoản, hồ sơ, sổ địa chỉ, RBAC"
+   ],
+   [
+    "Partner",
+    "Merchant, MerchantPickupAddress",
+    "Cửa hàng và vòng đời xác minh"
+   ],
+   [
+    "Network",
+    "NetworkRegion, ServiceArea, ServiceAreaCoverage, Hub, HubLane, LaneSchedule, RouteTemplate, LaneCapacityReservation",
+    "Mạng lưới, tuyến, lịch chạy, giữ chỗ tải"
+   ],
+   [
+    "Pricing",
+    "RatePlan, RateRule, QuoteRequest, QuoteParcel, QuoteOption",
+    "Bảng giá có phiên bản, báo giá có hạn"
+   ],
+   [
+    "Shipment",
+    "Shipment, Parcel, ShipmentEvent, DeliveryAttempt",
+    "Vận đơn, kiện, hành trình, lần giao"
+   ],
+   [
+    "Exception Handling",
+    "ShipmentExceptionRequest, ShipmentCase, ShipmentWeightAdjustment",
+    "Yêu cầu ngoại lệ, sự cố, điều chỉnh khối lượng"
+   ],
+   [
+    "Workforce & Operations",
+    "WorkforceMember, HubMembership, WorkforceAvailability, WorkShift, WorkforceShiftAssignment, OperationalAssignment",
+    "Nhân sự, ca làm việc, công việc vận hành"
+   ],
+   [
+    "Shared Kernel",
+    "ContactAddress, Weight, Dimensions, FeeBreakdown, DeliveryEstimate, GeoPoint",
+    "Value object dùng chung"
+   ]
+  ],
+  "widths": [
+   2000,
+   3606,
+   2700
+  ],
+  "size": 10
+ },
+ {
+  "t": "h3",
+  "text": "4.3.2. Kiến trúc tổng thể"
+ },
+ {
+  "t": "p",
+  "text": "Hệ thống theo kiến trúc client – server nhiều lớp. Ba ứng dụng client (cổng khách hàng, cổng quản trị, ứng dụng vận hành) giao tiếp với một backend duy nhất qua REST API /api/v1. Backend được tổ chức theo module tương ứng với các bounded context, mỗi module gồm các lớp: API (controller), ứng dụng (service), miền (domain) và hạ tầng (repository). Dữ liệu được lưu trong cơ sở dữ liệu quan hệ; mỗi aggregate tương ứng một nhóm bảng."
+ },
+ {
+  "t": "caption",
+  "text": "Bảng 4.2. Các lớp trong kiến trúc hệ thống"
+ },
+ {
+  "t": "table",
+  "header": [
+   "Lớp",
+   "Thành phần",
+   "Trách nhiệm"
+  ],
+  "rows": [
+   [
+    "Client",
+    "Cổng khách hàng, Cổng quản trị (Next.js), Ứng dụng vận hành",
+    "Giao diện người dùng, gọi API qua BFF"
+   ],
+   [
+    "BFF",
+    "Route /api/backend/* của từng cổng web",
+    "Giữ token trong cookie httpOnly, chuyển tiếp yêu cầu, tự làm mới token"
+   ],
+   [
+    "API",
+    "REST controller /api/v1/...",
+    "Xác thực JWT, kiểm tra quyền, kiểm tra dữ liệu đầu vào"
+   ],
+   [
+    "Ứng dụng / miền",
+    "Service, aggregate, quy tắc nghiệp vụ",
+    "Tính cước, định tuyến, điều phối, chuyển trạng thái"
+   ],
+   [
+    "Hạ tầng",
+    "Repository, cơ sở dữ liệu quan hệ",
+    "Lưu trữ, truy vấn, khóa lạc quan"
+   ]
+  ],
+  "widths": [
+   1500,
+   3200,
+   3606
+  ],
+  "size": 10
+ },
+ {
+  "t": "h1",
+  "text": "CHƯƠNG 5. GIẢI PHÁP CÔNG NGHỆ"
+ },
+ {
+  "t": "p",
+  "text": "Chương này trình bày các giải pháp kỹ thuật cốt lõi giúp PAVEX đáp ứng các yêu cầu nghiệp vụ: kiến trúc BFF, bảo mật, định giá có phiên bản, định tuyến với giữ chỗ tải và quét mã kiện hàng."
+ },
+ {
+  "t": "h2",
+  "text": "5.1. Kiến trúc client – BFF – backend"
+ },
+ {
+  "t": "p",
+  "text": "Trình duyệt không gọi trực tiếp backend. Mỗi cổng web có một route BFF (/api/backend/[...path]) chạy trên máy chủ Next.js: route này đọc access token từ cookie httpOnly, gắn header Authorization: Bearer, chuyển tiếp nguyên phương thức, tham số truy vấn, nội dung và header Idempotency-Key đến backend /api/v1/... Khi backend trả 401, BFF dùng refresh token để lấy token mới, gửi lại yêu cầu và cập nhật cookie; nếu làm mới thất bại thì xóa phiên và phát sự kiện hết phiên để giao diện chuyển về trang đăng nhập. Một middleware kiểm tra cookie phiên và chuyển hướng người dùng chưa đăng nhập đến /login kèm tham số returnTo."
+ },
+ {
+  "t": "h2",
+  "text": "5.2. Xác thực, phân quyền và toàn vẹn dữ liệu"
+ },
+ {
+  "t": "bullets",
+  "items": [
+   "Xác thực: POST /api/v1/auth/login trả accessToken, refreshToken, expiresIn; /auth/refresh cấp token mới; /auth/me trả thông tin người dùng kèm danh sách vai trò và quyền; /auth/logout thu hồi refresh token.",
+   "Phân quyền: quyền có mã dạng <context>.<tài nguyên>.<hành động> (ví dụ identity.users.read, identity.roles.read). Giao diện ẩn menu khi người dùng thiếu quyền, backend luôn kiểm tra lại và trả 403.",
+   "Khóa lạc quan: các bản ghi có trường version; khi hai người cùng sửa, người lưu sau nhận lỗi xung đột kèm conflictVersion để tải lại dữ liệu.",
+   "Lỗi chuẩn hóa: lỗi trả về dạng problem detail gồm message, code, traceId và fieldErrors cho từng trường, giúp giao diện hiển thị lỗi tại đúng ô nhập."
+  ]
+ },
+ {
+  "t": "h2",
+  "text": "5.3. Định giá có phiên bản và báo giá có thời hạn"
+ },
+ {
+  "t": "p",
+  "text": "Bảng giá (RatePlan) có mã và số phiên bản (revision). Mỗi lần thay đổi giá sẽ tạo một revision mới ở trạng thái DRAFT; khi kích hoạt, revision cũ chuyển RETIRED, đảm bảo luôn chỉ có một bảng giá đang áp dụng. Mỗi bảng giá gồm các quy tắc (RateRule) theo cặp mức dịch vụ × vùng giá, cùng chính sách COD, bảo hiểm và giới hạn nhận gửi."
+ },
+ {
+  "t": "p",
+  "text": "Khi tính cước, hệ thống phân giải điểm gửi và điểm nhận thành khu vực phục vụ, hub chính và hạng phủ sóng; suy ra vùng giá; tính khối lượng tính cước = max(khối lượng thực, khối lượng quy đổi theo thể tích / hệ số quy đổi) rồi áp dụng phí cơ bản, phí theo bước khối lượng, phụ phí vùng xa/hải đảo, phí COD và phí bảo hiểm. Kết quả được lưu thành QuoteRequest có thời hạn (quoteTtlMinutes). Vận đơn tạo từ báo giá lưu lại ảnh chụp (snapshot) giá và phiên bản bảng giá, nên thay đổi bảng giá sau này không ảnh hưởng đơn cũ."
+ },
+ {
+  "t": "h2",
+  "text": "5.4. Định tuyến và giữ chỗ tải trọng"
+ },
+ {
+  "t": "p",
+  "text": "Mạng lưới gồm hub, tuyến có hướng giữa hai hub (HubLane) và lịch khởi hành định kỳ của tuyến (LaneSchedule) kèm tải trọng mỗi chuyến. Khi tạo đơn, hệ thống chọn mẫu lộ trình (RouteTemplate) phù hợp giữa hub gốc và hub đích – hoặc tuyến trực tiếp – rồi với mỗi chặng tìm chuyến khởi hành gần nhất còn đủ tải và tạo bản ghi giữ chỗ (LaneCapacityReservation). Các bản ghi giữ chỗ của một lần định tuyến được gom theo batchId; khi đơn bị hủy hoặc định tuyến lại, giữ chỗ cũ được giải phóng. Nếu không tìm được lộ trình, vận đơn được đánh dấu ROUTING_FAILED và đưa vào danh sách ngoại lệ cho điều phối viên."
+ },
+ {
+  "t": "h2",
+  "text": "5.5. Điều phối công việc theo ca và năng lực nhân sự"
+ },
+ {
+  "t": "p",
+  "text": "Mỗi chặng của vận đơn sinh ra công việc vận hành (OperationalAssignment) tại một hub với loại nhân sự yêu cầu. Khi điều phối, hệ thống chỉ đề xuất nhân sự đúng loại, thuộc hub, đã check-in ca, đang ở trạng thái sẵn sàng và chưa vượt số công việc đồng thời tối đa. Vòng đời công việc gồm PENDING → ASSIGNED → ACCEPTED → IN_PROGRESS → COMPLETED / FAILED / CANCELLED, mỗi bước đều ghi người thao tác và thời điểm."
+ },
+ {
+  "t": "h2",
+  "text": "5.6. Quét mã kiện hàng và hành trình vận đơn"
+ },
+ {
+  "t": "p",
+  "text": "Ứng dụng vận hành dùng camera thiết bị để quét mã kiện. Mỗi lần quét, backend kiểm tra kiện thuộc vận đơn của công việc và đúng hub/công đoạn, sau đó cập nhật bên đang giữ kiện (custody), vị trí hiện tại, công đoạn và ghi một ShipmentEvent. Chuỗi ShipmentEvent tạo thành hành trình mà khách hàng nhìn thấy khi tra cứu. Ứng dụng có cơ chế nhập mã thủ công khi không thể dùng camera và cảnh báo khi quét trùng hoặc quét sai kiện."
+ },
+ {
+  "t": "h1",
+  "text": "CHƯƠNG 6. HIỆN THỰC, TRIỂN KHAI VÀ KIỂM THỬ"
+ },
+ {
+  "t": "h2",
+  "text": "6.1. Môi trường phát triển và công cụ"
+ },
+ {
+  "t": "caption",
+  "text": "Bảng 6.1. Môi trường và công cụ phát triển"
+ },
+ {
+  "t": "table",
+  "header": [
+   "Thành phần",
+   "Công nghệ / công cụ"
+  ],
+  "rows": [
+   [
+    "Backend",
+    "REST API /api/v1, xác thực JWT, cơ sở dữ liệu quan hệ"
+   ],
+   [
+    "Cổng quản trị",
+    "Next.js (App Router), React, TypeScript, Tailwind CSS, pnpm"
+   ],
+   [
+    "Cổng khách hàng",
+    "Next.js, React, TypeScript"
+   ],
+   [
+    "Ứng dụng vận hành",
+    "Giao diện web tối ưu cho di động, quét mã bằng camera"
+   ],
+   [
+    "Thiết kế",
+    "Visual Paradigm (use case, domain model, activity, sequence)"
+   ],
+   [
+    "Quản lý mã nguồn",
+    "Git, GitHub"
+   ],
+   [
+    "Kiểm thử API",
+    "Postman"
+   ]
+  ],
+  "widths": [
+   2600,
+   5706
+  ],
+  "size": 11
+ },
+ {
+  "t": "h2",
+  "text": "6.2. Giao diện cổng khách hàng"
+ },
+ {
+  "t": "placeholder",
+  "text": "[Chèn ảnh màn hình: Trang chủ và tra cứu vận đơn]",
+  "caption": "Hình 6.1. Trang chủ và tra cứu vận đơn"
+ },
+ {
+  "t": "placeholder",
+  "text": "[Chèn ảnh màn hình: Trang tính cước vận chuyển]",
+  "caption": "Hình 6.2. Trang tính cước vận chuyển"
+ },
+ {
+  "t": "placeholder",
+  "text": "[Chèn ảnh màn hình: Tạo đơn hàng]",
+  "caption": "Hình 6.3. Tạo đơn hàng"
+ },
+ {
+  "t": "placeholder",
+  "text": "[Chèn ảnh màn hình: Đơn hàng của tôi và chi tiết vận đơn]",
+  "caption": "Hình 6.4. Đơn hàng của tôi và chi tiết vận đơn"
+ },
+ {
+  "t": "placeholder",
+  "text": "[Chèn ảnh màn hình: Sổ địa chỉ]",
+  "caption": "Hình 6.5. Sổ địa chỉ"
+ },
+ {
+  "t": "h2",
+  "text": "6.3. Giao diện cổng quản trị"
+ },
+ {
+  "t": "placeholder",
+  "text": "[Chèn ảnh màn hình: Đăng nhập cổng quản trị]",
+  "caption": "Hình 6.6. Đăng nhập cổng quản trị"
+ },
+ {
+  "t": "placeholder",
+  "text": "[Chèn ảnh màn hình: Bảng điều hành]",
+  "caption": "Hình 6.7. Bảng điều hành"
+ },
+ {
+  "t": "placeholder",
+  "text": "[Chèn ảnh màn hình: Quản lý người dùng]",
+  "caption": "Hình 6.8. Quản lý người dùng"
+ },
+ {
+  "t": "placeholder",
+  "text": "[Chèn ảnh màn hình: Vai trò và quyền]",
+  "caption": "Hình 6.9. Vai trò và quyền"
+ },
+ {
+  "t": "placeholder",
+  "text": "[Chèn ảnh màn hình: Điều phối công việc]",
+  "caption": "Hình 6.10. Điều phối công việc"
+ },
+ {
+  "t": "placeholder",
+  "text": "[Chèn ảnh màn hình: Yêu cầu ngoại lệ]",
+  "caption": "Hình 6.11. Yêu cầu ngoại lệ"
+ },
+ {
+  "t": "h2",
+  "text": "6.4. Giao diện ứng dụng vận hành"
+ },
+ {
+  "t": "placeholder",
+  "text": "[Chèn ảnh màn hình: Công việc của tôi]",
+  "caption": "Hình 6.12. Công việc của tôi"
+ },
+ {
+  "t": "placeholder",
+  "text": "[Chèn ảnh màn hình: Quét mã kiện hàng]",
+  "caption": "Hình 6.13. Quét mã kiện hàng"
+ },
+ {
+  "t": "placeholder",
+  "text": "[Chèn ảnh màn hình: Ghi nhận kết quả giao hàng]",
+  "caption": "Hình 6.14. Ghi nhận kết quả giao hàng"
+ },
+ {
+  "t": "placeholder",
+  "text": "[Chèn ảnh màn hình: Ca làm việc và check-in]",
+  "caption": "Hình 6.15. Ca làm việc và check-in"
+ },
+ {
+  "t": "h2",
+  "text": "6.5. Kiểm thử hệ thống"
+ },
+ {
+  "t": "p",
+  "text": "Nhóm áp dụng kiểm thử hộp đen theo use case: mỗi chức năng có ít nhất một ca kiểm thử luồng chính và các ca kiểm thử luồng thay thế, dữ liệu không hợp lệ và giá trị biên. Tổng cộng 192 ca kiểm thử phủ toàn bộ 41 chức năng. Cột “Kết quả” được nhóm điền khi thực hiện kiểm thử (Đạt / Không đạt)."
+ },
+ {
+  "t": "caption",
+  "text": "Bảng 6.2. Tổng hợp số lượng test case"
+ },
+ {
+  "t": "table",
+  "header": [
+   "Nhóm chức năng",
+   "Số chức năng",
+   "Số test case"
+  ],
+  "rows": [
+   [
+    "Xác thực và tài khoản cá nhân",
+    "6",
+    "34"
+   ],
+   [
+    "Quản trị người dùng và phân quyền",
+    "3",
+    "21"
+   ],
+   [
+    "Cửa hàng (Merchant)",
+    "5",
+    "15"
+   ],
+   [
+    "Tra cứu công khai",
+    "3",
+    "14"
+   ],
+   [
+    "Đơn hàng và vận đơn",
+    "4",
+    "24"
+   ],
+   [
+    "Bảng giá và mạng lưới",
+    "2",
+    "15"
+   ],
+   [
+    "Nhân sự vận hành và ca làm việc",
+    "6",
+    "19"
+   ],
+   [
+    "Điều phối và thực hiện vận hành",
+    "10",
+    "35"
+   ],
+   [
+    "Ngoại lệ và sự cố",
+    "4",
+    "15"
+   ],
+   [
+    "Tổng cộng",
+    "43",
+    "192"
+   ]
+  ],
+  "widths": [
+   4706,
+   1800,
+   1800
+  ],
+  "size": 11
+ },
+ {
+  "t": "landscape_start"
+ },
+ {
+  "t": "caption",
+  "text": "Bảng 6.3. Bộ test case chi tiết"
+ },
+ {
+  "t": "testcases",
+  "rows": [
+   [
+    "TC001",
+    "UC01 Đăng nhập",
+    "Đăng nhập thành công (khách hàng)",
+    "Email: kh01@pavex.vn, mật khẩu đúng → nhấn Đăng nhập",
+    "Cấp token, chuyển đến trang chủ cổng khách hàng, hiển thị tên người dùng",
+    ""
+   ],
+   [
+    "TC002",
+    "UC01 Đăng nhập",
+    "Đăng nhập thành công (quản trị)",
+    "Tài khoản có vai trò Platform Admin",
+    "Chuyển đến Bảng điều hành; menu hiển thị theo quyền",
+    ""
+   ],
+   [
+    "TC003",
+    "UC01 Đăng nhập",
+    "Sai mật khẩu",
+    "Email đúng, mật khẩu sai",
+    "Thông báo “Email hoặc mật khẩu không đúng”, không cấp token",
+    ""
+   ],
+   [
+    "TC004",
+    "UC01 Đăng nhập",
+    "Email chưa đăng ký",
+    "Email: khongtontai@pavex.vn",
+    "Thông báo “Email hoặc mật khẩu không đúng”",
+    ""
+   ],
+   [
+    "TC005",
+    "UC01 Đăng nhập",
+    "Bỏ trống trường bắt buộc",
+    "Để trống email hoặc mật khẩu",
+    "Báo lỗi tại trường bị trống, không gửi yêu cầu",
+    ""
+   ],
+   [
+    "TC006",
+    "UC01 Đăng nhập",
+    "Email sai định dạng",
+    "Email: abc@",
+    "Báo lỗi định dạng email",
+    ""
+   ],
+   [
+    "TC007",
+    "UC01 Đăng nhập",
+    "Tài khoản bị tạm khóa",
+    "Tài khoản trạng thái SUSPENDED",
+    "Thông báo tài khoản bị khóa, không cho đăng nhập",
+    ""
+   ],
+   [
+    "TC008",
+    "UC01 Đăng nhập",
+    "Tự làm mới phiên",
+    "Đợi access token hết hạn rồi gọi một trang có dữ liệu",
+    "Hệ thống tự refresh token, trang vẫn tải được",
+    ""
+   ],
+   [
+    "TC009",
+    "UC01 Đăng nhập",
+    "Refresh token không hợp lệ",
+    "Xóa/sửa refresh token rồi gọi API",
+    "Phiên bị xóa, chuyển về trang Đăng nhập",
+    ""
+   ],
+   [
+    "TC010",
+    "UC01 Đăng nhập",
+    "Truy cập trang khi chưa đăng nhập",
+    "Mở trực tiếp /dashboard",
+    "Chuyển hướng đến /login kèm returnTo",
+    ""
+   ],
+   [
+    "TC011",
+    "UC01.1 Quên mật khẩu",
+    "Gửi yêu cầu đặt lại mật khẩu",
+    "Nhập email đã đăng ký",
+    "Thông báo đã gửi email hướng dẫn",
+    ""
+   ],
+   [
+    "TC012",
+    "UC01.1 Quên mật khẩu",
+    "Đặt lại mật khẩu bằng liên kết",
+    "Mở liên kết hợp lệ, nhập mật khẩu mới hợp lệ",
+    "Đổi mật khẩu thành công, đăng nhập được bằng mật khẩu mới",
+    ""
+   ],
+   [
+    "TC013",
+    "UC01.1 Quên mật khẩu",
+    "Liên kết hết hạn",
+    "Mở liên kết đã hết hạn",
+    "Thông báo liên kết hết hạn, cho gửi lại",
+    ""
+   ],
+   [
+    "TC014",
+    "UC02 Đăng xuất",
+    "Đăng xuất",
+    "Nhấn Đăng xuất",
+    "Thu hồi refresh token, xóa phiên, về trang Đăng nhập",
+    ""
+   ],
+   [
+    "TC015",
+    "UC02 Đăng xuất",
+    "Dùng lại token sau khi đăng xuất",
+    "Gọi API bằng refresh token cũ",
+    "Bị từ chối (401)",
+    ""
+   ],
+   [
+    "TC016",
+    "UC03 Đăng ký tài khoản",
+    "Đăng ký thành công",
+    "Họ tên, email mới, mật khẩu mạnh, xác nhận khớp",
+    "Tạo tài khoản, hồ sơ INCOMPLETE, gửi email xác minh",
+    ""
+   ],
+   [
+    "TC017",
+    "UC03 Đăng ký tài khoản",
+    "Email đã tồn tại",
+    "Dùng email đã đăng ký",
+    "Thông báo email đã được đăng ký",
+    ""
+   ],
+   [
+    "TC018",
+    "UC03 Đăng ký tài khoản",
+    "Mật khẩu xác nhận không khớp",
+    "Mật khẩu ≠ xác nhận",
+    "Báo lỗi tại trường xác nhận mật khẩu",
+    ""
+   ],
+   [
+    "TC019",
+    "UC03 Đăng ký tài khoản",
+    "Mật khẩu yếu",
+    "Mật khẩu: 123",
+    "Báo lỗi yêu cầu độ mạnh mật khẩu",
+    ""
+   ],
+   [
+    "TC020",
+    "UC03 Đăng ký tài khoản",
+    "Bỏ trống trường bắt buộc",
+    "Để trống họ tên",
+    "Báo lỗi tại trường họ tên",
+    ""
+   ],
+   [
+    "TC021",
+    "UC03 Đăng ký tài khoản",
+    "Xác minh email",
+    "Mở liên kết xác minh hợp lệ",
+    "emailVerified = true, chuyển đến Đăng nhập",
+    ""
+   ],
+   [
+    "TC022",
+    "UC04 Quản lý hồ sơ cá nhân",
+    "Xem hồ sơ",
+    "Mở trang Hồ sơ",
+    "Hiển thị email, họ tên, vai trò, trạng thái hồ sơ",
+    ""
+   ],
+   [
+    "TC023",
+    "UC04 Quản lý hồ sơ cá nhân",
+    "Cập nhật thông tin cá nhân",
+    "Sửa họ, tên, giới tính, ngày sinh → Lưu",
+    "Lưu thành công, hiển thị dữ liệu mới",
+    ""
+   ],
+   [
+    "TC024",
+    "UC04 Quản lý hồ sơ cá nhân",
+    "Ngày sinh không hợp lệ",
+    "Ngày sinh ở tương lai",
+    "Báo lỗi ngày sinh",
+    ""
+   ],
+   [
+    "TC025",
+    "UC04 Quản lý hồ sơ cá nhân",
+    "Cập nhật ảnh đại diện",
+    "Tải ảnh JPG ≤ 2MB",
+    "Ảnh đại diện được thay đổi",
+    ""
+   ],
+   [
+    "TC026",
+    "UC04 Quản lý hồ sơ cá nhân",
+    "Đổi mật khẩu",
+    "Mật khẩu cũ đúng, mật khẩu mới hợp lệ",
+    "Đổi thành công",
+    ""
+   ],
+   [
+    "TC027",
+    "UC04 Quản lý hồ sơ cá nhân",
+    "Đổi mật khẩu sai mật khẩu cũ",
+    "Mật khẩu cũ sai",
+    "Thông báo mật khẩu cũ không đúng",
+    ""
+   ],
+   [
+    "TC028",
+    "UC05 Quản lý sổ địa chỉ",
+    "Thêm địa chỉ",
+    "Tên, SĐT, tỉnh/thành, phường/xã, địa chỉ chi tiết",
+    "Địa chỉ mới xuất hiện trong danh sách",
+    ""
+   ],
+   [
+    "TC029",
+    "UC05 Quản lý sổ địa chỉ",
+    "Thiếu trường bắt buộc",
+    "Bỏ trống phường/xã",
+    "Báo lỗi trường bắt buộc",
+    ""
+   ],
+   [
+    "TC030",
+    "UC05 Quản lý sổ địa chỉ",
+    "Số điện thoại sai định dạng",
+    "SĐT: 12345",
+    "Báo lỗi số điện thoại",
+    ""
+   ],
+   [
+    "TC031",
+    "UC05 Quản lý sổ địa chỉ",
+    "Sửa địa chỉ",
+    "Đổi địa chỉ chi tiết → Lưu",
+    "Cập nhật thành công",
+    ""
+   ],
+   [
+    "TC032",
+    "UC05 Quản lý sổ địa chỉ",
+    "Xóa địa chỉ",
+    "Xóa một địa chỉ → xác nhận",
+    "Địa chỉ bị xóa khỏi danh sách",
+    ""
+   ],
+   [
+    "TC033",
+    "UC05 Quản lý sổ địa chỉ",
+    "Đặt mặc định",
+    "Chọn “Đặt làm mặc định”",
+    "Chỉ một địa chỉ có nhãn mặc định",
+    ""
+   ],
+   [
+    "TC034",
+    "UC05 Quản lý sổ địa chỉ",
+    "Vượt số lượng tối đa",
+    "Thêm địa chỉ thứ 21",
+    "Thông báo đã đạt giới hạn",
+    ""
+   ],
+   [
+    "TC035",
+    "UC06 Quản lý người dùng",
+    "Xem danh sách",
+    "Mở Người dùng",
+    "Danh sách có phân trang, hiển thị vai trò, trạng thái",
+    ""
+   ],
+   [
+    "TC036",
+    "UC06 Quản lý người dùng",
+    "Tìm theo email/tên",
+    "Từ khóa: “bao”",
+    "Chỉ hiển thị tài khoản khớp",
+    ""
+   ],
+   [
+    "TC037",
+    "UC06 Quản lý người dùng",
+    "Lọc theo vai trò và trạng thái",
+    "Vai trò: Courier; trạng thái: ACTIVE",
+    "Kết quả đúng điều kiện lọc",
+    ""
+   ],
+   [
+    "TC038",
+    "UC06 Quản lý người dùng",
+    "Lọc theo trạng thái hồ sơ",
+    "Hồ sơ: PENDING_VERIFICATION",
+    "Kết quả đúng điều kiện lọc",
+    ""
+   ],
+   [
+    "TC039",
+    "UC06 Quản lý người dùng",
+    "Xem chi tiết",
+    "Chọn một tài khoản",
+    "Hiển thị hồ sơ, vai trò, ngày tạo",
+    ""
+   ],
+   [
+    "TC040",
+    "UC06 Quản lý người dùng",
+    "Tạm khóa tài khoản",
+    "Đổi trạng thái sang SUSPENDED",
+    "Cập nhật thành công; tài khoản đó không đăng nhập được",
+    ""
+   ],
+   [
+    "TC041",
+    "UC06 Quản lý người dùng",
+    "Mở khóa tài khoản",
+    "Đổi SUSPENDED → ACTIVE",
+    "Tài khoản đăng nhập lại được",
+    ""
+   ],
+   [
+    "TC042",
+    "UC06 Quản lý người dùng",
+    "Xung đột dữ liệu",
+    "Hai admin cùng sửa một tài khoản",
+    "Người lưu sau nhận thông báo xung đột (version)",
+    ""
+   ],
+   [
+    "TC043",
+    "UC06 Quản lý người dùng",
+    "Tự khóa chính mình",
+    "Admin khóa tài khoản đang đăng nhập",
+    "Hệ thống không cho phép",
+    ""
+   ],
+   [
+    "TC044",
+    "UC06 Quản lý người dùng",
+    "Không đủ quyền",
+    "Tài khoản không có identity.users.read mở /identity/users",
+    "Thông báo chưa được cấp quyền (403)",
+    ""
+   ],
+   [
+    "TC045",
+    "UC06 Quản lý người dùng",
+    "Xác minh hồ sơ người dùng",
+    "Duyệt hồ sơ PENDING_VERIFICATION",
+    "Hồ sơ chuyển COMPLETED",
+    ""
+   ],
+   [
+    "TC046",
+    "UC06 Quản lý người dùng",
+    "Từ chối hồ sơ người dùng",
+    "Từ chối hồ sơ kèm lý do",
+    "Hồ sơ chuyển REJECTED",
+    ""
+   ],
+   [
+    "TC047",
+    "UC07 Tạo tài khoản nhân viên",
+    "Tạo tài khoản nhân viên",
+    "Họ tên, email mới, vai trò Courier",
+    "Tài khoản được tạo với vai trò đã chọn",
+    ""
+   ],
+   [
+    "TC048",
+    "UC07 Tạo tài khoản nhân viên",
+    "Email trùng",
+    "Email đã tồn tại",
+    "Báo lỗi email đã tồn tại",
+    ""
+   ],
+   [
+    "TC049",
+    "UC07 Tạo tài khoản nhân viên",
+    "Không chọn vai trò",
+    "Bỏ trống vai trò",
+    "Báo lỗi phải chọn ít nhất một vai trò",
+    ""
+   ],
+   [
+    "TC050",
+    "UC08 Quản lý vai trò và quyền",
+    "Xem vai trò và quyền",
+    "Mở Vai trò & quyền",
+    "Danh sách vai trò, số quyền mỗi vai trò",
+    ""
+   ],
+   [
+    "TC051",
+    "UC08 Quản lý vai trò và quyền",
+    "Tìm quyền",
+    "Tìm “users”",
+    "Hiển thị quyền có mã/tên khớp",
+    ""
+   ],
+   [
+    "TC052",
+    "UC08 Quản lý vai trò và quyền",
+    "Tạo vai trò",
+    "Mã, tên, mô tả",
+    "Vai trò mới xuất hiện",
+    ""
+   ],
+   [
+    "TC053",
+    "UC08 Quản lý vai trò và quyền",
+    "Phân quyền cho vai trò",
+    "Gán identity.users.read",
+    "Người có vai trò đó thấy menu Người dùng",
+    ""
+   ],
+   [
+    "TC054",
+    "UC08 Quản lý vai trò và quyền",
+    "Sửa vai trò hệ thống",
+    "Sửa vai trò isSystem = true",
+    "Không cho phép",
+    ""
+   ],
+   [
+    "TC055",
+    "UC08 Quản lý vai trò và quyền",
+    "Xóa vai trò tùy chỉnh",
+    "Xóa vai trò không phải hệ thống",
+    "Xóa thành công",
+    ""
+   ],
+   [
+    "TC056",
+    "UC09 Đăng ký cửa hàng",
+    "Đăng ký cửa hàng",
+    "Tên kinh doanh, người liên hệ, SĐT, MST",
+    "Cửa hàng được tạo, chờ xác minh",
+    ""
+   ],
+   [
+    "TC057",
+    "UC09 Đăng ký cửa hàng",
+    "Thiếu thông tin bắt buộc",
+    "Bỏ trống tên kinh doanh",
+    "Báo lỗi trường bắt buộc",
+    ""
+   ],
+   [
+    "TC058",
+    "UC09 Đăng ký cửa hàng",
+    "Đã có cửa hàng",
+    "Tài khoản đã sở hữu cửa hàng đăng ký lần nữa",
+    "Thông báo mỗi tài khoản chỉ có một cửa hàng",
+    ""
+   ],
+   [
+    "TC059",
+    "UC10 Quản lý thông tin cửa hàng",
+    "Xem thông tin cửa hàng",
+    "Mở Cửa hàng của tôi",
+    "Hiển thị mã, trạng thái, lý do trạng thái",
+    ""
+   ],
+   [
+    "TC060",
+    "UC10 Quản lý thông tin cửa hàng",
+    "Cập nhật thông tin",
+    "Sửa SĐT liên hệ → Lưu",
+    "Cập nhật thành công",
+    ""
+   ],
+   [
+    "TC061",
+    "UC11 Quản lý địa chỉ lấy hàng",
+    "Thêm địa chỉ lấy hàng",
+    "Tên kho, liên hệ, địa chỉ",
+    "Địa chỉ được thêm",
+    ""
+   ],
+   [
+    "TC062",
+    "UC11 Quản lý địa chỉ lấy hàng",
+    "Đặt địa chỉ lấy hàng mặc định",
+    "Chọn mặc định",
+    "Được dùng làm người gửi mặc định khi tạo đơn",
+    ""
+   ],
+   [
+    "TC063",
+    "UC11 Quản lý địa chỉ lấy hàng",
+    "Xóa địa chỉ lấy hàng",
+    "Xóa → xác nhận",
+    "Địa chỉ bị xóa",
+    ""
+   ],
+   [
+    "TC064",
+    "UC12 Yêu cầu xác minh cửa hàng",
+    "Gửi yêu cầu xác minh",
+    "Nhấn Gửi xác minh",
+    "Trạng thái PENDING_VERIFICATION",
+    ""
+   ],
+   [
+    "TC065",
+    "UC12 Yêu cầu xác minh cửa hàng",
+    "Gửi lại khi đang chờ",
+    "Gửi khi đã PENDING_VERIFICATION",
+    "Thông báo yêu cầu đang được xử lý",
+    ""
+   ],
+   [
+    "TC066",
+    "UC13 Duyệt và quản lý cửa hàng",
+    "Lọc cửa hàng chờ xác minh",
+    "Lọc trạng thái PENDING_VERIFICATION",
+    "Chỉ hiện cửa hàng đang chờ",
+    ""
+   ],
+   [
+    "TC067",
+    "UC13 Duyệt và quản lý cửa hàng",
+    "Duyệt cửa hàng",
+    "Chọn cửa hàng → Duyệt",
+    "ACTIVE, ghi người duyệt và thời điểm",
+    ""
+   ],
+   [
+    "TC068",
+    "UC13 Duyệt và quản lý cửa hàng",
+    "Từ chối cửa hàng",
+    "Chọn lý do MISSING_DOCUMENTS + ghi chú",
+    "REJECTED kèm lý do",
+    ""
+   ],
+   [
+    "TC069",
+    "UC13 Duyệt và quản lý cửa hàng",
+    "Tạm ngưng cửa hàng",
+    "Cửa hàng ACTIVE → Tạm ngưng kèm lý do",
+    "SUSPENDED; cửa hàng không tạo được đơn",
+    ""
+   ],
+   [
+    "TC070",
+    "UC13 Duyệt và quản lý cửa hàng",
+    "Khôi phục cửa hàng",
+    "SUSPENDED → Khôi phục",
+    "ACTIVE",
+    ""
+   ],
+   [
+    "TC071",
+    "UC14 Tra cứu vận đơn",
+    "Tra cứu đúng mã",
+    "Mã vận đơn tồn tại",
+    "Hiển thị trạng thái, tiến trình, timeline",
+    ""
+   ],
+   [
+    "TC072",
+    "UC14 Tra cứu vận đơn",
+    "Mã không tồn tại",
+    "Mã: PVX000000000",
+    "Thông báo vận đơn không tồn tại",
+    ""
+   ],
+   [
+    "TC073",
+    "UC14 Tra cứu vận đơn",
+    "Mã trống / sai định dạng",
+    "Để trống",
+    "Báo lỗi nhập mã",
+    ""
+   ],
+   [
+    "TC074",
+    "UC14 Tra cứu vận đơn",
+    "Ẩn thông tin cá nhân",
+    "Tra cứu khi không đăng nhập",
+    "Ẩn SĐT và địa chỉ chi tiết",
+    ""
+   ],
+   [
+    "TC075",
+    "UC14 Tra cứu vận đơn",
+    "Xem hành trình",
+    "Vận đơn đã qua nhiều hub",
+    "Sự kiện sắp theo thời gian, có địa điểm",
+    ""
+   ],
+   [
+    "TC076",
+    "UC15 Tra cứu giá cước",
+    "Tính cước nội tỉnh",
+    "Gửi và nhận cùng tỉnh, 1 kg",
+    "Hiển thị các mức dịch vụ, vùng INTRA_PROVINCE",
+    ""
+   ],
+   [
+    "TC077",
+    "UC15 Tra cứu giá cước",
+    "Tính cước liên vùng",
+    "Gửi Hà Nội, nhận TP.HCM",
+    "Vùng INTER_REGION, thời gian giao dài hơn",
+    ""
+   ],
+   [
+    "TC078",
+    "UC15 Tra cứu giá cước",
+    "Khối lượng quy đổi",
+    "1 kg, kích thước 50×50×50 cm",
+    "Khối lượng tính cước = khối lượng quy đổi",
+    ""
+   ],
+   [
+    "TC079",
+    "UC15 Tra cứu giá cước",
+    "Có COD và bảo hiểm",
+    "COD 2.000.000, giá trị 5.000.000",
+    "Có phí COD và phí bảo hiểm",
+    ""
+   ],
+   [
+    "TC080",
+    "UC15 Tra cứu giá cước",
+    "Vượt khối lượng tối đa",
+    "Khối lượng lớn hơn giới hạn",
+    "Thông báo vượt giới hạn",
+    ""
+   ],
+   [
+    "TC081",
+    "UC15 Tra cứu giá cước",
+    "Ngoài vùng phục vụ",
+    "Phường chưa có khu vực phục vụ",
+    "Thông báo chưa hỗ trợ khu vực",
+    ""
+   ],
+   [
+    "TC082",
+    "UC15 Tra cứu giá cước",
+    "Vùng xa / hải đảo",
+    "Điểm nhận hạng REMOTE / ISLAND",
+    "Có phụ phí vùng xa / hải đảo",
+    ""
+   ],
+   [
+    "TC083",
+    "UC16 Tra cứu bưu cục",
+    "Tìm bưu cục theo tỉnh",
+    "Chọn tỉnh",
+    "Danh sách hub công khai trong tỉnh",
+    ""
+   ],
+   [
+    "TC084",
+    "UC16 Tra cứu bưu cục",
+    "Ẩn hub không công khai",
+    "Hub có publicVisible = false",
+    "Không xuất hiện trong kết quả",
+    ""
+   ],
+   [
+    "TC085",
+    "UC17 Tạo đơn hàng",
+    "Tạo đơn thành công",
+    "Người gửi, người nhận, 1 kiện 2 kg, dịch vụ Tiêu chuẩn",
+    "Sinh mã vận đơn, trạng thái Chờ lấy hàng, có công việc lấy hàng",
+    ""
+   ],
+   [
+    "TC086",
+    "UC17 Tạo đơn hàng",
+    "Chọn địa chỉ từ sổ địa chỉ",
+    "Chọn người nhận từ sổ địa chỉ",
+    "Tự điền thông tin người nhận",
+    ""
+   ],
+   [
+    "TC087",
+    "UC17 Tạo đơn hàng",
+    "Nhiều kiện",
+    "3 kiện khác khối lượng",
+    "Lưu đủ 3 kiện, tổng khối lượng đúng",
+    ""
+   ],
+   [
+    "TC088",
+    "UC17 Tạo đơn hàng",
+    "SĐT người nhận sai",
+    "SĐT: 0123",
+    "Báo lỗi số điện thoại",
+    ""
+   ],
+   [
+    "TC089",
+    "UC17 Tạo đơn hàng",
+    "Kiện vượt giới hạn",
+    "Kích thước vượt tối đa",
+    "Báo lỗi vượt giới hạn",
+    ""
+   ],
+   [
+    "TC090",
+    "UC17 Tạo đơn hàng",
+    "COD vượt mức tối đa",
+    "COD lớn hơn mức cho phép",
+    "Báo mức COD tối đa",
+    ""
+   ],
+   [
+    "TC091",
+    "UC17 Tạo đơn hàng",
+    "Báo giá hết hạn",
+    "Để quá thời hạn báo giá rồi xác nhận",
+    "Hệ thống tính lại cước",
+    ""
+   ],
+   [
+    "TC092",
+    "UC17 Tạo đơn hàng",
+    "Không tìm được lộ trình",
+    "Tuyến hết tải trọng",
+    "Đơn được tạo với ROUTING_FAILED, vào danh sách ngoại lệ",
+    ""
+   ],
+   [
+    "TC093",
+    "UC17 Tạo đơn hàng",
+    "Cửa hàng chưa xác minh",
+    "Merchant PENDING_VERIFICATION",
+    "Không cho tạo đơn",
+    ""
+   ],
+   [
+    "TC094",
+    "UC17 Tạo đơn hàng",
+    "Người trả cước",
+    "Chọn Người nhận trả",
+    "shippingFeePayer = RECIPIENT",
+    ""
+   ],
+   [
+    "TC095",
+    "UC17 Tạo đơn hàng",
+    "Tạo đơn tại quầy (Hub Dispatch)",
+    "Chọn khách hàng → nhập thông tin",
+    "Đơn được tạo thay khách hàng",
+    ""
+   ],
+   [
+    "TC096",
+    "UC18 Quản lý đơn hàng",
+    "Xem danh sách đơn",
+    "Mở Đơn hàng của tôi",
+    "Danh sách đơn của cửa hàng",
+    ""
+   ],
+   [
+    "TC097",
+    "UC18 Quản lý đơn hàng",
+    "Lọc theo trạng thái",
+    "Tab Đang xử lý / Đã giao / Đã hủy",
+    "Kết quả đúng trạng thái",
+    ""
+   ],
+   [
+    "TC098",
+    "UC18 Quản lý đơn hàng",
+    "Tìm đơn",
+    "Tìm theo mã, tên hoặc SĐT người nhận",
+    "Kết quả khớp",
+    ""
+   ],
+   [
+    "TC099",
+    "UC18 Quản lý đơn hàng",
+    "Xem chi tiết",
+    "Chọn một đơn",
+    "Hiển thị kiện, cước, COD, trạng thái định tuyến",
+    ""
+   ],
+   [
+    "TC100",
+    "UC18 Quản lý đơn hàng",
+    "Hủy đơn khi chưa lấy hàng",
+    "Đơn Chờ lấy hàng → Hủy, nhập lý do",
+    "Đơn CANCELLED, giải phóng giữ chỗ tải",
+    ""
+   ],
+   [
+    "TC101",
+    "UC18 Quản lý đơn hàng",
+    "Hủy đơn đã lấy hàng",
+    "Đơn đã lấy → Hủy",
+    "Không cho hủy, gợi ý yêu cầu ngoại lệ",
+    ""
+   ],
+   [
+    "TC102",
+    "UC19 Theo dõi vận đơn",
+    "Theo dõi đơn của cửa hàng",
+    "Chọn đơn đang vận chuyển",
+    "Hiển thị timeline và vị trí hiện tại",
+    ""
+   ],
+   [
+    "TC103",
+    "UC19 Theo dõi vận đơn",
+    "Cập nhật trạng thái mới",
+    "Nhân viên quét kiện tại hub mới",
+    "Timeline có thêm sự kiện mới",
+    ""
+   ],
+   [
+    "TC104",
+    "UC20 Yêu cầu xử lý ngoại lệ vận đơn",
+    "Yêu cầu hoàn hàng",
+    "Chọn đơn → Yêu cầu hoàn hàng, nhập lý do",
+    "Tạo yêu cầu PENDING",
+    ""
+   ],
+   [
+    "TC105",
+    "UC20 Yêu cầu xử lý ngoại lệ vận đơn",
+    "Yêu cầu chuyển tiếp địa chỉ",
+    "Nhập địa chỉ mới",
+    "Yêu cầu có forwardAddress",
+    ""
+   ],
+   [
+    "TC106",
+    "UC20 Yêu cầu xử lý ngoại lệ vận đơn",
+    "Yêu cầu giao lại",
+    "Đơn giao thất bại → Giao lại",
+    "Tạo yêu cầu REDELIVERY",
+    ""
+   ],
+   [
+    "TC107",
+    "UC20 Yêu cầu xử lý ngoại lệ vận đơn",
+    "Yêu cầu hủy vận đơn",
+    "Chọn Hủy vận đơn",
+    "Tạo yêu cầu CANCEL_SHIPMENT",
+    ""
+   ],
+   [
+    "TC108",
+    "UC20 Yêu cầu xử lý ngoại lệ vận đơn",
+    "Thiếu lý do",
+    "Bỏ trống lý do",
+    "Báo lỗi trường bắt buộc",
+    ""
+   ],
+   [
+    "TC109",
+    "UC21 Quản lý bảng giá",
+    "Tạo bảng giá nháp",
+    "Mã, tên, tiền tệ, TTL báo giá",
+    "Bảng giá DRAFT",
+    ""
+   ],
+   [
+    "TC110",
+    "UC21 Quản lý bảng giá",
+    "Cấu hình quy tắc giá",
+    "Mức dịch vụ × vùng giá, phí cơ bản, bước khối lượng",
+    "Lưu quy tắc giá",
+    ""
+   ],
+   [
+    "TC111",
+    "UC21 Quản lý bảng giá",
+    "Cấu hình COD / bảo hiểm / giới hạn",
+    "Nhập ngưỡng miễn phí, tỉ lệ, mức tối đa",
+    "Lưu chính sách",
+    ""
+   ],
+   [
+    "TC112",
+    "UC21 Quản lý bảng giá",
+    "Kích hoạt bảng giá",
+    "DRAFT → Kích hoạt",
+    "ACTIVE; bảng giá cũ RETIRED",
+    ""
+   ],
+   [
+    "TC113",
+    "UC21 Quản lý bảng giá",
+    "Tạo phiên bản mới",
+    "Sao chép bảng giá ACTIVE",
+    "Revision mới ở DRAFT",
+    ""
+   ],
+   [
+    "TC114",
+    "UC21 Quản lý bảng giá",
+    "Ngừng áp dụng",
+    "ACTIVE → Ngừng",
+    "RETIRED, không dùng để báo giá",
+    ""
+   ],
+   [
+    "TC115",
+    "UC21 Quản lý bảng giá",
+    "Thiếu quy tắc giá",
+    "Kích hoạt khi thiếu quy tắc cho một vùng",
+    "Không cho kích hoạt",
+    ""
+   ],
+   [
+    "TC116",
+    "UC22 Quản lý mạng lưới",
+    "Thêm vùng mạng lưới",
+    "Mã, tên vùng",
+    "Vùng mới ACTIVE",
+    ""
+   ],
+   [
+    "TC117",
+    "UC22 Quản lý mạng lưới",
+    "Thêm khu vực phục vụ",
+    "Chọn vùng, hub chính, phạm vi tỉnh/phường",
+    "Khu vực phục vụ được tạo",
+    ""
+   ],
+   [
+    "TC118",
+    "UC22 Quản lý mạng lưới",
+    "Thêm hub",
+    "Mã, tên, loại hub, địa chỉ, hub cha",
+    "Hub mới xuất hiện",
+    ""
+   ],
+   [
+    "TC119",
+    "UC22 Quản lý mạng lưới",
+    "Trùng mã hub",
+    "Mã hub đã có",
+    "Báo lỗi trùng mã",
+    ""
+   ],
+   [
+    "TC120",
+    "UC22 Quản lý mạng lưới",
+    "Thêm tuyến vận chuyển",
+    "Hub đi, hub đến, phương thức, thời gian, tải tối đa",
+    "Tuyến được tạo",
+    ""
+   ],
+   [
+    "TC121",
+    "UC22 Quản lý mạng lưới",
+    "Tuyến trùng hub đi và đến",
+    "Hub đi = hub đến",
+    "Báo lỗi",
+    ""
+   ],
+   [
+    "TC122",
+    "UC22 Quản lý mạng lưới",
+    "Thêm lịch chạy tuyến",
+    "Giờ khởi hành, ngày chạy, tải trọng",
+    "Lịch chạy được tạo",
+    ""
+   ],
+   [
+    "TC123",
+    "UC22 Quản lý mạng lưới",
+    "Thêm mẫu lộ trình",
+    "Chuỗi chặng theo thứ tự",
+    "Mẫu lộ trình được tạo",
+    ""
+   ],
+   [
+    "TC124",
+    "UC23 Quản lý nhân sự vận hành",
+    "Tạo hồ sơ nhân sự",
+    "Tài khoản nhân viên, mã nhân viên, loại Courier",
+    "Hồ sơ nhân sự ACTIVE",
+    ""
+   ],
+   [
+    "TC125",
+    "UC23 Quản lý nhân sự vận hành",
+    "Gán nhân sự vào hub",
+    "Chọn hub, đặt hub chính",
+    "Tạo HubMembership",
+    ""
+   ],
+   [
+    "TC126",
+    "UC23 Quản lý nhân sự vận hành",
+    "Gỡ nhân sự khỏi hub",
+    "Gỡ khỏi hub",
+    "Ghi unassignedAt",
+    ""
+   ],
+   [
+    "TC127",
+    "UC23 Quản lý nhân sự vận hành",
+    "Cập nhật trạng thái nhân sự",
+    "ACTIVE → ON_LEAVE",
+    "Không xuất hiện trong danh sách phân công",
+    ""
+   ],
+   [
+    "TC128",
+    "UC24 Xem nhân sự vận hành",
+    "Xem nhân sự của hub",
+    "Mở Nhân sự vận hành",
+    "Danh sách nhân sự, trạng thái sẵn sàng, số việc đang làm",
+    ""
+   ],
+   [
+    "TC129",
+    "UC24 Xem nhân sự vận hành",
+    "Lọc theo loại nhân sự",
+    "Loại: Line-haul Driver",
+    "Kết quả đúng loại",
+    ""
+   ],
+   [
+    "TC130",
+    "UC25 Quản lý ca làm việc",
+    "Tạo ca",
+    "Mã, tên, 07:00–15:00",
+    "Ca SCHEDULED",
+    ""
+   ],
+   [
+    "TC131",
+    "UC25 Quản lý ca làm việc",
+    "Giờ kết thúc trước giờ bắt đầu",
+    "15:00–07:00",
+    "Báo lỗi thời gian",
+    ""
+   ],
+   [
+    "TC132",
+    "UC25 Quản lý ca làm việc",
+    "Phân công nhân sự vào ca",
+    "Chọn 3 nhân sự",
+    "Tạo 3 phân công ASSIGNED, nhân sự nhận thông báo",
+    ""
+   ],
+   [
+    "TC133",
+    "UC25 Quản lý ca làm việc",
+    "Nhân sự trùng ca",
+    "Phân công nhân sự đã có ca trùng giờ",
+    "Cảnh báo trùng ca",
+    ""
+   ],
+   [
+    "TC134",
+    "UC25 Quản lý ca làm việc",
+    "Hủy ca",
+    "Hủy ca kèm lý do",
+    "Ca CANCELLED, phân công bị hủy",
+    ""
+   ],
+   [
+    "TC135",
+    "UC25 Quản lý ca làm việc",
+    "Đánh dấu vắng mặt",
+    "Chọn nhân sự không đến",
+    "Phân công ABSENT",
+    ""
+   ],
+   [
+    "TC136",
+    "UC26 Xem ca làm việc",
+    "Xem lịch ca của tôi",
+    "Mở Ca làm việc trên ứng dụng",
+    "Danh sách ca được phân công",
+    ""
+   ],
+   [
+    "TC137",
+    "UC26 Xem ca làm việc",
+    "Không có ca",
+    "Nhân sự chưa được phân công",
+    "Thông báo chưa có ca",
+    ""
+   ],
+   [
+    "TC138",
+    "UC27 Check-in / Check-out ca",
+    "Check-in đúng giờ",
+    "Nhấn Check-in trong khung giờ ca",
+    "CHECKED_IN, ghi checkedInAt",
+    ""
+   ],
+   [
+    "TC139",
+    "UC27 Check-in / Check-out ca",
+    "Check-out",
+    "Nhấn Check-out",
+    "CHECKED_OUT, ghi checkedOutAt",
+    ""
+   ],
+   [
+    "TC140",
+    "UC27 Check-in / Check-out ca",
+    "Check-in khi ca đã hủy",
+    "Ca CANCELLED",
+    "Không cho check-in",
+    ""
+   ],
+   [
+    "TC141",
+    "UC28 Cập nhật trạng thái sẵn sàng",
+    "Chuyển sang sẵn sàng",
+    "Bật Đang hoạt động",
+    "AVAILABLE, xuất hiện khi điều phối",
+    ""
+   ],
+   [
+    "TC142",
+    "UC28 Cập nhật trạng thái sẵn sàng",
+    "Chuyển sang ngoại tuyến",
+    "Tắt Đang hoạt động",
+    "OFFLINE, không được phân công mới",
+    ""
+   ],
+   [
+    "TC143",
+    "UC29 Xem tổng quan vận hành",
+    "Xem bảng điều hành",
+    "Mở Tổng quan",
+    "Số đơn, đơn đang xử lý, đã giao, công việc tồn",
+    ""
+   ],
+   [
+    "TC144",
+    "UC29 Xem tổng quan vận hành",
+    "Không có dữ liệu",
+    "Hub mới chưa có đơn",
+    "Hiển thị 0 và trạng thái rỗng",
+    ""
+   ],
+   [
+    "TC145",
+    "UC30 Theo dõi vận đơn vận hành",
+    "Tra cứu vận đơn nội bộ",
+    "Nhập mã vận đơn",
+    "Hiển thị kiện, custody, lộ trình, công việc",
+    ""
+   ],
+   [
+    "TC146",
+    "UC30 Theo dõi vận đơn vận hành",
+    "Tạm giữ vận đơn",
+    "Tạm giữ kèm lý do",
+    "isOnHold = true, ghi hub và người thao tác",
+    ""
+   ],
+   [
+    "TC147",
+    "UC30 Theo dõi vận đơn vận hành",
+    "Giải phóng vận đơn",
+    "Bỏ tạm giữ",
+    "isOnHold = false",
+    ""
+   ],
+   [
+    "TC148",
+    "UC31 Điều phối công việc",
+    "Phân công công việc",
+    "Chọn công việc PICKUP → chọn Courier phù hợp",
+    "ASSIGNED, nhân sự nhận việc trên ứng dụng",
+    ""
+   ],
+   [
+    "TC149",
+    "UC31 Điều phối công việc",
+    "Chỉ hiện nhân sự phù hợp",
+    "Công việc yêu cầu LINE_HAUL_DRIVER",
+    "Chỉ hiện tài xế trung chuyển đã check-in, sẵn sàng",
+    ""
+   ],
+   [
+    "TC150",
+    "UC31 Điều phối công việc",
+    "Không có nhân sự",
+    "Không ai check-in ca",
+    "Thông báo không có nhân sự sẵn sàng",
+    ""
+   ],
+   [
+    "TC151",
+    "UC31 Điều phối công việc",
+    "Nhân sự quá tải",
+    "Nhân sự đã đạt số việc tối đa",
+    "Cảnh báo, chọn người khác",
+    ""
+   ],
+   [
+    "TC152",
+    "UC31 Điều phối công việc",
+    "Phân công lại",
+    "Đổi người thực hiện",
+    "Cập nhật người thực hiện, ghi người thao tác",
+    ""
+   ],
+   [
+    "TC153",
+    "UC31 Điều phối công việc",
+    "Hủy công việc",
+    "Hủy kèm ghi chú",
+    "CANCELLED",
+    ""
+   ],
+   [
+    "TC154",
+    "UC32 Xem công việc được giao",
+    "Xem công việc",
+    "Mở Công việc của tôi",
+    "Danh sách theo mức ưu tiên",
+    ""
+   ],
+   [
+    "TC155",
+    "UC32 Xem công việc được giao",
+    "Lọc theo trạng thái",
+    "Tab Đang xử lý / Đã xong",
+    "Kết quả đúng trạng thái",
+    ""
+   ],
+   [
+    "TC156",
+    "UC33 Thực hiện công việc",
+    "Nhận việc",
+    "Nhấn Nhận việc",
+    "ACCEPTED",
+    ""
+   ],
+   [
+    "TC157",
+    "UC33 Thực hiện công việc",
+    "Bắt đầu",
+    "Nhấn Bắt đầu",
+    "IN_PROGRESS",
+    ""
+   ],
+   [
+    "TC158",
+    "UC33 Thực hiện công việc",
+    "Hoàn thành",
+    "Quét đủ kiện → Hoàn thành",
+    "COMPLETED, tạo công việc chặng tiếp",
+    ""
+   ],
+   [
+    "TC159",
+    "UC33 Thực hiện công việc",
+    "Hoàn thành khi thiếu kiện",
+    "Quét 1/2 kiện → Hoàn thành",
+    "Không cho hoàn thành, hiển thị kiện còn thiếu",
+    ""
+   ],
+   [
+    "TC160",
+    "UC33 Thực hiện công việc",
+    "Báo không hoàn thành",
+    "Nhập lý do",
+    "FAILED, có resolutionNote",
+    ""
+   ],
+   [
+    "TC161",
+    "UC34 Quét kiện hàng",
+    "Quét mã hợp lệ",
+    "Quét mã kiện thuộc công việc",
+    "Ghi nhận, cập nhật custody và sự kiện",
+    ""
+   ],
+   [
+    "TC162",
+    "UC34 Quét kiện hàng",
+    "Mã không thuộc công việc",
+    "Quét kiện của vận đơn khác",
+    "Cảnh báo, không ghi nhận",
+    ""
+   ],
+   [
+    "TC163",
+    "UC34 Quét kiện hàng",
+    "Quét trùng",
+    "Quét lại kiện đã quét",
+    "Báo quét trùng",
+    ""
+   ],
+   [
+    "TC164",
+    "UC34 Quét kiện hàng",
+    "Chưa cấp quyền camera",
+    "Từ chối quyền camera",
+    "Yêu cầu cấp quyền / nhập mã thủ công",
+    ""
+   ],
+   [
+    "TC165",
+    "UC34 Quét kiện hàng",
+    "Nhập mã thủ công",
+    "Gõ mã kiện",
+    "Xử lý như quét mã",
+    ""
+   ],
+   [
+    "TC166",
+    "UC35 Ghi nhận kết quả giao hàng",
+    "Giao thành công có chữ ký",
+    "Chọn Giao thành công, ký nhận, nhập tên người nhận",
+    "DELIVERED, có DeliveryAttempt",
+    ""
+   ],
+   [
+    "TC167",
+    "UC35 Ghi nhận kết quả giao hàng",
+    "Giao thành công bằng OTP",
+    "Nhập OTP đúng",
+    "DELIVERED",
+    ""
+   ],
+   [
+    "TC168",
+    "UC35 Ghi nhận kết quả giao hàng",
+    "Thiếu bằng chứng",
+    "Không chụp ảnh / không ký",
+    "Yêu cầu bổ sung bằng chứng",
+    ""
+   ],
+   [
+    "TC169",
+    "UC35 Ghi nhận kết quả giao hàng",
+    "Giao thất bại",
+    "Chọn lý do Không liên lạc được",
+    "DELIVERY_FAILED, vào danh sách ngoại lệ",
+    ""
+   ],
+   [
+    "TC170",
+    "UC35 Ghi nhận kết quả giao hàng",
+    "Thu COD",
+    "Đơn có COD, xác nhận đã thu",
+    "Ghi nhận đã thu đủ COD",
+    ""
+   ],
+   [
+    "TC171",
+    "UC36 Bàn giao hàng trung chuyển",
+    "Nhận hàng tại hub đi",
+    "Quét các kiện của chuyến",
+    "Kiện chuyển sang custody tài xế",
+    ""
+   ],
+   [
+    "TC172",
+    "UC36 Bàn giao hàng trung chuyển",
+    "Bàn giao tại hub đến",
+    "Quét kiện tại hub đến",
+    "Kiện về custody hub đến, sự kiện Đến hub",
+    ""
+   ],
+   [
+    "TC173",
+    "UC36 Bàn giao hàng trung chuyển",
+    "Kiện không thuộc chuyến",
+    "Quét kiện của chuyến khác",
+    "Cảnh báo, không ghi nhận",
+    ""
+   ],
+   [
+    "TC174",
+    "UC37 Điều chỉnh khối lượng kiện",
+    "Cân lại kiện",
+    "Nhập khối lượng mới và lý do",
+    "Tạo điều chỉnh, vận đơn có hasPendingWeightReview",
+    ""
+   ],
+   [
+    "TC175",
+    "UC37 Điều chỉnh khối lượng kiện",
+    "Thiếu lý do",
+    "Bỏ trống lý do",
+    "Báo lỗi trường bắt buộc",
+    ""
+   ],
+   [
+    "TC176",
+    "UC38 Duyệt điều chỉnh khối lượng",
+    "Duyệt điều chỉnh",
+    "Chọn điều chỉnh → Duyệt kèm ghi chú",
+    "reviewCompleted = true, cập nhật khối lượng tính cước",
+    ""
+   ],
+   [
+    "TC177",
+    "UC38 Duyệt điều chỉnh khối lượng",
+    "Không có điều chỉnh chờ",
+    "Mở danh sách khi rỗng",
+    "Thông báo không có điều chỉnh chờ duyệt",
+    ""
+   ],
+   [
+    "TC178",
+    "UC39 Xem ngoại lệ vận đơn",
+    "Xem danh sách ngoại lệ",
+    "Mở Ngoại lệ",
+    "Đơn giao thất bại, tạm giữ, chờ duyệt khối lượng, yêu cầu ngoại lệ",
+    ""
+   ],
+   [
+    "TC179",
+    "UC39 Xem ngoại lệ vận đơn",
+    "Lọc theo loại ngoại lệ",
+    "Chọn Giao thất bại",
+    "Kết quả đúng loại",
+    ""
+   ],
+   [
+    "TC180",
+    "UC40 Xử lý yêu cầu ngoại lệ",
+    "Phê duyệt hoàn hàng",
+    "Yêu cầu RETURN_TO_SENDER → Phê duyệt",
+    "COMPLETED, vận đơn chuyển chiều hoàn",
+    ""
+   ],
+   [
+    "TC181",
+    "UC40 Xử lý yêu cầu ngoại lệ",
+    "Phê duyệt đổi địa chỉ",
+    "FORWARD_TO_NEW_ADDRESS → Phê duyệt",
+    "Định tuyến lại, người nhận mới",
+    ""
+   ],
+   [
+    "TC182",
+    "UC40 Xử lý yêu cầu ngoại lệ",
+    "Từ chối yêu cầu",
+    "Từ chối kèm ghi chú",
+    "REJECTED, người yêu cầu được thông báo",
+    ""
+   ],
+   [
+    "TC183",
+    "UC40 Xử lý yêu cầu ngoại lệ",
+    "Vận đơn đã giao",
+    "Phê duyệt yêu cầu của đơn DELIVERED",
+    "Không cho phê duyệt",
+    ""
+   ],
+   [
+    "TC184",
+    "UC40 Xử lý yêu cầu ngoại lệ",
+    "Không tìm được lộ trình mới",
+    "Địa chỉ mới ngoài vùng phục vụ",
+    "Giữ APPROVED, cảnh báo định tuyến thất bại",
+    ""
+   ],
+   [
+    "TC185",
+    "UC41 Báo cáo sự cố",
+    "Báo cáo hư hỏng",
+    "Loại DAMAGED, mức độ HIGH, mô tả",
+    "Tạo hồ sơ sự cố OPEN",
+    ""
+   ],
+   [
+    "TC186",
+    "UC41 Báo cáo sự cố",
+    "Kiện không xác định",
+    "Loại UNIDENTIFIED_PARCEL, nhập mã vạch ngoài",
+    "Tạo hồ sơ kèm externalBarcode",
+    ""
+   ],
+   [
+    "TC187",
+    "UC41 Báo cáo sự cố",
+    "Thiếu tiêu đề / mô tả",
+    "Bỏ trống mô tả",
+    "Báo lỗi trường bắt buộc",
+    ""
+   ],
+   [
+    "TC188",
+    "UC42 Quản lý hồ sơ sự cố",
+    "Phân công xử lý",
+    "Chọn người xử lý",
+    "Ghi assignedToUserId",
+    ""
+   ],
+   [
+    "TC189",
+    "UC42 Quản lý hồ sơ sự cố",
+    "Cập nhật tiến độ",
+    "OPEN → IN_PROGRESS",
+    "Trạng thái IN_PROGRESS",
+    ""
+   ],
+   [
+    "TC190",
+    "UC42 Quản lý hồ sơ sự cố",
+    "Giải quyết sự cố",
+    "Nhập kết quả xử lý",
+    "RESOLVED, ghi resolvedAt",
+    ""
+   ],
+   [
+    "TC191",
+    "UC42 Quản lý hồ sơ sự cố",
+    "Đóng hồ sơ",
+    "RESOLVED → Đóng",
+    "CLOSED, ghi closedAt",
+    ""
+   ],
+   [
+    "TC192",
+    "UC42 Quản lý hồ sơ sự cố",
+    "Đóng khi chưa giải quyết",
+    "OPEN → Đóng",
+    "Không cho đóng",
+    ""
+   ]
+  ],
+  "groups": [
+   "Xác thực và tài khoản cá nhân",
+   "Quản trị người dùng và phân quyền",
+   "Cửa hàng (Merchant)",
+   "Tra cứu công khai",
+   "Đơn hàng và vận đơn",
+   "Bảng giá và mạng lưới",
+   "Nhân sự vận hành và ca làm việc",
+   "Điều phối và thực hiện vận hành",
+   "Ngoại lệ và sự cố"
+  ],
+  "group_of": [
+   "Xác thực và tài khoản cá nhân",
+   "Xác thực và tài khoản cá nhân",
+   "Xác thực và tài khoản cá nhân",
+   "Xác thực và tài khoản cá nhân",
+   "Xác thực và tài khoản cá nhân",
+   "Xác thực và tài khoản cá nhân",
+   "Xác thực và tài khoản cá nhân",
+   "Xác thực và tài khoản cá nhân",
+   "Xác thực và tài khoản cá nhân",
+   "Xác thực và tài khoản cá nhân",
+   "Xác thực và tài khoản cá nhân",
+   "Xác thực và tài khoản cá nhân",
+   "Xác thực và tài khoản cá nhân",
+   "Xác thực và tài khoản cá nhân",
+   "Xác thực và tài khoản cá nhân",
+   "Xác thực và tài khoản cá nhân",
+   "Xác thực và tài khoản cá nhân",
+   "Xác thực và tài khoản cá nhân",
+   "Xác thực và tài khoản cá nhân",
+   "Xác thực và tài khoản cá nhân",
+   "Xác thực và tài khoản cá nhân",
+   "Xác thực và tài khoản cá nhân",
+   "Xác thực và tài khoản cá nhân",
+   "Xác thực và tài khoản cá nhân",
+   "Xác thực và tài khoản cá nhân",
+   "Xác thực và tài khoản cá nhân",
+   "Xác thực và tài khoản cá nhân",
+   "Xác thực và tài khoản cá nhân",
+   "Xác thực và tài khoản cá nhân",
+   "Xác thực và tài khoản cá nhân",
+   "Xác thực và tài khoản cá nhân",
+   "Xác thực và tài khoản cá nhân",
+   "Xác thực và tài khoản cá nhân",
+   "Xác thực và tài khoản cá nhân",
+   "Quản trị người dùng và phân quyền",
+   "Quản trị người dùng và phân quyền",
+   "Quản trị người dùng và phân quyền",
+   "Quản trị người dùng và phân quyền",
+   "Quản trị người dùng và phân quyền",
+   "Quản trị người dùng và phân quyền",
+   "Quản trị người dùng và phân quyền",
+   "Quản trị người dùng và phân quyền",
+   "Quản trị người dùng và phân quyền",
+   "Quản trị người dùng và phân quyền",
+   "Quản trị người dùng và phân quyền",
+   "Quản trị người dùng và phân quyền",
+   "Quản trị người dùng và phân quyền",
+   "Quản trị người dùng và phân quyền",
+   "Quản trị người dùng và phân quyền",
+   "Quản trị người dùng và phân quyền",
+   "Quản trị người dùng và phân quyền",
+   "Quản trị người dùng và phân quyền",
+   "Quản trị người dùng và phân quyền",
+   "Quản trị người dùng và phân quyền",
+   "Quản trị người dùng và phân quyền",
+   "Cửa hàng (Merchant)",
+   "Cửa hàng (Merchant)",
+   "Cửa hàng (Merchant)",
+   "Cửa hàng (Merchant)",
+   "Cửa hàng (Merchant)",
+   "Cửa hàng (Merchant)",
+   "Cửa hàng (Merchant)",
+   "Cửa hàng (Merchant)",
+   "Cửa hàng (Merchant)",
+   "Cửa hàng (Merchant)",
+   "Cửa hàng (Merchant)",
+   "Cửa hàng (Merchant)",
+   "Cửa hàng (Merchant)",
+   "Cửa hàng (Merchant)",
+   "Cửa hàng (Merchant)",
+   "Tra cứu công khai",
+   "Tra cứu công khai",
+   "Tra cứu công khai",
+   "Tra cứu công khai",
+   "Tra cứu công khai",
+   "Tra cứu công khai",
+   "Tra cứu công khai",
+   "Tra cứu công khai",
+   "Tra cứu công khai",
+   "Tra cứu công khai",
+   "Tra cứu công khai",
+   "Tra cứu công khai",
+   "Tra cứu công khai",
+   "Tra cứu công khai",
+   "Đơn hàng và vận đơn",
+   "Đơn hàng và vận đơn",
+   "Đơn hàng và vận đơn",
+   "Đơn hàng và vận đơn",
+   "Đơn hàng và vận đơn",
+   "Đơn hàng và vận đơn",
+   "Đơn hàng và vận đơn",
+   "Đơn hàng và vận đơn",
+   "Đơn hàng và vận đơn",
+   "Đơn hàng và vận đơn",
+   "Đơn hàng và vận đơn",
+   "Đơn hàng và vận đơn",
+   "Đơn hàng và vận đơn",
+   "Đơn hàng và vận đơn",
+   "Đơn hàng và vận đơn",
+   "Đơn hàng và vận đơn",
+   "Đơn hàng và vận đơn",
+   "Đơn hàng và vận đơn",
+   "Đơn hàng và vận đơn",
+   "Đơn hàng và vận đơn",
+   "Đơn hàng và vận đơn",
+   "Đơn hàng và vận đơn",
+   "Đơn hàng và vận đơn",
+   "Đơn hàng và vận đơn",
+   "Bảng giá và mạng lưới",
+   "Bảng giá và mạng lưới",
+   "Bảng giá và mạng lưới",
+   "Bảng giá và mạng lưới",
+   "Bảng giá và mạng lưới",
+   "Bảng giá và mạng lưới",
+   "Bảng giá và mạng lưới",
+   "Bảng giá và mạng lưới",
+   "Bảng giá và mạng lưới",
+   "Bảng giá và mạng lưới",
+   "Bảng giá và mạng lưới",
+   "Bảng giá và mạng lưới",
+   "Bảng giá và mạng lưới",
+   "Bảng giá và mạng lưới",
+   "Bảng giá và mạng lưới",
+   "Nhân sự vận hành và ca làm việc",
+   "Nhân sự vận hành và ca làm việc",
+   "Nhân sự vận hành và ca làm việc",
+   "Nhân sự vận hành và ca làm việc",
+   "Nhân sự vận hành và ca làm việc",
+   "Nhân sự vận hành và ca làm việc",
+   "Nhân sự vận hành và ca làm việc",
+   "Nhân sự vận hành và ca làm việc",
+   "Nhân sự vận hành và ca làm việc",
+   "Nhân sự vận hành và ca làm việc",
+   "Nhân sự vận hành và ca làm việc",
+   "Nhân sự vận hành và ca làm việc",
+   "Nhân sự vận hành và ca làm việc",
+   "Nhân sự vận hành và ca làm việc",
+   "Nhân sự vận hành và ca làm việc",
+   "Nhân sự vận hành và ca làm việc",
+   "Nhân sự vận hành và ca làm việc",
+   "Nhân sự vận hành và ca làm việc",
+   "Nhân sự vận hành và ca làm việc",
+   "Điều phối và thực hiện vận hành",
+   "Điều phối và thực hiện vận hành",
+   "Điều phối và thực hiện vận hành",
+   "Điều phối và thực hiện vận hành",
+   "Điều phối và thực hiện vận hành",
+   "Điều phối và thực hiện vận hành",
+   "Điều phối và thực hiện vận hành",
+   "Điều phối và thực hiện vận hành",
+   "Điều phối và thực hiện vận hành",
+   "Điều phối và thực hiện vận hành",
+   "Điều phối và thực hiện vận hành",
+   "Điều phối và thực hiện vận hành",
+   "Điều phối và thực hiện vận hành",
+   "Điều phối và thực hiện vận hành",
+   "Điều phối và thực hiện vận hành",
+   "Điều phối và thực hiện vận hành",
+   "Điều phối và thực hiện vận hành",
+   "Điều phối và thực hiện vận hành",
+   "Điều phối và thực hiện vận hành",
+   "Điều phối và thực hiện vận hành",
+   "Điều phối và thực hiện vận hành",
+   "Điều phối và thực hiện vận hành",
+   "Điều phối và thực hiện vận hành",
+   "Điều phối và thực hiện vận hành",
+   "Điều phối và thực hiện vận hành",
+   "Điều phối và thực hiện vận hành",
+   "Điều phối và thực hiện vận hành",
+   "Điều phối và thực hiện vận hành",
+   "Điều phối và thực hiện vận hành",
+   "Điều phối và thực hiện vận hành",
+   "Điều phối và thực hiện vận hành",
+   "Điều phối và thực hiện vận hành",
+   "Điều phối và thực hiện vận hành",
+   "Điều phối và thực hiện vận hành",
+   "Điều phối và thực hiện vận hành",
+   "Ngoại lệ và sự cố",
+   "Ngoại lệ và sự cố",
+   "Ngoại lệ và sự cố",
+   "Ngoại lệ và sự cố",
+   "Ngoại lệ và sự cố",
+   "Ngoại lệ và sự cố",
+   "Ngoại lệ và sự cố",
+   "Ngoại lệ và sự cố",
+   "Ngoại lệ và sự cố",
+   "Ngoại lệ và sự cố",
+   "Ngoại lệ và sự cố",
+   "Ngoại lệ và sự cố",
+   "Ngoại lệ và sự cố",
+   "Ngoại lệ và sự cố",
+   "Ngoại lệ và sự cố"
+  ]
+ },
+ {
+  "t": "landscape_end"
+ },
+ {
+  "t": "h1",
+  "text": "CHƯƠNG 7. ĐÁNH GIÁ VÀ THẢO LUẬN"
+ },
+ {
+  "t": "h2",
+  "text": "7.1. Kết quả đạt được"
+ },
+ {
+  "t": "bullets",
+  "items": [
+   "Hoàn thành phân tích và thiết kế đầy đủ: sơ đồ use case tổng thể (13 tác nhân, 41 use case), mô hình miền theo DDD (8 bounded context), đặc tả 12 use case cốt lõi kèm sơ đồ hoạt động và tuần tự.",
+   "Xây dựng backend REST API với xác thực JWT, refresh token, phân quyền RBAC, khóa lạc quan và lỗi chuẩn hóa.",
+   "Xây dựng cổng quản trị theo mô hình BFF: đăng nhập, bảng điều hành, quản lý người dùng, vai trò và quyền.",
+   "Thiết kế cơ chế tính cước có phiên bản, định tuyến với giữ chỗ tải và điều phối công việc theo ca.",
+   "Xây dựng bộ test case phủ toàn bộ chức năng của hệ thống."
+  ]
+ },
+ {
+  "t": "h2",
+  "text": "7.2. Hạn chế còn tồn tại"
+ },
+ {
+  "t": "bullets",
+  "items": [
+   "Chưa tích hợp cổng thanh toán trực tuyến và đối soát COD tự động.",
+   "Định tuyến hiện dựa trên mẫu lộ trình cấu hình sẵn, chưa tối ưu theo thời gian thực hay chi phí.",
+   "Chưa có thông báo đẩy (push notification) và chế độ làm việc ngoại tuyến cho ứng dụng vận hành.",
+   "Chưa thực hiện kiểm thử tải với số lượng người dùng đồng thời lớn."
+  ]
+ },
+ {
+  "t": "h2",
+  "text": "7.3. Thảo luận và bài học kinh nghiệm"
+ },
+ {
+  "t": "p",
+  "text": "Việc thiết kế mô hình miền theo DDD ngay từ đầu giúp nhóm tách bạch các phần nghiệp vụ phức tạp (giá, mạng lưới, vận đơn, nhân sự) và giảm phụ thuộc chéo. Nhóm rút ra rằng các quy tắc chuyển trạng thái (vận đơn, công việc, cửa hàng, yêu cầu ngoại lệ) cần được đặc tả rõ ràng trước khi lập trình, và mọi thao tác thay đổi trạng thái phải ghi lại người thao tác để truy vết. Mô hình BFF giúp bảo vệ token nhưng đòi hỏi xử lý cẩn thận việc làm mới phiên."
+ },
+ {
+  "t": "h1",
+  "text": "CHƯƠNG 8. KẾT LUẬN"
+ },
+ {
+  "t": "h2",
+  "text": "8.1. Kết luận"
+ },
+ {
+  "t": "p",
+  "text": "Đồ án đã xây dựng hệ thống quản lý vận chuyển PAVEX với ba phân hệ dùng chung một backend, quản lý toàn bộ vòng đời vận đơn: báo giá, tạo đơn, định tuyến, điều phối, quét kiện, giao hàng và xử lý ngoại lệ. Hệ thống được phân tích, thiết kế bài bản bằng UML và DDD, bảo mật bằng JWT và RBAC, và có bộ test case phủ toàn bộ chức năng."
+ },
+ {
+  "t": "h2",
+  "text": "8.2. Hướng phát triển"
+ },
+ {
+  "t": "bullets",
+  "items": [
+   "Tích hợp cổng thanh toán và đối soát COD với cửa hàng.",
+   "Tối ưu tuyến giao chặng cuối (bài toán VRP) và gợi ý lộ trình cho bưu tá.",
+   "Cập nhật hành trình theo thời gian thực qua WebSocket và gửi thông báo đẩy.",
+   "Ứng dụng di động native cho nhân sự vận hành với chế độ ngoại tuyến.",
+   "Phân tích dữ liệu để dự báo sản lượng và điều phối nhân sự theo khu vực."
+  ]
+ },
+ {
+  "t": "sign",
+  "text": "NHẬN XÉT CỦA GIÁO VIÊN HƯỚNG DẪN"
+ },
+ {
+  "t": "sign",
+  "text": "NHẬN XÉT CỦA GIÁO VIÊN PHẢN BIỆN 1"
+ },
+ {
+  "t": "sign",
+  "text": "NHẬN XÉT CỦA GIÁO VIÊN PHẢN BIỆN 2"
+ }
+]

@@ -671,7 +671,7 @@ class Diagram:
                 o.append(f'<polyline points="{pts}" fill="none" stroke="#333"{mk}/>')
                 ends = ((route[0], route[1], r.src_mult, r.src_role), (route[-1], route[-2], r.dst_mult, r.dst_role))
                 for (px, py), (qx, qy), mult, role in ends:
-                    if not (mult or role):
+                    if not getattr(self, "labels", True) or not (mult or role):
                         continue
                     L = math.hypot(qx - px, qy - py) or 1
                     ux, uy = (qx - px) / L, (qy - py) / L
