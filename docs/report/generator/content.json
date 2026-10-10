@@ -76,7 +76,7 @@
    "Phân tích, thiết kế hướng đối tượng với UML: sơ đồ use case, đặc tả use case, sơ đồ hoạt động (activity), sơ đồ tuần tự (sequence) và mô hình miền (domain model).",
    "Thiết kế hướng miền (Domain-Driven Design): chia hệ thống thành các bounded context, xác định aggregate, entity và value object.",
    "Phát triển theo mô hình Agile/Scrum, quản lý mã nguồn bằng Git.",
-   "Kiểm thử hộp đen (black-box testing) dựa trên use case."
+   "Kiểm thử hộp đen (black-box testing) dựa trên use case, tài liệu kiểm thử theo cấu trúc của chuẩn ISO/IEC/IEEE 29119-3."
   ]
  },
  {
@@ -91,7 +91,7 @@
    "Chương 3 – Phân tích yêu cầu: yêu cầu kinh doanh, người dùng, chức năng và phi chức năng.",
    "Chương 4 – Thiết kế hệ thống: sơ đồ use case, đặc tả use case cốt lõi kèm activity và sequence, mô hình miền.",
    "Chương 5 – Giải pháp công nghệ: kiến trúc, bảo mật, định giá, định tuyến và quét mã.",
-   "Chương 6 – Hiện thực, triển khai và kiểm thử: môi trường, giao diện và bộ test case.",
+   "Chương 6 – Hiện thực, triển khai và kiểm thử: môi trường, tình trạng hiện thực, giao diện và test case của các chức năng đã hiện thực.",
    "Chương 7 – Đánh giá và thảo luận. Chương 8 – Kết luận và hướng phát triển."
   ]
  },
@@ -145,7 +145,7 @@
  },
  {
   "t": "p",
-  "text": "Kiểm thử hộp đen kiểm tra phần mềm dựa trên đặc tả mà không cần biết mã nguồn. Các kỹ thuật được dùng gồm phân vùng tương đương (dữ liệu hợp lệ/không hợp lệ), phân tích giá trị biên (khối lượng tối đa, mức COD tối đa) và kiểm thử theo luồng use case (luồng chính và luồng thay thế)."
+  "text": "Kiểm thử hộp đen kiểm tra phần mềm dựa trên đặc tả mà không cần biết mã nguồn; ca kiểm thử được suy ra từ luồng sự kiện của use case. Chuẩn ISO/IEC/IEEE 29119-3 (thay thế IEEE 829) quy định nội dung của tài liệu đặc tả ca kiểm thử (test case specification): mã định danh, mục tiêu, tiền điều kiện, dữ liệu vào, các bước thực hiện và kết quả mong đợi; kết quả thực tế và trạng thái (Đạt/Không đạt) được ghi khi thực thi. Chuẩn không bắt buộc vị trí của tài liệu kiểm thử trong báo cáo, vì vậy nhóm đặt các ca kiểm thử ngay trong chương hiện thực và kiểm thử, cạnh phần giao diện của chức năng tương ứng."
  },
  {
   "t": "h1",
@@ -258,7 +258,7 @@
  },
  {
   "t": "p",
-  "text": "Bảng sau liệt kê toàn bộ 41 chức năng (use case mức người dùng) của hệ thống, nhóm theo phân hệ. Các use case con (thêm, sửa, xóa, duyệt, từ chối…) được mô tả trong phần đặc tả và bộ test case."
+  "text": "Bảng sau liệt kê toàn bộ 41 chức năng (use case mức người dùng) của hệ thống, nhóm theo phân hệ. Các use case con (thêm, sửa, xóa, duyệt, từ chối…) được mô tả trong phần đặc tả use case."
  },
  {
   "t": "caption",
@@ -568,7 +568,7 @@
  },
  {
   "t": "p",
-  "text": "Phần này đặc tả 12 use case cốt lõi – các luồng nghiệp vụ chính của hệ thống. Mỗi use case gồm bảng đặc tả, sơ đồ hoạt động và sơ đồ tuần tự. Trong sơ đồ tuần tự, lớp giao diện được đặt tiền tố GD_, lớp điều khiển CTRL_, lớp thực thể dùng tên trong mô hình miền."
+  "text": "Phần này đặc tả 12 use case cốt lõi – các luồng nghiệp vụ chính của hệ thống. Mỗi use case gồm bảng đặc tả, sơ đồ hoạt động và sơ đồ tuần tự (các sơ đồ được bổ sung trong khung tương ứng). Trong sơ đồ tuần tự, lớp giao diện được đặt tiền tố GD_, lớp điều khiển CTRL_, lớp thực thể dùng tên trong mô hình miền."
  },
  {
   "t": "h3",
@@ -792,17 +792,13 @@
   }
  },
  {
-  "t": "img",
-  "path": "/home/user/pavex-backend/docs/report/figures/uc01-act.png",
-  "w": 15,
-  "maxh": 20,
+  "t": "placeholder",
+  "text": "[Chèn sơ đồ hoạt động: Đăng nhập]",
   "caption": "Hình 4.2. Sơ đồ hoạt động – Đăng nhập"
  },
  {
-  "t": "img",
-  "path": "/home/user/pavex-backend/docs/report/figures/uc01-seq.png",
-  "w": 16,
-  "maxh": 18,
+  "t": "placeholder",
+  "text": "[Chèn sơ đồ tuần tự: Đăng nhập]",
   "caption": "Hình 4.3. Sơ đồ tuần tự – Đăng nhập"
  },
  {
@@ -1035,17 +1031,13 @@
   }
  },
  {
-  "t": "img",
-  "path": "/home/user/pavex-backend/docs/report/figures/uc03-act.png",
-  "w": 15,
-  "maxh": 20,
+  "t": "placeholder",
+  "text": "[Chèn sơ đồ hoạt động: Đăng ký tài khoản]",
   "caption": "Hình 4.4. Sơ đồ hoạt động – Đăng ký tài khoản"
  },
  {
-  "t": "img",
-  "path": "/home/user/pavex-backend/docs/report/figures/uc03-seq.png",
-  "w": 16,
-  "maxh": 18,
+  "t": "placeholder",
+  "text": "[Chèn sơ đồ tuần tự: Đăng ký tài khoản]",
   "caption": "Hình 4.5. Sơ đồ tuần tự – Đăng ký tài khoản"
  },
  {
@@ -1270,17 +1262,13 @@
   }
  },
  {
-  "t": "img",
-  "path": "/home/user/pavex-backend/docs/report/figures/uc15-act.png",
-  "w": 15,
-  "maxh": 20,
+  "t": "placeholder",
+  "text": "[Chèn sơ đồ hoạt động: Tra cứu giá cước]",
   "caption": "Hình 4.6. Sơ đồ hoạt động – Tra cứu giá cước"
  },
  {
-  "t": "img",
-  "path": "/home/user/pavex-backend/docs/report/figures/uc15-seq.png",
-  "w": 16,
-  "maxh": 18,
+  "t": "placeholder",
+  "text": "[Chèn sơ đồ tuần tự: Tra cứu giá cước]",
   "caption": "Hình 4.7. Sơ đồ tuần tự – Tra cứu giá cước"
  },
  {
@@ -1578,17 +1566,13 @@
   }
  },
  {
-  "t": "img",
-  "path": "/home/user/pavex-backend/docs/report/figures/uc17-act.png",
-  "w": 15,
-  "maxh": 20,
+  "t": "placeholder",
+  "text": "[Chèn sơ đồ hoạt động: Tạo đơn hàng]",
   "caption": "Hình 4.8. Sơ đồ hoạt động – Tạo đơn hàng"
  },
  {
-  "t": "img",
-  "path": "/home/user/pavex-backend/docs/report/figures/uc17-seq.png",
-  "w": 16,
-  "maxh": 18,
+  "t": "placeholder",
+  "text": "[Chèn sơ đồ tuần tự: Tạo đơn hàng]",
   "caption": "Hình 4.9. Sơ đồ tuần tự – Tạo đơn hàng"
  },
  {
@@ -1804,17 +1788,13 @@
   }
  },
  {
-  "t": "img",
-  "path": "/home/user/pavex-backend/docs/report/figures/uc14-act.png",
-  "w": 15,
-  "maxh": 20,
+  "t": "placeholder",
+  "text": "[Chèn sơ đồ hoạt động: Tra cứu và theo dõi vận đơn]",
   "caption": "Hình 4.10. Sơ đồ hoạt động – Tra cứu và theo dõi vận đơn"
  },
  {
-  "t": "img",
-  "path": "/home/user/pavex-backend/docs/report/figures/uc14-seq.png",
-  "w": 16,
-  "maxh": 18,
+  "t": "placeholder",
+  "text": "[Chèn sơ đồ tuần tự: Tra cứu và theo dõi vận đơn]",
   "caption": "Hình 4.11. Sơ đồ tuần tự – Tra cứu và theo dõi vận đơn"
  },
  {
@@ -2037,17 +2017,13 @@
   }
  },
  {
-  "t": "img",
-  "path": "/home/user/pavex-backend/docs/report/figures/uc13-act.png",
-  "w": 15,
-  "maxh": 20,
+  "t": "placeholder",
+  "text": "[Chèn sơ đồ hoạt động: Duyệt và quản lý cửa hàng]",
   "caption": "Hình 4.12. Sơ đồ hoạt động – Duyệt và quản lý cửa hàng"
  },
  {
-  "t": "img",
-  "path": "/home/user/pavex-backend/docs/report/figures/uc13-seq.png",
-  "w": 16,
-  "maxh": 18,
+  "t": "placeholder",
+  "text": "[Chèn sơ đồ tuần tự: Duyệt và quản lý cửa hàng]",
   "caption": "Hình 4.13. Sơ đồ tuần tự – Duyệt và quản lý cửa hàng"
  },
  {
@@ -2280,17 +2256,13 @@
   }
  },
  {
-  "t": "img",
-  "path": "/home/user/pavex-backend/docs/report/figures/uc31-act.png",
-  "w": 15,
-  "maxh": 20,
+  "t": "placeholder",
+  "text": "[Chèn sơ đồ hoạt động: Điều phối công việc]",
   "caption": "Hình 4.14. Sơ đồ hoạt động – Điều phối công việc"
  },
  {
-  "t": "img",
-  "path": "/home/user/pavex-backend/docs/report/figures/uc31-seq.png",
-  "w": 16,
-  "maxh": 18,
+  "t": "placeholder",
+  "text": "[Chèn sơ đồ tuần tự: Điều phối công việc]",
   "caption": "Hình 4.15. Sơ đồ tuần tự – Điều phối công việc"
  },
  {
@@ -2516,17 +2488,13 @@
   }
  },
  {
-  "t": "img",
-  "path": "/home/user/pavex-backend/docs/report/figures/uc40-act.png",
-  "w": 15,
-  "maxh": 20,
+  "t": "placeholder",
+  "text": "[Chèn sơ đồ hoạt động: Xử lý yêu cầu ngoại lệ]",
   "caption": "Hình 4.16. Sơ đồ hoạt động – Xử lý yêu cầu ngoại lệ"
  },
  {
-  "t": "img",
-  "path": "/home/user/pavex-backend/docs/report/figures/uc40-seq.png",
-  "w": 16,
-  "maxh": 18,
+  "t": "placeholder",
+  "text": "[Chèn sơ đồ tuần tự: Xử lý yêu cầu ngoại lệ]",
   "caption": "Hình 4.17. Sơ đồ tuần tự – Xử lý yêu cầu ngoại lệ"
  },
  {
@@ -2757,17 +2725,13 @@
   }
  },
  {
-  "t": "img",
-  "path": "/home/user/pavex-backend/docs/report/figures/uc25-act.png",
-  "w": 15,
-  "maxh": 20,
+  "t": "placeholder",
+  "text": "[Chèn sơ đồ hoạt động: Quản lý ca làm việc]",
   "caption": "Hình 4.18. Sơ đồ hoạt động – Quản lý ca làm việc"
  },
  {
-  "t": "img",
-  "path": "/home/user/pavex-backend/docs/report/figures/uc25-seq.png",
-  "w": 16,
-  "maxh": 18,
+  "t": "placeholder",
+  "text": "[Chèn sơ đồ tuần tự: Quản lý ca làm việc]",
   "caption": "Hình 4.19. Sơ đồ tuần tự – Quản lý ca làm việc"
  },
  {
@@ -3002,17 +2966,13 @@
   }
  },
  {
-  "t": "img",
-  "path": "/home/user/pavex-backend/docs/report/figures/uc06-act.png",
-  "w": 15,
-  "maxh": 20,
+  "t": "placeholder",
+  "text": "[Chèn sơ đồ hoạt động: Quản lý người dùng và phân quyền]",
   "caption": "Hình 4.20. Sơ đồ hoạt động – Quản lý người dùng và phân quyền"
  },
  {
-  "t": "img",
-  "path": "/home/user/pavex-backend/docs/report/figures/uc06-seq.png",
-  "w": 16,
-  "maxh": 18,
+  "t": "placeholder",
+  "text": "[Chèn sơ đồ tuần tự: Quản lý người dùng và phân quyền]",
   "caption": "Hình 4.21. Sơ đồ tuần tự – Quản lý người dùng và phân quyền"
  },
  {
@@ -3289,17 +3249,13 @@
   }
  },
  {
-  "t": "img",
-  "path": "/home/user/pavex-backend/docs/report/figures/uc33-act.png",
-  "w": 15,
-  "maxh": 20,
+  "t": "placeholder",
+  "text": "[Chèn sơ đồ hoạt động: Thực hiện công việc và quét kiện hàng]",
   "caption": "Hình 4.22. Sơ đồ hoạt động – Thực hiện công việc và quét kiện hàng"
  },
  {
-  "t": "img",
-  "path": "/home/user/pavex-backend/docs/report/figures/uc33-seq.png",
-  "w": 16,
-  "maxh": 18,
+  "t": "placeholder",
+  "text": "[Chèn sơ đồ tuần tự: Thực hiện công việc và quét kiện hàng]",
   "caption": "Hình 4.23. Sơ đồ tuần tự – Thực hiện công việc và quét kiện hàng"
  },
  {
@@ -3527,17 +3483,13 @@
   }
  },
  {
-  "t": "img",
-  "path": "/home/user/pavex-backend/docs/report/figures/uc35-act.png",
-  "w": 15,
-  "maxh": 20,
+  "t": "placeholder",
+  "text": "[Chèn sơ đồ hoạt động: Ghi nhận kết quả giao hàng]",
   "caption": "Hình 4.24. Sơ đồ hoạt động – Ghi nhận kết quả giao hàng"
  },
  {
-  "t": "img",
-  "path": "/home/user/pavex-backend/docs/report/figures/uc35-seq.png",
-  "w": 16,
-  "maxh": 18,
+  "t": "placeholder",
+  "text": "[Chèn sơ đồ tuần tự: Ghi nhận kết quả giao hàng]",
   "caption": "Hình 4.25. Sơ đồ tuần tự – Ghi nhận kết quả giao hàng"
  },
  {
@@ -3625,7 +3577,7 @@
  },
  {
   "t": "p",
-  "text": "Hệ thống theo kiến trúc client – server nhiều lớp. Ba ứng dụng client (cổng khách hàng, cổng quản trị, ứng dụng vận hành) giao tiếp với một backend duy nhất qua REST API /api/v1. Backend được tổ chức theo module tương ứng với các bounded context, mỗi module gồm các lớp: API (controller), ứng dụng (service), miền (domain) và hạ tầng (repository). Dữ liệu được lưu trong cơ sở dữ liệu quan hệ; mỗi aggregate tương ứng một nhóm bảng."
+  "text": "Hệ thống theo kiến trúc client – server nhiều lớp. Ba ứng dụng client (cổng khách hàng, cổng quản trị, ứng dụng vận hành) giao tiếp với một backend duy nhất qua REST API /api/v1. Backend được tổ chức theo module tương ứng với các bounded context, mỗi module gồm các lớp: API (controller), ứng dụng (service), miền (domain) và hạ tầng (repository). Dữ liệu được lưu trong hệ quản trị cơ sở dữ liệu PostgreSQL; mỗi aggregate tương ứng một nhóm bảng, quan hệ giữa các aggregate được thể hiện bằng khóa ngoại tới định danh."
  },
  {
   "t": "caption",
@@ -3661,8 +3613,8 @@
    ],
    [
     "Hạ tầng",
-    "Repository, cơ sở dữ liệu quan hệ",
-    "Lưu trữ, truy vấn, khóa lạc quan"
+    "Repository, PostgreSQL",
+    "Lưu trữ, truy vấn, giao dịch, khóa lạc quan"
    ]
   ],
   "widths": [
@@ -3697,7 +3649,7 @@
   "items": [
    "Xác thực: POST /api/v1/auth/login trả accessToken, refreshToken, expiresIn; /auth/refresh cấp token mới; /auth/me trả thông tin người dùng kèm danh sách vai trò và quyền; /auth/logout thu hồi refresh token.",
    "Phân quyền: quyền có mã dạng <context>.<tài nguyên>.<hành động> (ví dụ identity.users.read, identity.roles.read). Giao diện ẩn menu khi người dùng thiếu quyền, backend luôn kiểm tra lại và trả 403.",
-   "Khóa lạc quan: các bản ghi có trường version; khi hai người cùng sửa, người lưu sau nhận lỗi xung đột kèm conflictVersion để tải lại dữ liệu.",
+   "Khóa lạc quan: các bản ghi trong PostgreSQL có cột version; khi hai người cùng sửa, người lưu sau nhận lỗi xung đột kèm conflictVersion để tải lại dữ liệu. Các thao tác thay đổi nhiều bảng (tạo vận đơn kèm kiện, giữ chỗ tải) được thực hiện trong một giao dịch.",
    "Lỗi chuẩn hóa: lỗi trả về dạng problem detail gồm message, code, traceId và fieldErrors cho từng trường, giúp giao diện hiển thị lỗi tại đúng ô nhập."
   ]
  },
@@ -3758,19 +3710,23 @@
   "rows": [
    [
     "Backend",
-    "REST API /api/v1, xác thực JWT, cơ sở dữ liệu quan hệ"
+    "REST API /api/v1, xác thực JWT (access/refresh token), phân quyền RBAC"
+   ],
+   [
+    "Cơ sở dữ liệu",
+    "PostgreSQL"
    ],
    [
     "Cổng quản trị",
-    "Next.js (App Router), React, TypeScript, Tailwind CSS, pnpm"
+    "Next.js 16 (App Router), React 19, TypeScript 5, Tailwind CSS 4, pnpm"
    ],
    [
     "Cổng khách hàng",
-    "Next.js, React, TypeScript"
+    "Next.js, React, TypeScript (đang phát triển)"
    ],
    [
     "Ứng dụng vận hành",
-    "Giao diện web tối ưu cho di động, quét mã bằng camera"
+    "Giao diện web tối ưu cho di động, quét mã bằng camera (đang phát triển)"
    ],
    [
     "Thiết kế",
@@ -3781,8 +3737,8 @@
     "Git, GitHub"
    ],
    [
-    "Kiểm thử API",
-    "Postman"
+    "Kiểm thử",
+    "Kiểm thử thủ công trên trình duyệt (Chrome DevTools), Postman cho API"
    ]
   ],
   "widths": [
@@ -3793,1924 +3749,333 @@
  },
  {
   "t": "h2",
-  "text": "6.2. Giao diện cổng khách hàng"
+  "text": "6.2. Tình trạng hiện thực"
  },
  {
-  "t": "placeholder",
-  "text": "[Chèn ảnh màn hình: Trang chủ và tra cứu vận đơn]",
-  "caption": "Hình 6.1. Trang chủ và tra cứu vận đơn"
+  "t": "p",
+  "text": "Toàn bộ 41 use case đã được phân tích và thiết kế ở chương 3 và chương 4. Ở giai đoạn hiện tại, nhóm đã hiện thực cổng quản trị với nhóm chức năng Identity & Access; các chức năng còn lại đang trong quá trình phát triển và chưa đưa vào kiểm thử."
  },
  {
-  "t": "placeholder",
-  "text": "[Chèn ảnh màn hình: Trang tính cước vận chuyển]",
-  "caption": "Hình 6.2. Trang tính cước vận chuyển"
+  "t": "caption",
+  "text": "Bảng 6.2. Tình trạng hiện thực các chức năng"
  },
  {
-  "t": "placeholder",
-  "text": "[Chèn ảnh màn hình: Tạo đơn hàng]",
-  "caption": "Hình 6.3. Tạo đơn hàng"
- },
- {
-  "t": "placeholder",
-  "text": "[Chèn ảnh màn hình: Đơn hàng của tôi và chi tiết vận đơn]",
-  "caption": "Hình 6.4. Đơn hàng của tôi và chi tiết vận đơn"
- },
- {
-  "t": "placeholder",
-  "text": "[Chèn ảnh màn hình: Sổ địa chỉ]",
-  "caption": "Hình 6.5. Sổ địa chỉ"
+  "t": "table",
+  "header": [
+   "Nhóm chức năng",
+   "Use case",
+   "Tình trạng"
+  ],
+  "rows": [
+   [
+    "Xác thực & tài khoản cá nhân",
+    "UC01 – Đăng nhập",
+    "Đã hiện thực trên cổng quản trị"
+   ],
+   [
+    "",
+    "UC02 – Đăng xuất",
+    "Đã hiện thực trên cổng quản trị"
+   ],
+   [
+    "",
+    "UC03, UC04, UC05",
+    "Đã thiết kế, đang phát triển"
+   ],
+   [
+    "Quản trị người dùng & phân quyền",
+    "UC06 – Quản lý người dùng",
+    "Đã hiện thực phần xem danh sách, tìm kiếm, lọc, phân trang; thêm/sửa/khóa tài khoản đang phát triển"
+   ],
+   [
+    "",
+    "UC08 – Quản lý vai trò & quyền",
+    "Đã hiện thực phần xem vai trò, chi tiết và tìm kiếm quyền; gán quyền đang phát triển"
+   ],
+   [
+    "",
+    "UC07",
+    "Đã thiết kế, đang phát triển"
+   ],
+   [
+    "Cửa hàng (Merchant)",
+    "UC09, UC10, UC11, UC12, UC13",
+    "Đã thiết kế, đang phát triển"
+   ],
+   [
+    "Tra cứu công khai",
+    "UC14, UC15, UC16",
+    "Đã thiết kế, đang phát triển"
+   ],
+   [
+    "Đơn hàng & vận đơn",
+    "UC17, UC18, UC19, UC20",
+    "Đã thiết kế, đang phát triển"
+   ],
+   [
+    "Bảng giá & mạng lưới",
+    "UC21, UC22",
+    "Đã thiết kế, đang phát triển"
+   ],
+   [
+    "Nhân sự vận hành & ca làm việc",
+    "UC23, UC24, UC25, UC26, UC27, UC28",
+    "Đã thiết kế, đang phát triển"
+   ],
+   [
+    "Điều phối & thực hiện vận hành",
+    "UC29 – Xem tổng quan vận hành",
+    "Đã có trang Bảng điều hành (trang chào), chưa có số liệu vận hành"
+   ],
+   [
+    "",
+    "UC30, UC31, UC32, UC33, UC35, UC36, UC37, UC38",
+    "Đã thiết kế, đang phát triển"
+   ],
+   [
+    "Ngoại lệ & sự cố",
+    "UC39, UC40, UC41, UC42",
+    "Đã thiết kế, đang phát triển"
+   ]
+  ],
+  "widths": [
+   2400,
+   2500,
+   3406
+  ],
+  "size": 11
  },
  {
   "t": "h2",
   "text": "6.3. Giao diện cổng quản trị"
  },
  {
+  "t": "p",
+  "text": "Cổng quản trị gồm trang đăng nhập và khung điều hành có thanh bên hiển thị menu theo quyền của tài khoản. Người dùng chưa đăng nhập truy cập bất kỳ trang nào đều được chuyển về trang đăng nhập kèm tham số returnTo."
+ },
+ {
   "t": "placeholder",
   "text": "[Chèn ảnh màn hình: Đăng nhập cổng quản trị]",
-  "caption": "Hình 6.6. Đăng nhập cổng quản trị"
+  "caption": "Hình 6.1. Đăng nhập cổng quản trị"
  },
  {
   "t": "placeholder",
   "text": "[Chèn ảnh màn hình: Bảng điều hành]",
-  "caption": "Hình 6.7. Bảng điều hành"
+  "caption": "Hình 6.2. Bảng điều hành"
  },
  {
   "t": "placeholder",
   "text": "[Chèn ảnh màn hình: Quản lý người dùng]",
-  "caption": "Hình 6.8. Quản lý người dùng"
+  "caption": "Hình 6.3. Quản lý người dùng"
  },
  {
   "t": "placeholder",
   "text": "[Chèn ảnh màn hình: Vai trò và quyền]",
-  "caption": "Hình 6.9. Vai trò và quyền"
- },
- {
-  "t": "placeholder",
-  "text": "[Chèn ảnh màn hình: Điều phối công việc]",
-  "caption": "Hình 6.10. Điều phối công việc"
- },
- {
-  "t": "placeholder",
-  "text": "[Chèn ảnh màn hình: Yêu cầu ngoại lệ]",
-  "caption": "Hình 6.11. Yêu cầu ngoại lệ"
+  "caption": "Hình 6.4. Vai trò và quyền"
  },
  {
   "t": "h2",
-  "text": "6.4. Giao diện ứng dụng vận hành"
+  "text": "6.4. Kiểm thử hệ thống"
  },
  {
-  "t": "placeholder",
-  "text": "[Chèn ảnh màn hình: Công việc của tôi]",
-  "caption": "Hình 6.12. Công việc của tôi"
- },
- {
-  "t": "placeholder",
-  "text": "[Chèn ảnh màn hình: Quét mã kiện hàng]",
-  "caption": "Hình 6.13. Quét mã kiện hàng"
- },
- {
-  "t": "placeholder",
-  "text": "[Chèn ảnh màn hình: Ghi nhận kết quả giao hàng]",
-  "caption": "Hình 6.14. Ghi nhận kết quả giao hàng"
- },
- {
-  "t": "placeholder",
-  "text": "[Chèn ảnh màn hình: Ca làm việc và check-in]",
-  "caption": "Hình 6.15. Ca làm việc và check-in"
- },
- {
-  "t": "h2",
-  "text": "6.5. Kiểm thử hệ thống"
+  "t": "h3",
+  "text": "6.4.1. Phương pháp kiểm thử"
  },
  {
   "t": "p",
-  "text": "Nhóm áp dụng kiểm thử hộp đen theo use case: mỗi chức năng có ít nhất một ca kiểm thử luồng chính và các ca kiểm thử luồng thay thế, dữ liệu không hợp lệ và giá trị biên. Tổng cộng 192 ca kiểm thử phủ toàn bộ 41 chức năng. Cột “Kết quả” được nhóm điền khi thực hiện kiểm thử (Đạt / Không đạt)."
+  "text": "Nhóm áp dụng kiểm thử hộp đen theo use case. Mỗi chức năng đã hiện thực có một test case, được trình bày dưới dạng bảng dọc theo các mục của chuẩn ISO/IEC/IEEE 29119-3: mã test case, use case, mục tiêu, tiền điều kiện, dữ liệu vào, các bước thực hiện, kết quả mong đợi, kết quả thực tế và trạng thái. Các chức năng chưa hiện thực không được đưa vào kiểm thử ở giai đoạn này."
  },
  {
   "t": "caption",
-  "text": "Bảng 6.2. Tổng hợp số lượng test case"
+  "text": "Bảng 6.3. Danh sách test case"
  },
  {
   "t": "table",
   "header": [
-   "Nhóm chức năng",
-   "Số chức năng",
-   "Số test case"
+   "Mã TC",
+   "Use case",
+   "Chức năng được kiểm thử"
   ],
   "rows": [
    [
-    "Xác thực và tài khoản cá nhân",
-    "6",
-    "34"
+    "TC01",
+    "UC01",
+    "Đăng nhập"
    ],
    [
-    "Quản trị người dùng và phân quyền",
-    "3",
-    "21"
+    "TC02",
+    "UC02",
+    "Đăng xuất"
    ],
    [
-    "Cửa hàng (Merchant)",
-    "5",
-    "15"
+    "TC03",
+    "UC06",
+    "Tra cứu và lọc người dùng"
    ],
    [
-    "Tra cứu công khai",
-    "3",
-    "14"
-   ],
-   [
-    "Đơn hàng và vận đơn",
-    "4",
-    "24"
-   ],
-   [
-    "Bảng giá và mạng lưới",
-    "2",
-    "15"
-   ],
-   [
-    "Nhân sự vận hành và ca làm việc",
-    "6",
-    "19"
-   ],
-   [
-    "Điều phối và thực hiện vận hành",
-    "10",
-    "35"
-   ],
-   [
-    "Ngoại lệ và sự cố",
-    "4",
-    "15"
-   ],
-   [
-    "Tổng cộng",
-    "43",
-    "192"
+    "TC04",
+    "UC08",
+    "Xem vai trò và quyền"
    ]
   ],
   "widths": [
-   4706,
-   1800,
-   1800
+   1500,
+   1500,
+   5306
   ],
   "size": 11
  },
  {
-  "t": "landscape_start"
+  "t": "h3",
+  "text": "6.4.2. Test case chi tiết"
+ },
+ {
+  "t": "h4",
+  "text": "Test case TC01 – Đăng nhập"
  },
  {
   "t": "caption",
-  "text": "Bảng 6.3. Bộ test case chi tiết"
+  "text": "Bảng 6.4. Test case TC01 – Đăng nhập"
  },
  {
-  "t": "testcases",
-  "rows": [
-   [
-    "TC001",
-    "UC01 Đăng nhập",
-    "Đăng nhập thành công (khách hàng)",
-    "Email: kh01@pavex.vn, mật khẩu đúng → nhấn Đăng nhập",
-    "Cấp token, chuyển đến trang chủ cổng khách hàng, hiển thị tên người dùng",
-    ""
-   ],
-   [
-    "TC002",
-    "UC01 Đăng nhập",
-    "Đăng nhập thành công (quản trị)",
-    "Tài khoản có vai trò Platform Admin",
-    "Chuyển đến Bảng điều hành; menu hiển thị theo quyền",
-    ""
-   ],
-   [
-    "TC003",
-    "UC01 Đăng nhập",
-    "Sai mật khẩu",
-    "Email đúng, mật khẩu sai",
-    "Thông báo “Email hoặc mật khẩu không đúng”, không cấp token",
-    ""
-   ],
-   [
-    "TC004",
-    "UC01 Đăng nhập",
-    "Email chưa đăng ký",
-    "Email: khongtontai@pavex.vn",
-    "Thông báo “Email hoặc mật khẩu không đúng”",
-    ""
-   ],
-   [
-    "TC005",
-    "UC01 Đăng nhập",
-    "Bỏ trống trường bắt buộc",
-    "Để trống email hoặc mật khẩu",
-    "Báo lỗi tại trường bị trống, không gửi yêu cầu",
-    ""
-   ],
-   [
-    "TC006",
-    "UC01 Đăng nhập",
-    "Email sai định dạng",
-    "Email: abc@",
-    "Báo lỗi định dạng email",
-    ""
-   ],
-   [
-    "TC007",
-    "UC01 Đăng nhập",
-    "Tài khoản bị tạm khóa",
-    "Tài khoản trạng thái SUSPENDED",
-    "Thông báo tài khoản bị khóa, không cho đăng nhập",
-    ""
-   ],
-   [
-    "TC008",
-    "UC01 Đăng nhập",
-    "Tự làm mới phiên",
-    "Đợi access token hết hạn rồi gọi một trang có dữ liệu",
-    "Hệ thống tự refresh token, trang vẫn tải được",
-    ""
-   ],
-   [
-    "TC009",
-    "UC01 Đăng nhập",
-    "Refresh token không hợp lệ",
-    "Xóa/sửa refresh token rồi gọi API",
-    "Phiên bị xóa, chuyển về trang Đăng nhập",
-    ""
-   ],
-   [
-    "TC010",
-    "UC01 Đăng nhập",
-    "Truy cập trang khi chưa đăng nhập",
-    "Mở trực tiếp /dashboard",
-    "Chuyển hướng đến /login kèm returnTo",
-    ""
-   ],
-   [
-    "TC011",
-    "UC01.1 Quên mật khẩu",
-    "Gửi yêu cầu đặt lại mật khẩu",
-    "Nhập email đã đăng ký",
-    "Thông báo đã gửi email hướng dẫn",
-    ""
-   ],
-   [
-    "TC012",
-    "UC01.1 Quên mật khẩu",
-    "Đặt lại mật khẩu bằng liên kết",
-    "Mở liên kết hợp lệ, nhập mật khẩu mới hợp lệ",
-    "Đổi mật khẩu thành công, đăng nhập được bằng mật khẩu mới",
-    ""
-   ],
-   [
-    "TC013",
-    "UC01.1 Quên mật khẩu",
-    "Liên kết hết hạn",
-    "Mở liên kết đã hết hạn",
-    "Thông báo liên kết hết hạn, cho gửi lại",
-    ""
-   ],
-   [
-    "TC014",
-    "UC02 Đăng xuất",
-    "Đăng xuất",
-    "Nhấn Đăng xuất",
-    "Thu hồi refresh token, xóa phiên, về trang Đăng nhập",
-    ""
-   ],
-   [
-    "TC015",
-    "UC02 Đăng xuất",
-    "Dùng lại token sau khi đăng xuất",
-    "Gọi API bằng refresh token cũ",
-    "Bị từ chối (401)",
-    ""
-   ],
-   [
-    "TC016",
-    "UC03 Đăng ký tài khoản",
-    "Đăng ký thành công",
-    "Họ tên, email mới, mật khẩu mạnh, xác nhận khớp",
-    "Tạo tài khoản, hồ sơ INCOMPLETE, gửi email xác minh",
-    ""
-   ],
-   [
-    "TC017",
-    "UC03 Đăng ký tài khoản",
-    "Email đã tồn tại",
-    "Dùng email đã đăng ký",
-    "Thông báo email đã được đăng ký",
-    ""
-   ],
-   [
-    "TC018",
-    "UC03 Đăng ký tài khoản",
-    "Mật khẩu xác nhận không khớp",
-    "Mật khẩu ≠ xác nhận",
-    "Báo lỗi tại trường xác nhận mật khẩu",
-    ""
-   ],
-   [
-    "TC019",
-    "UC03 Đăng ký tài khoản",
-    "Mật khẩu yếu",
-    "Mật khẩu: 123",
-    "Báo lỗi yêu cầu độ mạnh mật khẩu",
-    ""
-   ],
-   [
-    "TC020",
-    "UC03 Đăng ký tài khoản",
-    "Bỏ trống trường bắt buộc",
-    "Để trống họ tên",
-    "Báo lỗi tại trường họ tên",
-    ""
-   ],
-   [
-    "TC021",
-    "UC03 Đăng ký tài khoản",
-    "Xác minh email",
-    "Mở liên kết xác minh hợp lệ",
-    "emailVerified = true, chuyển đến Đăng nhập",
-    ""
-   ],
-   [
-    "TC022",
-    "UC04 Quản lý hồ sơ cá nhân",
-    "Xem hồ sơ",
-    "Mở trang Hồ sơ",
-    "Hiển thị email, họ tên, vai trò, trạng thái hồ sơ",
-    ""
-   ],
-   [
-    "TC023",
-    "UC04 Quản lý hồ sơ cá nhân",
-    "Cập nhật thông tin cá nhân",
-    "Sửa họ, tên, giới tính, ngày sinh → Lưu",
-    "Lưu thành công, hiển thị dữ liệu mới",
-    ""
-   ],
-   [
-    "TC024",
-    "UC04 Quản lý hồ sơ cá nhân",
-    "Ngày sinh không hợp lệ",
-    "Ngày sinh ở tương lai",
-    "Báo lỗi ngày sinh",
-    ""
-   ],
-   [
-    "TC025",
-    "UC04 Quản lý hồ sơ cá nhân",
-    "Cập nhật ảnh đại diện",
-    "Tải ảnh JPG ≤ 2MB",
-    "Ảnh đại diện được thay đổi",
-    ""
-   ],
-   [
-    "TC026",
-    "UC04 Quản lý hồ sơ cá nhân",
-    "Đổi mật khẩu",
-    "Mật khẩu cũ đúng, mật khẩu mới hợp lệ",
-    "Đổi thành công",
-    ""
-   ],
-   [
-    "TC027",
-    "UC04 Quản lý hồ sơ cá nhân",
-    "Đổi mật khẩu sai mật khẩu cũ",
-    "Mật khẩu cũ sai",
-    "Thông báo mật khẩu cũ không đúng",
-    ""
-   ],
-   [
-    "TC028",
-    "UC05 Quản lý sổ địa chỉ",
-    "Thêm địa chỉ",
-    "Tên, SĐT, tỉnh/thành, phường/xã, địa chỉ chi tiết",
-    "Địa chỉ mới xuất hiện trong danh sách",
-    ""
-   ],
-   [
-    "TC029",
-    "UC05 Quản lý sổ địa chỉ",
-    "Thiếu trường bắt buộc",
-    "Bỏ trống phường/xã",
-    "Báo lỗi trường bắt buộc",
-    ""
-   ],
-   [
-    "TC030",
-    "UC05 Quản lý sổ địa chỉ",
-    "Số điện thoại sai định dạng",
-    "SĐT: 12345",
-    "Báo lỗi số điện thoại",
-    ""
-   ],
-   [
-    "TC031",
-    "UC05 Quản lý sổ địa chỉ",
-    "Sửa địa chỉ",
-    "Đổi địa chỉ chi tiết → Lưu",
-    "Cập nhật thành công",
-    ""
-   ],
-   [
-    "TC032",
-    "UC05 Quản lý sổ địa chỉ",
-    "Xóa địa chỉ",
-    "Xóa một địa chỉ → xác nhận",
-    "Địa chỉ bị xóa khỏi danh sách",
-    ""
-   ],
-   [
-    "TC033",
-    "UC05 Quản lý sổ địa chỉ",
-    "Đặt mặc định",
-    "Chọn “Đặt làm mặc định”",
-    "Chỉ một địa chỉ có nhãn mặc định",
-    ""
-   ],
-   [
-    "TC034",
-    "UC05 Quản lý sổ địa chỉ",
-    "Vượt số lượng tối đa",
-    "Thêm địa chỉ thứ 21",
-    "Thông báo đã đạt giới hạn",
-    ""
-   ],
-   [
-    "TC035",
-    "UC06 Quản lý người dùng",
-    "Xem danh sách",
-    "Mở Người dùng",
-    "Danh sách có phân trang, hiển thị vai trò, trạng thái",
-    ""
-   ],
-   [
-    "TC036",
-    "UC06 Quản lý người dùng",
-    "Tìm theo email/tên",
-    "Từ khóa: “bao”",
-    "Chỉ hiển thị tài khoản khớp",
-    ""
-   ],
-   [
-    "TC037",
-    "UC06 Quản lý người dùng",
-    "Lọc theo vai trò và trạng thái",
-    "Vai trò: Courier; trạng thái: ACTIVE",
-    "Kết quả đúng điều kiện lọc",
-    ""
-   ],
-   [
-    "TC038",
-    "UC06 Quản lý người dùng",
-    "Lọc theo trạng thái hồ sơ",
-    "Hồ sơ: PENDING_VERIFICATION",
-    "Kết quả đúng điều kiện lọc",
-    ""
-   ],
-   [
-    "TC039",
-    "UC06 Quản lý người dùng",
-    "Xem chi tiết",
-    "Chọn một tài khoản",
-    "Hiển thị hồ sơ, vai trò, ngày tạo",
-    ""
-   ],
-   [
-    "TC040",
-    "UC06 Quản lý người dùng",
-    "Tạm khóa tài khoản",
-    "Đổi trạng thái sang SUSPENDED",
-    "Cập nhật thành công; tài khoản đó không đăng nhập được",
-    ""
-   ],
-   [
-    "TC041",
-    "UC06 Quản lý người dùng",
-    "Mở khóa tài khoản",
-    "Đổi SUSPENDED → ACTIVE",
-    "Tài khoản đăng nhập lại được",
-    ""
-   ],
-   [
-    "TC042",
-    "UC06 Quản lý người dùng",
-    "Xung đột dữ liệu",
-    "Hai admin cùng sửa một tài khoản",
-    "Người lưu sau nhận thông báo xung đột (version)",
-    ""
-   ],
-   [
-    "TC043",
-    "UC06 Quản lý người dùng",
-    "Tự khóa chính mình",
-    "Admin khóa tài khoản đang đăng nhập",
-    "Hệ thống không cho phép",
-    ""
-   ],
-   [
-    "TC044",
-    "UC06 Quản lý người dùng",
-    "Không đủ quyền",
-    "Tài khoản không có identity.users.read mở /identity/users",
-    "Thông báo chưa được cấp quyền (403)",
-    ""
-   ],
-   [
-    "TC045",
-    "UC06 Quản lý người dùng",
-    "Xác minh hồ sơ người dùng",
-    "Duyệt hồ sơ PENDING_VERIFICATION",
-    "Hồ sơ chuyển COMPLETED",
-    ""
-   ],
-   [
-    "TC046",
-    "UC06 Quản lý người dùng",
-    "Từ chối hồ sơ người dùng",
-    "Từ chối hồ sơ kèm lý do",
-    "Hồ sơ chuyển REJECTED",
-    ""
-   ],
-   [
-    "TC047",
-    "UC07 Tạo tài khoản nhân viên",
-    "Tạo tài khoản nhân viên",
-    "Họ tên, email mới, vai trò Courier",
-    "Tài khoản được tạo với vai trò đã chọn",
-    ""
-   ],
-   [
-    "TC048",
-    "UC07 Tạo tài khoản nhân viên",
-    "Email trùng",
-    "Email đã tồn tại",
-    "Báo lỗi email đã tồn tại",
-    ""
-   ],
-   [
-    "TC049",
-    "UC07 Tạo tài khoản nhân viên",
-    "Không chọn vai trò",
-    "Bỏ trống vai trò",
-    "Báo lỗi phải chọn ít nhất một vai trò",
-    ""
-   ],
-   [
-    "TC050",
-    "UC08 Quản lý vai trò và quyền",
-    "Xem vai trò và quyền",
-    "Mở Vai trò & quyền",
-    "Danh sách vai trò, số quyền mỗi vai trò",
-    ""
-   ],
-   [
-    "TC051",
-    "UC08 Quản lý vai trò và quyền",
-    "Tìm quyền",
-    "Tìm “users”",
-    "Hiển thị quyền có mã/tên khớp",
-    ""
-   ],
-   [
-    "TC052",
-    "UC08 Quản lý vai trò và quyền",
-    "Tạo vai trò",
-    "Mã, tên, mô tả",
-    "Vai trò mới xuất hiện",
-    ""
-   ],
-   [
-    "TC053",
-    "UC08 Quản lý vai trò và quyền",
-    "Phân quyền cho vai trò",
-    "Gán identity.users.read",
-    "Người có vai trò đó thấy menu Người dùng",
-    ""
-   ],
-   [
-    "TC054",
-    "UC08 Quản lý vai trò và quyền",
-    "Sửa vai trò hệ thống",
-    "Sửa vai trò isSystem = true",
-    "Không cho phép",
-    ""
-   ],
-   [
-    "TC055",
-    "UC08 Quản lý vai trò và quyền",
-    "Xóa vai trò tùy chỉnh",
-    "Xóa vai trò không phải hệ thống",
-    "Xóa thành công",
-    ""
-   ],
-   [
-    "TC056",
-    "UC09 Đăng ký cửa hàng",
-    "Đăng ký cửa hàng",
-    "Tên kinh doanh, người liên hệ, SĐT, MST",
-    "Cửa hàng được tạo, chờ xác minh",
-    ""
-   ],
-   [
-    "TC057",
-    "UC09 Đăng ký cửa hàng",
-    "Thiếu thông tin bắt buộc",
-    "Bỏ trống tên kinh doanh",
-    "Báo lỗi trường bắt buộc",
-    ""
-   ],
-   [
-    "TC058",
-    "UC09 Đăng ký cửa hàng",
-    "Đã có cửa hàng",
-    "Tài khoản đã sở hữu cửa hàng đăng ký lần nữa",
-    "Thông báo mỗi tài khoản chỉ có một cửa hàng",
-    ""
-   ],
-   [
-    "TC059",
-    "UC10 Quản lý thông tin cửa hàng",
-    "Xem thông tin cửa hàng",
-    "Mở Cửa hàng của tôi",
-    "Hiển thị mã, trạng thái, lý do trạng thái",
-    ""
-   ],
-   [
-    "TC060",
-    "UC10 Quản lý thông tin cửa hàng",
-    "Cập nhật thông tin",
-    "Sửa SĐT liên hệ → Lưu",
-    "Cập nhật thành công",
-    ""
-   ],
-   [
-    "TC061",
-    "UC11 Quản lý địa chỉ lấy hàng",
-    "Thêm địa chỉ lấy hàng",
-    "Tên kho, liên hệ, địa chỉ",
-    "Địa chỉ được thêm",
-    ""
-   ],
-   [
-    "TC062",
-    "UC11 Quản lý địa chỉ lấy hàng",
-    "Đặt địa chỉ lấy hàng mặc định",
-    "Chọn mặc định",
-    "Được dùng làm người gửi mặc định khi tạo đơn",
-    ""
-   ],
-   [
-    "TC063",
-    "UC11 Quản lý địa chỉ lấy hàng",
-    "Xóa địa chỉ lấy hàng",
-    "Xóa → xác nhận",
-    "Địa chỉ bị xóa",
-    ""
-   ],
-   [
-    "TC064",
-    "UC12 Yêu cầu xác minh cửa hàng",
-    "Gửi yêu cầu xác minh",
-    "Nhấn Gửi xác minh",
-    "Trạng thái PENDING_VERIFICATION",
-    ""
-   ],
-   [
-    "TC065",
-    "UC12 Yêu cầu xác minh cửa hàng",
-    "Gửi lại khi đang chờ",
-    "Gửi khi đã PENDING_VERIFICATION",
-    "Thông báo yêu cầu đang được xử lý",
-    ""
-   ],
-   [
-    "TC066",
-    "UC13 Duyệt và quản lý cửa hàng",
-    "Lọc cửa hàng chờ xác minh",
-    "Lọc trạng thái PENDING_VERIFICATION",
-    "Chỉ hiện cửa hàng đang chờ",
-    ""
-   ],
-   [
-    "TC067",
-    "UC13 Duyệt và quản lý cửa hàng",
-    "Duyệt cửa hàng",
-    "Chọn cửa hàng → Duyệt",
-    "ACTIVE, ghi người duyệt và thời điểm",
-    ""
-   ],
-   [
-    "TC068",
-    "UC13 Duyệt và quản lý cửa hàng",
-    "Từ chối cửa hàng",
-    "Chọn lý do MISSING_DOCUMENTS + ghi chú",
-    "REJECTED kèm lý do",
-    ""
-   ],
-   [
-    "TC069",
-    "UC13 Duyệt và quản lý cửa hàng",
-    "Tạm ngưng cửa hàng",
-    "Cửa hàng ACTIVE → Tạm ngưng kèm lý do",
-    "SUSPENDED; cửa hàng không tạo được đơn",
-    ""
-   ],
-   [
-    "TC070",
-    "UC13 Duyệt và quản lý cửa hàng",
-    "Khôi phục cửa hàng",
-    "SUSPENDED → Khôi phục",
-    "ACTIVE",
-    ""
-   ],
-   [
-    "TC071",
-    "UC14 Tra cứu vận đơn",
-    "Tra cứu đúng mã",
-    "Mã vận đơn tồn tại",
-    "Hiển thị trạng thái, tiến trình, timeline",
-    ""
-   ],
-   [
-    "TC072",
-    "UC14 Tra cứu vận đơn",
-    "Mã không tồn tại",
-    "Mã: PVX000000000",
-    "Thông báo vận đơn không tồn tại",
-    ""
-   ],
-   [
-    "TC073",
-    "UC14 Tra cứu vận đơn",
-    "Mã trống / sai định dạng",
-    "Để trống",
-    "Báo lỗi nhập mã",
-    ""
-   ],
-   [
-    "TC074",
-    "UC14 Tra cứu vận đơn",
-    "Ẩn thông tin cá nhân",
-    "Tra cứu khi không đăng nhập",
-    "Ẩn SĐT và địa chỉ chi tiết",
-    ""
-   ],
-   [
-    "TC075",
-    "UC14 Tra cứu vận đơn",
-    "Xem hành trình",
-    "Vận đơn đã qua nhiều hub",
-    "Sự kiện sắp theo thời gian, có địa điểm",
-    ""
-   ],
-   [
-    "TC076",
-    "UC15 Tra cứu giá cước",
-    "Tính cước nội tỉnh",
-    "Gửi và nhận cùng tỉnh, 1 kg",
-    "Hiển thị các mức dịch vụ, vùng INTRA_PROVINCE",
-    ""
-   ],
-   [
-    "TC077",
-    "UC15 Tra cứu giá cước",
-    "Tính cước liên vùng",
-    "Gửi Hà Nội, nhận TP.HCM",
-    "Vùng INTER_REGION, thời gian giao dài hơn",
-    ""
-   ],
-   [
-    "TC078",
-    "UC15 Tra cứu giá cước",
-    "Khối lượng quy đổi",
-    "1 kg, kích thước 50×50×50 cm",
-    "Khối lượng tính cước = khối lượng quy đổi",
-    ""
-   ],
-   [
-    "TC079",
-    "UC15 Tra cứu giá cước",
-    "Có COD và bảo hiểm",
-    "COD 2.000.000, giá trị 5.000.000",
-    "Có phí COD và phí bảo hiểm",
-    ""
-   ],
-   [
-    "TC080",
-    "UC15 Tra cứu giá cước",
-    "Vượt khối lượng tối đa",
-    "Khối lượng lớn hơn giới hạn",
-    "Thông báo vượt giới hạn",
-    ""
-   ],
-   [
-    "TC081",
-    "UC15 Tra cứu giá cước",
-    "Ngoài vùng phục vụ",
-    "Phường chưa có khu vực phục vụ",
-    "Thông báo chưa hỗ trợ khu vực",
-    ""
-   ],
-   [
-    "TC082",
-    "UC15 Tra cứu giá cước",
-    "Vùng xa / hải đảo",
-    "Điểm nhận hạng REMOTE / ISLAND",
-    "Có phụ phí vùng xa / hải đảo",
-    ""
-   ],
-   [
-    "TC083",
-    "UC16 Tra cứu bưu cục",
-    "Tìm bưu cục theo tỉnh",
-    "Chọn tỉnh",
-    "Danh sách hub công khai trong tỉnh",
-    ""
-   ],
-   [
-    "TC084",
-    "UC16 Tra cứu bưu cục",
-    "Ẩn hub không công khai",
-    "Hub có publicVisible = false",
-    "Không xuất hiện trong kết quả",
-    ""
-   ],
-   [
-    "TC085",
-    "UC17 Tạo đơn hàng",
-    "Tạo đơn thành công",
-    "Người gửi, người nhận, 1 kiện 2 kg, dịch vụ Tiêu chuẩn",
-    "Sinh mã vận đơn, trạng thái Chờ lấy hàng, có công việc lấy hàng",
-    ""
-   ],
-   [
-    "TC086",
-    "UC17 Tạo đơn hàng",
-    "Chọn địa chỉ từ sổ địa chỉ",
-    "Chọn người nhận từ sổ địa chỉ",
-    "Tự điền thông tin người nhận",
-    ""
-   ],
-   [
-    "TC087",
-    "UC17 Tạo đơn hàng",
-    "Nhiều kiện",
-    "3 kiện khác khối lượng",
-    "Lưu đủ 3 kiện, tổng khối lượng đúng",
-    ""
-   ],
-   [
-    "TC088",
-    "UC17 Tạo đơn hàng",
-    "SĐT người nhận sai",
-    "SĐT: 0123",
-    "Báo lỗi số điện thoại",
-    ""
-   ],
-   [
-    "TC089",
-    "UC17 Tạo đơn hàng",
-    "Kiện vượt giới hạn",
-    "Kích thước vượt tối đa",
-    "Báo lỗi vượt giới hạn",
-    ""
-   ],
-   [
-    "TC090",
-    "UC17 Tạo đơn hàng",
-    "COD vượt mức tối đa",
-    "COD lớn hơn mức cho phép",
-    "Báo mức COD tối đa",
-    ""
-   ],
-   [
-    "TC091",
-    "UC17 Tạo đơn hàng",
-    "Báo giá hết hạn",
-    "Để quá thời hạn báo giá rồi xác nhận",
-    "Hệ thống tính lại cước",
-    ""
-   ],
-   [
-    "TC092",
-    "UC17 Tạo đơn hàng",
-    "Không tìm được lộ trình",
-    "Tuyến hết tải trọng",
-    "Đơn được tạo với ROUTING_FAILED, vào danh sách ngoại lệ",
-    ""
-   ],
-   [
-    "TC093",
-    "UC17 Tạo đơn hàng",
-    "Cửa hàng chưa xác minh",
-    "Merchant PENDING_VERIFICATION",
-    "Không cho tạo đơn",
-    ""
-   ],
-   [
-    "TC094",
-    "UC17 Tạo đơn hàng",
-    "Người trả cước",
-    "Chọn Người nhận trả",
-    "shippingFeePayer = RECIPIENT",
-    ""
-   ],
-   [
-    "TC095",
-    "UC17 Tạo đơn hàng",
-    "Tạo đơn tại quầy (Hub Dispatch)",
-    "Chọn khách hàng → nhập thông tin",
-    "Đơn được tạo thay khách hàng",
-    ""
-   ],
-   [
-    "TC096",
-    "UC18 Quản lý đơn hàng",
-    "Xem danh sách đơn",
-    "Mở Đơn hàng của tôi",
-    "Danh sách đơn của cửa hàng",
-    ""
-   ],
-   [
-    "TC097",
-    "UC18 Quản lý đơn hàng",
-    "Lọc theo trạng thái",
-    "Tab Đang xử lý / Đã giao / Đã hủy",
-    "Kết quả đúng trạng thái",
-    ""
-   ],
-   [
-    "TC098",
-    "UC18 Quản lý đơn hàng",
-    "Tìm đơn",
-    "Tìm theo mã, tên hoặc SĐT người nhận",
-    "Kết quả khớp",
-    ""
-   ],
-   [
-    "TC099",
-    "UC18 Quản lý đơn hàng",
-    "Xem chi tiết",
-    "Chọn một đơn",
-    "Hiển thị kiện, cước, COD, trạng thái định tuyến",
-    ""
-   ],
-   [
-    "TC100",
-    "UC18 Quản lý đơn hàng",
-    "Hủy đơn khi chưa lấy hàng",
-    "Đơn Chờ lấy hàng → Hủy, nhập lý do",
-    "Đơn CANCELLED, giải phóng giữ chỗ tải",
-    ""
-   ],
-   [
-    "TC101",
-    "UC18 Quản lý đơn hàng",
-    "Hủy đơn đã lấy hàng",
-    "Đơn đã lấy → Hủy",
-    "Không cho hủy, gợi ý yêu cầu ngoại lệ",
-    ""
-   ],
-   [
-    "TC102",
-    "UC19 Theo dõi vận đơn",
-    "Theo dõi đơn của cửa hàng",
-    "Chọn đơn đang vận chuyển",
-    "Hiển thị timeline và vị trí hiện tại",
-    ""
-   ],
-   [
-    "TC103",
-    "UC19 Theo dõi vận đơn",
-    "Cập nhật trạng thái mới",
-    "Nhân viên quét kiện tại hub mới",
-    "Timeline có thêm sự kiện mới",
-    ""
-   ],
-   [
-    "TC104",
-    "UC20 Yêu cầu xử lý ngoại lệ vận đơn",
-    "Yêu cầu hoàn hàng",
-    "Chọn đơn → Yêu cầu hoàn hàng, nhập lý do",
-    "Tạo yêu cầu PENDING",
-    ""
-   ],
-   [
-    "TC105",
-    "UC20 Yêu cầu xử lý ngoại lệ vận đơn",
-    "Yêu cầu chuyển tiếp địa chỉ",
-    "Nhập địa chỉ mới",
-    "Yêu cầu có forwardAddress",
-    ""
-   ],
-   [
-    "TC106",
-    "UC20 Yêu cầu xử lý ngoại lệ vận đơn",
-    "Yêu cầu giao lại",
-    "Đơn giao thất bại → Giao lại",
-    "Tạo yêu cầu REDELIVERY",
-    ""
-   ],
-   [
-    "TC107",
-    "UC20 Yêu cầu xử lý ngoại lệ vận đơn",
-    "Yêu cầu hủy vận đơn",
-    "Chọn Hủy vận đơn",
-    "Tạo yêu cầu CANCEL_SHIPMENT",
-    ""
-   ],
-   [
-    "TC108",
-    "UC20 Yêu cầu xử lý ngoại lệ vận đơn",
-    "Thiếu lý do",
-    "Bỏ trống lý do",
-    "Báo lỗi trường bắt buộc",
-    ""
-   ],
-   [
-    "TC109",
-    "UC21 Quản lý bảng giá",
-    "Tạo bảng giá nháp",
-    "Mã, tên, tiền tệ, TTL báo giá",
-    "Bảng giá DRAFT",
-    ""
-   ],
-   [
-    "TC110",
-    "UC21 Quản lý bảng giá",
-    "Cấu hình quy tắc giá",
-    "Mức dịch vụ × vùng giá, phí cơ bản, bước khối lượng",
-    "Lưu quy tắc giá",
-    ""
-   ],
-   [
-    "TC111",
-    "UC21 Quản lý bảng giá",
-    "Cấu hình COD / bảo hiểm / giới hạn",
-    "Nhập ngưỡng miễn phí, tỉ lệ, mức tối đa",
-    "Lưu chính sách",
-    ""
-   ],
-   [
-    "TC112",
-    "UC21 Quản lý bảng giá",
-    "Kích hoạt bảng giá",
-    "DRAFT → Kích hoạt",
-    "ACTIVE; bảng giá cũ RETIRED",
-    ""
-   ],
-   [
-    "TC113",
-    "UC21 Quản lý bảng giá",
-    "Tạo phiên bản mới",
-    "Sao chép bảng giá ACTIVE",
-    "Revision mới ở DRAFT",
-    ""
-   ],
-   [
-    "TC114",
-    "UC21 Quản lý bảng giá",
-    "Ngừng áp dụng",
-    "ACTIVE → Ngừng",
-    "RETIRED, không dùng để báo giá",
-    ""
-   ],
-   [
-    "TC115",
-    "UC21 Quản lý bảng giá",
-    "Thiếu quy tắc giá",
-    "Kích hoạt khi thiếu quy tắc cho một vùng",
-    "Không cho kích hoạt",
-    ""
-   ],
-   [
-    "TC116",
-    "UC22 Quản lý mạng lưới",
-    "Thêm vùng mạng lưới",
-    "Mã, tên vùng",
-    "Vùng mới ACTIVE",
-    ""
-   ],
-   [
-    "TC117",
-    "UC22 Quản lý mạng lưới",
-    "Thêm khu vực phục vụ",
-    "Chọn vùng, hub chính, phạm vi tỉnh/phường",
-    "Khu vực phục vụ được tạo",
-    ""
-   ],
-   [
-    "TC118",
-    "UC22 Quản lý mạng lưới",
-    "Thêm hub",
-    "Mã, tên, loại hub, địa chỉ, hub cha",
-    "Hub mới xuất hiện",
-    ""
-   ],
-   [
-    "TC119",
-    "UC22 Quản lý mạng lưới",
-    "Trùng mã hub",
-    "Mã hub đã có",
-    "Báo lỗi trùng mã",
-    ""
-   ],
-   [
-    "TC120",
-    "UC22 Quản lý mạng lưới",
-    "Thêm tuyến vận chuyển",
-    "Hub đi, hub đến, phương thức, thời gian, tải tối đa",
-    "Tuyến được tạo",
-    ""
-   ],
-   [
-    "TC121",
-    "UC22 Quản lý mạng lưới",
-    "Tuyến trùng hub đi và đến",
-    "Hub đi = hub đến",
-    "Báo lỗi",
-    ""
-   ],
-   [
-    "TC122",
-    "UC22 Quản lý mạng lưới",
-    "Thêm lịch chạy tuyến",
-    "Giờ khởi hành, ngày chạy, tải trọng",
-    "Lịch chạy được tạo",
-    ""
-   ],
-   [
-    "TC123",
-    "UC22 Quản lý mạng lưới",
-    "Thêm mẫu lộ trình",
-    "Chuỗi chặng theo thứ tự",
-    "Mẫu lộ trình được tạo",
-    ""
-   ],
-   [
-    "TC124",
-    "UC23 Quản lý nhân sự vận hành",
-    "Tạo hồ sơ nhân sự",
-    "Tài khoản nhân viên, mã nhân viên, loại Courier",
-    "Hồ sơ nhân sự ACTIVE",
-    ""
-   ],
-   [
-    "TC125",
-    "UC23 Quản lý nhân sự vận hành",
-    "Gán nhân sự vào hub",
-    "Chọn hub, đặt hub chính",
-    "Tạo HubMembership",
-    ""
-   ],
-   [
-    "TC126",
-    "UC23 Quản lý nhân sự vận hành",
-    "Gỡ nhân sự khỏi hub",
-    "Gỡ khỏi hub",
-    "Ghi unassignedAt",
-    ""
-   ],
-   [
-    "TC127",
-    "UC23 Quản lý nhân sự vận hành",
-    "Cập nhật trạng thái nhân sự",
-    "ACTIVE → ON_LEAVE",
-    "Không xuất hiện trong danh sách phân công",
-    ""
-   ],
-   [
-    "TC128",
-    "UC24 Xem nhân sự vận hành",
-    "Xem nhân sự của hub",
-    "Mở Nhân sự vận hành",
-    "Danh sách nhân sự, trạng thái sẵn sàng, số việc đang làm",
-    ""
-   ],
-   [
-    "TC129",
-    "UC24 Xem nhân sự vận hành",
-    "Lọc theo loại nhân sự",
-    "Loại: Line-haul Driver",
-    "Kết quả đúng loại",
-    ""
-   ],
-   [
-    "TC130",
-    "UC25 Quản lý ca làm việc",
-    "Tạo ca",
-    "Mã, tên, 07:00–15:00",
-    "Ca SCHEDULED",
-    ""
-   ],
-   [
-    "TC131",
-    "UC25 Quản lý ca làm việc",
-    "Giờ kết thúc trước giờ bắt đầu",
-    "15:00–07:00",
-    "Báo lỗi thời gian",
-    ""
-   ],
-   [
-    "TC132",
-    "UC25 Quản lý ca làm việc",
-    "Phân công nhân sự vào ca",
-    "Chọn 3 nhân sự",
-    "Tạo 3 phân công ASSIGNED, nhân sự nhận thông báo",
-    ""
-   ],
-   [
-    "TC133",
-    "UC25 Quản lý ca làm việc",
-    "Nhân sự trùng ca",
-    "Phân công nhân sự đã có ca trùng giờ",
-    "Cảnh báo trùng ca",
-    ""
-   ],
-   [
-    "TC134",
-    "UC25 Quản lý ca làm việc",
-    "Hủy ca",
-    "Hủy ca kèm lý do",
-    "Ca CANCELLED, phân công bị hủy",
-    ""
-   ],
-   [
-    "TC135",
-    "UC25 Quản lý ca làm việc",
-    "Đánh dấu vắng mặt",
-    "Chọn nhân sự không đến",
-    "Phân công ABSENT",
-    ""
-   ],
-   [
-    "TC136",
-    "UC26 Xem ca làm việc",
-    "Xem lịch ca của tôi",
-    "Mở Ca làm việc trên ứng dụng",
-    "Danh sách ca được phân công",
-    ""
-   ],
-   [
-    "TC137",
-    "UC26 Xem ca làm việc",
-    "Không có ca",
-    "Nhân sự chưa được phân công",
-    "Thông báo chưa có ca",
-    ""
-   ],
-   [
-    "TC138",
-    "UC27 Check-in / Check-out ca",
-    "Check-in đúng giờ",
-    "Nhấn Check-in trong khung giờ ca",
-    "CHECKED_IN, ghi checkedInAt",
-    ""
-   ],
-   [
-    "TC139",
-    "UC27 Check-in / Check-out ca",
-    "Check-out",
-    "Nhấn Check-out",
-    "CHECKED_OUT, ghi checkedOutAt",
-    ""
-   ],
-   [
-    "TC140",
-    "UC27 Check-in / Check-out ca",
-    "Check-in khi ca đã hủy",
-    "Ca CANCELLED",
-    "Không cho check-in",
-    ""
-   ],
-   [
-    "TC141",
-    "UC28 Cập nhật trạng thái sẵn sàng",
-    "Chuyển sang sẵn sàng",
-    "Bật Đang hoạt động",
-    "AVAILABLE, xuất hiện khi điều phối",
-    ""
-   ],
-   [
-    "TC142",
-    "UC28 Cập nhật trạng thái sẵn sàng",
-    "Chuyển sang ngoại tuyến",
-    "Tắt Đang hoạt động",
-    "OFFLINE, không được phân công mới",
-    ""
-   ],
-   [
-    "TC143",
-    "UC29 Xem tổng quan vận hành",
-    "Xem bảng điều hành",
-    "Mở Tổng quan",
-    "Số đơn, đơn đang xử lý, đã giao, công việc tồn",
-    ""
-   ],
-   [
-    "TC144",
-    "UC29 Xem tổng quan vận hành",
-    "Không có dữ liệu",
-    "Hub mới chưa có đơn",
-    "Hiển thị 0 và trạng thái rỗng",
-    ""
-   ],
-   [
-    "TC145",
-    "UC30 Theo dõi vận đơn vận hành",
-    "Tra cứu vận đơn nội bộ",
-    "Nhập mã vận đơn",
-    "Hiển thị kiện, custody, lộ trình, công việc",
-    ""
-   ],
-   [
-    "TC146",
-    "UC30 Theo dõi vận đơn vận hành",
-    "Tạm giữ vận đơn",
-    "Tạm giữ kèm lý do",
-    "isOnHold = true, ghi hub và người thao tác",
-    ""
-   ],
-   [
-    "TC147",
-    "UC30 Theo dõi vận đơn vận hành",
-    "Giải phóng vận đơn",
-    "Bỏ tạm giữ",
-    "isOnHold = false",
-    ""
-   ],
-   [
-    "TC148",
-    "UC31 Điều phối công việc",
-    "Phân công công việc",
-    "Chọn công việc PICKUP → chọn Courier phù hợp",
-    "ASSIGNED, nhân sự nhận việc trên ứng dụng",
-    ""
-   ],
-   [
-    "TC149",
-    "UC31 Điều phối công việc",
-    "Chỉ hiện nhân sự phù hợp",
-    "Công việc yêu cầu LINE_HAUL_DRIVER",
-    "Chỉ hiện tài xế trung chuyển đã check-in, sẵn sàng",
-    ""
-   ],
-   [
-    "TC150",
-    "UC31 Điều phối công việc",
-    "Không có nhân sự",
-    "Không ai check-in ca",
-    "Thông báo không có nhân sự sẵn sàng",
-    ""
-   ],
-   [
-    "TC151",
-    "UC31 Điều phối công việc",
-    "Nhân sự quá tải",
-    "Nhân sự đã đạt số việc tối đa",
-    "Cảnh báo, chọn người khác",
-    ""
-   ],
-   [
-    "TC152",
-    "UC31 Điều phối công việc",
-    "Phân công lại",
-    "Đổi người thực hiện",
-    "Cập nhật người thực hiện, ghi người thao tác",
-    ""
-   ],
-   [
-    "TC153",
-    "UC31 Điều phối công việc",
-    "Hủy công việc",
-    "Hủy kèm ghi chú",
-    "CANCELLED",
-    ""
-   ],
-   [
-    "TC154",
-    "UC32 Xem công việc được giao",
-    "Xem công việc",
-    "Mở Công việc của tôi",
-    "Danh sách theo mức ưu tiên",
-    ""
-   ],
-   [
-    "TC155",
-    "UC32 Xem công việc được giao",
-    "Lọc theo trạng thái",
-    "Tab Đang xử lý / Đã xong",
-    "Kết quả đúng trạng thái",
-    ""
-   ],
-   [
-    "TC156",
-    "UC33 Thực hiện công việc",
-    "Nhận việc",
-    "Nhấn Nhận việc",
-    "ACCEPTED",
-    ""
-   ],
-   [
-    "TC157",
-    "UC33 Thực hiện công việc",
-    "Bắt đầu",
-    "Nhấn Bắt đầu",
-    "IN_PROGRESS",
-    ""
-   ],
-   [
-    "TC158",
-    "UC33 Thực hiện công việc",
-    "Hoàn thành",
-    "Quét đủ kiện → Hoàn thành",
-    "COMPLETED, tạo công việc chặng tiếp",
-    ""
-   ],
-   [
-    "TC159",
-    "UC33 Thực hiện công việc",
-    "Hoàn thành khi thiếu kiện",
-    "Quét 1/2 kiện → Hoàn thành",
-    "Không cho hoàn thành, hiển thị kiện còn thiếu",
-    ""
-   ],
-   [
-    "TC160",
-    "UC33 Thực hiện công việc",
-    "Báo không hoàn thành",
-    "Nhập lý do",
-    "FAILED, có resolutionNote",
-    ""
-   ],
-   [
-    "TC161",
-    "UC34 Quét kiện hàng",
-    "Quét mã hợp lệ",
-    "Quét mã kiện thuộc công việc",
-    "Ghi nhận, cập nhật custody và sự kiện",
-    ""
-   ],
-   [
-    "TC162",
-    "UC34 Quét kiện hàng",
-    "Mã không thuộc công việc",
-    "Quét kiện của vận đơn khác",
-    "Cảnh báo, không ghi nhận",
-    ""
-   ],
-   [
-    "TC163",
-    "UC34 Quét kiện hàng",
-    "Quét trùng",
-    "Quét lại kiện đã quét",
-    "Báo quét trùng",
-    ""
-   ],
-   [
-    "TC164",
-    "UC34 Quét kiện hàng",
-    "Chưa cấp quyền camera",
-    "Từ chối quyền camera",
-    "Yêu cầu cấp quyền / nhập mã thủ công",
-    ""
-   ],
-   [
-    "TC165",
-    "UC34 Quét kiện hàng",
-    "Nhập mã thủ công",
-    "Gõ mã kiện",
-    "Xử lý như quét mã",
-    ""
-   ],
-   [
-    "TC166",
-    "UC35 Ghi nhận kết quả giao hàng",
-    "Giao thành công có chữ ký",
-    "Chọn Giao thành công, ký nhận, nhập tên người nhận",
-    "DELIVERED, có DeliveryAttempt",
-    ""
-   ],
-   [
-    "TC167",
-    "UC35 Ghi nhận kết quả giao hàng",
-    "Giao thành công bằng OTP",
-    "Nhập OTP đúng",
-    "DELIVERED",
-    ""
-   ],
-   [
-    "TC168",
-    "UC35 Ghi nhận kết quả giao hàng",
-    "Thiếu bằng chứng",
-    "Không chụp ảnh / không ký",
-    "Yêu cầu bổ sung bằng chứng",
-    ""
-   ],
-   [
-    "TC169",
-    "UC35 Ghi nhận kết quả giao hàng",
-    "Giao thất bại",
-    "Chọn lý do Không liên lạc được",
-    "DELIVERY_FAILED, vào danh sách ngoại lệ",
-    ""
-   ],
-   [
-    "TC170",
-    "UC35 Ghi nhận kết quả giao hàng",
-    "Thu COD",
-    "Đơn có COD, xác nhận đã thu",
-    "Ghi nhận đã thu đủ COD",
-    ""
-   ],
-   [
-    "TC171",
-    "UC36 Bàn giao hàng trung chuyển",
-    "Nhận hàng tại hub đi",
-    "Quét các kiện của chuyến",
-    "Kiện chuyển sang custody tài xế",
-    ""
-   ],
-   [
-    "TC172",
-    "UC36 Bàn giao hàng trung chuyển",
-    "Bàn giao tại hub đến",
-    "Quét kiện tại hub đến",
-    "Kiện về custody hub đến, sự kiện Đến hub",
-    ""
-   ],
-   [
-    "TC173",
-    "UC36 Bàn giao hàng trung chuyển",
-    "Kiện không thuộc chuyến",
-    "Quét kiện của chuyến khác",
-    "Cảnh báo, không ghi nhận",
-    ""
-   ],
-   [
-    "TC174",
-    "UC37 Điều chỉnh khối lượng kiện",
-    "Cân lại kiện",
-    "Nhập khối lượng mới và lý do",
-    "Tạo điều chỉnh, vận đơn có hasPendingWeightReview",
-    ""
-   ],
-   [
-    "TC175",
-    "UC37 Điều chỉnh khối lượng kiện",
-    "Thiếu lý do",
-    "Bỏ trống lý do",
-    "Báo lỗi trường bắt buộc",
-    ""
-   ],
-   [
-    "TC176",
-    "UC38 Duyệt điều chỉnh khối lượng",
-    "Duyệt điều chỉnh",
-    "Chọn điều chỉnh → Duyệt kèm ghi chú",
-    "reviewCompleted = true, cập nhật khối lượng tính cước",
-    ""
-   ],
-   [
-    "TC177",
-    "UC38 Duyệt điều chỉnh khối lượng",
-    "Không có điều chỉnh chờ",
-    "Mở danh sách khi rỗng",
-    "Thông báo không có điều chỉnh chờ duyệt",
-    ""
-   ],
-   [
-    "TC178",
-    "UC39 Xem ngoại lệ vận đơn",
-    "Xem danh sách ngoại lệ",
-    "Mở Ngoại lệ",
-    "Đơn giao thất bại, tạm giữ, chờ duyệt khối lượng, yêu cầu ngoại lệ",
-    ""
-   ],
-   [
-    "TC179",
-    "UC39 Xem ngoại lệ vận đơn",
-    "Lọc theo loại ngoại lệ",
-    "Chọn Giao thất bại",
-    "Kết quả đúng loại",
-    ""
-   ],
-   [
-    "TC180",
-    "UC40 Xử lý yêu cầu ngoại lệ",
-    "Phê duyệt hoàn hàng",
-    "Yêu cầu RETURN_TO_SENDER → Phê duyệt",
-    "COMPLETED, vận đơn chuyển chiều hoàn",
-    ""
-   ],
-   [
-    "TC181",
-    "UC40 Xử lý yêu cầu ngoại lệ",
-    "Phê duyệt đổi địa chỉ",
-    "FORWARD_TO_NEW_ADDRESS → Phê duyệt",
-    "Định tuyến lại, người nhận mới",
-    ""
-   ],
-   [
-    "TC182",
-    "UC40 Xử lý yêu cầu ngoại lệ",
-    "Từ chối yêu cầu",
-    "Từ chối kèm ghi chú",
-    "REJECTED, người yêu cầu được thông báo",
-    ""
-   ],
-   [
-    "TC183",
-    "UC40 Xử lý yêu cầu ngoại lệ",
-    "Vận đơn đã giao",
-    "Phê duyệt yêu cầu của đơn DELIVERED",
-    "Không cho phê duyệt",
-    ""
-   ],
-   [
-    "TC184",
-    "UC40 Xử lý yêu cầu ngoại lệ",
-    "Không tìm được lộ trình mới",
-    "Địa chỉ mới ngoài vùng phục vụ",
-    "Giữ APPROVED, cảnh báo định tuyến thất bại",
-    ""
-   ],
-   [
-    "TC185",
-    "UC41 Báo cáo sự cố",
-    "Báo cáo hư hỏng",
-    "Loại DAMAGED, mức độ HIGH, mô tả",
-    "Tạo hồ sơ sự cố OPEN",
-    ""
-   ],
-   [
-    "TC186",
-    "UC41 Báo cáo sự cố",
-    "Kiện không xác định",
-    "Loại UNIDENTIFIED_PARCEL, nhập mã vạch ngoài",
-    "Tạo hồ sơ kèm externalBarcode",
-    ""
-   ],
-   [
-    "TC187",
-    "UC41 Báo cáo sự cố",
-    "Thiếu tiêu đề / mô tả",
-    "Bỏ trống mô tả",
-    "Báo lỗi trường bắt buộc",
-    ""
-   ],
-   [
-    "TC188",
-    "UC42 Quản lý hồ sơ sự cố",
-    "Phân công xử lý",
-    "Chọn người xử lý",
-    "Ghi assignedToUserId",
-    ""
-   ],
-   [
-    "TC189",
-    "UC42 Quản lý hồ sơ sự cố",
-    "Cập nhật tiến độ",
-    "OPEN → IN_PROGRESS",
-    "Trạng thái IN_PROGRESS",
-    ""
-   ],
-   [
-    "TC190",
-    "UC42 Quản lý hồ sơ sự cố",
-    "Giải quyết sự cố",
-    "Nhập kết quả xử lý",
-    "RESOLVED, ghi resolvedAt",
-    ""
-   ],
-   [
-    "TC191",
-    "UC42 Quản lý hồ sơ sự cố",
-    "Đóng hồ sơ",
-    "RESOLVED → Đóng",
-    "CLOSED, ghi closedAt",
-    ""
-   ],
-   [
-    "TC192",
-    "UC42 Quản lý hồ sơ sự cố",
-    "Đóng khi chưa giải quyết",
-    "OPEN → Đóng",
-    "Không cho đóng",
-    ""
+  "t": "testcase",
+  "tc": {
+   "id": "TC01",
+   "uc": "UC01",
+   "name": "Đăng nhập",
+   "goal": "Kiểm tra quản trị viên đăng nhập cổng quản trị bằng email và mật khẩu hợp lệ, phiên được lưu trong cookie HttpOnly và được chuyển về trang đã yêu cầu trước đó (returnTo).",
+   "pre": [
+    "Backend PAVEX đang chạy, kết nối PostgreSQL bình thường.",
+    "Tồn tại tài khoản quản trị trạng thái Hoạt động, có quyền identity.users.read.",
+    "Trình duyệt chưa có phiên đăng nhập."
+   ],
+   "data": [
+    "Email: admin@pavex.vn",
+    "Mật khẩu: mật khẩu đúng của tài khoản"
+   ],
+   "steps": [
+    "Truy cập trực tiếp đường dẫn /identity/users khi chưa đăng nhập.",
+    "Quan sát trang được chuyển đến.",
+    "Nhập Email và Mật khẩu theo dữ liệu vào.",
+    "Nhấn nút “Vào bảng điều hành”."
+   ],
+   "expected": [
+    "Bước 2: hệ thống chuyển về /login?returnTo=/identity/users.",
+    "Bước 4: nút chuyển sang “Đang xác thực...”, sau đó chuyển đến trang Người dùng (/identity/users).",
+    "Cookie phiên được tạo với thuộc tính HttpOnly (không đọc được bằng JavaScript).",
+    "Thanh bên hiển thị tên và email của tài khoản; chỉ hiện các menu ứng với quyền của tài khoản."
    ]
-  ],
-  "groups": [
-   "Xác thực và tài khoản cá nhân",
-   "Quản trị người dùng và phân quyền",
-   "Cửa hàng (Merchant)",
-   "Tra cứu công khai",
-   "Đơn hàng và vận đơn",
-   "Bảng giá và mạng lưới",
-   "Nhân sự vận hành và ca làm việc",
-   "Điều phối và thực hiện vận hành",
-   "Ngoại lệ và sự cố"
-  ],
-  "group_of": [
-   "Xác thực và tài khoản cá nhân",
-   "Xác thực và tài khoản cá nhân",
-   "Xác thực và tài khoản cá nhân",
-   "Xác thực và tài khoản cá nhân",
-   "Xác thực và tài khoản cá nhân",
-   "Xác thực và tài khoản cá nhân",
-   "Xác thực và tài khoản cá nhân",
-   "Xác thực và tài khoản cá nhân",
-   "Xác thực và tài khoản cá nhân",
-   "Xác thực và tài khoản cá nhân",
-   "Xác thực và tài khoản cá nhân",
-   "Xác thực và tài khoản cá nhân",
-   "Xác thực và tài khoản cá nhân",
-   "Xác thực và tài khoản cá nhân",
-   "Xác thực và tài khoản cá nhân",
-   "Xác thực và tài khoản cá nhân",
-   "Xác thực và tài khoản cá nhân",
-   "Xác thực và tài khoản cá nhân",
-   "Xác thực và tài khoản cá nhân",
-   "Xác thực và tài khoản cá nhân",
-   "Xác thực và tài khoản cá nhân",
-   "Xác thực và tài khoản cá nhân",
-   "Xác thực và tài khoản cá nhân",
-   "Xác thực và tài khoản cá nhân",
-   "Xác thực và tài khoản cá nhân",
-   "Xác thực và tài khoản cá nhân",
-   "Xác thực và tài khoản cá nhân",
-   "Xác thực và tài khoản cá nhân",
-   "Xác thực và tài khoản cá nhân",
-   "Xác thực và tài khoản cá nhân",
-   "Xác thực và tài khoản cá nhân",
-   "Xác thực và tài khoản cá nhân",
-   "Xác thực và tài khoản cá nhân",
-   "Xác thực và tài khoản cá nhân",
-   "Quản trị người dùng và phân quyền",
-   "Quản trị người dùng và phân quyền",
-   "Quản trị người dùng và phân quyền",
-   "Quản trị người dùng và phân quyền",
-   "Quản trị người dùng và phân quyền",
-   "Quản trị người dùng và phân quyền",
-   "Quản trị người dùng và phân quyền",
-   "Quản trị người dùng và phân quyền",
-   "Quản trị người dùng và phân quyền",
-   "Quản trị người dùng và phân quyền",
-   "Quản trị người dùng và phân quyền",
-   "Quản trị người dùng và phân quyền",
-   "Quản trị người dùng và phân quyền",
-   "Quản trị người dùng và phân quyền",
-   "Quản trị người dùng và phân quyền",
-   "Quản trị người dùng và phân quyền",
-   "Quản trị người dùng và phân quyền",
-   "Quản trị người dùng và phân quyền",
-   "Quản trị người dùng và phân quyền",
-   "Quản trị người dùng và phân quyền",
-   "Quản trị người dùng và phân quyền",
-   "Cửa hàng (Merchant)",
-   "Cửa hàng (Merchant)",
-   "Cửa hàng (Merchant)",
-   "Cửa hàng (Merchant)",
-   "Cửa hàng (Merchant)",
-   "Cửa hàng (Merchant)",
-   "Cửa hàng (Merchant)",
-   "Cửa hàng (Merchant)",
-   "Cửa hàng (Merchant)",
-   "Cửa hàng (Merchant)",
-   "Cửa hàng (Merchant)",
-   "Cửa hàng (Merchant)",
-   "Cửa hàng (Merchant)",
-   "Cửa hàng (Merchant)",
-   "Cửa hàng (Merchant)",
-   "Tra cứu công khai",
-   "Tra cứu công khai",
-   "Tra cứu công khai",
-   "Tra cứu công khai",
-   "Tra cứu công khai",
-   "Tra cứu công khai",
-   "Tra cứu công khai",
-   "Tra cứu công khai",
-   "Tra cứu công khai",
-   "Tra cứu công khai",
-   "Tra cứu công khai",
-   "Tra cứu công khai",
-   "Tra cứu công khai",
-   "Tra cứu công khai",
-   "Đơn hàng và vận đơn",
-   "Đơn hàng và vận đơn",
-   "Đơn hàng và vận đơn",
-   "Đơn hàng và vận đơn",
-   "Đơn hàng và vận đơn",
-   "Đơn hàng và vận đơn",
-   "Đơn hàng và vận đơn",
-   "Đơn hàng và vận đơn",
-   "Đơn hàng và vận đơn",
-   "Đơn hàng và vận đơn",
-   "Đơn hàng và vận đơn",
-   "Đơn hàng và vận đơn",
-   "Đơn hàng và vận đơn",
-   "Đơn hàng và vận đơn",
-   "Đơn hàng và vận đơn",
-   "Đơn hàng và vận đơn",
-   "Đơn hàng và vận đơn",
-   "Đơn hàng và vận đơn",
-   "Đơn hàng và vận đơn",
-   "Đơn hàng và vận đơn",
-   "Đơn hàng và vận đơn",
-   "Đơn hàng và vận đơn",
-   "Đơn hàng và vận đơn",
-   "Đơn hàng và vận đơn",
-   "Bảng giá và mạng lưới",
-   "Bảng giá và mạng lưới",
-   "Bảng giá và mạng lưới",
-   "Bảng giá và mạng lưới",
-   "Bảng giá và mạng lưới",
-   "Bảng giá và mạng lưới",
-   "Bảng giá và mạng lưới",
-   "Bảng giá và mạng lưới",
-   "Bảng giá và mạng lưới",
-   "Bảng giá và mạng lưới",
-   "Bảng giá và mạng lưới",
-   "Bảng giá và mạng lưới",
-   "Bảng giá và mạng lưới",
-   "Bảng giá và mạng lưới",
-   "Bảng giá và mạng lưới",
-   "Nhân sự vận hành và ca làm việc",
-   "Nhân sự vận hành và ca làm việc",
-   "Nhân sự vận hành và ca làm việc",
-   "Nhân sự vận hành và ca làm việc",
-   "Nhân sự vận hành và ca làm việc",
-   "Nhân sự vận hành và ca làm việc",
-   "Nhân sự vận hành và ca làm việc",
-   "Nhân sự vận hành và ca làm việc",
-   "Nhân sự vận hành và ca làm việc",
-   "Nhân sự vận hành và ca làm việc",
-   "Nhân sự vận hành và ca làm việc",
-   "Nhân sự vận hành và ca làm việc",
-   "Nhân sự vận hành và ca làm việc",
-   "Nhân sự vận hành và ca làm việc",
-   "Nhân sự vận hành và ca làm việc",
-   "Nhân sự vận hành và ca làm việc",
-   "Nhân sự vận hành và ca làm việc",
-   "Nhân sự vận hành và ca làm việc",
-   "Nhân sự vận hành và ca làm việc",
-   "Điều phối và thực hiện vận hành",
-   "Điều phối và thực hiện vận hành",
-   "Điều phối và thực hiện vận hành",
-   "Điều phối và thực hiện vận hành",
-   "Điều phối và thực hiện vận hành",
-   "Điều phối và thực hiện vận hành",
-   "Điều phối và thực hiện vận hành",
-   "Điều phối và thực hiện vận hành",
-   "Điều phối và thực hiện vận hành",
-   "Điều phối và thực hiện vận hành",
-   "Điều phối và thực hiện vận hành",
-   "Điều phối và thực hiện vận hành",
-   "Điều phối và thực hiện vận hành",
-   "Điều phối và thực hiện vận hành",
-   "Điều phối và thực hiện vận hành",
-   "Điều phối và thực hiện vận hành",
-   "Điều phối và thực hiện vận hành",
-   "Điều phối và thực hiện vận hành",
-   "Điều phối và thực hiện vận hành",
-   "Điều phối và thực hiện vận hành",
-   "Điều phối và thực hiện vận hành",
-   "Điều phối và thực hiện vận hành",
-   "Điều phối và thực hiện vận hành",
-   "Điều phối và thực hiện vận hành",
-   "Điều phối và thực hiện vận hành",
-   "Điều phối và thực hiện vận hành",
-   "Điều phối và thực hiện vận hành",
-   "Điều phối và thực hiện vận hành",
-   "Điều phối và thực hiện vận hành",
-   "Điều phối và thực hiện vận hành",
-   "Điều phối và thực hiện vận hành",
-   "Điều phối và thực hiện vận hành",
-   "Điều phối và thực hiện vận hành",
-   "Điều phối và thực hiện vận hành",
-   "Điều phối và thực hiện vận hành",
-   "Ngoại lệ và sự cố",
-   "Ngoại lệ và sự cố",
-   "Ngoại lệ và sự cố",
-   "Ngoại lệ và sự cố",
-   "Ngoại lệ và sự cố",
-   "Ngoại lệ và sự cố",
-   "Ngoại lệ và sự cố",
-   "Ngoại lệ và sự cố",
-   "Ngoại lệ và sự cố",
-   "Ngoại lệ và sự cố",
-   "Ngoại lệ và sự cố",
-   "Ngoại lệ và sự cố",
-   "Ngoại lệ và sự cố",
-   "Ngoại lệ và sự cố",
-   "Ngoại lệ và sự cố"
-  ]
+  }
  },
  {
-  "t": "landscape_end"
+  "t": "h4",
+  "text": "Test case TC02 – Đăng xuất"
+ },
+ {
+  "t": "caption",
+  "text": "Bảng 6.5. Test case TC02 – Đăng xuất"
+ },
+ {
+  "t": "testcase",
+  "tc": {
+   "id": "TC02",
+   "uc": "UC02",
+   "name": "Đăng xuất",
+   "goal": "Kiểm tra người dùng đăng xuất khỏi cổng quản trị: refresh token bị thu hồi, cookie phiên bị xóa và không thể truy cập lại các trang quản trị.",
+   "pre": [
+    "Đã đăng nhập cổng quản trị thành công (TC01).",
+    "Đang ở trang Bảng điều hành (/dashboard)."
+   ],
+   "data": [
+    "Không có"
+   ],
+   "steps": [
+    "Nhấn nút “Đăng xuất” trên thanh bên.",
+    "Quan sát trang được chuyển đến.",
+    "Nhập lại đường dẫn /dashboard trên thanh địa chỉ."
+   ],
+   "expected": [
+    "Bước 1: cổng gửi yêu cầu đăng xuất, backend thu hồi refresh token; cookie phiên bị xóa.",
+    "Bước 2: chuyển về trang Đăng nhập (/login).",
+    "Bước 3: không vào được bảng điều hành, hệ thống chuyển về /login?returnTo=/dashboard."
+   ]
+  }
+ },
+ {
+  "t": "h4",
+  "text": "Test case TC03 – Tra cứu và lọc người dùng"
+ },
+ {
+  "t": "caption",
+  "text": "Bảng 6.6. Test case TC03 – Tra cứu và lọc người dùng"
+ },
+ {
+  "t": "testcase",
+  "tc": {
+   "id": "TC03",
+   "uc": "UC06",
+   "name": "Tra cứu và lọc người dùng",
+   "goal": "Kiểm tra quản trị viên xem danh sách tài khoản, tìm kiếm theo email/tên, lọc theo vai trò, trạng thái tài khoản, trạng thái hồ sơ và phân trang.",
+   "pre": [
+    "Đã đăng nhập bằng tài khoản có quyền identity.users.read.",
+    "Hệ thống có hơn 20 tài khoản, trong đó có tài khoản khớp dữ liệu vào."
+   ],
+   "data": [
+    "Từ khóa: pavex",
+    "Vai trò: một vai trò có trong danh sách",
+    "Trạng thái tài khoản: Hoạt động",
+    "Trạng thái hồ sơ: Đã hoàn tất"
+   ],
+   "steps": [
+    "Chọn menu “Người dùng” trên thanh bên.",
+    "Nhấn “Sau” rồi “Trước” ở thanh phân trang.",
+    "Nhập từ khóa vào ô “Email hoặc tên...”.",
+    "Lần lượt chọn vai trò, trạng thái tài khoản và trạng thái hồ sơ theo dữ liệu vào.",
+    "Nhấn “Tải lại”."
+   ],
+   "expected": [
+    "Bước 1: hiển thị các chỉ số (Tổng tài khoản, Hoạt động / trang, Email xác minh, Hồ sơ hoàn tất) và bảng tài khoản, tối đa 20 dòng mỗi trang.",
+    "Bước 2: nhãn “Trang x/y” thay đổi đúng, danh sách đổi theo trang.",
+    "Bước 3–4: danh sách chỉ còn tài khoản có email hoặc tên chứa “pavex” và khớp cả ba bộ lọc; điều kiện lọc được ghi lên URL.",
+    "Bước 5: danh sách được tải lại và giữ nguyên điều kiện lọc."
+   ]
+  }
+ },
+ {
+  "t": "h4",
+  "text": "Test case TC04 – Xem vai trò và quyền"
+ },
+ {
+  "t": "caption",
+  "text": "Bảng 6.7. Test case TC04 – Xem vai trò và quyền"
+ },
+ {
+  "t": "testcase",
+  "tc": {
+   "id": "TC04",
+   "uc": "UC08",
+   "name": "Xem vai trò và quyền",
+   "goal": "Kiểm tra quản trị viên xem danh sách vai trò, chi tiết quyền của từng vai trò và tìm quyền theo tên hoặc mã.",
+   "pre": [
+    "Đã đăng nhập bằng tài khoản có quyền identity.roles.read.",
+    "Hệ thống có các vai trò hệ thống đã được khởi tạo."
+   ],
+   "data": [
+    "Từ khóa tìm quyền: users"
+   ],
+   "steps": [
+    "Chọn menu “Vai trò & quyền” trên thanh bên.",
+    "Chọn một vai trò trong danh sách.",
+    "Nhập từ khóa vào ô “Tìm quyền theo tên hoặc mã...”.",
+    "Nhấn “Tải lại”."
+   ],
+   "expected": [
+    "Bước 1: hiển thị danh sách vai trò, mỗi vai trò có số quyền và nhãn “Vai trò hệ thống” nếu là vai trò hệ thống; vai trò đầu tiên được chọn sẵn.",
+    "Bước 2: hiển thị mô tả và danh sách quyền của vai trò đã chọn.",
+    "Bước 3: chỉ còn các quyền có tên hoặc mã chứa “users” (ví dụ identity.users.read).",
+    "Bước 4: danh sách vai trò được tải lại từ backend."
+   ]
+  }
  },
  {
   "t": "h1",
@@ -5723,11 +4088,11 @@
  {
   "t": "bullets",
   "items": [
-   "Hoàn thành phân tích và thiết kế đầy đủ: sơ đồ use case tổng thể (13 tác nhân, 41 use case), mô hình miền theo DDD (8 bounded context), đặc tả 12 use case cốt lõi kèm sơ đồ hoạt động và tuần tự.",
-   "Xây dựng backend REST API với xác thực JWT, refresh token, phân quyền RBAC, khóa lạc quan và lỗi chuẩn hóa.",
-   "Xây dựng cổng quản trị theo mô hình BFF: đăng nhập, bảng điều hành, quản lý người dùng, vai trò và quyền.",
-   "Thiết kế cơ chế tính cước có phiên bản, định tuyến với giữ chỗ tải và điều phối công việc theo ca.",
-   "Xây dựng bộ test case phủ toàn bộ chức năng của hệ thống."
+   "Hoàn thành phân tích và thiết kế: sơ đồ use case tổng thể (13 tác nhân, 41 use case), mô hình miền theo DDD (8 bounded context) và đặc tả 12 use case cốt lõi.",
+   "Hiện thực cổng quản trị theo mô hình BFF trên Next.js: đăng nhập, đăng xuất, tự làm mới phiên, menu theo quyền; tra cứu và lọc người dùng; xem vai trò và quyền.",
+   "Tích hợp với Identity API của backend: xác thực JWT, refresh token, phân quyền RBAC; dữ liệu lưu trên PostgreSQL.",
+   "Thiết kế cơ chế tính cước có phiên bản, định tuyến với giữ chỗ tải và điều phối công việc theo ca để làm cơ sở hiện thực các giai đoạn sau.",
+   "Xây dựng test case cho toàn bộ chức năng đã hiện thực theo chuẩn ISO/IEC/IEEE 29119-3."
   ]
  },
  {
@@ -5737,10 +4102,10 @@
  {
   "t": "bullets",
   "items": [
+   "Mới hiện thực nhóm chức năng Identity & Access của cổng quản trị; cổng khách hàng, ứng dụng vận hành và các nghiệp vụ báo giá, vận đơn, điều phối, ngoại lệ mới dừng ở mức thiết kế.",
+   "Quản lý người dùng và vai trò hiện chỉ ở mức xem/tra cứu; chưa có thêm, sửa, khóa tài khoản và gán quyền.",
    "Chưa tích hợp cổng thanh toán trực tuyến và đối soát COD tự động.",
-   "Định tuyến hiện dựa trên mẫu lộ trình cấu hình sẵn, chưa tối ưu theo thời gian thực hay chi phí.",
-   "Chưa có thông báo đẩy (push notification) và chế độ làm việc ngoại tuyến cho ứng dụng vận hành.",
-   "Chưa thực hiện kiểm thử tải với số lượng người dùng đồng thời lớn."
+   "Kiểm thử mới thực hiện thủ công theo test case; chưa có kiểm thử tự động và kiểm thử tải."
   ]
  },
  {
@@ -5761,7 +4126,7 @@
  },
  {
   "t": "p",
-  "text": "Đồ án đã xây dựng hệ thống quản lý vận chuyển PAVEX với ba phân hệ dùng chung một backend, quản lý toàn bộ vòng đời vận đơn: báo giá, tạo đơn, định tuyến, điều phối, quét kiện, giao hàng và xử lý ngoại lệ. Hệ thống được phân tích, thiết kế bài bản bằng UML và DDD, bảo mật bằng JWT và RBAC, và có bộ test case phủ toàn bộ chức năng."
+  "text": "Đồ án đã phân tích và thiết kế hệ thống quản lý vận chuyển PAVEX với ba phân hệ dùng chung một backend, bao quát toàn bộ vòng đời vận đơn: báo giá, tạo đơn, định tuyến, điều phối, quét kiện, giao hàng và xử lý ngoại lệ. Thiết kế được thể hiện bằng UML và DDD. Ở giai đoạn này, nhóm đã hiện thực cổng quản trị với nhóm chức năng Identity & Access (đăng nhập, đăng xuất, tra cứu người dùng, xem vai trò và quyền), bảo mật bằng JWT, cookie HttpOnly và RBAC, dữ liệu lưu trên PostgreSQL, và đã xây dựng test case cho các chức năng này."
  },
  {
   "t": "h2",
@@ -5770,6 +4135,7 @@
  {
   "t": "bullets",
   "items": [
+   "Hoàn thiện các chức năng đã thiết kế: quản lý tài khoản và gán quyền, cổng khách hàng (báo giá, tạo đơn, tra cứu), ứng dụng vận hành (công việc, quét kiện, giao hàng).",
    "Tích hợp cổng thanh toán và đối soát COD với cửa hàng.",
    "Tối ưu tuyến giao chặng cuối (bài toán VRP) và gợi ý lộ trình cho bưu tá.",
    "Cập nhật hành trình theo thời gian thực qua WebSocket và gửi thông báo đẩy.",

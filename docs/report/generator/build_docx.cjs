@@ -1,11 +1,11 @@
 // Build the PAVEX report (.docx) from content.json, mirroring the layout of the earlier report:
-// bordered cover page, IUH header, TOC, chapters, spec tables, figures and a landscape test-case table.
+// bordered cover page, IUH header, TOC, chapters, spec tables, figures and one table per test case.
 const fs = require("fs");
 const path = require("path");
 const {
   Document, Packer, Paragraph, TextRun, ImageRun, Table, TableRow, TableCell, WidthType, AlignmentType,
   HeadingLevel, BorderStyle, ShadingType, PageBreak, Header, Footer, PageNumber, TableOfContents,
-  LevelFormat, PageOrientation, VerticalAlign, SectionType, TabStopType,
+  LevelFormat, VerticalAlign, SectionType, TabStopType,
 } = require("docx");
 
 const HERE = __dirname;
@@ -18,7 +18,6 @@ const SZ = 26; // 13pt
 const A4 = { width: 11906, height: 16838 };
 const MARGIN = { top: 1440, right: 1440, bottom: 1440, left: 1800, header: 600, footer: 600 };
 const TEXT_W = A4.width - MARGIN.left - MARGIN.right; // 8666
-const LAND_W = A4.height - 1440 - 1440;               // 13958
 const BLUE = "2E75B6";
 const HEAD_FILL = "D9E2F3";
 const LABEL_FILL = "EEF3FA";
@@ -57,6 +56,7 @@ function cell(text, width, opts = {}) {
     children: lines.map((t) => new Paragraph({
       alignment: opts.align || AlignmentType.LEFT,
       spacing: { before: 0, after: 0, line: 276 },
+      keepNext: opts.keepNext,
       children: runs(t, { size: opts.size || 24, bold: opts.bold, italics: opts.italics }),
     })),
   });
@@ -137,24 +137,22 @@ function placeholderBox(text) {
   });
 }
 
-function testcaseTable(b) {
-  const widths = [1000, 2200, 2700, 3400, 3500, 1150];
-  const total = LAND_W;
-  const sum = widths.reduce((a, c) => a + c, 0);
-  const ws = widths.map((x) => Math.floor(x * total / sum));
-  ws[5] += total - ws.reduce((a, c) => a + c, 0);
-  const header = ["Mã TC", "Chức năng", "Kịch bản kiểm thử", "Các bước / dữ liệu", "Kết quả mong đợi", "Kết quả"];
-  const rows = [new TableRow({ tableHeader: true, children: header.map((t, i) => cell(t, ws[i], { bold: true, fill: HEAD_FILL, size: 21, align: AlignmentType.CENTER })) })];
-  let last = null;
-  b.rows.forEach((r, k) => {
-    const g = b.group_of[k];
-    if (g !== last) {
-      rows.push(new TableRow({ cantSplit: true, children: [cell(g, total, { span: 6, bold: true, fill: LABEL_FILL, size: 21 })] }));
-      last = g;
-    }
-    rows.push(new TableRow({ cantSplit: true, children: r.map((t, i) => cell(t, ws[i], { size: 20 })) }));
+// one vertical table per test case (ISO/IEC/IEEE 29119-3 fields)
+function testcaseTable(tc) {
+  const w1 = 2600, w2 = TEXT_W - 2600;
+  const list = (xs, numbered) => xs.map((x, i) => (numbered ? `${i + 1}. ` : xs.length > 1 ? "- " : "") + x);
+  const info = [
+    ["Mã test case", tc.id], ["Tên test case", tc.name], ["Use case", tc.uc], ["Mục tiêu", tc.goal],
+    ["Tiền điều kiện", list(tc.pre)], ["Dữ liệu vào", list(tc.data)], ["Các bước thực hiện", list(tc.steps, true)],
+    ["Kết quả mong đợi", list(tc.expected)], ["Kết quả thực tế", tc.actual || ""], ["Trạng thái", tc.status || "☐ Đạt     ☐ Không đạt"],
+  ];
+  // keepNext on every row but the last keeps the whole test case on one page
+  const rows = info.map(([k, v], i) => {
+    const keepNext = i < info.length - 1;
+    return new TableRow({ cantSplit: true, height: k === "Kết quả thực tế" ? { value: 700, rule: "atLeast" } : undefined, children: [
+      cell(k, w1, { bold: true, fill: i === 0 ? HEAD_FILL : LABEL_FILL, keepNext }), cell(v, w2, { bold: i === 0, fill: i === 0 ? HEAD_FILL : undefined, keepNext })] });
   });
-  return new Table({ width: { size: total, type: WidthType.DXA }, columnWidths: ws, rows });
+  return new Table({ width: { size: TEXT_W, type: WidthType.DXA }, columnWidths: [w1, w2], rows });
 }
 
 function coverChildren() {
@@ -203,7 +201,6 @@ function footer() {
 const sections = [];
 let cur = [];
 const portrait = () => ({ page: { size: A4, margin: MARGIN } });
-const landscape = () => ({ page: { size: { width: A4.width, height: A4.height, orientation: PageOrientation.LANDSCAPE }, margin: { top: 1300, bottom: 1300, left: 1440, right: 1440, header: 600, footer: 600 } } });
 let curProps = portrait();
 const flush = (type) => {
   if (cur.length) sections.push({ properties: { ...curProps, type: type || SectionType.NEXT_PAGE }, headers: { default: header() }, footers: { default: footer() }, children: cur });
@@ -279,16 +276,9 @@ for (const b of blocks) {
       cur.push(placeholderBox(b.text));
       cur.push(caption(b.caption));
       break;
-    case "landscape_start":
-      flush();
-      curProps = landscape();
-      break;
-    case "testcases":
-      cur.push(testcaseTable(b));
-      break;
-    case "landscape_end":
-      flush();
-      curProps = portrait();
+    case "testcase":
+      cur.push(testcaseTable(b.tc));
+      cur.push(para("", { after: 120 }));
       break;
     case "sign":
       cur.push(new Paragraph({ alignment: AlignmentType.CENTER, pageBreakBefore: true, spacing: { after: 400 }, children: runs(b.text, { bold: true, size: 28 }) }));

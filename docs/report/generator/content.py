@@ -7,7 +7,7 @@ import pathlib
 import sys
 
 from specs import CORE
-from tests import GROUPS, flat
+from tests import CASES
 
 HERE = pathlib.Path(__file__).resolve().parent
 ROOT = HERE.parent
@@ -94,7 +94,7 @@ bullets([
     "Phân tích, thiết kế hướng đối tượng với UML: sơ đồ use case, đặc tả use case, sơ đồ hoạt động (activity), sơ đồ tuần tự (sequence) và mô hình miền (domain model).",
     "Thiết kế hướng miền (Domain-Driven Design): chia hệ thống thành các bounded context, xác định aggregate, entity và value object.",
     "Phát triển theo mô hình Agile/Scrum, quản lý mã nguồn bằng Git.",
-    "Kiểm thử hộp đen (black-box testing) dựa trên use case.",
+    "Kiểm thử hộp đen (black-box testing) dựa trên use case, tài liệu kiểm thử theo cấu trúc của chuẩn ISO/IEC/IEEE 29119-3.",
 ])
 h2("1.5. Bố cục báo cáo")
 bullets([
@@ -103,7 +103,7 @@ bullets([
     "Chương 3 – Phân tích yêu cầu: yêu cầu kinh doanh, người dùng, chức năng và phi chức năng.",
     "Chương 4 – Thiết kế hệ thống: sơ đồ use case, đặc tả use case cốt lõi kèm activity và sequence, mô hình miền.",
     "Chương 5 – Giải pháp công nghệ: kiến trúc, bảo mật, định giá, định tuyến và quét mã.",
-    "Chương 6 – Hiện thực, triển khai và kiểm thử: môi trường, giao diện và bộ test case.",
+    "Chương 6 – Hiện thực, triển khai và kiểm thử: môi trường, tình trạng hiện thực, giao diện và test case của các chức năng đã hiện thực.",
     "Chương 7 – Đánh giá và thảo luận. Chương 8 – Kết luận và hướng phát triển.",
 ])
 
@@ -120,7 +120,7 @@ p("Các cổng web được xây dựng bằng Next.js (React, TypeScript). Next
 h2("2.5. Mã kiện hàng và chuỗi giám sát (chain of custody)")
 p("Mỗi kiện hàng được gắn mã (mã vạch hoặc QR) in trên nhãn. Khi nhân sự quét mã ở mỗi công đoạn, hệ thống ghi nhận ai đang giữ kiện (custody), kiện đang ở hub nào và ở công đoạn nào, đồng thời thêm một sự kiện vào hành trình của vận đơn. Chuỗi các lần quét tạo thành chuỗi giám sát giúp truy vết trách nhiệm khi xảy ra thất lạc hoặc hư hỏng.")
 h2("2.6. Kiểm thử hộp đen")
-p("Kiểm thử hộp đen kiểm tra phần mềm dựa trên đặc tả mà không cần biết mã nguồn. Các kỹ thuật được dùng gồm phân vùng tương đương (dữ liệu hợp lệ/không hợp lệ), phân tích giá trị biên (khối lượng tối đa, mức COD tối đa) và kiểm thử theo luồng use case (luồng chính và luồng thay thế).")
+p("Kiểm thử hộp đen kiểm tra phần mềm dựa trên đặc tả mà không cần biết mã nguồn; ca kiểm thử được suy ra từ luồng sự kiện của use case. Chuẩn ISO/IEC/IEEE 29119-3 (thay thế IEEE 829) quy định nội dung của tài liệu đặc tả ca kiểm thử (test case specification): mã định danh, mục tiêu, tiền điều kiện, dữ liệu vào, các bước thực hiện và kết quả mong đợi; kết quả thực tế và trạng thái (Đạt/Không đạt) được ghi khi thực thi. Chuẩn không bắt buộc vị trí của tài liệu kiểm thử trong báo cáo, vì vậy nhóm đặt các ca kiểm thử ngay trong chương hiện thực và kiểm thử, cạnh phần giao diện của chức năng tương ứng.")
 
 # ---------------------------------------------------------------------------
 h1("PHÂN TÍCH YÊU CẦU")
@@ -144,7 +144,7 @@ table(["Frame", "Tác nhân", "Nhu cầu chính"], [
     ["", "Warehouse Operator", "Nhập/xuất hub, phân loại, cân lại kiện"],
 ], [2300, 2600, 3406], "Tác nhân của hệ thống")
 h2("3.3. Yêu cầu chức năng hệ thống")
-p("Bảng sau liệt kê toàn bộ 41 chức năng (use case mức người dùng) của hệ thống, nhóm theo phân hệ. Các use case con (thêm, sửa, xóa, duyệt, từ chối…) được mô tả trong phần đặc tả và bộ test case.")
+p("Bảng sau liệt kê toàn bộ 41 chức năng (use case mức người dùng) của hệ thống, nhóm theo phân hệ. Các use case con (thêm, sửa, xóa, duyệt, từ chối…) được mô tả trong phần đặc tả use case.")
 import build_usecase as BU  # noqa: E402  (use case model from docs/uml)
 
 rows = []
@@ -168,7 +168,7 @@ h2("4.1. Sơ đồ use case tổng thể")
 p("Sơ đồ use case tổng thể gồm 13 tác nhân (10 vai trò và 3 tác nhân trừu tượng theo frame) và 41 use case trong ranh giới hệ thống PAVEX Logistics Platform. Quan hệ «include» thể hiện bước bắt buộc dùng chung (Xem hành trình vận đơn, Quét kiện hàng, Gán vai trò cho người dùng, Tra cứu giá cước, Xem nhân sự vận hành); quan hệ «extend» thể hiện chức năng mở rộng tùy chọn.")
 fig(UML / "preview" / "usecase-diagram.png", "Sơ đồ use case tổng thể hệ thống PAVEX", 16, 22.5)
 h2("4.2. Đặc tả chi tiết các use case cốt lõi")
-p("Phần này đặc tả 12 use case cốt lõi – các luồng nghiệp vụ chính của hệ thống. Mỗi use case gồm bảng đặc tả, sơ đồ hoạt động và sơ đồ tuần tự. Trong sơ đồ tuần tự, lớp giao diện được đặt tiền tố GD_, lớp điều khiển CTRL_, lớp thực thể dùng tên trong mô hình miền.")
+p("Phần này đặc tả 12 use case cốt lõi – các luồng nghiệp vụ chính của hệ thống. Mỗi use case gồm bảng đặc tả, sơ đồ hoạt động và sơ đồ tuần tự (các sơ đồ được bổ sung trong khung tương ứng). Trong sơ đồ tuần tự, lớp giao diện được đặt tiền tố GD_, lớp điều khiển CTRL_, lớp thực thể dùng tên trong mô hình miền.")
 sections = [("4.2.1. Nhóm use case dùng chung và cổng khách hàng", ["UC01", "UC03", "UC15", "UC17", "UC14 / UC19"]),
             ("4.2.2. Nhóm use case của cổng quản trị", ["UC13", "UC31", "UC40", "UC25", "UC06 / UC08"]),
             ("4.2.3. Nhóm use case của ứng dụng vận hành", ["UC33 / UC34", "UC35"])]
@@ -181,9 +181,8 @@ for title, codes in sections:
         k += 1
         B.append({"t": "h4", "text": f"Use case {u['name'].lower()} ({u['code']})"})
         B.append({"t": "spec", "uc": u})
-        slug = u["code"].split(" ")[0].lower()
-        fig(FIG / f"{slug}-act.png", f"Sơ đồ hoạt động – {u['name']}", 15, 20)
-        fig(FIG / f"{slug}-seq.png", f"Sơ đồ tuần tự – {u['name']}", 16, 18)
+        placeholder(f"Sơ đồ hoạt động – {u['name']}", f"[Chèn sơ đồ hoạt động: {u['name']}]")
+        placeholder(f"Sơ đồ tuần tự – {u['name']}", f"[Chèn sơ đồ tuần tự: {u['name']}]")
 
 h2("4.3. Thiết kế kiến trúc và cơ sở dữ liệu")
 h3("4.3.1. Mô hình miền")
@@ -200,13 +199,13 @@ table(["Bounded context", "Aggregate root / entity chính", "Vai trò"], [
     ["Shared Kernel", "ContactAddress, Weight, Dimensions, FeeBreakdown, DeliveryEstimate, GeoPoint", "Value object dùng chung"],
 ], [2000, 3606, 2700], "Các bounded context của mô hình miền", size=10)
 h3("4.3.2. Kiến trúc tổng thể")
-p("Hệ thống theo kiến trúc client – server nhiều lớp. Ba ứng dụng client (cổng khách hàng, cổng quản trị, ứng dụng vận hành) giao tiếp với một backend duy nhất qua REST API /api/v1. Backend được tổ chức theo module tương ứng với các bounded context, mỗi module gồm các lớp: API (controller), ứng dụng (service), miền (domain) và hạ tầng (repository). Dữ liệu được lưu trong cơ sở dữ liệu quan hệ; mỗi aggregate tương ứng một nhóm bảng.")
+p("Hệ thống theo kiến trúc client – server nhiều lớp. Ba ứng dụng client (cổng khách hàng, cổng quản trị, ứng dụng vận hành) giao tiếp với một backend duy nhất qua REST API /api/v1. Backend được tổ chức theo module tương ứng với các bounded context, mỗi module gồm các lớp: API (controller), ứng dụng (service), miền (domain) và hạ tầng (repository). Dữ liệu được lưu trong hệ quản trị cơ sở dữ liệu PostgreSQL; mỗi aggregate tương ứng một nhóm bảng, quan hệ giữa các aggregate được thể hiện bằng khóa ngoại tới định danh.")
 table(["Lớp", "Thành phần", "Trách nhiệm"], [
     ["Client", "Cổng khách hàng, Cổng quản trị (Next.js), Ứng dụng vận hành", "Giao diện người dùng, gọi API qua BFF"],
     ["BFF", "Route /api/backend/* của từng cổng web", "Giữ token trong cookie httpOnly, chuyển tiếp yêu cầu, tự làm mới token"],
     ["API", "REST controller /api/v1/...", "Xác thực JWT, kiểm tra quyền, kiểm tra dữ liệu đầu vào"],
     ["Ứng dụng / miền", "Service, aggregate, quy tắc nghiệp vụ", "Tính cước, định tuyến, điều phối, chuyển trạng thái"],
-    ["Hạ tầng", "Repository, cơ sở dữ liệu quan hệ", "Lưu trữ, truy vấn, khóa lạc quan"],
+    ["Hạ tầng", "Repository, PostgreSQL", "Lưu trữ, truy vấn, giao dịch, khóa lạc quan"],
 ], [1500, 3200, 3606], "Các lớp trong kiến trúc hệ thống", size=10)
 
 # ---------------------------------------------------------------------------
@@ -218,7 +217,7 @@ h2("5.2. Xác thực, phân quyền và toàn vẹn dữ liệu")
 bullets([
     "Xác thực: POST /api/v1/auth/login trả accessToken, refreshToken, expiresIn; /auth/refresh cấp token mới; /auth/me trả thông tin người dùng kèm danh sách vai trò và quyền; /auth/logout thu hồi refresh token.",
     "Phân quyền: quyền có mã dạng <context>.<tài nguyên>.<hành động> (ví dụ identity.users.read, identity.roles.read). Giao diện ẩn menu khi người dùng thiếu quyền, backend luôn kiểm tra lại và trả 403.",
-    "Khóa lạc quan: các bản ghi có trường version; khi hai người cùng sửa, người lưu sau nhận lỗi xung đột kèm conflictVersion để tải lại dữ liệu.",
+    "Khóa lạc quan: các bản ghi trong PostgreSQL có cột version; khi hai người cùng sửa, người lưu sau nhận lỗi xung đột kèm conflictVersion để tải lại dữ liệu. Các thao tác thay đổi nhiều bảng (tạo vận đơn kèm kiện, giữ chỗ tải) được thực hiện trong một giao dịch.",
     "Lỗi chuẩn hóa: lỗi trả về dạng problem detail gồm message, code, traceId và fieldErrors cho từng trường, giúp giao diện hiển thị lỗi tại đúng ô nhập.",
 ])
 h2("5.3. Định giá có phiên bản và báo giá có thời hạn")
@@ -235,54 +234,65 @@ p("Ứng dụng vận hành dùng camera thiết bị để quét mã kiện. M�
 h1("HIỆN THỰC, TRIỂN KHAI VÀ KIỂM THỬ")
 h2("6.1. Môi trường phát triển và công cụ")
 table(["Thành phần", "Công nghệ / công cụ"], [
-    ["Backend", "REST API /api/v1, xác thực JWT, cơ sở dữ liệu quan hệ"],
-    ["Cổng quản trị", "Next.js (App Router), React, TypeScript, Tailwind CSS, pnpm"],
-    ["Cổng khách hàng", "Next.js, React, TypeScript"],
-    ["Ứng dụng vận hành", "Giao diện web tối ưu cho di động, quét mã bằng camera"],
+    ["Backend", "REST API /api/v1, xác thực JWT (access/refresh token), phân quyền RBAC"],
+    ["Cơ sở dữ liệu", "PostgreSQL"],
+    ["Cổng quản trị", "Next.js 16 (App Router), React 19, TypeScript 5, Tailwind CSS 4, pnpm"],
+    ["Cổng khách hàng", "Next.js, React, TypeScript (đang phát triển)"],
+    ["Ứng dụng vận hành", "Giao diện web tối ưu cho di động, quét mã bằng camera (đang phát triển)"],
     ["Thiết kế", "Visual Paradigm (use case, domain model, activity, sequence)"],
     ["Quản lý mã nguồn", "Git, GitHub"],
-    ["Kiểm thử API", "Postman"],
+    ["Kiểm thử", "Kiểm thử thủ công trên trình duyệt (Chrome DevTools), Postman cho API"],
 ], [2600, 5706], "Môi trường và công cụ phát triển")
-h2("6.2. Giao diện cổng khách hàng")
-for cap in ["Trang chủ và tra cứu vận đơn", "Trang tính cước vận chuyển", "Tạo đơn hàng", "Đơn hàng của tôi và chi tiết vận đơn", "Sổ địa chỉ"]:
-    placeholder(cap, f"[Chèn ảnh màn hình: {cap}]")
+h2("6.2. Tình trạng hiện thực")
+p("Toàn bộ 41 use case đã được phân tích và thiết kế ở chương 3 và chương 4. Ở giai đoạn hiện tại, nhóm đã hiện thực cổng quản trị với nhóm chức năng Identity & Access; các chức năng còn lại đang trong quá trình phát triển và chưa đưa vào kiểm thử.")
+DONE = {"UC01": "Đã hiện thực trên cổng quản trị",
+        "UC02": "Đã hiện thực trên cổng quản trị",
+        "UC06": "Đã hiện thực phần xem danh sách, tìm kiếm, lọc, phân trang; thêm/sửa/khóa tài khoản đang phát triển",
+        "UC08": "Đã hiện thực phần xem vai trò, chi tiết và tìm kiếm quyền; gán quyền đang phát triển",
+        "UC29": "Đã có trang Bảng điều hành (trang chào), chưa có số liệu vận hành"}
+rows = []
+for gcode, gname, ucs in BU.GROUPS:
+    first = True
+    for code, name, *_r in sorted(ucs):
+        if code in DONE:
+            rows.append([gname if first else "", f"{code} – {name}", DONE[code]])
+            first = False
+    rest = sorted(code for code, *_r in ucs if code not in DONE)
+    if rest:
+        rows.append([gname if first else "", ", ".join(rest), "Đã thiết kế, đang phát triển"])
+table(["Nhóm chức năng", "Use case", "Tình trạng"], rows, [2400, 2500, 3406], "Tình trạng hiện thực các chức năng", size=11)
 h2("6.3. Giao diện cổng quản trị")
-for cap in ["Đăng nhập cổng quản trị", "Bảng điều hành", "Quản lý người dùng", "Vai trò và quyền", "Điều phối công việc", "Yêu cầu ngoại lệ"]:
+p("Cổng quản trị gồm trang đăng nhập và khung điều hành có thanh bên hiển thị menu theo quyền của tài khoản. Người dùng chưa đăng nhập truy cập bất kỳ trang nào đều được chuyển về trang đăng nhập kèm tham số returnTo.")
+for cap in ["Đăng nhập cổng quản trị", "Bảng điều hành", "Quản lý người dùng", "Vai trò và quyền"]:
     placeholder(cap, f"[Chèn ảnh màn hình: {cap}]")
-h2("6.4. Giao diện ứng dụng vận hành")
-for cap in ["Công việc của tôi", "Quét mã kiện hàng", "Ghi nhận kết quả giao hàng", "Ca làm việc và check-in"]:
-    placeholder(cap, f"[Chèn ảnh màn hình: {cap}]")
-h2("6.5. Kiểm thử hệ thống")
-cases = flat()
-p(f"Nhóm áp dụng kiểm thử hộp đen theo use case: mỗi chức năng có ít nhất một ca kiểm thử luồng chính và các ca kiểm thử luồng thay thế, dữ liệu không hợp lệ và giá trị biên. Tổng cộng {len(cases)} ca kiểm thử phủ toàn bộ 41 chức năng. Cột “Kết quả” được nhóm điền khi thực hiện kiểm thử (Đạt / Không đạt).")
-summary = []
-for g, ucs in GROUPS:
-    summary.append([g, str(len(ucs)), str(sum(len(c) for _u, c in ucs))])
-summary.append(["Tổng cộng", str(sum(int(r[1]) for r in summary)), str(len(cases))])
-table(["Nhóm chức năng", "Số chức năng", "Số test case"], summary, [4706, 1800, 1800], "Tổng hợp số lượng test case")
-B.append({"t": "landscape_start"})
-tab_no[chapter] = tab_no.get(chapter, 0) + 1
-B.append({"t": "caption", "text": f"Bảng {chapter}.{tab_no[chapter]}. Bộ test case chi tiết"})
-B.append({"t": "testcases", "rows": [[i, uc, sc, st, ex, ""] for (i, _g, uc, sc, st, ex) in cases],
-          "groups": [g for g, _ in GROUPS], "group_of": [g for (_i, g, *_r) in cases]})
-B.append({"t": "landscape_end"})
+h2("6.4. Kiểm thử hệ thống")
+h3("6.4.1. Phương pháp kiểm thử")
+p("Nhóm áp dụng kiểm thử hộp đen theo use case. Mỗi chức năng đã hiện thực có một test case, được trình bày dưới dạng bảng dọc theo các mục của chuẩn ISO/IEC/IEEE 29119-3: mã test case, use case, mục tiêu, tiền điều kiện, dữ liệu vào, các bước thực hiện, kết quả mong đợi, kết quả thực tế và trạng thái. Các chức năng chưa hiện thực không được đưa vào kiểm thử ở giai đoạn này.")
+table(["Mã TC", "Use case", "Chức năng được kiểm thử"],
+      [[c["id"], c["uc"], c["name"]] for c in CASES], [1500, 1500, 5306], "Danh sách test case")
+h3("6.4.2. Test case chi tiết")
+for c in CASES:
+    B.append({"t": "h4", "text": f"Test case {c['id']} – {c['name']}"})
+    tab_no[chapter] = tab_no.get(chapter, 0) + 1
+    B.append({"t": "caption", "text": f"Bảng {chapter}.{tab_no[chapter]}. Test case {c['id']} – {c['name']}"})
+    B.append({"t": "testcase", "tc": c})
 
 # ---------------------------------------------------------------------------
 h1("ĐÁNH GIÁ VÀ THẢO LUẬN")
 h2("7.1. Kết quả đạt được")
 bullets([
-    "Hoàn thành phân tích và thiết kế đầy đủ: sơ đồ use case tổng thể (13 tác nhân, 41 use case), mô hình miền theo DDD (8 bounded context), đặc tả 12 use case cốt lõi kèm sơ đồ hoạt động và tuần tự.",
-    "Xây dựng backend REST API với xác thực JWT, refresh token, phân quyền RBAC, khóa lạc quan và lỗi chuẩn hóa.",
-    "Xây dựng cổng quản trị theo mô hình BFF: đăng nhập, bảng điều hành, quản lý người dùng, vai trò và quyền.",
-    "Thiết kế cơ chế tính cước có phiên bản, định tuyến với giữ chỗ tải và điều phối công việc theo ca.",
-    "Xây dựng bộ test case phủ toàn bộ chức năng của hệ thống.",
+    "Hoàn thành phân tích và thiết kế: sơ đồ use case tổng thể (13 tác nhân, 41 use case), mô hình miền theo DDD (8 bounded context) và đặc tả 12 use case cốt lõi.",
+    "Hiện thực cổng quản trị theo mô hình BFF trên Next.js: đăng nhập, đăng xuất, tự làm mới phiên, menu theo quyền; tra cứu và lọc người dùng; xem vai trò và quyền.",
+    "Tích hợp với Identity API của backend: xác thực JWT, refresh token, phân quyền RBAC; dữ liệu lưu trên PostgreSQL.",
+    "Thiết kế cơ chế tính cước có phiên bản, định tuyến với giữ chỗ tải và điều phối công việc theo ca để làm cơ sở hiện thực các giai đoạn sau.",
+    "Xây dựng test case cho toàn bộ chức năng đã hiện thực theo chuẩn ISO/IEC/IEEE 29119-3.",
 ])
 h2("7.2. Hạn chế còn tồn tại")
 bullets([
+    "Mới hiện thực nhóm chức năng Identity & Access của cổng quản trị; cổng khách hàng, ứng dụng vận hành và các nghiệp vụ báo giá, vận đơn, điều phối, ngoại lệ mới dừng ở mức thiết kế.",
+    "Quản lý người dùng và vai trò hiện chỉ ở mức xem/tra cứu; chưa có thêm, sửa, khóa tài khoản và gán quyền.",
     "Chưa tích hợp cổng thanh toán trực tuyến và đối soát COD tự động.",
-    "Định tuyến hiện dựa trên mẫu lộ trình cấu hình sẵn, chưa tối ưu theo thời gian thực hay chi phí.",
-    "Chưa có thông báo đẩy (push notification) và chế độ làm việc ngoại tuyến cho ứng dụng vận hành.",
-    "Chưa thực hiện kiểm thử tải với số lượng người dùng đồng thời lớn.",
+    "Kiểm thử mới thực hiện thủ công theo test case; chưa có kiểm thử tự động và kiểm thử tải.",
 ])
 h2("7.3. Thảo luận và bài học kinh nghiệm")
 p("Việc thiết kế mô hình miền theo DDD ngay từ đầu giúp nhóm tách bạch các phần nghiệp vụ phức tạp (giá, mạng lưới, vận đơn, nhân sự) và giảm phụ thuộc chéo. Nhóm rút ra rằng các quy tắc chuyển trạng thái (vận đơn, công việc, cửa hàng, yêu cầu ngoại lệ) cần được đặc tả rõ ràng trước khi lập trình, và mọi thao tác thay đổi trạng thái phải ghi lại người thao tác để truy vết. Mô hình BFF giúp bảo vệ token nhưng đòi hỏi xử lý cẩn thận việc làm mới phiên.")
@@ -290,9 +300,10 @@ p("Việc thiết kế mô hình miền theo DDD ngay từ đầu giúp nhóm t�
 # ---------------------------------------------------------------------------
 h1("KẾT LUẬN")
 h2("8.1. Kết luận")
-p("Đồ án đã xây dựng hệ thống quản lý vận chuyển PAVEX với ba phân hệ dùng chung một backend, quản lý toàn bộ vòng đời vận đơn: báo giá, tạo đơn, định tuyến, điều phối, quét kiện, giao hàng và xử lý ngoại lệ. Hệ thống được phân tích, thiết kế bài bản bằng UML và DDD, bảo mật bằng JWT và RBAC, và có bộ test case phủ toàn bộ chức năng.")
+p("Đồ án đã phân tích và thiết kế hệ thống quản lý vận chuyển PAVEX với ba phân hệ dùng chung một backend, bao quát toàn bộ vòng đời vận đơn: báo giá, tạo đơn, định tuyến, điều phối, quét kiện, giao hàng và xử lý ngoại lệ. Thiết kế được thể hiện bằng UML và DDD. Ở giai đoạn này, nhóm đã hiện thực cổng quản trị với nhóm chức năng Identity & Access (đăng nhập, đăng xuất, tra cứu người dùng, xem vai trò và quyền), bảo mật bằng JWT, cookie HttpOnly và RBAC, dữ liệu lưu trên PostgreSQL, và đã xây dựng test case cho các chức năng này.")
 h2("8.2. Hướng phát triển")
 bullets([
+    "Hoàn thiện các chức năng đã thiết kế: quản lý tài khoản và gán quyền, cổng khách hàng (báo giá, tạo đơn, tra cứu), ứng dụng vận hành (công việc, quét kiện, giao hàng).",
     "Tích hợp cổng thanh toán và đối soát COD với cửa hàng.",
     "Tối ưu tuyến giao chặng cuối (bài toán VRP) và gợi ý lộ trình cho bưu tá.",
     "Cập nhật hành trình theo thời gian thực qua WebSocket và gửi thông báo đẩy.",
@@ -305,4 +316,4 @@ for t in ["NHẬN XÉT CỦA GIÁO VIÊN HƯỚNG DẪN", "NHẬN XÉT CỦA GI�
 
 if __name__ == "__main__":
     (HERE / "content.json").write_text(json.dumps(B, ensure_ascii=False, indent=1), encoding="utf-8")
-    print(f"{len(B)} blocks, {len(cases)} test cases")
+    print(f"{len(B)} blocks, {len(CASES)} test cases")
