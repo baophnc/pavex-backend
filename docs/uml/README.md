@@ -26,6 +26,22 @@ Hai file XML import thẳng vào **Visual Paradigm**. Đây là bản viết l�
 > VP 16.1 xuất ra (`project.xml` của use case v2): use case nằm trong `DiagramElementChildren` của khung System,
 > mỗi shape có `ZOrder`, tác nhân có `Caption` hiện tên bên dưới, và model có `MasterView`.
 
+## Mỗi sơ đồ một file XML (`xml/`)
+
+Thư mục `xml/` có **một file cho mỗi sơ đồ** (giống các hình trong báo cáo):
+
+| File | Sơ đồ |
+|---|---|
+| `01-usecase.xml` | Use case tổng thể |
+| `02-domain-packages.xml` | Sơ đồ package các bounded context, phụ thuộc «use» |
+| `03-domain-overview.xml` | Sơ đồ domain tổng thể (34 entity / aggregate root, 56 association) |
+| `04-class-identity.xml` … `12-class-shared.xml` | Sơ đồ lớp từng bounded context (thuộc tính + phương thức) |
+
+Mọi file domain (`02`–`12`) đều chứa **toàn bộ** domain model với cùng Id, chỉ khác sơ đồ. Import nhiều
+file vào **cùng một project trống** thì Visual Paradigm gộp chung một model, mỗi file thêm một sơ đồ.
+Phương thức (operation) trong lớp được rút ra từ use case và trạng thái của aggregate
+(xem `OPS` trong `docs/report/generator/classdiag.py`).
+
 ## Domain model: cấu trúc
 
 Mô hình viết theo kiểu DDD. Mỗi package là một bounded context:
@@ -111,6 +127,7 @@ Cần đối chiếu với enum trong backend, rồi sửa trong `generator/buil
 cd docs/uml/generator
 python3 build_domain.py     # tạo pavex-domain-model.xml, domain-catalog.md, preview/domain-model.svg
 python3 build_usecase.py    # tạo pavex-usecase-model.xml, usecase-catalog.md, preview/usecase-diagram.svg
+python3 build_xml.py        # tạo xml/: mỗi sơ đồ một file (chạy sau build_usecase.py)
 ```
 
 Script chỉ dùng thư viện chuẩn của Python 3. Ảnh PNG trong `preview/` được render từ file SVG bằng Chromium headless.

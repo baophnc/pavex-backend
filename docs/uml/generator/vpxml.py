@@ -163,7 +163,8 @@ class Project:
             st = ET.SubElement(x, "Stereotypes")
             for s in e.stereotypes:
                 ET.SubElement(st, "Stereotype", {"Idref": s.id, "Name": s.name})
-        if e.children or e.features:
+        ops = getattr(e, "ops_model", [])  # [(id, name, [(param, type | None)], return type | None)]
+        if e.children or e.features or ops:
             mc = ET.SubElement(x, "ModelChildren")
             for kind, fid, fname, ftype, mult, fdoc in e.features:
                 if kind == "Attribute":
@@ -189,6 +190,22 @@ class Project:
                     self._type_ref(ax, ftype)
                 else:  # EnumerationLiteral
                     ET.SubElement(mc, "EnumerationLiteral", self._common(fid, fname, fdoc))
+            for oid, oname, params, ret in ops:
+                oa = self._common(oid, oname, "")
+                oa.update({"Abstract": "false", "Leaf": "false", "Query": "false", "Scope": "instance", "Visibility": "public"})
+                ox = ET.SubElement(mc, "Operation", oa)
+                if ret and ret in self.by_name:
+                    holder = ET.SubElement(ox, "ReturnType")
+                    t = self.by_name[ret]
+                    ET.SubElement(holder, t.kind, {"Idref": t.id, "Name": t.name})
+                if params:
+                    pmc = ET.SubElement(ox, "ModelChildren")
+                    for i, (pname, ptype) in enumerate(params):
+                        pa = self._common(f"{oid}_P{i}", pname, "")
+                        pa.update({"Direction": "in"})
+                        px = ET.SubElement(pmc, "Parameter", pa)
+                        if ptype and ptype in self.by_name:
+                            self._type_ref(px, ptype)
             for c in e.children:
                 self._elem_xml(mc, c)
 
