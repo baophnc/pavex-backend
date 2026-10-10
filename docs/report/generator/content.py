@@ -194,6 +194,10 @@ h3("4.3.1. Mô hình miền")
 p("Mô hình miền được thiết kế theo DDD gồm 8 package (bounded context): Identity & Access, Partner, Network, Pricing, Shipment, Exception Handling, Workforce & Operations và Shared Kernel. Quan hệ giữa các entity được biểu diễn bằng association có tên vai trò và bội số; composition (hình thoi đặc) thể hiện phần tử sống và mất cùng aggregate.")
 p("Sơ đồ package dưới đây thể hiện các bounded context, aggregate root của từng context và quan hệ phụ thuộc «use» giữa chúng. Phụ thuộc luôn đi từ context hạ nguồn (downstream) về context thượng nguồn (upstream): Shipment dùng Partner, Pricing và Network; Workforce & Operations và Exception Handling dùng Shipment và Network; mọi context dùng các value object của Shared Kernel.")
 fig(FIG / "domain-packages.png", "Sơ đồ package các bounded context của PAVEX", 15.5, 21)
+p("Sơ đồ domain tổng thể gồm toàn bộ 34 aggregate root và entity của hệ thống cùng 56 quan hệ, mỗi lớp được tô màu theo bounded context. Ở mức tổng quan, sơ đồ chỉ thể hiện tên lớp, stereotype và bội số của quan hệ; thuộc tính, phương thức và tên vai trò được trình bày chi tiết trong sơ đồ lớp của từng bounded context (mục 4.3.2).")
+B.append({"t": "landscape_start"})
+fig(FIG / "domain-overview.png", "Sơ đồ domain tổng thể của hệ thống PAVEX", 24.5, 14.5)
+B.append({"t": "landscape_end"})
 table(["Bounded context", "Aggregate root / entity chính", "Vai trò"], [
     ["Identity & Access", "UserAccount, UserProfile, UserAddress, Role, Permission", "Tài khoản, hồ sơ, sổ địa chỉ, RBAC"],
     ["Partner", "Merchant, MerchantPickupAddress", "Cửa hàng và vòng đời xác minh"],

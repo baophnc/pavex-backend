@@ -5,7 +5,7 @@ const path = require("path");
 const {
   Document, Packer, Paragraph, TextRun, ImageRun, Table, TableRow, TableCell, WidthType, AlignmentType,
   HeadingLevel, BorderStyle, ShadingType, PageBreak, Header, Footer, PageNumber, TableOfContents,
-  LevelFormat, VerticalAlign, SectionType, TabStopType,
+  LevelFormat, PageOrientation, VerticalAlign, SectionType, TabStopType,
 } = require("docx");
 
 const HERE = __dirname;
@@ -201,6 +201,7 @@ function footer() {
 const sections = [];
 let cur = [];
 const portrait = () => ({ page: { size: A4, margin: MARGIN } });
+const landscape = () => ({ page: { size: { width: A4.width, height: A4.height, orientation: PageOrientation.LANDSCAPE }, margin: { top: 1300, bottom: 1300, left: 1440, right: 1440, header: 600, footer: 600 } } });
 let curProps = portrait();
 const flush = (type) => {
   if (cur.length) sections.push({ properties: { ...curProps, type: type || SectionType.NEXT_PAGE }, headers: { default: header() }, footers: { default: footer() }, children: cur });
@@ -275,6 +276,14 @@ for (const b of blocks) {
     case "placeholder":
       cur.push(placeholderBox(b.text));
       cur.push(caption(b.caption));
+      break;
+    case "landscape_start":  // a wide figure on its own landscape page
+      flush();
+      curProps = landscape();
+      break;
+    case "landscape_end":
+      flush();
+      curProps = portrait();
       break;
     case "testcase":
       cur.push(testcaseTable(b.tc));

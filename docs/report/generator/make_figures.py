@@ -16,10 +16,11 @@ def slug(uc):
 
 
 def class_figures():
-    """Package diagram of the bounded contexts + one class diagram per context."""
+    """Package diagram, overall domain model and one class diagram per bounded context."""
     import classdiag
 
     (OUT / "domain-packages.svg").write_text(classdiag.package_svg(), encoding="utf-8")
+    (OUT / "domain-overview.svg").write_text(classdiag.overview_svg(), encoding="utf-8")
     for slug, _pkg, d in classdiag.context_diagrams():
         (OUT / f"class-{slug}.svg").write_text(d.to_svg(), encoding="utf-8")
 

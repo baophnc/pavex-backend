@@ -3614,6 +3614,23 @@
   "caption": "Hình 4.26. Sơ đồ package các bounded context của PAVEX"
  },
  {
+  "t": "p",
+  "text": "Sơ đồ domain tổng thể gồm toàn bộ 34 aggregate root và entity của hệ thống cùng 56 quan hệ, mỗi lớp được tô màu theo bounded context. Ở mức tổng quan, sơ đồ chỉ thể hiện tên lớp, stereotype và bội số của quan hệ; thuộc tính, phương thức và tên vai trò được trình bày chi tiết trong sơ đồ lớp của từng bounded context (mục 4.3.2)."
+ },
+ {
+  "t": "landscape_start"
+ },
+ {
+  "t": "img",
+  "path": "/home/user/pavex-backend/docs/report/figures/domain-overview.png",
+  "w": 24.5,
+  "maxh": 14.5,
+  "caption": "Hình 4.27. Sơ đồ domain tổng thể của hệ thống PAVEX"
+ },
+ {
+  "t": "landscape_end"
+ },
+ {
   "t": "caption",
   "text": "Bảng 4.1. Các bounded context của mô hình miền"
  },
@@ -3703,7 +3720,7 @@
   "path": "/home/user/pavex-backend/docs/report/figures/class-identity.png",
   "w": 16,
   "maxh": 21.5,
-  "caption": "Hình 4.27. Sơ đồ lớp – Identity & Access"
+  "caption": "Hình 4.28. Sơ đồ lớp – Identity & Access"
  },
  {
   "t": "h4",
@@ -3718,7 +3735,7 @@
   "path": "/home/user/pavex-backend/docs/report/figures/class-partner.png",
   "w": 16,
   "maxh": 21.5,
-  "caption": "Hình 4.28. Sơ đồ lớp – Partner"
+  "caption": "Hình 4.29. Sơ đồ lớp – Partner"
  },
  {
   "t": "h4",
@@ -3733,7 +3750,7 @@
   "path": "/home/user/pavex-backend/docs/report/figures/class-network.png",
   "w": 16,
   "maxh": 21.5,
-  "caption": "Hình 4.29. Sơ đồ lớp – Network"
+  "caption": "Hình 4.30. Sơ đồ lớp – Network"
  },
  {
   "t": "h4",
@@ -3748,7 +3765,7 @@
   "path": "/home/user/pavex-backend/docs/report/figures/class-pricing.png",
   "w": 16,
   "maxh": 21.5,
-  "caption": "Hình 4.30. Sơ đồ lớp – Pricing"
+  "caption": "Hình 4.31. Sơ đồ lớp – Pricing"
  },
  {
   "t": "h4",
@@ -3763,7 +3780,7 @@
   "path": "/home/user/pavex-backend/docs/report/figures/class-shipment.png",
   "w": 16,
   "maxh": 21.5,
-  "caption": "Hình 4.31. Sơ đồ lớp – Shipment"
+  "caption": "Hình 4.32. Sơ đồ lớp – Shipment"
  },
  {
   "t": "h4",
@@ -3778,7 +3795,7 @@
   "path": "/home/user/pavex-backend/docs/report/figures/class-shipment-types.png",
   "w": 16,
   "maxh": 21.5,
-  "caption": "Hình 4.32. Sơ đồ lớp – Shipment – value object và enumeration"
+  "caption": "Hình 4.33. Sơ đồ lớp – Shipment – value object và enumeration"
  },
  {
   "t": "h4",
@@ -3793,7 +3810,7 @@
   "path": "/home/user/pavex-backend/docs/report/figures/class-exception.png",
   "w": 16,
   "maxh": 21.5,
-  "caption": "Hình 4.33. Sơ đồ lớp – Exception Handling"
+  "caption": "Hình 4.34. Sơ đồ lớp – Exception Handling"
  },
  {
   "t": "h4",
@@ -3808,7 +3825,7 @@
   "path": "/home/user/pavex-backend/docs/report/figures/class-workforce.png",
   "w": 16,
   "maxh": 21.5,
-  "caption": "Hình 4.34. Sơ đồ lớp – Workforce & Operations"
+  "caption": "Hình 4.35. Sơ đồ lớp – Workforce & Operations"
  },
  {
   "t": "h4",
@@ -3823,7 +3840,7 @@
   "path": "/home/user/pavex-backend/docs/report/figures/class-shared.png",
   "w": 16,
   "maxh": 21.5,
-  "caption": "Hình 4.35. Sơ đồ lớp – Shared Kernel"
+  "caption": "Hình 4.36. Sơ đồ lớp – Shared Kernel"
  },
  {
   "t": "h3",

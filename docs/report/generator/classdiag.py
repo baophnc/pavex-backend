@@ -263,3 +263,53 @@ def package_svg():
     o.append(f'<line x1="{nx + 60}" y1="{ny}" x2="{nx + 60}" y2="{B("Shared Kernel")}" stroke="#333" stroke-dasharray="4,3"/>')
     o.append("</svg>")
     return "\n".join(o)
+
+
+# ---------------------------------------------------------------------------
+# overall domain model: every entity / aggregate root, coloured by bounded context
+# ---------------------------------------------------------------------------
+CTX_FILL = {"Identity & Access": "#dbeafe", "Partner": "#fef9c3", "Pricing": "#ffedd5", "Shipment": "#dcfce7",
+            "Exception Handling": "#fee2e2", "Network": "#ede9fe", "Workforce & Operations": "#cffafe"}
+OVERVIEW = {  # name: (column, row)
+    "UserProfile": (1, 0), "UserAccount": (2, 0), "Role": (3, 0), "Permission": (4, 0),
+    "UserAddress": (1, 1), "Merchant": (2, 1), "MerchantPickupAddress": (3, 1), "QuoteOption": (0, 1),
+    "WorkforceMember": (5, 1), "WorkforceAvailability": (6, 1),
+    "QuoteParcel": (0, 2), "QuoteRequest": (1, 2), "Shipment": (2, 2), "Parcel": (3, 2), "ShipmentEvent": (4, 2),
+    "OperationalAssignment": (5, 2), "HubMembership": (6, 2),
+    "RateRule": (0, 3), "RatePlan": (1, 3), "DeliveryAttempt": (2, 3), "ShipmentExceptionRequest": (3, 3),
+    "ShipmentCase": (4, 3), "ShipmentWeightAdjustment": (5, 3), "WorkforceShiftAssignment": (6, 3),
+    "NetworkRegion": (0, 4), "ServiceArea": (1, 4), "Hub": (3, 4), "HubLane": (4, 4), "LaneSchedule": (5, 4),
+    "WorkShift": (6, 4),
+    "ServiceAreaCoverage": (1, 5), "RouteTemplate": (3, 5), "RouteTemplateLeg": (4, 5), "LaneCapacityReservation": (5, 5),
+}
+
+
+def overview_svg():
+    d = Diagram(P, "OVR", "ClassDiagram", "PAVEX Domain Model", "")
+    d.frame = "class PAVEX Domain Model"
+    d.show_roles = False  # multiplicities only; role names are in the per-context diagrams
+    d.lane_gap = 22
+    CW, RH, X0, Y0 = 290, 185, 40, 60
+    for name, (c, r) in OVERVIEW.items():
+        e = copy.copy(P.by_name[name])
+        e.features = []
+        e.fill = CTX_FILL[pkg_of(e)]
+        w, h = class_size(e)
+        w = max(w, 210)
+        d.place(e, X0 + c * CW + (CW - 70 - w) / 2, Y0 + r * RH, w, h)
+    d.only_rels = {r.id for r in P.rels if r.kind == "Association"}
+    svg = d.to_svg()
+    # legend: one swatch per bounded context
+    import re
+    W, H = (int(v) for v in re.search(r'width="(\d+)" height="(\d+)"', svg).groups())
+    lh = 40
+    items = []
+    x = 40
+    for name, col in CTX_FILL.items():
+        items.append(f'<rect x="{x}" y="{H - 8}" width="22" height="14" fill="{col}" stroke="#333"/>'
+                     f'<text x="{x + 28}" y="{H + 4}" font-size="11">{name}</text>')
+        x += 28 + len(name) * 6.8 + 26
+    svg = svg.replace(f'width="{W}" height="{H}" viewBox="0 0 {W} {H}"', f'width="{W}" height="{H + lh}" viewBox="0 0 {W} {H + lh}"', 1)
+    svg = svg.replace(f'<rect width="{W}" height="{H}" fill="#fff"/>', f'<rect width="{W}" height="{H + lh}" fill="#fff"/>', 1)
+    svg = re.sub(r'(<rect x="1" y="1" width="\d+" height=")(\d+)(")', lambda m: f"{m.group(1)}{int(m.group(2)) + lh}{m.group(3)}", svg, 1)
+    return svg.replace("</svg>", "".join(items) + "</svg>")

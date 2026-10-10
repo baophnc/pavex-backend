@@ -697,6 +697,7 @@ class Diagram:
                 o.append(f'<polyline points="{pts}" fill="none" stroke="#333"{mk}/>')
                 ends = ((route[0], route[1], r.src_mult, r.src_role), (route[-1], route[-2], r.dst_mult, r.dst_role))
                 for (px, py), (qx, qy), mult, role in ends:
+                    role = role if getattr(self, "show_roles", True) else ""
                     if not getattr(self, "labels", True) or not (mult or role):
                         continue
                     L = math.hypot(qx - px, qy - py) or 1
@@ -738,6 +739,7 @@ class Diagram:
                 fill = "#fff6d5" if is_enum else ("#e8f5e9" if is_vo else "#e3f2fd")
                 if getattr(s.elem, "external", False):  # class owned by another package
                     fill = "#f2f2f2"
+                fill = getattr(s.elem, "fill", None) or fill
                 hh = 12 + ROW_H * len(head)
                 o.append(f'<rect x="{s.x}" y="{s.y}" width="{s.w}" height="{s.h}" fill="{fill}" stroke="#333"/>')
                 o.append(f'<line x1="{s.x}" y1="{s.y + hh}" x2="{s.x + s.w}" y2="{s.y + hh}" stroke="#333"/>')
