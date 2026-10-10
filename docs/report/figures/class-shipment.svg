@@ -1,0 +1,195 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1641" height="961" viewBox="0 0 1641 961" font-family="DejaVu Sans, Arial, sans-serif" font-size="11">
+<defs><marker id="open" markerWidth="12" markerHeight="12" refX="11" refY="6" orient="auto"><path d="M0,0 L11,6 L0,12" fill="none" stroke="#333"/></marker><marker id="tri" markerWidth="16" markerHeight="16" refX="15" refY="8" orient="auto"><path d="M0,0 L15,8 L0,16 Z" fill="#fff" stroke="#333"/></marker><marker id="dia" markerWidth="20" markerHeight="12" refX="1" refY="6" orient="auto"><path d="M1,6 L10,1 L19,6 L10,11 Z" fill="#333" stroke="#333"/></marker><marker id="odia" markerWidth="20" markerHeight="12" refX="1" refY="6" orient="auto"><path d="M1,6 L10,1 L19,6 L10,11 Z" fill="#fff" stroke="#333"/></marker></defs>
+<rect width="1641" height="961" fill="#fff"/>
+<rect x="1" y="1" width="1639" height="959" fill="none" stroke="#333" stroke-width="1.3"/>
+<path d="M1,1 L118.39999999999999,1 L118.39999999999999,15 L108.39999999999999,25 L1,25 Z" fill="#fff" stroke="#333" stroke-width="1.3"/>
+<text x="8" y="18" font-size="12"><tspan font-weight="bold">class</tspan> Shipment</text>
+<polyline points="190,79 436,79" fill="none" stroke="#333"/>
+<text x="204" y="92" fill="#222" font-size="9.5" text-anchor="start">merchant</text>
+<text x="204" y="74" fill="#000" font-size="9.5" text-anchor="start">1</text>
+<text x="422" y="74" fill="#222" font-size="9.5" text-anchor="end">shipments</text>
+<text x="422" y="92" fill="#000" font-size="9.5" text-anchor="end">0..*</text>
+<polyline points="190,227 436,227" fill="none" stroke="#333"/>
+<text x="204" y="240" fill="#222" font-size="9.5" text-anchor="start">ratePlan</text>
+<text x="204" y="222" fill="#000" font-size="9.5" text-anchor="start">1</text>
+<text x="422" y="222" fill="#222" font-size="9.5" text-anchor="end">shipments</text>
+<text x="422" y="240" fill="#000" font-size="9.5" text-anchor="end">0..*</text>
+<polyline points="213,375 436,375" fill="none" stroke="#333"/>
+<text x="227" y="388" fill="#222" font-size="9.5" text-anchor="start">quote</text>
+<text x="227" y="370" fill="#000" font-size="9.5" text-anchor="start">1</text>
+<text x="422" y="370" fill="#222" font-size="9.5" text-anchor="end">shipments</text>
+<text x="422" y="388" fill="#000" font-size="9.5" text-anchor="end">0..*</text>
+<polyline points="1393,413 1393,541 740,541" fill="none" stroke="#333"/>
+<text x="1387" y="431" fill="#222" font-size="9.5" text-anchor="end">originHub</text>
+<text x="1399" y="431" fill="#000" font-size="9.5" text-anchor="start">1</text>
+<text x="754" y="554" fill="#222" font-size="9.5" text-anchor="start">originShipments</text>
+<text x="754" y="536" fill="#000" font-size="9.5" text-anchor="start">0..*</text>
+<polyline points="1423,413 1423,901 679,901 679,868" fill="none" stroke="#333"/>
+<text x="1417" y="453" fill="#222" font-size="9.5" text-anchor="end">destinationHub</text>
+<text x="1429" y="453" fill="#000" font-size="9.5" text-anchor="start">1</text>
+<text x="673" y="886" fill="#222" font-size="9.5" text-anchor="end">destinationShipments</text>
+<text x="685" y="886" fill="#000" font-size="9.5" text-anchor="start">0..*</text>
+<polyline points="740,92 890,92" fill="none" stroke="#333" marker-start="url(#dia)"/>
+<text x="754" y="105" fill="#222" font-size="9.5" text-anchor="start">shipment</text>
+<text x="754" y="87" fill="#000" font-size="9.5" text-anchor="start">1</text>
+<text x="876" y="87" fill="#222" font-size="9.5" text-anchor="end">parcels</text>
+<text x="876" y="105" fill="#000" font-size="9.5" text-anchor="end">1..*</text>
+<polyline points="710,50 710,10 1418,10 1418,50" fill="none" stroke="#333" marker-start="url(#dia)"/>
+<text x="716" y="40" fill="#222" font-size="9.5" text-anchor="start">shipment</text>
+<text x="704" y="40" fill="#000" font-size="9.5" text-anchor="end">1</text>
+<text x="1424" y="40" fill="#222" font-size="9.5" text-anchor="start">events {ordered}</text>
+<text x="1412" y="40" fill="#000" font-size="9.5" text-anchor="end">0..*</text>
+<polyline points="1187,92 1363,92" fill="none" stroke="#333"/>
+<text x="1201" y="105" fill="#222" font-size="9.5" text-anchor="start">parcel</text>
+<text x="1201" y="87" fill="#000" font-size="9.5" text-anchor="start">0..1</text>
+<text x="1349" y="87" fill="#222" font-size="9.5" text-anchor="end">events</text>
+<text x="1349" y="105" fill="#000" font-size="9.5" text-anchor="end">0..*</text>
+<polyline points="1438,355 1438,265" fill="none" stroke="#333"/>
+<text x="1444" y="345" fill="#222" font-size="9.5" text-anchor="start">hub</text>
+<text x="1432" y="345" fill="#000" font-size="9.5" text-anchor="end">0..1</text>
+<text x="1432" y="283" fill="#222" font-size="9.5" text-anchor="end">events</text>
+<text x="1444" y="283" fill="#000" font-size="9.5" text-anchor="start">0..*</text>
+<polyline points="740,609 890,609" fill="none" stroke="#333" marker-start="url(#dia)"/>
+<text x="754" y="622" fill="#222" font-size="9.5" text-anchor="start">shipment</text>
+<text x="754" y="604" fill="#000" font-size="9.5" text-anchor="start">1</text>
+<text x="876" y="604" fill="#222" font-size="9.5" text-anchor="end">deliveryAttempts</text>
+<text x="876" y="622" fill="#000" font-size="9.5" text-anchor="end">0..*</text>
+<polyline points="1038,477 1038,567" fill="none" stroke="#333"/>
+<text x="1032" y="495" fill="#222" font-size="9.5" text-anchor="end">parcel</text>
+<text x="1044" y="495" fill="#000" font-size="9.5" text-anchor="start">1</text>
+<text x="1044" y="557" fill="#222" font-size="9.5" text-anchor="start">deliveryAttempts</text>
+<text x="1032" y="557" fill="#000" font-size="9.5" text-anchor="end">0..*</text>
+<polyline points="1363,384 1187,384" fill="none" stroke="#333"/>
+<text x="1349" y="379" fill="#222" font-size="9.5" text-anchor="end">currentHub</text>
+<text x="1349" y="397" fill="#000" font-size="9.5" text-anchor="end">0..1</text>
+<text x="1201" y="397" fill="#222" font-size="9.5" text-anchor="start">parcelsOnHand</text>
+<text x="1201" y="379" fill="#000" font-size="9.5" text-anchor="start">0..*</text>
+<polyline points="436,523 286,523" fill="none" stroke="#333"/>
+<text x="422" y="518" fill="#222" font-size="9.5" text-anchor="end">shipment</text>
+<text x="422" y="536" fill="#000" font-size="9.5" text-anchor="end">1</text>
+<text x="300" y="536" fill="#222" font-size="9.5" text-anchor="start">capacityReservations</text>
+<text x="300" y="518" fill="#000" font-size="9.5" text-anchor="start">0..*</text>
+<rect x="40" y="50" width="150" height="58" fill="#f2f2f2" stroke="#333"/>
+<line x1="40" y1="96" x2="190" y2="96" stroke="#333"/>
+<text x="115.0" y="68" text-anchor="middle">«aggregate root»</text>
+<text x="115.0" y="85" text-anchor="middle" font-weight="bold">Partner::Merchant</text>
+<rect x="40" y="198" width="150" height="58" fill="#f2f2f2" stroke="#333"/>
+<line x1="40" y1="244" x2="190" y2="244" stroke="#333"/>
+<text x="115.0" y="216" text-anchor="middle">«aggregate root»</text>
+<text x="115.0" y="233" text-anchor="middle" font-weight="bold">Pricing::RatePlan</text>
+<rect x="40" y="346" width="173" height="58" fill="#f2f2f2" stroke="#333"/>
+<line x1="40" y1="392" x2="213" y2="392" stroke="#333"/>
+<text x="126.5" y="364" text-anchor="middle">«aggregate root»</text>
+<text x="126.5" y="381" text-anchor="middle" font-weight="bold">Pricing::QuoteRequest</text>
+<rect x="40" y="494" width="246" height="58" fill="#f2f2f2" stroke="#333"/>
+<line x1="40" y1="540" x2="286" y2="540" stroke="#333"/>
+<text x="163.0" y="512" text-anchor="middle">«entity»</text>
+<text x="163.0" y="529" text-anchor="middle" font-weight="bold">Network::LaneCapacityReservation</text>
+<rect x="436" y="50" width="304" height="818" fill="#e3f2fd" stroke="#333"/>
+<line x1="436" y1="96" x2="740" y2="96" stroke="#333"/>
+<line x1="436" y1="707" x2="740" y2="707" stroke="#333"/>
+<text x="444" y="721">+create(quote, sender, recipient, parcels)</text>
+<text x="444" y="738">+markRouted(batchId : UUID)</text>
+<text x="444" y="755">+markRoutingFailed()</text>
+<text x="444" y="772">+placeOnHold(reason : String)</text>
+<text x="444" y="789">+releaseHold()</text>
+<text x="444" y="806">+changeEndpoint(dest : ShipmentEndpoint)</text>
+<text x="444" y="823">+recordAttempt(attempt : DeliveryAttempt)</text>
+<text x="444" y="840">+markDelivered(at : Instant)</text>
+<text x="444" y="857">+cancel(reason : String)</text>
+<text x="588.0" y="68" text-anchor="middle">«aggregate root»</text>
+<text x="588.0" y="85" text-anchor="middle" font-weight="bold">Shipment</text>
+<text x="444" y="114">-id : UUID</text>
+<text x="444" y="131">-trackingCode : String</text>
+<text x="444" y="148">-merchantReference : String [0..1]</text>
+<text x="444" y="165">-createdByUserId : UUID</text>
+<text x="444" y="182">-sender : ShipmentAddressSnapshot</text>
+<text x="444" y="199">-recipient : ShipmentAddressSnapshot</text>
+<text x="444" y="216">-shippingFeePayer : ShippingFeePayer</text>
+<text x="444" y="233">-rateRevision : Int</text>
+<text x="444" y="250">-rateVersion : String</text>
+<text x="444" y="267">-currency : String</text>
+<text x="444" y="284">-serviceLevel : ShipmentServiceLevel</text>
+<text x="444" y="301">-pricingZone : ShipmentPricingZone</text>
+<text x="444" y="318">-fees : FeeBreakdown</text>
+<text x="444" y="335">-codAmount : Long</text>
+<text x="444" y="352">-declaredValue : Long</text>
+<text x="444" y="369">-estimate : DeliveryEstimate</text>
+<text x="444" y="386">-quoteExpiresAt : Instant</text>
+<text x="444" y="403">-origin : ShipmentEndpoint</text>
+<text x="444" y="420">-destination : ShipmentEndpoint</text>
+<text x="444" y="437">-routingStatus : ShipmentRoutingStatus</text>
+<text x="444" y="454">-routeRevision : Int</text>
+<text x="444" y="471">-reservedWeightKg : BigDecimal</text>
+<text x="444" y="488">-routeReadyAt : Instant [0..1]</text>
+<text x="444" y="505">-estimatedDeliveryAt : Instant [0..1]</text>
+<text x="444" y="522">-estimatedTransitMinutes : Int [0..1]</text>
+<text x="444" y="539">-routeDistanceKm : BigDecimal [0..1]</text>
+<text x="444" y="556">-status : ShipmentStatus</text>
+<text x="444" y="573">-lifecycleStatus : ShipmentLifecycleStatus</text>
+<text x="444" y="590">-hold : ShipmentHold [0..1]</text>
+<text x="444" y="607">-hasPendingWeightReview : Boolean</text>
+<text x="444" y="624">-note : String [0..1]</text>
+<text x="444" y="641">-cancellationReason : String [0..1]</text>
+<text x="444" y="658">-cancelledAt : Instant [0..1]</text>
+<text x="444" y="675">-completedAt : Instant [0..1]</text>
+<text x="444" y="692">-createdAt : Instant</text>
+<rect x="890" y="50" width="297" height="427" fill="#e3f2fd" stroke="#333"/>
+<line x1="890" y1="96" x2="1187" y2="96" stroke="#333"/>
+<line x1="890" y1="401" x2="1187" y2="401" stroke="#333"/>
+<text x="898" y="415">+updateCustody(type, refId, hub, stage)</text>
+<text x="898" y="432">+reweigh(weight : Weight)</text>
+<text x="898" y="449">+markLost()</text>
+<text x="898" y="466">+markDamaged()</text>
+<text x="1038.5" y="68" text-anchor="middle">«entity»</text>
+<text x="1038.5" y="85" text-anchor="middle" font-weight="bold">Parcel</text>
+<text x="898" y="114">-id : UUID</text>
+<text x="898" y="131">-code : String</text>
+<text x="898" y="148">-sequence : Int</text>
+<text x="898" y="165">-description : String</text>
+<text x="898" y="182">-quantity : Int</text>
+<text x="898" y="199">-category : GoodsCategory</text>
+<text x="898" y="216">-isFragile : Boolean</text>
+<text x="898" y="233">-weight : Weight</text>
+<text x="898" y="250">-dimensions : Dimensions</text>
+<text x="898" y="267">-status : ParcelStatus</text>
+<text x="898" y="284">-stage : ParcelStage</text>
+<text x="898" y="301">-flowDirection : ParcelFlowDirection</text>
+<text x="898" y="318">-currentLocationType : ParcelLocationType</text>
+<text x="898" y="335">-currentHubName : String [0..1]</text>
+<text x="898" y="352">-currentRouteLegId : UUID [0..1]</text>
+<text x="898" y="369">-custodyType : ParcelCustodyType</text>
+<text x="898" y="386">-custodyReferenceId : UUID [0..1]</text>
+<rect x="890" y="567" width="323" height="249" fill="#e3f2fd" stroke="#333"/>
+<line x1="890" y1="613" x2="1213" y2="613" stroke="#333"/>
+<text x="1051.5" y="585" text-anchor="middle">«entity»</text>
+<text x="1051.5" y="602" text-anchor="middle" font-weight="bold">DeliveryAttempt</text>
+<text x="898" y="631">-id : UUID</text>
+<text x="898" y="648">-attemptNumber : Int</text>
+<text x="898" y="665">-outcome : DeliveryAttemptOutcome</text>
+<text x="898" y="682">-failureReason : DeliveryFailureReason [0..1]</text>
+<text x="898" y="699">-proofMethod : DeliveryProofMethod [0..1]</text>
+<text x="898" y="716">-recipientName : String [0..1]</text>
+<text x="898" y="733">-evidenceReference : String [0..1]</text>
+<text x="898" y="750">-note : String [0..1]</text>
+<text x="898" y="767">-location : GeoPoint [0..1]</text>
+<text x="898" y="784">-actorUserId : UUID</text>
+<text x="898" y="801">-occurredAt : Instant</text>
+<rect x="1363" y="50" width="218" height="215" fill="#e3f2fd" stroke="#333"/>
+<line x1="1363" y1="96" x2="1581" y2="96" stroke="#333"/>
+<text x="1472.0" y="68" text-anchor="middle">«entity»</text>
+<text x="1472.0" y="85" text-anchor="middle" font-weight="bold">ShipmentEvent</text>
+<text x="1371" y="114">-id : UUID</text>
+<text x="1371" y="131">-status : ShipmentStatus</text>
+<text x="1371" y="148">-code : String</text>
+<text x="1371" y="165">-description : String</text>
+<text x="1371" y="182">-actorUserId : UUID [0..1]</text>
+<text x="1371" y="199">-locationName : String [0..1]</text>
+<text x="1371" y="216">-dataJson : String [0..1]</text>
+<text x="1371" y="233">-occurredAt : Instant</text>
+<text x="1371" y="250">-recordedAt : Instant</text>
+<rect x="1363" y="355" width="150" height="58" fill="#f2f2f2" stroke="#333"/>
+<line x1="1363" y1="401" x2="1513" y2="401" stroke="#333"/>
+<text x="1438.0" y="373" text-anchor="middle">«aggregate root»</text>
+<text x="1438.0" y="390" text-anchor="middle" font-weight="bold">Network::Hub</text>
+</svg>

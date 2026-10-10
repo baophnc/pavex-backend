@@ -101,7 +101,7 @@ bullets([
     "Chương 1 – Giới thiệu: lý do, mục tiêu, phạm vi và phương pháp.",
     "Chương 2 – Cơ sở lý thuyết: bài toán vận chuyển, DDD, REST/JWT, kiến trúc web và mã kiện hàng.",
     "Chương 3 – Phân tích yêu cầu: yêu cầu kinh doanh, người dùng, chức năng và phi chức năng.",
-    "Chương 4 – Thiết kế hệ thống: sơ đồ use case, đặc tả use case cốt lõi kèm activity và sequence, mô hình miền.",
+    "Chương 4 – Thiết kế hệ thống: sơ đồ use case, đặc tả use case cốt lõi kèm sơ đồ hoạt động và tuần tự, sơ đồ package và sơ đồ lớp của mô hình miền.",
     "Chương 5 – Giải pháp công nghệ: kiến trúc, bảo mật, định giá, định tuyến và quét mã.",
     "Chương 6 – Hiện thực, triển khai và kiểm thử: môi trường, tình trạng hiện thực, giao diện và test case của các chức năng đã hiện thực.",
     "Chương 7 – Đánh giá và thảo luận. Chương 8 – Kết luận và hướng phát triển.",
@@ -168,7 +168,11 @@ h2("4.1. Sơ đồ use case tổng thể")
 p("Sơ đồ use case tổng thể gồm 13 tác nhân (10 vai trò và 3 tác nhân trừu tượng theo frame) và 41 use case trong ranh giới hệ thống PAVEX Logistics Platform. Quan hệ «include» thể hiện bước bắt buộc dùng chung (Xem hành trình vận đơn, Quét kiện hàng, Gán vai trò cho người dùng, Tra cứu giá cước, Xem nhân sự vận hành); quan hệ «extend» thể hiện chức năng mở rộng tùy chọn.")
 fig(UML / "preview" / "usecase-diagram.png", "Sơ đồ use case tổng thể hệ thống PAVEX", 16, 22.5)
 h2("4.2. Đặc tả chi tiết các use case cốt lõi")
-p("Phần này đặc tả 12 use case cốt lõi – các luồng nghiệp vụ chính của hệ thống. Mỗi use case gồm bảng đặc tả, sơ đồ hoạt động và sơ đồ tuần tự (các sơ đồ được bổ sung trong khung tương ứng). Trong sơ đồ tuần tự, lớp giao diện được đặt tiền tố GD_, lớp điều khiển CTRL_, lớp thực thể dùng tên trong mô hình miền.")
+p("Phần này đặc tả 12 use case cốt lõi – các luồng nghiệp vụ chính của hệ thống. Mỗi use case gồm bảng đặc tả, sơ đồ hoạt động và sơ đồ tuần tự, vẽ theo ký pháp UML 2.5.")
+bullets([
+    "Sơ đồ hoạt động: đặt trong khung “act <tên use case>”, chia 2 phân vùng (partition) Tác nhân – Hệ thống PAVEX; gồm nút khởi đầu, hành động, nút quyết định có điều kiện (guard) trên mọi nhánh ra, nút hợp (merge) tại điểm luồng quay lại và nút kết thúc.",
+    "Sơ đồ tuần tự: đặt trong khung “sd <tên use case>”; lifeline theo mô hình boundary – control – entity (lớp giao diện tiền tố GD_, lớp điều khiển CTRL_, lớp thực thể dùng tên aggregate trong mô hình miền); thanh kích hoạt (execution specification) trên đối tượng đang xử lý; thông điệp đồng bộ (mũi tên đặc), bất đồng bộ tới hệ thống ngoài (mũi tên mở), thông điệp trả về (nét đứt); các khối kết hợp alt / opt / loop có điều kiện cho từng nhánh.",
+])
 sections = [("4.2.1. Nhóm use case dùng chung và cổng khách hàng", ["UC01", "UC03", "UC15", "UC17", "UC14 / UC19"]),
             ("4.2.2. Nhóm use case của cổng quản trị", ["UC13", "UC31", "UC40", "UC25", "UC06 / UC08"]),
             ("4.2.3. Nhóm use case của ứng dụng vận hành", ["UC33 / UC34", "UC35"])]
@@ -181,13 +185,15 @@ for title, codes in sections:
         k += 1
         B.append({"t": "h4", "text": f"Use case {u['name'].lower()} ({u['code']})"})
         B.append({"t": "spec", "uc": u})
-        placeholder(f"Sơ đồ hoạt động – {u['name']}", f"[Chèn sơ đồ hoạt động: {u['name']}]")
-        placeholder(f"Sơ đồ tuần tự – {u['name']}", f"[Chèn sơ đồ tuần tự: {u['name']}]")
+        slug = u["code"].split(" ")[0].lower()
+        fig(FIG / f"{slug}-act.png", f"Sơ đồ hoạt động – {u['name']}", 15, 21)
+        fig(FIG / f"{slug}-seq.png", f"Sơ đồ tuần tự – {u['name']}", 16, 20)
 
 h2("4.3. Thiết kế kiến trúc và cơ sở dữ liệu")
 h3("4.3.1. Mô hình miền")
 p("Mô hình miền được thiết kế theo DDD gồm 8 package (bounded context): Identity & Access, Partner, Network, Pricing, Shipment, Exception Handling, Workforce & Operations và Shared Kernel. Quan hệ giữa các entity được biểu diễn bằng association có tên vai trò và bội số; composition (hình thoi đặc) thể hiện phần tử sống và mất cùng aggregate.")
-fig(FIG / "domain-entities.png", "Mô hình miền – các entity và aggregate root", 16, 22)
+p("Sơ đồ package dưới đây thể hiện các bounded context, aggregate root của từng context và quan hệ phụ thuộc «use» giữa chúng. Phụ thuộc luôn đi từ context hạ nguồn (downstream) về context thượng nguồn (upstream): Shipment dùng Partner, Pricing và Network; Workforce & Operations và Exception Handling dùng Shipment và Network; mọi context dùng các value object của Shared Kernel.")
+fig(FIG / "domain-packages.png", "Sơ đồ package các bounded context của PAVEX", 15.5, 21)
 table(["Bounded context", "Aggregate root / entity chính", "Vai trò"], [
     ["Identity & Access", "UserAccount, UserProfile, UserAddress, Role, Permission", "Tài khoản, hồ sơ, sổ địa chỉ, RBAC"],
     ["Partner", "Merchant, MerchantPickupAddress", "Cửa hàng và vòng đời xác minh"],
@@ -198,7 +204,28 @@ table(["Bounded context", "Aggregate root / entity chính", "Vai trò"], [
     ["Workforce & Operations", "WorkforceMember, HubMembership, WorkforceAvailability, WorkShift, WorkforceShiftAssignment, OperationalAssignment", "Nhân sự, ca làm việc, công việc vận hành"],
     ["Shared Kernel", "ContactAddress, Weight, Dimensions, FeeBreakdown, DeliveryEstimate, GeoPoint", "Value object dùng chung"],
 ], [2000, 3606, 2700], "Các bounded context của mô hình miền", size=10)
-h3("4.3.2. Kiến trúc tổng thể")
+h3("4.3.2. Sơ đồ lớp theo bounded context")
+p("Mỗi bounded context được vẽ thành một sơ đồ lớp (khung “class <tên context>”) theo các quy ước sau:")
+bullets([
+    "Lớp có 3 ngăn: tên kèm stereotype DDD («aggregate root», «entity», «value object», «enumeration»), thuộc tính dạng -tên : Kiểu [bội số] và phương thức dạng +tên(tham số) : Kiểu trả về. Phương thức được rút ra từ các use case và các trạng thái của aggregate (ví dụ Merchant.verify(), OperationalAssignment.accept()).",
+    "Association ghi tên vai trò và bội số ở hai đầu; composition (hình thoi đặc) ở phía aggregate root sở hữu vòng đời của phần tử; aggregation (hình thoi rỗng) cho quan hệ gom nhóm lỏng.",
+    "Lớp thuộc context khác được vẽ thu gọn (nền xám) với tên đầy đủ Package::Lớp; quan hệ giữa hai context chỉ vẽ ở sơ đồ của context hạ nguồn.",
+    "Value object và enumeration được dùng làm kiểu thuộc tính nên được liệt kê bên dưới mà không nối đường.",
+])
+CTX = [("identity", "Identity & Access", "Tài khoản đăng nhập (UserAccount) sở hữu hồ sơ và sổ địa chỉ; vai trò (Role) gom các quyền (Permission) để phân quyền RBAC."),
+       ("partner", "Partner", "Cửa hàng (Merchant) do một tài khoản khách hàng sở hữu, có vòng đời xác minh và danh sách điểm lấy hàng."),
+       ("network", "Network", "Mạng lưới vùng – khu vực phục vụ – hub, tuyến giữa hai hub với lịch chạy, mẫu lộ trình và giữ chỗ tải trên từng chuyến."),
+       ("pricing", "Pricing", "Bảng giá có phiên bản (RatePlan) gồm các quy tắc giá; báo giá (QuoteRequest) lưu kiện hàng và các phương án giá có thời hạn."),
+       ("shipment", "Shipment", "Vận đơn là aggregate root sở hữu kiện hàng, sự kiện hành trình và lần giao; tham chiếu cửa hàng, bảng giá, báo giá, hub và giữ chỗ tải."),
+       ("shipment-types", "Shipment – value object và enumeration", "Các kiểu dữ liệu của context Shipment: địa chỉ chụp tại thời điểm tạo đơn, điểm đầu/cuối, trạng thái tạm giữ và các tập giá trị trạng thái."),
+       ("exception", "Exception Handling", "Yêu cầu ngoại lệ (hoàn, chuyển tiếp, giao lại, hủy), hồ sơ sự cố và điều chỉnh khối lượng, đều tham chiếu vận đơn, kiện và hub."),
+       ("workforce", "Workforce & Operations", "Nhân sự vận hành, thành viên hub, trạng thái sẵn sàng, ca làm việc và công việc vận hành sinh ra từ từng chặng của vận đơn."),
+       ("shared", "Shared Kernel", "Các value object dùng chung giữa các context.")]
+for slug, title, desc in CTX:
+    B.append({"t": "h4", "text": f"Sơ đồ lớp – {title}"})
+    p(desc)
+    fig(FIG / f"class-{slug}.png", f"Sơ đồ lớp – {title}", 16, 21.5)
+h3("4.3.3. Kiến trúc tổng thể")
 p("Hệ thống theo kiến trúc client – server nhiều lớp. Ba ứng dụng client (cổng khách hàng, cổng quản trị, ứng dụng vận hành) giao tiếp với một backend duy nhất qua REST API /api/v1. Backend được tổ chức theo module tương ứng với các bounded context, mỗi module gồm các lớp: API (controller), ứng dụng (service), miền (domain) và hạ tầng (repository). Dữ liệu được lưu trong hệ quản trị cơ sở dữ liệu PostgreSQL; mỗi aggregate tương ứng một nhóm bảng, quan hệ giữa các aggregate được thể hiện bằng khóa ngoại tới định danh.")
 table(["Lớp", "Thành phần", "Trách nhiệm"], [
     ["Client", "Cổng khách hàng, Cổng quản trị (Next.js), Ứng dụng vận hành", "Giao diện người dùng, gọi API qua BFF"],
@@ -281,7 +308,7 @@ for c in CASES:
 h1("ĐÁNH GIÁ VÀ THẢO LUẬN")
 h2("7.1. Kết quả đạt được")
 bullets([
-    "Hoàn thành phân tích và thiết kế: sơ đồ use case tổng thể (13 tác nhân, 41 use case), mô hình miền theo DDD (8 bounded context) và đặc tả 12 use case cốt lõi.",
+    "Hoàn thành phân tích và thiết kế theo UML 2.5: sơ đồ use case tổng thể (13 tác nhân, 41 use case), đặc tả 12 use case cốt lõi kèm sơ đồ hoạt động và sơ đồ tuần tự, sơ đồ package và 9 sơ đồ lớp của mô hình miền theo DDD (8 bounded context).",
     "Hiện thực cổng quản trị theo mô hình BFF trên Next.js: đăng nhập, đăng xuất, tự làm mới phiên, menu theo quyền; tra cứu và lọc người dùng; xem vai trò và quyền.",
     "Tích hợp với Identity API của backend: xác thực JWT, refresh token, phân quyền RBAC; dữ liệu lưu trên PostgreSQL.",
     "Thiết kế cơ chế tính cước có phiên bản, định tuyến với giữ chỗ tải và điều phối công việc theo ca để làm cơ sở hiện thực các giai đoạn sau.",

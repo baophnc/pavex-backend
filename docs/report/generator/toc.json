@@ -112,131 +112,136 @@
  {
   "level": 3,
   "text": "4.2.2. Nhóm use case của cổng quản trị",
-  "page": 22
+  "page": 28
  },
  {
   "level": 3,
   "text": "4.2.3. Nhóm use case của ứng dụng vận hành",
-  "page": 30
+  "page": 41
  },
  {
   "level": 2,
   "text": "4.3. Thiết kế kiến trúc và cơ sở dữ liệu",
-  "page": 33
+  "page": 47
  },
  {
   "level": 3,
   "text": "4.3.1. Mô hình miền",
-  "page": 33
+  "page": 47
  },
  {
   "level": 3,
-  "text": "4.3.2. Kiến trúc tổng thể",
-  "page": 34
+  "text": "4.3.2. Sơ đồ lớp theo bounded context",
+  "page": 49
+ },
+ {
+  "level": 3,
+  "text": "4.3.3. Kiến trúc tổng thể",
+  "page": 55
  },
  {
   "level": 1,
   "text": "CHƯƠNG 5. GIẢI PHÁP CÔNG NGHỆ",
-  "page": 35
+  "page": 57
  },
  {
   "level": 2,
   "text": "5.1. Kiến trúc client – BFF – backend",
-  "page": 35
+  "page": 57
  },
  {
   "level": 2,
   "text": "5.2. Xác thực, phân quyền và toàn vẹn dữ liệu",
-  "page": 35
+  "page": 57
  },
  {
   "level": 2,
   "text": "5.3. Định giá có phiên bản và báo giá có thời hạn",
-  "page": 35
+  "page": 57
  },
  {
   "level": 2,
   "text": "5.4. Định tuyến và giữ chỗ tải trọng",
-  "page": 36
+  "page": 58
  },
  {
   "level": 2,
   "text": "5.5. Điều phối công việc theo ca và năng lực nhân sự",
-  "page": 36
+  "page": 58
  },
  {
   "level": 2,
   "text": "5.6. Quét mã kiện hàng và hành trình vận đơn",
-  "page": 36
+  "page": 58
  },
  {
   "level": 1,
   "text": "CHƯƠNG 6. HIỆN THỰC, TRIỂN KHAI VÀ KIỂM THỬ",
-  "page": 37
+  "page": 59
  },
  {
   "level": 2,
   "text": "6.1. Môi trường phát triển và công cụ",
-  "page": 37
+  "page": 59
  },
  {
   "level": 2,
   "text": "6.2. Tình trạng hiện thực",
-  "page": 37
+  "page": 59
  },
  {
   "level": 2,
   "text": "6.3. Giao diện cổng quản trị",
-  "page": 38
+  "page": 60
  },
  {
   "level": 2,
   "text": "6.4. Kiểm thử hệ thống",
-  "page": 39
+  "page": 61
  },
  {
   "level": 3,
   "text": "6.4.1. Phương pháp kiểm thử",
-  "page": 39
+  "page": 61
  },
  {
   "level": 3,
   "text": "6.4.2. Test case chi tiết",
-  "page": 40
+  "page": 62
  },
  {
   "level": 1,
   "text": "CHƯƠNG 7. ĐÁNH GIÁ VÀ THẢO LUẬN",
-  "page": 44
+  "page": 66
  },
  {
   "level": 2,
   "text": "7.1. Kết quả đạt được",
-  "page": 44
+  "page": 66
  },
  {
   "level": 2,
   "text": "7.2. Hạn chế còn tồn tại",
-  "page": 44
+  "page": 66
  },
  {
   "level": 2,
   "text": "7.3. Thảo luận và bài học kinh nghiệm",
-  "page": 44
+  "page": 66
  },
  {
   "level": 1,
   "text": "CHƯƠNG 8. KẾT LUẬN",
-  "page": 45
+  "page": 67
  },
  {
   "level": 2,
   "text": "8.1. Kết luận",
-  "page": 45
+  "page": 67
  },
  {
   "level": 2,
   "text": "8.2. Hướng phát triển",
-  "page": 45
+  "page": 67
  }
 ]

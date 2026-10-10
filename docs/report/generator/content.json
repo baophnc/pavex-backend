@@ -89,7 +89,7 @@
    "Chương 1 – Giới thiệu: lý do, mục tiêu, phạm vi và phương pháp.",
    "Chương 2 – Cơ sở lý thuyết: bài toán vận chuyển, DDD, REST/JWT, kiến trúc web và mã kiện hàng.",
    "Chương 3 – Phân tích yêu cầu: yêu cầu kinh doanh, người dùng, chức năng và phi chức năng.",
-   "Chương 4 – Thiết kế hệ thống: sơ đồ use case, đặc tả use case cốt lõi kèm activity và sequence, mô hình miền.",
+   "Chương 4 – Thiết kế hệ thống: sơ đồ use case, đặc tả use case cốt lõi kèm sơ đồ hoạt động và tuần tự, sơ đồ package và sơ đồ lớp của mô hình miền.",
    "Chương 5 – Giải pháp công nghệ: kiến trúc, bảo mật, định giá, định tuyến và quét mã.",
    "Chương 6 – Hiện thực, triển khai và kiểm thử: môi trường, tình trạng hiện thực, giao diện và test case của các chức năng đã hiện thực.",
    "Chương 7 – Đánh giá và thảo luận. Chương 8 – Kết luận và hướng phát triển."
@@ -568,7 +568,14 @@
  },
  {
   "t": "p",
-  "text": "Phần này đặc tả 12 use case cốt lõi – các luồng nghiệp vụ chính của hệ thống. Mỗi use case gồm bảng đặc tả, sơ đồ hoạt động và sơ đồ tuần tự (các sơ đồ được bổ sung trong khung tương ứng). Trong sơ đồ tuần tự, lớp giao diện được đặt tiền tố GD_, lớp điều khiển CTRL_, lớp thực thể dùng tên trong mô hình miền."
+  "text": "Phần này đặc tả 12 use case cốt lõi – các luồng nghiệp vụ chính của hệ thống. Mỗi use case gồm bảng đặc tả, sơ đồ hoạt động và sơ đồ tuần tự, vẽ theo ký pháp UML 2.5."
+ },
+ {
+  "t": "bullets",
+  "items": [
+   "Sơ đồ hoạt động: đặt trong khung “act <tên use case>”, chia 2 phân vùng (partition) Tác nhân – Hệ thống PAVEX; gồm nút khởi đầu, hành động, nút quyết định có điều kiện (guard) trên mọi nhánh ra, nút hợp (merge) tại điểm luồng quay lại và nút kết thúc.",
+   "Sơ đồ tuần tự: đặt trong khung “sd <tên use case>”; lifeline theo mô hình boundary – control – entity (lớp giao diện tiền tố GD_, lớp điều khiển CTRL_, lớp thực thể dùng tên aggregate trong mô hình miền); thanh kích hoạt (execution specification) trên đối tượng đang xử lý; thông điệp đồng bộ (mũi tên đặc), bất đồng bộ tới hệ thống ngoài (mũi tên mở), thông điệp trả về (nét đứt); các khối kết hợp alt / opt / loop có điều kiện cho từng nhánh."
+  ]
  },
  {
   "t": "h3",
@@ -709,7 +716,7 @@
      ],
      [
       "entity",
-      "Role / Permission"
+      "Role"
      ]
     ],
     "msgs": [
@@ -792,13 +799,17 @@
   }
  },
  {
-  "t": "placeholder",
-  "text": "[Chèn sơ đồ hoạt động: Đăng nhập]",
+  "t": "img",
+  "path": "/home/user/pavex-backend/docs/report/figures/uc01-act.png",
+  "w": 15,
+  "maxh": 21,
   "caption": "Hình 4.2. Sơ đồ hoạt động – Đăng nhập"
  },
  {
-  "t": "placeholder",
-  "text": "[Chèn sơ đồ tuần tự: Đăng nhập]",
+  "t": "img",
+  "path": "/home/user/pavex-backend/docs/report/figures/uc01-seq.png",
+  "w": 16,
+  "maxh": 20,
   "caption": "Hình 4.3. Sơ đồ tuần tự – Đăng nhập"
  },
  {
@@ -1031,13 +1042,17 @@
   }
  },
  {
-  "t": "placeholder",
-  "text": "[Chèn sơ đồ hoạt động: Đăng ký tài khoản]",
+  "t": "img",
+  "path": "/home/user/pavex-backend/docs/report/figures/uc03-act.png",
+  "w": 15,
+  "maxh": 21,
   "caption": "Hình 4.4. Sơ đồ hoạt động – Đăng ký tài khoản"
  },
  {
-  "t": "placeholder",
-  "text": "[Chèn sơ đồ tuần tự: Đăng ký tài khoản]",
+  "t": "img",
+  "path": "/home/user/pavex-backend/docs/report/figures/uc03-seq.png",
+  "w": 16,
+  "maxh": 20,
   "caption": "Hình 4.5. Sơ đồ tuần tự – Đăng ký tài khoản"
  },
  {
@@ -1183,7 +1198,7 @@
      ],
      [
       "entity",
-      "RatePlan / RateRule"
+      "RatePlan"
      ],
      [
       "entity",
@@ -1220,7 +1235,7 @@
      [
       2,
       4,
-      "findActivePlan(); rules(zone)"
+      "findActivePlan(); findRule(serviceLevel, zone)"
      ],
      [
       4,
@@ -1239,6 +1254,12 @@
       "save(quoteRequest, options, expiresAt)"
      ],
      [
+      5,
+      2,
+      "quoteId",
+      "ret"
+     ],
+     [
       2,
       1,
       "quoteId, options[]",
@@ -1248,27 +1269,44 @@
       1,
       0,
       "Hiển thị bảng phương án và hạn báo giá"
+     ],
+     [
+      2,
+      1,
+      "422 – ngoài vùng phục vụ",
+      "ret"
+     ],
+     [
+      1,
+      0,
+      "Thông báo chưa hỗ trợ khu vực"
      ]
     ],
     "frags": [
      [
-      3,
-      4,
-      "opt",
-      "[địa chỉ ngoài vùng phục vụ → báo lỗi]"
+      5,
+      13,
+      "alt",
+      "[trong vùng phục vụ]",
+      12,
+      "[ngoài vùng phục vụ]"
      ]
     ]
    }
   }
  },
  {
-  "t": "placeholder",
-  "text": "[Chèn sơ đồ hoạt động: Tra cứu giá cước]",
+  "t": "img",
+  "path": "/home/user/pavex-backend/docs/report/figures/uc15-act.png",
+  "w": 15,
+  "maxh": 21,
   "caption": "Hình 4.6. Sơ đồ hoạt động – Tra cứu giá cước"
  },
  {
-  "t": "placeholder",
-  "text": "[Chèn sơ đồ tuần tự: Tra cứu giá cước]",
+  "t": "img",
+  "path": "/home/user/pavex-backend/docs/report/figures/uc15-seq.png",
+  "w": 16,
+  "maxh": 20,
   "caption": "Hình 4.7. Sơ đồ tuần tự – Tra cứu giá cước"
  },
  {
@@ -1467,7 +1505,7 @@
      ],
      [
       "entity",
-      "Shipment / Parcel"
+      "Shipment"
      ],
      [
       "entity",
@@ -1519,28 +1557,38 @@
      [
       2,
       4,
-      "save(shipment, parcels, trackingCode)"
+      "create(shipment, parcels, trackingCode)"
      ],
      [
       2,
       2,
-      "Tìm lộ trình (RouteTemplate / tuyến)"
+      "Tìm lộ trình (RouteTemplate / tuyến trực tiếp)"
      ],
      [
       2,
       5,
-      "reserve(lane, schedule, weight) cho từng chặng"
+      "reserve(lane, schedule, weightKg)"
      ],
      [
       5,
       2,
-      "batchId",
+      "reservation",
       "ret"
+     ],
+     [
+      2,
+      4,
+      "markRouted(batchId)"
      ],
      [
       2,
       6,
       "create(PICKUP, originHub)"
+     ],
+     [
+      2,
+      4,
+      "markRoutingFailed()"
      ],
      [
       2,
@@ -1551,28 +1599,40 @@
      [
       1,
       0,
-      "Hiển thị mã vận đơn, Chờ lấy hàng"
+      "Hiển thị mã vận đơn và trạng thái"
      ]
     ],
     "frags": [
      [
-      8,
+      9,
+      13,
+      "alt",
+      "[tìm được lộ trình, còn tải]",
+      13,
+      "[không có lộ trình / hết tải]"
+     ],
+     [
+      9,
       10,
-      "opt",
-      "[có lộ trình và còn tải; ngược lại: ROUTING_FAILED]"
+      "loop",
+      "[với mỗi chặng của lộ trình]"
      ]
     ]
    }
   }
  },
  {
-  "t": "placeholder",
-  "text": "[Chèn sơ đồ hoạt động: Tạo đơn hàng]",
+  "t": "img",
+  "path": "/home/user/pavex-backend/docs/report/figures/uc17-act.png",
+  "w": 15,
+  "maxh": 21,
   "caption": "Hình 4.8. Sơ đồ hoạt động – Tạo đơn hàng"
  },
  {
-  "t": "placeholder",
-  "text": "[Chèn sơ đồ tuần tự: Tạo đơn hàng]",
+  "t": "img",
+  "path": "/home/user/pavex-backend/docs/report/figures/uc17-seq.png",
+  "w": 16,
+  "maxh": 20,
   "caption": "Hình 4.9. Sơ đồ tuần tự – Tạo đơn hàng"
  },
  {
@@ -1788,13 +1848,17 @@
   }
  },
  {
-  "t": "placeholder",
-  "text": "[Chèn sơ đồ hoạt động: Tra cứu và theo dõi vận đơn]",
+  "t": "img",
+  "path": "/home/user/pavex-backend/docs/report/figures/uc14-act.png",
+  "w": 15,
+  "maxh": 21,
   "caption": "Hình 4.10. Sơ đồ hoạt động – Tra cứu và theo dõi vận đơn"
  },
  {
-  "t": "placeholder",
-  "text": "[Chèn sơ đồ tuần tự: Tra cứu và theo dõi vận đơn]",
+  "t": "img",
+  "path": "/home/user/pavex-backend/docs/report/figures/uc14-seq.png",
+  "w": 16,
+  "maxh": 20,
   "caption": "Hình 4.11. Sơ đồ tuần tự – Tra cứu và theo dõi vận đơn"
  },
  {
@@ -2017,13 +2081,17 @@
   }
  },
  {
-  "t": "placeholder",
-  "text": "[Chèn sơ đồ hoạt động: Duyệt và quản lý cửa hàng]",
+  "t": "img",
+  "path": "/home/user/pavex-backend/docs/report/figures/uc13-act.png",
+  "w": 15,
+  "maxh": 21,
   "caption": "Hình 4.12. Sơ đồ hoạt động – Duyệt và quản lý cửa hàng"
  },
  {
-  "t": "placeholder",
-  "text": "[Chèn sơ đồ tuần tự: Duyệt và quản lý cửa hàng]",
+  "t": "img",
+  "path": "/home/user/pavex-backend/docs/report/figures/uc13-seq.png",
+  "w": 16,
+  "maxh": 20,
   "caption": "Hình 4.13. Sơ đồ tuần tự – Duyệt và quản lý cửa hàng"
  },
  {
@@ -2165,7 +2233,7 @@
      ],
      [
       "entity",
-      "WorkforceMember / Availability"
+      "WorkforceMember"
      ],
      [
       "system",
@@ -2256,13 +2324,17 @@
   }
  },
  {
-  "t": "placeholder",
-  "text": "[Chèn sơ đồ hoạt động: Điều phối công việc]",
+  "t": "img",
+  "path": "/home/user/pavex-backend/docs/report/figures/uc31-act.png",
+  "w": 15,
+  "maxh": 21,
   "caption": "Hình 4.14. Sơ đồ hoạt động – Điều phối công việc"
  },
  {
-  "t": "placeholder",
-  "text": "[Chèn sơ đồ tuần tự: Điều phối công việc]",
+  "t": "img",
+  "path": "/home/user/pavex-backend/docs/report/figures/uc31-seq.png",
+  "w": 16,
+  "maxh": 20,
   "caption": "Hình 4.15. Sơ đồ tuần tự – Điều phối công việc"
  },
  {
@@ -2439,6 +2511,12 @@
       "checkModifiable(shipmentId)"
      ],
      [
+      5,
+      2,
+      "modifiable",
+      "ret"
+     ],
+     [
       2,
       3,
       "update(APPROVED, reviewedBy, reviewedAt)"
@@ -2478,8 +2556,8 @@
     ],
     "frags": [
      [
-      6,
       7,
+      8,
       "opt",
       "[routingRequired = true]"
      ]
@@ -2488,13 +2566,17 @@
   }
  },
  {
-  "t": "placeholder",
-  "text": "[Chèn sơ đồ hoạt động: Xử lý yêu cầu ngoại lệ]",
+  "t": "img",
+  "path": "/home/user/pavex-backend/docs/report/figures/uc40-act.png",
+  "w": 15,
+  "maxh": 21,
   "caption": "Hình 4.16. Sơ đồ hoạt động – Xử lý yêu cầu ngoại lệ"
  },
  {
-  "t": "placeholder",
-  "text": "[Chèn sơ đồ tuần tự: Xử lý yêu cầu ngoại lệ]",
+  "t": "img",
+  "path": "/home/user/pavex-backend/docs/report/figures/uc40-seq.png",
+  "w": 16,
+  "maxh": 20,
   "caption": "Hình 4.17. Sơ đồ tuần tự – Xử lý yêu cầu ngoại lệ"
  },
  {
@@ -2725,13 +2807,17 @@
   }
  },
  {
-  "t": "placeholder",
-  "text": "[Chèn sơ đồ hoạt động: Quản lý ca làm việc]",
+  "t": "img",
+  "path": "/home/user/pavex-backend/docs/report/figures/uc25-act.png",
+  "w": 15,
+  "maxh": 21,
   "caption": "Hình 4.18. Sơ đồ hoạt động – Quản lý ca làm việc"
  },
  {
-  "t": "placeholder",
-  "text": "[Chèn sơ đồ tuần tự: Quản lý ca làm việc]",
+  "t": "img",
+  "path": "/home/user/pavex-backend/docs/report/figures/uc25-seq.png",
+  "w": 16,
+  "maxh": 20,
   "caption": "Hình 4.19. Sơ đồ tuần tự – Quản lý ca làm việc"
  },
  {
@@ -2966,13 +3052,17 @@
   }
  },
  {
-  "t": "placeholder",
-  "text": "[Chèn sơ đồ hoạt động: Quản lý người dùng và phân quyền]",
+  "t": "img",
+  "path": "/home/user/pavex-backend/docs/report/figures/uc06-act.png",
+  "w": 15,
+  "maxh": 21,
   "caption": "Hình 4.20. Sơ đồ hoạt động – Quản lý người dùng và phân quyền"
  },
  {
-  "t": "placeholder",
-  "text": "[Chèn sơ đồ tuần tự: Quản lý người dùng và phân quyền]",
+  "t": "img",
+  "path": "/home/user/pavex-backend/docs/report/figures/uc06-seq.png",
+  "w": 16,
+  "maxh": 20,
   "caption": "Hình 4.21. Sơ đồ tuần tự – Quản lý người dùng và phân quyền"
  },
  {
@@ -3249,13 +3339,17 @@
   }
  },
  {
-  "t": "placeholder",
-  "text": "[Chèn sơ đồ hoạt động: Thực hiện công việc và quét kiện hàng]",
+  "t": "img",
+  "path": "/home/user/pavex-backend/docs/report/figures/uc33-act.png",
+  "w": 15,
+  "maxh": 21,
   "caption": "Hình 4.22. Sơ đồ hoạt động – Thực hiện công việc và quét kiện hàng"
  },
  {
-  "t": "placeholder",
-  "text": "[Chèn sơ đồ tuần tự: Thực hiện công việc và quét kiện hàng]",
+  "t": "img",
+  "path": "/home/user/pavex-backend/docs/report/figures/uc33-seq.png",
+  "w": 16,
+  "maxh": 20,
   "caption": "Hình 4.23. Sơ đồ tuần tự – Thực hiện công việc và quét kiện hàng"
  },
  {
@@ -3393,7 +3487,7 @@
      ],
      [
       "entity",
-      "Shipment / Parcel"
+      "Shipment"
      ],
      [
       "entity",
@@ -3483,13 +3577,17 @@
   }
  },
  {
-  "t": "placeholder",
-  "text": "[Chèn sơ đồ hoạt động: Ghi nhận kết quả giao hàng]",
+  "t": "img",
+  "path": "/home/user/pavex-backend/docs/report/figures/uc35-act.png",
+  "w": 15,
+  "maxh": 21,
   "caption": "Hình 4.24. Sơ đồ hoạt động – Ghi nhận kết quả giao hàng"
  },
  {
-  "t": "placeholder",
-  "text": "[Chèn sơ đồ tuần tự: Ghi nhận kết quả giao hàng]",
+  "t": "img",
+  "path": "/home/user/pavex-backend/docs/report/figures/uc35-seq.png",
+  "w": 16,
+  "maxh": 20,
   "caption": "Hình 4.25. Sơ đồ tuần tự – Ghi nhận kết quả giao hàng"
  },
  {
@@ -3505,11 +3603,15 @@
   "text": "Mô hình miền được thiết kế theo DDD gồm 8 package (bounded context): Identity & Access, Partner, Network, Pricing, Shipment, Exception Handling, Workforce & Operations và Shared Kernel. Quan hệ giữa các entity được biểu diễn bằng association có tên vai trò và bội số; composition (hình thoi đặc) thể hiện phần tử sống và mất cùng aggregate."
  },
  {
+  "t": "p",
+  "text": "Sơ đồ package dưới đây thể hiện các bounded context, aggregate root của từng context và quan hệ phụ thuộc «use» giữa chúng. Phụ thuộc luôn đi từ context hạ nguồn (downstream) về context thượng nguồn (upstream): Shipment dùng Partner, Pricing và Network; Workforce & Operations và Exception Handling dùng Shipment và Network; mọi context dùng các value object của Shared Kernel."
+ },
+ {
   "t": "img",
-  "path": "/home/user/pavex-backend/docs/report/figures/domain-entities.png",
-  "w": 16,
-  "maxh": 22,
-  "caption": "Hình 4.26. Mô hình miền – các entity và aggregate root"
+  "path": "/home/user/pavex-backend/docs/report/figures/domain-packages.png",
+  "w": 15.5,
+  "maxh": 21,
+  "caption": "Hình 4.26. Sơ đồ package các bounded context của PAVEX"
  },
  {
   "t": "caption",
@@ -3573,7 +3675,159 @@
  },
  {
   "t": "h3",
-  "text": "4.3.2. Kiến trúc tổng thể"
+  "text": "4.3.2. Sơ đồ lớp theo bounded context"
+ },
+ {
+  "t": "p",
+  "text": "Mỗi bounded context được vẽ thành một sơ đồ lớp (khung “class <tên context>”) theo các quy ước sau:"
+ },
+ {
+  "t": "bullets",
+  "items": [
+   "Lớp có 3 ngăn: tên kèm stereotype DDD («aggregate root», «entity», «value object», «enumeration»), thuộc tính dạng -tên : Kiểu [bội số] và phương thức dạng +tên(tham số) : Kiểu trả về. Phương thức được rút ra từ các use case và các trạng thái của aggregate (ví dụ Merchant.verify(), OperationalAssignment.accept()).",
+   "Association ghi tên vai trò và bội số ở hai đầu; composition (hình thoi đặc) ở phía aggregate root sở hữu vòng đời của phần tử; aggregation (hình thoi rỗng) cho quan hệ gom nhóm lỏng.",
+   "Lớp thuộc context khác được vẽ thu gọn (nền xám) với tên đầy đủ Package::Lớp; quan hệ giữa hai context chỉ vẽ ở sơ đồ của context hạ nguồn.",
+   "Value object và enumeration được dùng làm kiểu thuộc tính nên được liệt kê bên dưới mà không nối đường."
+  ]
+ },
+ {
+  "t": "h4",
+  "text": "Sơ đồ lớp – Identity & Access"
+ },
+ {
+  "t": "p",
+  "text": "Tài khoản đăng nhập (UserAccount) sở hữu hồ sơ và sổ địa chỉ; vai trò (Role) gom các quyền (Permission) để phân quyền RBAC."
+ },
+ {
+  "t": "img",
+  "path": "/home/user/pavex-backend/docs/report/figures/class-identity.png",
+  "w": 16,
+  "maxh": 21.5,
+  "caption": "Hình 4.27. Sơ đồ lớp – Identity & Access"
+ },
+ {
+  "t": "h4",
+  "text": "Sơ đồ lớp – Partner"
+ },
+ {
+  "t": "p",
+  "text": "Cửa hàng (Merchant) do một tài khoản khách hàng sở hữu, có vòng đời xác minh và danh sách điểm lấy hàng."
+ },
+ {
+  "t": "img",
+  "path": "/home/user/pavex-backend/docs/report/figures/class-partner.png",
+  "w": 16,
+  "maxh": 21.5,
+  "caption": "Hình 4.28. Sơ đồ lớp – Partner"
+ },
+ {
+  "t": "h4",
+  "text": "Sơ đồ lớp – Network"
+ },
+ {
+  "t": "p",
+  "text": "Mạng lưới vùng – khu vực phục vụ – hub, tuyến giữa hai hub với lịch chạy, mẫu lộ trình và giữ chỗ tải trên từng chuyến."
+ },
+ {
+  "t": "img",
+  "path": "/home/user/pavex-backend/docs/report/figures/class-network.png",
+  "w": 16,
+  "maxh": 21.5,
+  "caption": "Hình 4.29. Sơ đồ lớp – Network"
+ },
+ {
+  "t": "h4",
+  "text": "Sơ đồ lớp – Pricing"
+ },
+ {
+  "t": "p",
+  "text": "Bảng giá có phiên bản (RatePlan) gồm các quy tắc giá; báo giá (QuoteRequest) lưu kiện hàng và các phương án giá có thời hạn."
+ },
+ {
+  "t": "img",
+  "path": "/home/user/pavex-backend/docs/report/figures/class-pricing.png",
+  "w": 16,
+  "maxh": 21.5,
+  "caption": "Hình 4.30. Sơ đồ lớp – Pricing"
+ },
+ {
+  "t": "h4",
+  "text": "Sơ đồ lớp – Shipment"
+ },
+ {
+  "t": "p",
+  "text": "Vận đơn là aggregate root sở hữu kiện hàng, sự kiện hành trình và lần giao; tham chiếu cửa hàng, bảng giá, báo giá, hub và giữ chỗ tải."
+ },
+ {
+  "t": "img",
+  "path": "/home/user/pavex-backend/docs/report/figures/class-shipment.png",
+  "w": 16,
+  "maxh": 21.5,
+  "caption": "Hình 4.31. Sơ đồ lớp – Shipment"
+ },
+ {
+  "t": "h4",
+  "text": "Sơ đồ lớp – Shipment – value object và enumeration"
+ },
+ {
+  "t": "p",
+  "text": "Các kiểu dữ liệu của context Shipment: địa chỉ chụp tại thời điểm tạo đơn, điểm đầu/cuối, trạng thái tạm giữ và các tập giá trị trạng thái."
+ },
+ {
+  "t": "img",
+  "path": "/home/user/pavex-backend/docs/report/figures/class-shipment-types.png",
+  "w": 16,
+  "maxh": 21.5,
+  "caption": "Hình 4.32. Sơ đồ lớp – Shipment – value object và enumeration"
+ },
+ {
+  "t": "h4",
+  "text": "Sơ đồ lớp – Exception Handling"
+ },
+ {
+  "t": "p",
+  "text": "Yêu cầu ngoại lệ (hoàn, chuyển tiếp, giao lại, hủy), hồ sơ sự cố và điều chỉnh khối lượng, đều tham chiếu vận đơn, kiện và hub."
+ },
+ {
+  "t": "img",
+  "path": "/home/user/pavex-backend/docs/report/figures/class-exception.png",
+  "w": 16,
+  "maxh": 21.5,
+  "caption": "Hình 4.33. Sơ đồ lớp – Exception Handling"
+ },
+ {
+  "t": "h4",
+  "text": "Sơ đồ lớp – Workforce & Operations"
+ },
+ {
+  "t": "p",
+  "text": "Nhân sự vận hành, thành viên hub, trạng thái sẵn sàng, ca làm việc và công việc vận hành sinh ra từ từng chặng của vận đơn."
+ },
+ {
+  "t": "img",
+  "path": "/home/user/pavex-backend/docs/report/figures/class-workforce.png",
+  "w": 16,
+  "maxh": 21.5,
+  "caption": "Hình 4.34. Sơ đồ lớp – Workforce & Operations"
+ },
+ {
+  "t": "h4",
+  "text": "Sơ đồ lớp – Shared Kernel"
+ },
+ {
+  "t": "p",
+  "text": "Các value object dùng chung giữa các context."
+ },
+ {
+  "t": "img",
+  "path": "/home/user/pavex-backend/docs/report/figures/class-shared.png",
+  "w": 16,
+  "maxh": 21.5,
+  "caption": "Hình 4.35. Sơ đồ lớp – Shared Kernel"
+ },
+ {
+  "t": "h3",
+  "text": "4.3.3. Kiến trúc tổng thể"
  },
  {
   "t": "p",
@@ -4088,7 +4342,7 @@
  {
   "t": "bullets",
   "items": [
-   "Hoàn thành phân tích và thiết kế: sơ đồ use case tổng thể (13 tác nhân, 41 use case), mô hình miền theo DDD (8 bounded context) và đặc tả 12 use case cốt lõi.",
+   "Hoàn thành phân tích và thiết kế theo UML 2.5: sơ đồ use case tổng thể (13 tác nhân, 41 use case), đặc tả 12 use case cốt lõi kèm sơ đồ hoạt động và sơ đồ tuần tự, sơ đồ package và 9 sơ đồ lớp của mô hình miền theo DDD (8 bounded context).",
    "Hiện thực cổng quản trị theo mô hình BFF trên Next.js: đăng nhập, đăng xuất, tự làm mới phiên, menu theo quyền; tra cứu và lọc người dùng; xem vai trò và quyền.",
    "Tích hợp với Identity API của backend: xác thực JWT, refresh token, phân quyền RBAC; dữ liệu lưu trên PostgreSQL.",
    "Thiết kế cơ chế tính cước có phiên bản, định tuyến với giữ chỗ tải và điều phối công việc theo ca để làm cơ sở hiện thực các giai đoạn sau.",

@@ -1,0 +1,233 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1738" height="1148" viewBox="0 0 1738 1148" font-family="DejaVu Sans, Arial, sans-serif" font-size="11">
+<defs><marker id="open" markerWidth="12" markerHeight="12" refX="11" refY="6" orient="auto"><path d="M0,0 L11,6 L0,12" fill="none" stroke="#333"/></marker><marker id="tri" markerWidth="16" markerHeight="16" refX="15" refY="8" orient="auto"><path d="M0,0 L15,8 L0,16 Z" fill="#fff" stroke="#333"/></marker><marker id="dia" markerWidth="20" markerHeight="12" refX="1" refY="6" orient="auto"><path d="M1,6 L10,1 L19,6 L10,11 Z" fill="#333" stroke="#333"/></marker><marker id="odia" markerWidth="20" markerHeight="12" refX="1" refY="6" orient="auto"><path d="M1,6 L10,1 L19,6 L10,11 Z" fill="#fff" stroke="#333"/></marker></defs>
+<rect width="1738" height="1148" fill="#fff"/>
+<rect x="1" y="1" width="1736" height="1146" fill="none" stroke="#333" stroke-width="1.3"/>
+<path d="M1,1 L210.79999999999998,1 L210.79999999999998,15 L200.79999999999998,25 L1,25 Z" fill="#fff" stroke="#333" stroke-width="1.3"/>
+<text x="8" y="18" font-size="12"><tspan font-weight="bold">class</tspan> Workforce &amp; Operations</text>
+<polyline points="213,79 461,79" fill="none" stroke="#333"/>
+<text x="227" y="92" fill="#222" font-size="9.5" text-anchor="start">account</text>
+<text x="227" y="74" fill="#000" font-size="9.5" text-anchor="start">1</text>
+<text x="447" y="74" fill="#222" font-size="9.5" text-anchor="end">workforceMember</text>
+<text x="447" y="92" fill="#000" font-size="9.5" text-anchor="end">0..1</text>
+<polyline points="844,92 994,92" fill="none" stroke="#333" marker-start="url(#dia)"/>
+<text x="858" y="105" fill="#222" font-size="9.5" text-anchor="start">member</text>
+<text x="858" y="87" fill="#000" font-size="9.5" text-anchor="start">1</text>
+<text x="980" y="87" fill="#222" font-size="9.5" text-anchor="end">memberships</text>
+<text x="980" y="105" fill="#000" font-size="9.5" text-anchor="end">0..*</text>
+<polyline points="1069,287 1069,197" fill="none" stroke="#333"/>
+<text x="1075" y="277" fill="#222" font-size="9.5" text-anchor="start">hub</text>
+<text x="1063" y="277" fill="#000" font-size="9.5" text-anchor="end">1</text>
+<text x="1063" y="215" fill="#222" font-size="9.5" text-anchor="end">memberships</text>
+<text x="1075" y="215" fill="#000" font-size="9.5" text-anchor="start">0..*</text>
+<polyline points="461,227 311,227" fill="none" stroke="#333" marker-start="url(#dia)"/>
+<text x="447" y="222" fill="#222" font-size="9.5" text-anchor="end">member</text>
+<text x="447" y="240" fill="#000" font-size="9.5" text-anchor="end">1</text>
+<text x="325" y="240" fill="#222" font-size="9.5" text-anchor="start">availability</text>
+<text x="325" y="222" fill="#000" font-size="9.5" text-anchor="start">1</text>
+<polyline points="1144,316 1434,316" fill="none" stroke="#333"/>
+<text x="1158" y="329" fill="#222" font-size="9.5" text-anchor="start">hub</text>
+<text x="1158" y="311" fill="#000" font-size="9.5" text-anchor="start">1</text>
+<text x="1420" y="311" fill="#222" font-size="9.5" text-anchor="end">shifts</text>
+<text x="1420" y="329" fill="#000" font-size="9.5" text-anchor="end">0..*</text>
+<polyline points="1434,255 1187,255 1187,435" fill="none" stroke="#333" marker-start="url(#dia)"/>
+<text x="1420" y="250" fill="#222" font-size="9.5" text-anchor="end">shift</text>
+<text x="1420" y="268" fill="#000" font-size="9.5" text-anchor="end">1</text>
+<text x="1193" y="425" fill="#222" font-size="9.5" text-anchor="start">assignments</text>
+<text x="1181" y="425" fill="#000" font-size="9.5" text-anchor="end">0..*</text>
+<polyline points="780,256 780,538 994,538" fill="none" stroke="#333"/>
+<text x="774" y="274" fill="#222" font-size="9.5" text-anchor="end">member</text>
+<text x="786" y="274" fill="#000" font-size="9.5" text-anchor="start">1</text>
+<text x="980" y="533" fill="#222" font-size="9.5" text-anchor="end">shiftAssignments</text>
+<text x="980" y="551" fill="#000" font-size="9.5" text-anchor="end">0..*</text>
+<polyline points="193,430 461,430" fill="none" stroke="#333"/>
+<text x="207" y="443" fill="#222" font-size="9.5" text-anchor="start">shipment</text>
+<text x="207" y="425" fill="#000" font-size="9.5" text-anchor="start">1</text>
+<text x="447" y="425" fill="#222" font-size="9.5" text-anchor="end">assignments {ordered}</text>
+<text x="447" y="443" fill="#000" font-size="9.5" text-anchor="end">0..*</text>
+<polyline points="994,330 715,330 715,346" fill="none" stroke="#333"/>
+<text x="980" y="326" fill="#222" font-size="9.5" text-anchor="end">hub</text>
+<text x="980" y="344" fill="#000" font-size="9.5" text-anchor="end">1</text>
+<text x="721" y="336" fill="#222" font-size="9.5" text-anchor="start">assignments</text>
+<text x="709" y="336" fill="#000" font-size="9.5" text-anchor="end">0..*</text>
+<polyline points="620,256 620,346" fill="none" stroke="#333"/>
+<text x="614" y="274" fill="#222" font-size="9.5" text-anchor="end">assignee</text>
+<text x="626" y="274" fill="#000" font-size="9.5" text-anchor="start">0..1</text>
+<text x="626" y="314" fill="#222" font-size="9.5" text-anchor="start">assignments</text>
+<text x="614" y="314" fill="#000" font-size="9.5" text-anchor="end">0..*</text>
+<polyline points="461,578 190,578" fill="none" stroke="#333"/>
+<text x="447" y="573" fill="#222" font-size="9.5" text-anchor="end">currentAssignment</text>
+<text x="447" y="591" fill="#000" font-size="9.5" text-anchor="end">0..1</text>
+<text x="204" y="591" fill="#222" font-size="9.5" text-anchor="start">parcels</text>
+<text x="204" y="573" fill="#000" font-size="9.5" text-anchor="start">0..*</text>
+<rect x="40" y="50" width="173" height="58" fill="#f2f2f2" stroke="#333"/>
+<line x1="40" y1="96" x2="213" y2="96" stroke="#333"/>
+<text x="126.5" y="68" text-anchor="middle">«aggregate root»</text>
+<text x="126.5" y="85" text-anchor="middle" font-weight="bold">Identity::UserAccount</text>
+<rect x="40" y="198" width="271" height="113" fill="#e3f2fd" stroke="#333"/>
+<line x1="40" y1="244" x2="311" y2="244" stroke="#333"/>
+<text x="175.5" y="216" text-anchor="middle">«entity»</text>
+<text x="175.5" y="233" text-anchor="middle" font-weight="bold">WorkforceAvailability</text>
+<text x="48" y="262">-status : WorkforceAvailabilityStatus</text>
+<text x="48" y="279">-maxConcurrentAssignments : Int</text>
+<text x="48" y="296">-updatedAt : Instant</text>
+<rect x="40" y="401" width="153" height="58" fill="#f2f2f2" stroke="#333"/>
+<line x1="40" y1="447" x2="193" y2="447" stroke="#333"/>
+<text x="116.5" y="419" text-anchor="middle">«aggregate root»</text>
+<text x="116.5" y="436" text-anchor="middle" font-weight="bold">Shipment::Shipment</text>
+<rect x="40" y="549" width="150" height="58" fill="#f2f2f2" stroke="#333"/>
+<line x1="40" y1="595" x2="190" y2="595" stroke="#333"/>
+<text x="115.0" y="567" text-anchor="middle">«entity»</text>
+<text x="115.0" y="584" text-anchor="middle" font-weight="bold">Shipment::Parcel</text>
+<rect x="461" y="50" width="383" height="206" fill="#e3f2fd" stroke="#333"/>
+<line x1="461" y1="96" x2="844" y2="96" stroke="#333"/>
+<line x1="461" y1="180" x2="844" y2="180" stroke="#333"/>
+<text x="469" y="194">+joinHub(hub : Hub, primary : Boolean)</text>
+<text x="469" y="211">+leaveHub(hub : Hub)</text>
+<text x="469" y="228">+setAvailability(status : WorkforceAvailabilityStatus)</text>
+<text x="469" y="245">+canTakeAssignment() : Boolean</text>
+<text x="652.5" y="68" text-anchor="middle">«aggregate root»</text>
+<text x="652.5" y="85" text-anchor="middle" font-weight="bold">WorkforceMember</text>
+<text x="469" y="114">-id : UUID</text>
+<text x="469" y="131">-employeeCode : String</text>
+<text x="469" y="148">-kind : WorkforceMemberKind</text>
+<text x="469" y="165">-status : WorkforceMemberStatus</text>
+<rect x="461" y="346" width="317" height="461" fill="#e3f2fd" stroke="#333"/>
+<line x1="461" y1="392" x2="778" y2="392" stroke="#333"/>
+<line x1="461" y1="697" x2="778" y2="697" stroke="#333"/>
+<text x="469" y="711">+assign(member : WorkforceMember, by : UUID)</text>
+<text x="469" y="728">+accept()</text>
+<text x="469" y="745">+start()</text>
+<text x="469" y="762">+complete()</text>
+<text x="469" y="779">+fail(note : String)</text>
+<text x="469" y="796">+cancel(reason : String)</text>
+<text x="619.5" y="364" text-anchor="middle">«aggregate root»</text>
+<text x="619.5" y="381" text-anchor="middle" font-weight="bold">OperationalAssignment</text>
+<text x="469" y="410">-id : UUID</text>
+<text x="469" y="427">-code : String</text>
+<text x="469" y="444">-sequence : Int</text>
+<text x="469" y="461">-routeLegId : UUID [0..1]</text>
+<text x="469" y="478">-type : OperationalAssignmentType</text>
+<text x="469" y="495">-requiredKind : WorkforceMemberKind</text>
+<text x="469" y="512">-status : OperationalAssignmentStatus</text>
+<text x="469" y="529">-priority : Int</text>
+<text x="469" y="546">-assignedByUserId : UUID [0..1]</text>
+<text x="469" y="563">-assignedAt : Instant [0..1]</text>
+<text x="469" y="580">-acceptedAt : Instant [0..1]</text>
+<text x="469" y="597">-startedAt : Instant [0..1]</text>
+<text x="469" y="614">-completedAt : Instant [0..1]</text>
+<text x="469" y="631">-cancelledAt : Instant [0..1]</text>
+<text x="469" y="648">-resolutionNote : String [0..1]</text>
+<text x="469" y="665">-lastActorUserId : UUID [0..1]</text>
+<text x="469" y="682">-createdAt : Instant</text>
+<rect x="994" y="50" width="224" height="147" fill="#e3f2fd" stroke="#333"/>
+<line x1="994" y1="96" x2="1218" y2="96" stroke="#333"/>
+<text x="1106.0" y="68" text-anchor="middle">«entity»</text>
+<text x="1106.0" y="85" text-anchor="middle" font-weight="bold">HubMembership</text>
+<text x="1002" y="114">-id : UUID</text>
+<text x="1002" y="131">-isPrimary : Boolean</text>
+<text x="1002" y="148">-isActive : Boolean</text>
+<text x="1002" y="165">-assignedAt : Instant</text>
+<text x="1002" y="182">-unassignedAt : Instant [0..1]</text>
+<rect x="994" y="287" width="150" height="58" fill="#f2f2f2" stroke="#333"/>
+<line x1="994" y1="333" x2="1144" y2="333" stroke="#333"/>
+<text x="1069.0" y="305" text-anchor="middle">«aggregate root»</text>
+<text x="1069.0" y="322" text-anchor="middle" font-weight="bold">Network::Hub</text>
+<rect x="994" y="435" width="290" height="308" fill="#e3f2fd" stroke="#333"/>
+<line x1="994" y1="481" x2="1284" y2="481" stroke="#333"/>
+<line x1="994" y1="667" x2="1284" y2="667" stroke="#333"/>
+<text x="1002" y="681">+checkIn(at : Instant)</text>
+<text x="1002" y="698">+checkOut(at : Instant)</text>
+<text x="1002" y="715">+markAbsent()</text>
+<text x="1002" y="732">+cancel(reason : String)</text>
+<text x="1139.0" y="453" text-anchor="middle">«entity»</text>
+<text x="1139.0" y="470" text-anchor="middle" font-weight="bold">WorkforceShiftAssignment</text>
+<text x="1002" y="499">-id : UUID</text>
+<text x="1002" y="516">-status : WorkforceShiftAssignmentStatus</text>
+<text x="1002" y="533">-assignedByUserId : UUID</text>
+<text x="1002" y="550">-statusChangedByUserId : UUID</text>
+<text x="1002" y="567">-assignedAt : Instant</text>
+<text x="1002" y="584">-checkedInAt : Instant [0..1]</text>
+<text x="1002" y="601">-checkedOutAt : Instant [0..1]</text>
+<text x="1002" y="618">-markedAbsentAt : Instant [0..1]</text>
+<text x="1002" y="635">-cancelledAt : Instant [0..1]</text>
+<text x="1002" y="652">-note : String [0..1]</text>
+<rect x="1434" y="50" width="244" height="308" fill="#e3f2fd" stroke="#333"/>
+<line x1="1434" y1="96" x2="1678" y2="96" stroke="#333"/>
+<line x1="1434" y1="282" x2="1678" y2="282" stroke="#333"/>
+<text x="1442" y="296">+assign(member : WorkforceMember)</text>
+<text x="1442" y="313">+start()</text>
+<text x="1442" y="330">+complete()</text>
+<text x="1442" y="347">+cancel()</text>
+<text x="1556.0" y="68" text-anchor="middle">«aggregate root»</text>
+<text x="1556.0" y="85" text-anchor="middle" font-weight="bold">WorkShift</text>
+<text x="1442" y="114">-id : UUID</text>
+<text x="1442" y="131">-code : String</text>
+<text x="1442" y="148">-name : String</text>
+<text x="1442" y="165">-startsAt : Instant</text>
+<text x="1442" y="182">-endsAt : Instant</text>
+<text x="1442" y="199">-status : WorkShiftStatus</text>
+<text x="1442" y="216">-createdByUserId : UUID</text>
+<text x="1442" y="233">-cancelledByUserId : UUID [0..1]</text>
+<text x="1442" y="250">-cancelReason : String [0..1]</text>
+<text x="1442" y="267">-cancelledAt : Instant [0..1]</text>
+<rect x="40" y="907" width="160" height="113" fill="#fff6d5" stroke="#333"/>
+<line x1="40" y1="953" x2="200" y2="953" stroke="#333"/>
+<text x="120.0" y="925" text-anchor="middle">«enumeration»</text>
+<text x="120.0" y="942" text-anchor="middle" font-weight="bold">WorkforceMemberKind</text>
+<text x="48" y="971">COURIER</text>
+<text x="48" y="988">LINE_HAUL_DRIVER</text>
+<text x="48" y="1005">WAREHOUSE_OPERATOR</text>
+<rect x="230" y="907" width="173" height="113" fill="#fff6d5" stroke="#333"/>
+<line x1="230" y1="953" x2="403" y2="953" stroke="#333"/>
+<text x="316.5" y="925" text-anchor="middle">«enumeration»</text>
+<text x="316.5" y="942" text-anchor="middle" font-weight="bold">WorkforceMemberStatus</text>
+<text x="238" y="971">ACTIVE</text>
+<text x="238" y="988">ON_LEAVE</text>
+<text x="238" y="1005">INACTIVE</text>
+<rect x="433" y="907" width="213" height="113" fill="#fff6d5" stroke="#333"/>
+<line x1="433" y1="953" x2="646" y2="953" stroke="#333"/>
+<text x="539.5" y="925" text-anchor="middle">«enumeration»</text>
+<text x="539.5" y="942" text-anchor="middle" font-weight="bold">WorkforceAvailabilityStatus</text>
+<text x="441" y="971">AVAILABLE</text>
+<text x="441" y="988">BUSY</text>
+<text x="441" y="1005">OFFLINE</text>
+<rect x="676" y="907" width="150" height="130" fill="#fff6d5" stroke="#333"/>
+<line x1="676" y1="953" x2="826" y2="953" stroke="#333"/>
+<text x="751.0" y="925" text-anchor="middle">«enumeration»</text>
+<text x="751.0" y="942" text-anchor="middle" font-weight="bold">WorkShiftStatus</text>
+<text x="684" y="971">SCHEDULED</text>
+<text x="684" y="988">IN_PROGRESS</text>
+<text x="684" y="1005">COMPLETED</text>
+<text x="684" y="1022">CANCELLED</text>
+<rect x="856" y="907" width="232" height="147" fill="#fff6d5" stroke="#333"/>
+<line x1="856" y1="953" x2="1088" y2="953" stroke="#333"/>
+<text x="972.0" y="925" text-anchor="middle">«enumeration»</text>
+<text x="972.0" y="942" text-anchor="middle" font-weight="bold">WorkforceShiftAssignmentStatus</text>
+<text x="864" y="971">ASSIGNED</text>
+<text x="864" y="988">CHECKED_IN</text>
+<text x="864" y="1005">CHECKED_OUT</text>
+<text x="864" y="1022">ABSENT</text>
+<text x="864" y="1039">CANCELLED</text>
+<rect x="1118" y="907" width="199" height="181" fill="#fff6d5" stroke="#333"/>
+<line x1="1118" y1="953" x2="1317" y2="953" stroke="#333"/>
+<text x="1217.5" y="925" text-anchor="middle">«enumeration»</text>
+<text x="1217.5" y="942" text-anchor="middle" font-weight="bold">OperationalAssignmentType</text>
+<text x="1126" y="971">PICKUP</text>
+<text x="1126" y="988">HUB_INBOUND</text>
+<text x="1126" y="1005">SORTING</text>
+<text x="1126" y="1022">LINE_HAUL</text>
+<text x="1126" y="1039">HUB_OUTBOUND</text>
+<text x="1126" y="1056">LAST_MILE_DELIVERY</text>
+<text x="1126" y="1073">RETURN_TO_SENDER</text>
+<rect x="1347" y="907" width="213" height="181" fill="#fff6d5" stroke="#333"/>
+<line x1="1347" y1="953" x2="1560" y2="953" stroke="#333"/>
+<text x="1453.5" y="925" text-anchor="middle">«enumeration»</text>
+<text x="1453.5" y="942" text-anchor="middle" font-weight="bold">OperationalAssignmentStatus</text>
+<text x="1355" y="971">PENDING</text>
+<text x="1355" y="988">ASSIGNED</text>
+<text x="1355" y="1005">ACCEPTED</text>
+<text x="1355" y="1022">IN_PROGRESS</text>
+<text x="1355" y="1039">COMPLETED</text>
+<text x="1355" y="1056">FAILED</text>
+<text x="1355" y="1073">CANCELLED</text>
+</svg>

@@ -43,7 +43,7 @@ CORE = [
             ("S", "Chuyển đến trang chính theo vai trò"),
         ],
         seq=dict(
-            parts=[("actor", U), ("boundary", "GD_DangNhap"), ("control", "CTRL_XacThuc"), ("entity", "UserAccount"), ("entity", "Role / Permission")],
+            parts=[("actor", U), ("boundary", "GD_DangNhap"), ("control", "CTRL_XacThuc"), ("entity", "UserAccount"), ("entity", "Role")],
             msgs=[
                 (0, 1, "Nhập email, mật khẩu, nhấn Đăng nhập"),
                 (1, 2, "login(email, password)"),
@@ -154,21 +154,24 @@ CORE = [
             ("S", "Lưu báo giá, hiển thị các phương án dịch vụ"),
         ],
         seq=dict(
-            parts=[("actor", "Public User"), ("boundary", "GD_TinhCuoc"), ("control", "CTRL_BaoGia"), ("entity", "ServiceAreaCoverage"), ("entity", "RatePlan / RateRule"), ("entity", "QuoteRequest")],
+            parts=[("actor", "Public User"), ("boundary", "GD_TinhCuoc"), ("control", "CTRL_BaoGia"), ("entity", "ServiceAreaCoverage"), ("entity", "RatePlan"), ("entity", "QuoteRequest")],
             msgs=[
                 (0, 1, "Nhập thông tin, nhấn Tính cước"),
                 (1, 2, "createQuote(origin, destination, parcels, cod, declaredValue)"),
                 (2, 2, "Kiểm tra giới hạn nhận gửi"),
                 (2, 3, "resolve(province, ward) cho điểm gửi và nhận"),
                 (3, 2, "serviceArea, primaryHub, coverageTier", "ret"),
-                (2, 4, "findActivePlan(); rules(zone)"),
+                (2, 4, "findActivePlan(); findRule(serviceLevel, zone)"),
                 (4, 2, "ratePlan, rateRules", "ret"),
                 (2, 2, "Tính khối lượng tính cước, phí, phụ phí"),
                 (2, 5, "save(quoteRequest, options, expiresAt)"),
+                (5, 2, "quoteId", "ret"),
                 (2, 1, "quoteId, options[]", "ret"),
                 (1, 0, "Hiển thị bảng phương án và hạn báo giá"),
+                (2, 1, "422 – ngoài vùng phục vụ", "ret"),
+                (1, 0, "Thông báo chưa hỗ trợ khu vực"),
             ],
-            frags=[(3, 4, "opt", "[địa chỉ ngoài vùng phục vụ → báo lỗi]")],
+            frags=[(5, 13, "alt", "[trong vùng phục vụ]", 12, "[ngoài vùng phục vụ]")],
         ),
     ),
     # ------------------------------------------------------------------ 4
@@ -220,7 +223,7 @@ CORE = [
             ("S", "Hiển thị mã vận đơn, trạng thái Chờ lấy hàng"),
         ],
         seq=dict(
-            parts=[("actor", "Merchant"), ("boundary", "GD_TaoDonHang"), ("control", "CTRL_DonHang"), ("control", "CTRL_BaoGia"), ("entity", "Shipment / Parcel"), ("entity", "LaneCapacityReservation"), ("entity", "OperationalAssignment")],
+            parts=[("actor", "Merchant"), ("boundary", "GD_TaoDonHang"), ("control", "CTRL_DonHang"), ("control", "CTRL_BaoGia"), ("entity", "Shipment"), ("entity", "LaneCapacityReservation"), ("entity", "OperationalAssignment")],
             msgs=[
                 (0, 1, "Nhập người gửi, người nhận, kiện hàng, COD"),
                 (1, 3, "createQuote(...)"),
@@ -229,15 +232,18 @@ CORE = [
                 (1, 2, "createShipment(quoteId, serviceLevel, sender, recipient, parcels)"),
                 (2, 3, "validateQuote(quoteId)"),
                 (3, 2, "quote còn hiệu lực", "ret"),
-                (2, 4, "save(shipment, parcels, trackingCode)"),
-                (2, 2, "Tìm lộ trình (RouteTemplate / tuyến)"),
-                (2, 5, "reserve(lane, schedule, weight) cho từng chặng"),
-                (5, 2, "batchId", "ret"),
+                (2, 4, "create(shipment, parcels, trackingCode)"),
+                (2, 2, "Tìm lộ trình (RouteTemplate / tuyến trực tiếp)"),
+                (2, 5, "reserve(lane, schedule, weightKg)"),
+                (5, 2, "reservation", "ret"),
+                (2, 4, "markRouted(batchId)"),
                 (2, 6, "create(PICKUP, originHub)"),
+                (2, 4, "markRoutingFailed()"),
                 (2, 1, "trackingCode, status", "ret"),
-                (1, 0, "Hiển thị mã vận đơn, Chờ lấy hàng"),
+                (1, 0, "Hiển thị mã vận đơn và trạng thái"),
             ],
-            frags=[(8, 10, "opt", "[có lộ trình và còn tải; ngược lại: ROUTING_FAILED]")],
+            frags=[(9, 13, "alt", "[tìm được lộ trình, còn tải]", 13, "[không có lộ trình / hết tải]"),
+                   (9, 10, "loop", "[với mỗi chặng của lộ trình]")],
         ),
     ),
     # ------------------------------------------------------------------ 5
@@ -382,7 +388,7 @@ CORE = [
             ("S", "Gửi công việc đến ứng dụng nhân sự"),
         ],
         seq=dict(
-            parts=[("actor", "Hub Dispatch"), ("boundary", "GD_DieuPhoi"), ("control", "CTRL_PhanCong"), ("entity", "OperationalAssignment"), ("entity", "WorkforceMember / Availability"), ("system", "Ứng dụng vận hành")],
+            parts=[("actor", "Hub Dispatch"), ("boundary", "GD_DieuPhoi"), ("control", "CTRL_PhanCong"), ("entity", "OperationalAssignment"), ("entity", "WorkforceMember"), ("system", "Ứng dụng vận hành")],
             msgs=[
                 (0, 1, "Mở Điều phối công việc"),
                 (1, 2, "listPending(hubId)"),
@@ -502,7 +508,7 @@ CORE = [
             ("S", "Ghi sự kiện, hoàn tất công việc"),
         ],
         seq=dict(
-            parts=[("actor", "Courier"), ("boundary", "GD_GiaoHang"), ("control", "CTRL_GiaoHang"), ("entity", "DeliveryAttempt"), ("entity", "Shipment / Parcel"), ("entity", "ShipmentEvent")],
+            parts=[("actor", "Courier"), ("boundary", "GD_GiaoHang"), ("control", "CTRL_GiaoHang"), ("entity", "DeliveryAttempt"), ("entity", "Shipment"), ("entity", "ShipmentEvent")],
             msgs=[
                 (0, 1, "Chọn Giao thành công, gửi bằng chứng"),
                 (1, 2, "recordDelivery(parcelId, proof, recipientName, gps)"),
@@ -564,6 +570,7 @@ CORE = [
                 (2, 3, "findById(requestId)"),
                 (3, 2, "request", "ret"),
                 (2, 5, "checkModifiable(shipmentId)"),
+                (5, 2, "modifiable", "ret"),
                 (2, 3, "update(APPROVED, reviewedBy, reviewedAt)"),
                 (2, 4, "reroute(shipmentId, newEndpoint)"),
                 (4, 2, "routeRevision mới", "ret"),
@@ -572,7 +579,7 @@ CORE = [
                 (2, 1, "ok", "ret"),
                 (1, 0, "Thông báo xử lý thành công"),
             ],
-            frags=[(6, 7, "opt", "[routingRequired = true]")],
+            frags=[(7, 8, "opt", "[routingRequired = true]")],
         ),
     ),
     # ------------------------------------------------------------------ 11
@@ -688,3 +695,22 @@ CORE = [
         ),
     ),
 ]
+
+
+# guards of the decision nodes in the activity diagrams: question -> ([yes], [no])
+GUARDS = {
+    "Hợp lệ?": ("hợp lệ", "không hợp lệ"),
+    "Đúng và đang hoạt động?": ("đúng, ACTIVE", "sai / bị khóa"),
+    "Email mới?": ("email chưa tồn tại", "email đã tồn tại"),
+    "Trong vùng phục vụ?": ("trong vùng phục vụ", "ngoài vùng"),
+    "Còn hạn?": ("báo giá còn hạn", "báo giá hết hạn"),
+    "Tồn tại?": ("tìm thấy", "không tìm thấy"),
+    "Duyệt?": ("duyệt", "từ chối"),
+    "Có nhân sự?": ("có nhân sự sẵn sàng", "không có nhân sự"),
+    "Còn hợp lệ?": ("còn hợp lệ", "không còn hợp lệ"),
+    "Đủ kiện?": ("đủ kiện", "còn thiếu kiện"),
+    "Giao thành công?": ("giao thành công", "giao thất bại"),
+    "Đầy đủ?": ("đủ bằng chứng", "thiếu bằng chứng"),
+    "Phê duyệt?": ("phê duyệt", "từ chối"),
+    "Cho phép?": ("được phép", "không được phép"),
+}

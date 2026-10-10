@@ -1,0 +1,80 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1153" height="801" viewBox="0 0 1153 801" font-family="DejaVu Sans, Arial, sans-serif" font-size="11">
+<defs><marker id="open" markerWidth="12" markerHeight="12" refX="11" refY="6" orient="auto"><path d="M0,0 L11,6 L0,12" fill="none" stroke="#333"/></marker><marker id="tri" markerWidth="16" markerHeight="16" refX="15" refY="8" orient="auto"><path d="M0,0 L15,8 L0,16 Z" fill="#fff" stroke="#333"/></marker><marker id="dia" markerWidth="20" markerHeight="12" refX="1" refY="6" orient="auto"><path d="M1,6 L10,1 L19,6 L10,11 Z" fill="#333" stroke="#333"/></marker><marker id="odia" markerWidth="20" markerHeight="12" refX="1" refY="6" orient="auto"><path d="M1,6 L10,1 L19,6 L10,11 Z" fill="#fff" stroke="#333"/></marker></defs>
+<rect width="1153" height="801" fill="#fff"/>
+<rect x="1" y="1" width="1151" height="799" fill="none" stroke="#333" stroke-width="1.3"/>
+<path d="M1,1 L111.8,1 L111.8,15 L101.8,25 L1,25 Z" fill="#fff" stroke="#333" stroke-width="1.3"/>
+<text x="8" y="18" font-size="12"><tspan font-weight="bold">class</tspan> Partner</text>
+<polyline points="213,79 363,79" fill="none" stroke="#333"/>
+<text x="227" y="92" fill="#222" font-size="9.5" text-anchor="start">owner</text>
+<text x="227" y="74" fill="#000" font-size="9.5" text-anchor="start">1</text>
+<text x="349" y="74" fill="#222" font-size="9.5" text-anchor="end">merchant</text>
+<text x="349" y="92" fill="#000" font-size="9.5" text-anchor="end">0..1</text>
+<polyline points="752,92 902,92" fill="none" stroke="#333" marker-start="url(#dia)"/>
+<text x="766" y="105" fill="#222" font-size="9.5" text-anchor="start">merchant</text>
+<text x="766" y="87" fill="#000" font-size="9.5" text-anchor="start">1</text>
+<text x="888" y="87" fill="#222" font-size="9.5" text-anchor="end">pickupAddresses</text>
+<text x="888" y="105" fill="#000" font-size="9.5" text-anchor="end">0..*</text>
+<rect x="40" y="50" width="173" height="58" fill="#f2f2f2" stroke="#333"/>
+<line x1="40" y1="96" x2="213" y2="96" stroke="#333"/>
+<text x="126.5" y="68" text-anchor="middle">«aggregate root»</text>
+<text x="126.5" y="85" text-anchor="middle" font-weight="bold">Identity::UserAccount</text>
+<rect x="363" y="50" width="389" height="427" fill="#e3f2fd" stroke="#333"/>
+<line x1="363" y1="96" x2="752" y2="96" stroke="#333"/>
+<line x1="363" y1="367" x2="752" y2="367" stroke="#333"/>
+<text x="371" y="381">+verify(adminId : UUID)</text>
+<text x="371" y="398">+reject(reason : MerchantStatusReason, detail : String)</text>
+<text x="371" y="415">+suspend(reason : MerchantStatusReason)</text>
+<text x="371" y="432">+reactivate()</text>
+<text x="371" y="449">+close()</text>
+<text x="371" y="466">+canCreateShipment() : Boolean</text>
+<text x="557.5" y="68" text-anchor="middle">«aggregate root»</text>
+<text x="557.5" y="85" text-anchor="middle" font-weight="bold">Merchant</text>
+<text x="371" y="114">-id : UUID</text>
+<text x="371" y="131">-merchantCode : String</text>
+<text x="371" y="148">-businessName : String</text>
+<text x="371" y="165">-contactName : String</text>
+<text x="371" y="182">-contactPhone : String</text>
+<text x="371" y="199">-contactEmail : String [0..1]</text>
+<text x="371" y="216">-taxCode : String [0..1]</text>
+<text x="371" y="233">-status : MerchantStatus</text>
+<text x="371" y="250">-statusReasonCode : MerchantStatusReason [0..1]</text>
+<text x="371" y="267">-statusReasonDetail : String [0..1]</text>
+<text x="371" y="284">-statusChangedAt : Instant</text>
+<text x="371" y="301">-statusChangedByUserId : UUID [0..1]</text>
+<text x="371" y="318">-verifiedAt : Instant [0..1]</text>
+<text x="371" y="335">-verifiedByUserId : UUID [0..1]</text>
+<text x="371" y="352">-createdAt : Instant</text>
+<rect x="902" y="50" width="191" height="155" fill="#e3f2fd" stroke="#333"/>
+<line x1="902" y1="96" x2="1093" y2="96" stroke="#333"/>
+<line x1="902" y1="180" x2="1093" y2="180" stroke="#333"/>
+<text x="910" y="194">+markDefault()</text>
+<text x="997.5" y="68" text-anchor="middle">«entity»</text>
+<text x="997.5" y="85" text-anchor="middle" font-weight="bold">MerchantPickupAddress</text>
+<text x="910" y="114">-id : UUID</text>
+<text x="910" y="131">-name : String</text>
+<text x="910" y="148">-address : ContactAddress</text>
+<text x="910" y="165">-isDefault : Boolean</text>
+<rect x="40" y="577" width="158" height="147" fill="#fff6d5" stroke="#333"/>
+<line x1="40" y1="623" x2="198" y2="623" stroke="#333"/>
+<text x="119.0" y="595" text-anchor="middle">«enumeration»</text>
+<text x="119.0" y="612" text-anchor="middle" font-weight="bold">MerchantStatus</text>
+<text x="48" y="641">PENDING_VERIFICATION</text>
+<text x="48" y="658">ACTIVE</text>
+<text x="48" y="675">REJECTED</text>
+<text x="48" y="692">SUSPENDED</text>
+<text x="48" y="709">CLOSED</text>
+<rect x="228" y="577" width="166" height="164" fill="#fff6d5" stroke="#333"/>
+<line x1="228" y1="623" x2="394" y2="623" stroke="#333"/>
+<text x="311.0" y="595" text-anchor="middle">«enumeration»</text>
+<text x="311.0" y="612" text-anchor="middle" font-weight="bold">MerchantStatusReason</text>
+<text x="236" y="641">MISSING_DOCUMENTS</text>
+<text x="236" y="658">INVALID_INFORMATION</text>
+<text x="236" y="675">POLICY_VIOLATION</text>
+<text x="236" y="692">FRAUD_SUSPECTED</text>
+<text x="236" y="709">OWNER_REQUEST</text>
+<text x="236" y="726">OTHER</text>
+<rect x="424" y="577" width="219" height="58" fill="#f2f2f2" stroke="#333"/>
+<line x1="424" y1="623" x2="643" y2="623" stroke="#333"/>
+<text x="533.5" y="595" text-anchor="middle">«value object»</text>
+<text x="533.5" y="612" text-anchor="middle" font-weight="bold">SharedKernel::ContactAddress</text>
+</svg>

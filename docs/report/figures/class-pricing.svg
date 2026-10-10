@@ -1,0 +1,179 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1732" height="990" viewBox="0 0 1732 990" font-family="DejaVu Sans, Arial, sans-serif" font-size="11">
+<defs><marker id="open" markerWidth="12" markerHeight="12" refX="11" refY="6" orient="auto"><path d="M0,0 L11,6 L0,12" fill="none" stroke="#333"/></marker><marker id="tri" markerWidth="16" markerHeight="16" refX="15" refY="8" orient="auto"><path d="M0,0 L15,8 L0,16 Z" fill="#fff" stroke="#333"/></marker><marker id="dia" markerWidth="20" markerHeight="12" refX="1" refY="6" orient="auto"><path d="M1,6 L10,1 L19,6 L10,11 Z" fill="#333" stroke="#333"/></marker><marker id="odia" markerWidth="20" markerHeight="12" refX="1" refY="6" orient="auto"><path d="M1,6 L10,1 L19,6 L10,11 Z" fill="#fff" stroke="#333"/></marker></defs>
+<rect width="1732" height="990" fill="#fff"/>
+<rect x="1" y="1" width="1730" height="988" fill="none" stroke="#333" stroke-width="1.3"/>
+<path d="M1,1 L111.8,1 L111.8,15 L101.8,25 L1,25 Z" fill="#fff" stroke="#333" stroke-width="1.3"/>
+<text x="8" y="18" font-size="12"><tspan font-weight="bold">class</tspan> Pricing</text>
+<polyline points="626,92 476,92" fill="none" stroke="#333" marker-start="url(#dia)"/>
+<text x="612" y="87" fill="#222" font-size="9.5" text-anchor="end">ratePlan</text>
+<text x="612" y="105" fill="#000" font-size="9.5" text-anchor="end">1</text>
+<text x="490" y="105" fill="#222" font-size="9.5" text-anchor="start">rules</text>
+<text x="490" y="87" fill="#000" font-size="9.5" text-anchor="start">1..*</text>
+<polyline points="877,92 1027,92" fill="none" stroke="#333"/>
+<text x="891" y="105" fill="#222" font-size="9.5" text-anchor="start">ratePlan</text>
+<text x="891" y="87" fill="#000" font-size="9.5" text-anchor="start">1</text>
+<text x="1013" y="87" fill="#222" font-size="9.5" text-anchor="end">quotes</text>
+<text x="1013" y="105" fill="#000" font-size="9.5" text-anchor="end">0..*</text>
+<polyline points="1337,92 1487,92" fill="none" stroke="#333" marker-start="url(#dia)"/>
+<text x="1351" y="105" fill="#222" font-size="9.5" text-anchor="start">quote</text>
+<text x="1351" y="87" fill="#000" font-size="9.5" text-anchor="start">1</text>
+<text x="1473" y="87" fill="#222" font-size="9.5" text-anchor="end">parcels</text>
+<text x="1473" y="105" fill="#000" font-size="9.5" text-anchor="end">1..*</text>
+<polyline points="1132,358 1132,448" fill="none" stroke="#333" marker-start="url(#dia)"/>
+<text x="1126" y="376" fill="#222" font-size="9.5" text-anchor="end">quote</text>
+<text x="1138" y="376" fill="#000" font-size="9.5" text-anchor="start">1</text>
+<text x="1138" y="438" fill="#222" font-size="9.5" text-anchor="start">options</text>
+<text x="1126" y="438" fill="#000" font-size="9.5" text-anchor="end">1..*</text>
+<rect x="40" y="50" width="436" height="223" fill="#e3f2fd" stroke="#333"/>
+<line x1="40" y1="96" x2="476" y2="96" stroke="#333"/>
+<line x1="40" y1="248" x2="476" y2="248" stroke="#333"/>
+<text x="48" y="262">+calculateFee(weight, tier, cod, declaredValue) : FeeBreakdown</text>
+<text x="258.0" y="68" text-anchor="middle">«entity»</text>
+<text x="258.0" y="85" text-anchor="middle" font-weight="bold">RateRule</text>
+<text x="48" y="114">-id : UUID</text>
+<text x="48" y="131">-serviceLevel : ServiceLevel</text>
+<text x="48" y="148">-pricingZone : PricingZone</text>
+<text x="48" y="165">-baseFee : Long</text>
+<text x="48" y="182">-includedWeightKg : BigDecimal</text>
+<text x="48" y="199">-additionalWeightStepKg : BigDecimal</text>
+<text x="48" y="216">-additionalWeightStepFee : Long</text>
+<text x="48" y="233">-estimate : DeliveryEstimate</text>
+<rect x="626" y="50" width="251" height="495" fill="#e3f2fd" stroke="#333"/>
+<line x1="626" y1="96" x2="877" y2="96" stroke="#333"/>
+<line x1="626" y1="469" x2="877" y2="469" stroke="#333"/>
+<text x="634" y="483">+newRevision() : RatePlan</text>
+<text x="634" y="500">+activate(adminId : UUID)</text>
+<text x="634" y="517">+retire(adminId : UUID)</text>
+<text x="634" y="534">+findRule(level, zone) : RateRule</text>
+<text x="751.5" y="68" text-anchor="middle">«aggregate root»</text>
+<text x="751.5" y="85" text-anchor="middle" font-weight="bold">RatePlan</text>
+<text x="634" y="114">-id : UUID</text>
+<text x="634" y="131">-code : String</text>
+<text x="634" y="148">-revision : Int</text>
+<text x="634" y="165">-name : String</text>
+<text x="634" y="182">-currency : String</text>
+<text x="634" y="199">-status : RatePlanStatus</text>
+<text x="634" y="216">-effectiveFrom : Instant [0..1]</text>
+<text x="634" y="233">-effectiveTo : Instant [0..1]</text>
+<text x="634" y="250">-quoteTtlMinutes : Int</text>
+<text x="634" y="267">-volumetricDivisor : BigDecimal</text>
+<text x="634" y="284">-remoteEndpointSurcharge : Long</text>
+<text x="634" y="301">-islandTransportRate : BigDecimal</text>
+<text x="634" y="318">-codPolicy : CodPolicy</text>
+<text x="634" y="335">-insurancePolicy : InsurancePolicy</text>
+<text x="634" y="352">-limits : ShipmentLimits</text>
+<text x="634" y="369">-createdBy : UUID [0..1]</text>
+<text x="634" y="386">-activatedBy : UUID [0..1]</text>
+<text x="634" y="403">-activatedAt : Instant [0..1]</text>
+<text x="634" y="420">-retiredBy : UUID [0..1]</text>
+<text x="634" y="437">-retiredAt : Instant [0..1]</text>
+<text x="634" y="454">-createdAt : Instant</text>
+<rect x="1027" y="50" width="310" height="308" fill="#e3f2fd" stroke="#333"/>
+<line x1="1027" y1="96" x2="1337" y2="96" stroke="#333"/>
+<line x1="1027" y1="316" x2="1337" y2="316" stroke="#333"/>
+<text x="1035" y="330">+isExpired(now : Instant) : Boolean</text>
+<text x="1035" y="347">+option(level : ServiceLevel) : QuoteOption</text>
+<text x="1182.0" y="68" text-anchor="middle">«aggregate root»</text>
+<text x="1182.0" y="85" text-anchor="middle" font-weight="bold">QuoteRequest</text>
+<text x="1035" y="114">-id : UUID</text>
+<text x="1035" y="131">-rateRevision : Int</text>
+<text x="1035" y="148">-rateVersion : String</text>
+<text x="1035" y="165">-pricingZone : PricingZone</text>
+<text x="1035" y="182">-origin : QuoteEndpoint</text>
+<text x="1035" y="199">-destination : QuoteEndpoint</text>
+<text x="1035" y="216">-totalWeight : Weight</text>
+<text x="1035" y="233">-parcelCount : Int</text>
+<text x="1035" y="250">-codAmount : Long</text>
+<text x="1035" y="267">-declaredValue : Long</text>
+<text x="1035" y="284">-createdAt : Instant</text>
+<text x="1035" y="301">-expiresAt : Instant</text>
+<rect x="1027" y="448" width="211" height="130" fill="#e3f2fd" stroke="#333"/>
+<line x1="1027" y1="494" x2="1238" y2="494" stroke="#333"/>
+<text x="1132.5" y="466" text-anchor="middle">«entity»</text>
+<text x="1132.5" y="483" text-anchor="middle" font-weight="bold">QuoteOption</text>
+<text x="1035" y="512">-id : UUID</text>
+<text x="1035" y="529">-serviceLevel : ServiceLevel</text>
+<text x="1035" y="546">-fees : FeeBreakdown</text>
+<text x="1035" y="563">-estimate : DeliveryEstimate</text>
+<rect x="1487" y="50" width="185" height="130" fill="#e3f2fd" stroke="#333"/>
+<line x1="1487" y1="96" x2="1672" y2="96" stroke="#333"/>
+<text x="1579.5" y="68" text-anchor="middle">«entity»</text>
+<text x="1579.5" y="85" text-anchor="middle" font-weight="bold">QuoteParcel</text>
+<text x="1495" y="114">-id : UUID</text>
+<text x="1495" y="131">-sequence : Int</text>
+<text x="1495" y="148">-weight : Weight</text>
+<text x="1495" y="165">-dimensions : Dimensions</text>
+<rect x="40" y="678" width="165" height="130" fill="#e8f5e9" stroke="#333"/>
+<line x1="40" y1="724" x2="205" y2="724" stroke="#333"/>
+<text x="122.5" y="696" text-anchor="middle">«value object»</text>
+<text x="122.5" y="713" text-anchor="middle" font-weight="bold">CodPolicy</text>
+<text x="48" y="742">-freeThreshold : Long</text>
+<text x="48" y="759">-rate : BigDecimal</text>
+<text x="48" y="776">-minimumFee : Long</text>
+<text x="48" y="793">-maximumCod : Long</text>
+<rect x="235" y="678" width="211" height="113" fill="#e8f5e9" stroke="#333"/>
+<line x1="235" y1="724" x2="446" y2="724" stroke="#333"/>
+<text x="340.5" y="696" text-anchor="middle">«value object»</text>
+<text x="340.5" y="713" text-anchor="middle" font-weight="bold">InsurancePolicy</text>
+<text x="243" y="742">-freeThreshold : Long</text>
+<text x="243" y="759">-rate : BigDecimal</text>
+<text x="243" y="776">-maximumDeclaredValue : Long</text>
+<rect x="476" y="678" width="310" height="113" fill="#e8f5e9" stroke="#333"/>
+<line x1="476" y1="724" x2="786" y2="724" stroke="#333"/>
+<text x="631.0" y="696" text-anchor="middle">«value object»</text>
+<text x="631.0" y="713" text-anchor="middle" font-weight="bold">ShipmentLimits</text>
+<text x="484" y="742">-maxParcelWeightKg : BigDecimal</text>
+<text x="484" y="759">-maxShipmentChargeableWeightKg : BigDecimal</text>
+<text x="484" y="776">-maxDimensionCm : BigDecimal</text>
+<rect x="816" y="678" width="211" height="164" fill="#e8f5e9" stroke="#333"/>
+<line x1="816" y1="724" x2="1027" y2="724" stroke="#333"/>
+<text x="921.5" y="696" text-anchor="middle">«value object»</text>
+<text x="921.5" y="713" text-anchor="middle" font-weight="bold">QuoteEndpoint</text>
+<text x="824" y="742">-provinceCode : String</text>
+<text x="824" y="759">-wardCode : String</text>
+<text x="824" y="776">-serviceAreaId : UUID</text>
+<text x="824" y="793">-regionId : UUID</text>
+<text x="824" y="810">-primaryHubId : UUID</text>
+<text x="824" y="827">-coverageTier : CoverageTier</text>
+<rect x="1057" y="678" width="150" height="113" fill="#fff6d5" stroke="#333"/>
+<line x1="1057" y1="724" x2="1207" y2="724" stroke="#333"/>
+<text x="1132.0" y="696" text-anchor="middle">«enumeration»</text>
+<text x="1132.0" y="713" text-anchor="middle" font-weight="bold">RatePlanStatus</text>
+<text x="1065" y="742">DRAFT</text>
+<text x="1065" y="759">ACTIVE</text>
+<text x="1065" y="776">RETIRED</text>
+<rect x="1237" y="678" width="150" height="113" fill="#fff6d5" stroke="#333"/>
+<line x1="1237" y1="724" x2="1387" y2="724" stroke="#333"/>
+<text x="1312.0" y="696" text-anchor="middle">«enumeration»</text>
+<text x="1312.0" y="713" text-anchor="middle" font-weight="bold">ServiceLevel</text>
+<text x="1245" y="742">ECONOMY</text>
+<text x="1245" y="759">STANDARD</text>
+<text x="1245" y="776">EXPRESS</text>
+<rect x="1417" y="678" width="150" height="113" fill="#fff6d5" stroke="#333"/>
+<line x1="1417" y1="724" x2="1567" y2="724" stroke="#333"/>
+<text x="1492.0" y="696" text-anchor="middle">«enumeration»</text>
+<text x="1492.0" y="713" text-anchor="middle" font-weight="bold">PricingZone</text>
+<text x="1425" y="742">INTRA_PROVINCE</text>
+<text x="1425" y="759">INTRA_REGION</text>
+<text x="1425" y="776">INTER_REGION</text>
+<rect x="40" y="872" width="232" height="58" fill="#f2f2f2" stroke="#333"/>
+<line x1="40" y1="918" x2="272" y2="918" stroke="#333"/>
+<text x="156.0" y="890" text-anchor="middle">«value object»</text>
+<text x="156.0" y="907" text-anchor="middle" font-weight="bold">SharedKernel::DeliveryEstimate</text>
+<rect x="302" y="872" width="166" height="58" fill="#f2f2f2" stroke="#333"/>
+<line x1="302" y1="918" x2="468" y2="918" stroke="#333"/>
+<text x="385.0" y="890" text-anchor="middle">«value object»</text>
+<text x="385.0" y="907" text-anchor="middle" font-weight="bold">SharedKernel::Weight</text>
+<rect x="498" y="872" width="173" height="58" fill="#f2f2f2" stroke="#333"/>
+<line x1="498" y1="918" x2="671" y2="918" stroke="#333"/>
+<text x="584.5" y="890" text-anchor="middle">«enumeration»</text>
+<text x="584.5" y="907" text-anchor="middle" font-weight="bold">Network::CoverageTier</text>
+<rect x="701" y="872" width="193" height="58" fill="#f2f2f2" stroke="#333"/>
+<line x1="701" y1="918" x2="894" y2="918" stroke="#333"/>
+<text x="797.5" y="890" text-anchor="middle">«value object»</text>
+<text x="797.5" y="907" text-anchor="middle" font-weight="bold">SharedKernel::Dimensions</text>
+<rect x="924" y="872" width="206" height="58" fill="#f2f2f2" stroke="#333"/>
+<line x1="924" y1="918" x2="1130" y2="918" stroke="#333"/>
+<text x="1027.0" y="890" text-anchor="middle">«value object»</text>
+<text x="1027.0" y="907" text-anchor="middle" font-weight="bold">SharedKernel::FeeBreakdown</text>
+</svg>

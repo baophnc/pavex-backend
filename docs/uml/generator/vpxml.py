@@ -305,10 +305,18 @@ def class_lines(e: Elem):
     return head, body
 
 
+def class_ops(e: Elem):
+    """Operation compartment (report figures only; not exported to XML)."""
+    return list(getattr(e, "ops", []) or [])
+
+
 def class_size(e: Elem):
     head, body = class_lines(e)
-    w = max([text_w(h) + 34 for h in head] + [text_w(b) + 26 for b in body] + [150])
+    ops = class_ops(e)
+    w = max([text_w(h) + 34 for h in head] + [text_w(b) + 26 for b in body + ops] + [150])
     h = 12 + ROW_H * len(head) + 8 + ROW_H * len(body) + (8 if body else 4)
+    if ops:
+        h += ROW_H * len(ops) + 8
     return math.ceil(w), math.ceil(h)
 
 
@@ -436,7 +444,7 @@ class Diagram:
             straight = [(straight[0][0] + ox, straight[0][1] + oy), (straight[1][0] + ox, straight[1][1] + oy)]
         if self.kind != "ClassDiagram":
             return straight
-        off = 14 * lane
+        off = getattr(self, "lane_gap", 14) * lane
         jog = ((n % 5) - 2) * 7  # spread parallel channel segments
 
         def clampx(s, _x):
@@ -632,6 +640,15 @@ class Diagram:
                 ET.SubElement(pts, "Point", {"X": f"{px:.1f}", "Y": f"{py:.1f}"})
 
     # ------------------------------------------------------------------ SVG
+    @staticmethod
+    def _label_box(x, y, text, nx, ux, side):
+        if not text:
+            return None
+        w = len(text) * 6.4
+        start = (side * nx > 0) if abs(nx) > 0.5 else ux >= -0.1
+        x1 = x if start else x - w
+        return (x1 - 2, y - 7, x1 + w + 2, y + 6)
+
     def to_svg(self) -> str:
         pts = [pt for *_x, route in self.connectors() for pt in route]
         W = int(max([s.x + s.w for s in self.shapes] + [x for x, _ in pts]) + 60)
@@ -648,13 +665,22 @@ class Diagram:
             '<marker id="odia" markerWidth="20" markerHeight="12" refX="1" refY="6" orient="auto">'
             '<path d="M1,6 L10,1 L19,6 L10,11 Z" fill="#fff" stroke="#333"/></marker></defs>',
             f'<rect width="{W}" height="{H}" fill="#fff"/>',
-            f'<text x="20" y="22" font-size="14" font-weight="bold">{escape(self.name)}</text>',
         ]
+        frame = getattr(self, "frame", None)
+        if frame:  # UML diagram frame: "<kind> <name>" in the pentagon of the top-left corner
+            kind, _sp, nm = frame.partition(" ")
+            tw = text_w(frame) + 26
+            o.append(f'<rect x="1" y="1" width="{W - 2}" height="{H - 2}" fill="none" stroke="#333" stroke-width="1.3"/>')
+            o.append(f'<path d="M1,1 L{tw},1 L{tw},15 L{tw - 10},25 L1,25 Z" fill="#fff" stroke="#333" stroke-width="1.3"/>')
+            o.append(f'<text x="8" y="18" font-size="12"><tspan font-weight="bold">{escape(kind)}</tspan> {escape(nm)}</text>')
+        else:
+            o.append(f'<text x="20" y="22" font-size="14" font-weight="bold">{escape(self.name)}</text>')
         # boundaries / packages first
         for s in self.shapes:
             if s.elem.kind == "System":
                 o.append(f'<rect x="{s.x}" y="{s.y}" width="{s.w}" height="{s.h}" fill="#f4fbff" stroke="#333"/>')
                 o.append(f'<text x="{s.cx}" y="{s.y + 18}" text-anchor="middle" font-weight="bold">{escape(s.elem.name)}</text>')
+        placed = []
         for r, a, b, route in self.connectors():
             pts = " ".join(f"{x:.0f},{y:.0f}" for x, y in route)
             p1, p2 = route[0], route[-1]
@@ -675,12 +701,34 @@ class Diagram:
                         continue
                     L = math.hypot(qx - px, qy - py) or 1
                     ux, uy = (qx - px) / L, (qy - py) / L
-                    tx, ty = px + ux * 14, py + uy * 14
                     nx, ny = -uy, ux  # put role and multiplicity on opposite sides of the line
+                    # slide along the line (and if needed swap sides) until clear of labels already placed
+                    choice = None
+                    for flip in (1, -1):
+                        for step in range(7):
+                            tx, ty = px + ux * (14 + 11 * step), py + uy * (14 + 11 * step)
+                            boxes = [self._label_box(tx + flip * nx * 6, ty + flip * ny * 9, role, nx, ux, flip),
+                                     self._label_box(tx - flip * nx * 6, ty - flip * ny * 9, mult, nx, ux, -flip)]
+                            if not any(_overlap(b, c) for b in boxes if b for c in placed):
+                                choice = (tx, ty, flip, boxes)
+                                break
+                        if choice:
+                            break
+                    if choice is None:
+                        tx, ty = px + ux * 14, py + uy * 14
+                        choice = (tx, ty, 1, [self._label_box(tx + nx * 6, ty + ny * 9, role, nx, ux, 1),
+                                              self._label_box(tx - nx * 6, ty - ny * 9, mult, nx, ux, -1)])
+                    tx, ty, flip, boxes = choice
+                    placed.extend(b for b in boxes if b)
+
+                    def anchor(side):  # text grows away from the line, never across it
+                        if abs(nx) > 0.5:
+                            return "start" if side * nx > 0 else "end"
+                        return "start" if ux >= -0.1 else "end"
                     if role:
-                        o.append(f'<text x="{tx + nx * 9:.0f}" y="{ty + ny * 9 + 4:.0f}" fill="#a33" font-size="9" text-anchor="{"start" if ux >= -0.1 else "end"}">{escape(role)}</text>')
+                        o.append(f'<text x="{tx + flip * nx * 6:.0f}" y="{ty + flip * ny * 9 + 4:.0f}" fill="#222" font-size="9.5" text-anchor="{anchor(flip)}">{escape(role)}</text>')
                     if mult:
-                        o.append(f'<text x="{tx - nx * 9:.0f}" y="{ty - ny * 9 + 4:.0f}" fill="#1a5" font-size="9" text-anchor="{"start" if ux >= -0.1 else "end"}">{escape(mult)}</text>')
+                        o.append(f'<text x="{tx - flip * nx * 6:.0f}" y="{ty - flip * ny * 9 + 4:.0f}" fill="#000" font-size="9.5" text-anchor="{anchor(-flip)}">{escape(mult)}</text>')
         for s in self.shapes:
             k = s.elem.kind
             if k == "Class":
@@ -688,9 +736,17 @@ class Diagram:
                 is_enum = any(st.name == "enumeration" for st in s.elem.stereotypes)
                 is_vo = any(st.name == "value object" for st in s.elem.stereotypes)
                 fill = "#fff6d5" if is_enum else ("#e8f5e9" if is_vo else "#e3f2fd")
+                if getattr(s.elem, "external", False):  # class owned by another package
+                    fill = "#f2f2f2"
                 hh = 12 + ROW_H * len(head)
                 o.append(f'<rect x="{s.x}" y="{s.y}" width="{s.w}" height="{s.h}" fill="{fill}" stroke="#333"/>')
                 o.append(f'<line x1="{s.x}" y1="{s.y + hh}" x2="{s.x + s.w}" y2="{s.y + hh}" stroke="#333"/>')
+                ops = class_ops(s.elem)
+                if ops:
+                    oy = s.y + hh + 8 + ROW_H * len(body) + (8 if body else 4)
+                    o.append(f'<line x1="{s.x}" y1="{oy}" x2="{s.x + s.w}" y2="{oy}" stroke="#333"/>')
+                    for i, t in enumerate(ops):
+                        o.append(f'<text x="{s.x + 8}" y="{oy + 14 + i * ROW_H}">{escape(t)}</text>')
                 for i, t in enumerate(head):
                     bold = ' font-weight="bold"' if i == len(head) - 1 else ""
                     o.append(f'<text x="{s.cx}" y="{s.y + 18 + i * ROW_H}" text-anchor="middle"{bold}>{escape(t)}</text>')
@@ -716,9 +772,16 @@ class Diagram:
                 style = ' font-style="italic"' if s.elem.attrs.get("Abstract") == "true" else ""
                 o.append(f'<text x="{cx}" y="{y + s.h + 13}" text-anchor="middle"{style}>{escape(s.elem.name)}</text>')
             elif k == "Package":
-                o.append(f'<rect x="{s.x}" y="{s.y}" width="{min(90, s.w / 2)}" height="18" fill="#ede7f6" stroke="#333"/>')
-                o.append(f'<rect x="{s.x}" y="{s.y + 18}" width="{s.w}" height="{s.h - 18}" fill="#ede7f6" stroke="#333"/>')
-                o.append(f'<text x="{s.cx}" y="{s.y + 18 + (s.h - 18) / 2 + 4}" text-anchor="middle" font-weight="bold">{escape(s.elem.name)}</text>')
+                contents = getattr(s.elem, "contents", None)
+                tab = max(90, text_w(s.elem.name) + 20) if contents else min(90, s.w / 2)
+                o.append(f'<rect x="{s.x}" y="{s.y}" width="{tab}" height="20" fill="#ede7f6" stroke="#333"/>')
+                o.append(f'<rect x="{s.x}" y="{s.y + 20}" width="{s.w}" height="{s.h - 20}" fill="#ede7f6" stroke="#333"/>')
+                if contents:  # name in the tab, owned elements listed in the body
+                    o.append(f'<text x="{s.x + 8}" y="{s.y + 14}" font-weight="bold">{escape(s.elem.name)}</text>')
+                    for i, t in enumerate(contents):
+                        o.append(f'<text x="{s.x + 10}" y="{s.y + 40 + i * 15}" font-size="10.5">{escape(t)}</text>')
+                else:
+                    o.append(f'<text x="{s.cx}" y="{s.y + 20 + (s.h - 20) / 2 + 4}" text-anchor="middle" font-weight="bold">{escape(s.elem.name)}</text>')
         o.append("</svg>")
         return "\n".join(o)
 
@@ -726,6 +789,10 @@ class Diagram:
 # ---------------------------------------------------------------------------
 # helpers for class specs
 # ---------------------------------------------------------------------------
+
+
+def _overlap(a, b):
+    return a[0] < b[2] and b[0] < a[2] and a[1] < b[3] and b[1] < a[3]
 
 
 def parse_attr(spec: str):

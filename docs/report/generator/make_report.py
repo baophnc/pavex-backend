@@ -1,7 +1,7 @@
 """Build the report: figures -> content.json -> docx, then measure heading pages in a PDF render
 and rebuild with a static table of contents until page numbers are stable.
 
-usage: python3 make_report.py <svg-to-png renderer.cjs>
+usage: python3 make_report.py   (figures are rendered with render_svg.cjs)
 """
 import json
 import os
@@ -54,9 +54,8 @@ def measure(pdf, headings):
 
 
 def main():
-    renderer = sys.argv[1]
     WORK.mkdir(parents=True, exist_ok=True)
-    subprocess.run([sys.executable, str(HERE / "make_figures.py"), renderer], check=True)
+    subprocess.run([sys.executable, str(HERE / "make_figures.py")], check=True)
     subprocess.run([sys.executable, str(HERE / "content.py")], check=True)
     blocks = json.loads((HERE / "content.json").read_text(encoding="utf-8"))
     headings = [({"h1": 1, "h2": 2, "h3": 3}[b["t"]], b["text"]) for b in blocks if b["t"] in ("h1", "h2", "h3")]
