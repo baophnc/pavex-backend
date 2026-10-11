@@ -1,0 +1,829 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Project Author="baophuc" CommentTableSortAscending="false" CommentTableSortColumn="Date Time" DocumentationType="html" ExportedFromDifferentName="false" ExporterVersion="16.1.1" Name="AD-UC31 Điều phối công việc" TextualAnalysisHighlightOptionCaseSensitive="false" UmlVersion="2.x" Xml_structure="simple">
+  <Models>
+    <ActivitySwimlane2 Documentation_plain="" Id="PAVEXAD31_ACT_0001" Name="Swimlane UC31" PmAuthor="baophuc" PmCreateDateTime="2026-10-03T09:00:00.000" PmLastModified="2026-10-03T09:00:00.000" QualityReason_IsNull="true" QualityScore="-1">
+      <MasterView>
+        <ActivitySwimlane2 Idref="PAVEXAD31_SHP_0001" Name="Swimlane UC31" />
+      </MasterView>
+      <ModelChildren>
+        <ActivityPartition Documentation_plain="" Id="PAVEXAD31_ACT_0002" Name="Hub Dispatch" PmAuthor="baophuc" PmCreateDateTime="2026-10-03T09:00:00.000" PmLastModified="2026-10-03T09:00:00.000" QualityReason_IsNull="true" QualityScore="-1">
+          <MasterView>
+            <ActivityPartition Idref="PAVEXAD31_SHP_0002" Name="Hub Dispatch" />
+          </MasterView>
+        </ActivityPartition>
+        <ActivityPartition Documentation_plain="" Id="PAVEXAD31_ACT_0003" Name="Hệ thống PAVEX" PmAuthor="baophuc" PmCreateDateTime="2026-10-03T09:00:00.000" PmLastModified="2026-10-03T09:00:00.000" QualityReason_IsNull="true" QualityScore="-1">
+          <MasterView>
+            <ActivityPartition Idref="PAVEXAD31_SHP_0003" Name="Hệ thống PAVEX" />
+          </MasterView>
+        </ActivityPartition>
+      </ModelChildren>
+    </ActivitySwimlane2>
+    <InitialNode Documentation_plain="" Id="PAVEXAD31_INI_0001" Name="Bắt đầu" PmAuthor="baophuc" PmCreateDateTime="2026-10-03T09:00:00.000" PmLastModified="2026-10-03T09:00:00.000" QualityReason_IsNull="true" QualityScore="-1">
+      <FromSimpleRelationships>
+        <ControlFlow Idref="PAVEXAD31_CONR_0021" Name="" />
+      </FromSimpleRelationships>
+      <MasterView>
+        <InitialNode Idref="PAVEXAD31_SHP_0004" Name="Bắt đầu" />
+      </MasterView>
+    </InitialNode>
+    <ActivityAction Documentation_plain="" Id="PAVEXAD31_ACT_0004" Name="Mở Điều phối công việc" PmAuthor="baophuc" PmCreateDateTime="2026-10-03T09:00:00.000" PmLastModified="2026-10-03T09:00:00.000" QualityReason_IsNull="true" QualityScore="-1">
+      <FromSimpleRelationships>
+        <ControlFlow Idref="PAVEXAD31_CONR_0010" Name="" />
+      </FromSimpleRelationships>
+      <ToSimpleRelationships>
+        <ControlFlow Idref="PAVEXAD31_CONR_0021" Name="" />
+      </ToSimpleRelationships>
+      <MasterView>
+        <ActivityAction Idref="PAVEXAD31_SHP_0005" Name="Mở Điều phối công việc" />
+      </MasterView>
+    </ActivityAction>
+    <ActivityAction Documentation_plain="" Id="PAVEXAD31_ACT_0005" Name="Hiển thị công việc chờ theo ưu tiên" PmAuthor="baophuc" PmCreateDateTime="2026-10-03T09:00:00.000" PmLastModified="2026-10-03T09:00:00.000" QualityReason_IsNull="true" QualityScore="-1">
+      <FromSimpleRelationships>
+        <ControlFlow Idref="PAVEXAD31_CONR_0011" Name="" />
+      </FromSimpleRelationships>
+      <ToSimpleRelationships>
+        <ControlFlow Idref="PAVEXAD31_CONR_0010" Name="" />
+      </ToSimpleRelationships>
+      <MasterView>
+        <ActivityAction Idref="PAVEXAD31_SHP_0006" Name="Hiển thị công việc chờ theo ưu tiên" />
+      </MasterView>
+    </ActivityAction>
+    <DecisionNode Documentation_plain="" Id="PAVEXAD31_DEC_0001" Name="" PmAuthor="baophuc" PmCreateDateTime="2026-10-03T09:00:00.000" PmLastModified="2026-10-03T09:00:00.000" QualityReason_IsNull="true" QualityScore="-1">
+      <FromSimpleRelationships>
+        <ControlFlow Idref="PAVEXAD31_CONR_0001" Name="" />
+        <ControlFlow Idref="PAVEXAD31_CONR_0012" Name="" />
+      </FromSimpleRelationships>
+      <ToSimpleRelationships>
+        <ControlFlow Idref="PAVEXAD31_CONR_0011" Name="" />
+      </ToSimpleRelationships>
+      <MasterView>
+        <DecisionNode Idref="PAVEXAD31_SHP_0007" Name="" />
+      </MasterView>
+    </DecisionNode>
+    <ActivityAction Documentation_plain="" Id="PAVEXAD31_ACT_0006" Name="Yêu cầu ghi chú, chuyển CANCELLED" PmAuthor="baophuc" PmCreateDateTime="2026-10-03T09:00:00.000" PmLastModified="2026-10-03T09:00:00.000" QualityReason_IsNull="true" QualityScore="-1">
+      <FromSimpleRelationships>
+        <ControlFlow Idref="PAVEXAD31_CONR_0002" Name="" />
+      </FromSimpleRelationships>
+      <ToSimpleRelationships>
+        <ControlFlow Idref="PAVEXAD31_CONR_0001" Name="" />
+      </ToSimpleRelationships>
+      <MasterView>
+        <ActivityAction Idref="PAVEXAD31_SHP_0008" Name="Yêu cầu ghi chú, chuyển CANCELLED" />
+      </MasterView>
+    </ActivityAction>
+    <ActivityFinalNode Documentation_plain="" Id="PAVEXAD31_ACT_0007" Name="Kết thúc" PmAuthor="baophuc" PmCreateDateTime="2026-10-03T09:00:00.000" PmLastModified="2026-10-03T09:00:00.000" QualityReason_IsNull="true" QualityScore="-1">
+      <ToSimpleRelationships>
+        <ControlFlow Idref="PAVEXAD31_CONR_0002" Name="" />
+      </ToSimpleRelationships>
+      <MasterView>
+        <ActivityFinalNode Idref="PAVEXAD31_SHP_0009" Name="Kết thúc" />
+      </MasterView>
+    </ActivityFinalNode>
+    <ActivityAction Documentation_plain="" Id="PAVEXAD31_ACT_0008" Name="Chọn công việc" PmAuthor="baophuc" PmCreateDateTime="2026-10-03T09:00:00.000" PmLastModified="2026-10-03T09:00:00.000" QualityReason_IsNull="true" QualityScore="-1">
+      <FromSimpleRelationships>
+        <ControlFlow Idref="PAVEXAD31_CONR_0013" Name="" />
+      </FromSimpleRelationships>
+      <ToSimpleRelationships>
+        <ControlFlow Idref="PAVEXAD31_CONR_0012" Name="" />
+      </ToSimpleRelationships>
+      <MasterView>
+        <ActivityAction Idref="PAVEXAD31_SHP_0010" Name="Chọn công việc" />
+      </MasterView>
+    </ActivityAction>
+    <ActivityAction Documentation_plain="Call behavior action: gọi use case UC24" Id="PAVEXAD31_ACT_0009" Name="UC24 Xem nhân sự vận hành (lọc nhân sự phù hợp)" PmAuthor="baophuc" PmCreateDateTime="2026-10-03T09:00:00.000" PmLastModified="2026-10-03T09:00:00.000" QualityReason_IsNull="true" QualityScore="-1">
+      <FromSimpleRelationships>
+        <ControlFlow Idref="PAVEXAD31_CONR_0014" Name="" />
+      </FromSimpleRelationships>
+      <ToSimpleRelationships>
+        <ControlFlow Idref="PAVEXAD31_CONR_0013" Name="" />
+      </ToSimpleRelationships>
+      <MasterView>
+        <ActivityAction Idref="PAVEXAD31_SHP_0011" Name="UC24 Xem nhân sự vận hành (lọc nhân sự phù hợp)" />
+      </MasterView>
+    </ActivityAction>
+    <DecisionNode Documentation_plain="" Id="PAVEXAD31_DEC_0002" Name="" PmAuthor="baophuc" PmCreateDateTime="2026-10-03T09:00:00.000" PmLastModified="2026-10-03T09:00:00.000" QualityReason_IsNull="true" QualityScore="-1">
+      <FromSimpleRelationships>
+        <ControlFlow Idref="PAVEXAD31_CONR_0003" Name="" />
+        <ControlFlow Idref="PAVEXAD31_CONR_0015" Name="" />
+      </FromSimpleRelationships>
+      <ToSimpleRelationships>
+        <ControlFlow Idref="PAVEXAD31_CONR_0014" Name="" />
+      </ToSimpleRelationships>
+      <MasterView>
+        <DecisionNode Idref="PAVEXAD31_SHP_0012" Name="" />
+      </MasterView>
+    </DecisionNode>
+    <ActivityAction Documentation_plain="" Id="PAVEXAD31_ACT_0010" Name="Thông báo không có nhân sự sẵn sàng" PmAuthor="baophuc" PmCreateDateTime="2026-10-03T09:00:00.000" PmLastModified="2026-10-03T09:00:00.000" QualityReason_IsNull="true" QualityScore="-1">
+      <FromSimpleRelationships>
+        <ControlFlow Idref="PAVEXAD31_CONR_0004" Name="" />
+      </FromSimpleRelationships>
+      <ToSimpleRelationships>
+        <ControlFlow Idref="PAVEXAD31_CONR_0003" Name="" />
+      </ToSimpleRelationships>
+      <MasterView>
+        <ActivityAction Idref="PAVEXAD31_SHP_0013" Name="Thông báo không có nhân sự sẵn sàng" />
+      </MasterView>
+    </ActivityAction>
+    <ActivityFinalNode Documentation_plain="" Id="PAVEXAD31_ACT_0011" Name="Kết thúc" PmAuthor="baophuc" PmCreateDateTime="2026-10-03T09:00:00.000" PmLastModified="2026-10-03T09:00:00.000" QualityReason_IsNull="true" QualityScore="-1">
+      <ToSimpleRelationships>
+        <ControlFlow Idref="PAVEXAD31_CONR_0004" Name="" />
+      </ToSimpleRelationships>
+      <MasterView>
+        <ActivityFinalNode Idref="PAVEXAD31_SHP_0014" Name="Kết thúc" />
+      </MasterView>
+    </ActivityFinalNode>
+    <MergeNode Documentation_plain="" Id="PAVEXAD31_MER_0001" Name="" PmAuthor="baophuc" PmCreateDateTime="2026-10-03T09:00:00.000" PmLastModified="2026-10-03T09:00:00.000" QualityReason_IsNull="true" QualityScore="-1">
+      <FromSimpleRelationships>
+        <ControlFlow Idref="PAVEXAD31_CONR_0016" Name="" />
+      </FromSimpleRelationships>
+      <ToSimpleRelationships>
+        <ControlFlow Idref="PAVEXAD31_CONR_0015" Name="" />
+        <ControlFlow Idref="PAVEXAD31_CONR_0022" Name="" />
+      </ToSimpleRelationships>
+      <MasterView>
+        <MergeNode Idref="PAVEXAD31_SHP_0015" Name="" />
+      </MasterView>
+    </MergeNode>
+    <ActivityAction Documentation_plain="" Id="PAVEXAD31_ACT_0012" Name="Chọn nhân sự và nhấn Phân công" PmAuthor="baophuc" PmCreateDateTime="2026-10-03T09:00:00.000" PmLastModified="2026-10-03T09:00:00.000" QualityReason_IsNull="true" QualityScore="-1">
+      <FromSimpleRelationships>
+        <ControlFlow Idref="PAVEXAD31_CONR_0017" Name="" />
+      </FromSimpleRelationships>
+      <ToSimpleRelationships>
+        <ControlFlow Idref="PAVEXAD31_CONR_0016" Name="" />
+      </ToSimpleRelationships>
+      <MasterView>
+        <ActivityAction Idref="PAVEXAD31_SHP_0016" Name="Chọn nhân sự và nhấn Phân công" />
+      </MasterView>
+    </ActivityAction>
+    <ActivityAction Documentation_plain="" Id="PAVEXAD31_ACT_0013" Name="Kiểm tra lại điều kiện của nhân sự" PmAuthor="baophuc" PmCreateDateTime="2026-10-03T09:00:00.000" PmLastModified="2026-10-03T09:00:00.000" QualityReason_IsNull="true" QualityScore="-1">
+      <FromSimpleRelationships>
+        <ControlFlow Idref="PAVEXAD31_CONR_0018" Name="" />
+      </FromSimpleRelationships>
+      <ToSimpleRelationships>
+        <ControlFlow Idref="PAVEXAD31_CONR_0017" Name="" />
+      </ToSimpleRelationships>
+      <MasterView>
+        <ActivityAction Idref="PAVEXAD31_SHP_0017" Name="Kiểm tra lại điều kiện của nhân sự" />
+      </MasterView>
+    </ActivityAction>
+    <DecisionNode Documentation_plain="" Id="PAVEXAD31_DEC_0003" Name="" PmAuthor="baophuc" PmCreateDateTime="2026-10-03T09:00:00.000" PmLastModified="2026-10-03T09:00:00.000" QualityReason_IsNull="true" QualityScore="-1">
+      <FromSimpleRelationships>
+        <ControlFlow Idref="PAVEXAD31_CONR_0005" Name="" />
+        <ControlFlow Idref="PAVEXAD31_CONR_0019" Name="" />
+      </FromSimpleRelationships>
+      <ToSimpleRelationships>
+        <ControlFlow Idref="PAVEXAD31_CONR_0018" Name="" />
+      </ToSimpleRelationships>
+      <MasterView>
+        <DecisionNode Idref="PAVEXAD31_SHP_0018" Name="" />
+      </MasterView>
+    </DecisionNode>
+    <ActivityAction Documentation_plain="" Id="PAVEXAD31_ACT_0014" Name="Cảnh báo, yêu cầu chọn nhân sự khác" PmAuthor="baophuc" PmCreateDateTime="2026-10-03T09:00:00.000" PmLastModified="2026-10-03T09:00:00.000" QualityReason_IsNull="true" QualityScore="-1">
+      <FromSimpleRelationships>
+        <ControlFlow Idref="PAVEXAD31_CONR_0022" Name="" />
+      </FromSimpleRelationships>
+      <ToSimpleRelationships>
+        <ControlFlow Idref="PAVEXAD31_CONR_0005" Name="" />
+      </ToSimpleRelationships>
+      <MasterView>
+        <ActivityAction Idref="PAVEXAD31_SHP_0019" Name="Cảnh báo, yêu cầu chọn nhân sự khác" />
+      </MasterView>
+    </ActivityAction>
+    <ActivityAction Documentation_plain="" Id="PAVEXAD31_ACT_0015" Name="Cập nhật ASSIGNED, ghi người phân công, thời điểm" PmAuthor="baophuc" PmCreateDateTime="2026-10-03T09:00:00.000" PmLastModified="2026-10-03T09:00:00.000" QualityReason_IsNull="true" QualityScore="-1">
+      <FromSimpleRelationships>
+        <ControlFlow Idref="PAVEXAD31_CONR_0020" Name="" />
+      </FromSimpleRelationships>
+      <ToSimpleRelationships>
+        <ControlFlow Idref="PAVEXAD31_CONR_0019" Name="" />
+      </ToSimpleRelationships>
+      <MasterView>
+        <ActivityAction Idref="PAVEXAD31_SHP_0020" Name="Cập nhật ASSIGNED, ghi người phân công, thời điểm" />
+      </MasterView>
+    </ActivityAction>
+    <ForkNode Documentation_plain="" Id="PAVEXAD31_FOR_0001" Name="" PmAuthor="baophuc" PmCreateDateTime="2026-10-03T09:00:00.000" PmLastModified="2026-10-03T09:00:00.000" QualityReason_IsNull="true" QualityScore="-1">
+      <FromSimpleRelationships>
+        <ControlFlow Idref="PAVEXAD31_CONR_0006" Name="" />
+        <ControlFlow Idref="PAVEXAD31_CONR_0008" Name="" />
+      </FromSimpleRelationships>
+      <ToSimpleRelationships>
+        <ControlFlow Idref="PAVEXAD31_CONR_0020" Name="" />
+      </ToSimpleRelationships>
+      <MasterView>
+        <ForkNode Idref="PAVEXAD31_SHP_0021" Name="" />
+      </MasterView>
+    </ForkNode>
+    <JoinNode Documentation_plain="" Id="PAVEXAD31_JOI_0001" Name="" PmAuthor="baophuc" PmCreateDateTime="2026-10-03T09:00:00.000" PmLastModified="2026-10-03T09:00:00.000" QualityReason_IsNull="true" QualityScore="-1">
+      <FromSimpleRelationships>
+        <ControlFlow Idref="PAVEXAD31_CONR_0023" Name="" />
+      </FromSimpleRelationships>
+      <ToSimpleRelationships>
+        <ControlFlow Idref="PAVEXAD31_CONR_0007" Name="" />
+        <ControlFlow Idref="PAVEXAD31_CONR_0009" Name="" />
+      </ToSimpleRelationships>
+      <MasterView>
+        <JoinNode Idref="PAVEXAD31_SHP_0022" Name="" />
+      </MasterView>
+    </JoinNode>
+    <ActivityAction Documentation_plain="" Id="PAVEXAD31_ACT_0016" Name="Đẩy công việc đến ứng dụng của nhân sự" PmAuthor="baophuc" PmCreateDateTime="2026-10-03T09:00:00.000" PmLastModified="2026-10-03T09:00:00.000" QualityReason_IsNull="true" QualityScore="-1">
+      <FromSimpleRelationships>
+        <ControlFlow Idref="PAVEXAD31_CONR_0007" Name="" />
+      </FromSimpleRelationships>
+      <ToSimpleRelationships>
+        <ControlFlow Idref="PAVEXAD31_CONR_0006" Name="" />
+      </ToSimpleRelationships>
+      <MasterView>
+        <ActivityAction Idref="PAVEXAD31_SHP_0023" Name="Đẩy công việc đến ứng dụng của nhân sự" />
+      </MasterView>
+    </ActivityAction>
+    <ActivityAction Documentation_plain="" Id="PAVEXAD31_ACT_0017" Name="Hiển thị “Phân công thành công”" PmAuthor="baophuc" PmCreateDateTime="2026-10-03T09:00:00.000" PmLastModified="2026-10-03T09:00:00.000" QualityReason_IsNull="true" QualityScore="-1">
+      <FromSimpleRelationships>
+        <ControlFlow Idref="PAVEXAD31_CONR_0009" Name="" />
+      </FromSimpleRelationships>
+      <ToSimpleRelationships>
+        <ControlFlow Idref="PAVEXAD31_CONR_0008" Name="" />
+      </ToSimpleRelationships>
+      <MasterView>
+        <ActivityAction Idref="PAVEXAD31_SHP_0024" Name="Hiển thị “Phân công thành công”" />
+      </MasterView>
+    </ActivityAction>
+    <ActivityFinalNode Documentation_plain="" Id="PAVEXAD31_ACT_0018" Name="Kết thúc" PmAuthor="baophuc" PmCreateDateTime="2026-10-03T09:00:00.000" PmLastModified="2026-10-03T09:00:00.000" QualityReason_IsNull="true" QualityScore="-1">
+      <ToSimpleRelationships>
+        <ControlFlow Idref="PAVEXAD31_CONR_0023" Name="" />
+      </ToSimpleRelationships>
+      <MasterView>
+        <ActivityFinalNode Idref="PAVEXAD31_SHP_0025" Name="Kết thúc" />
+      </MasterView>
+    </ActivityFinalNode>
+    <ModelRelationshipContainer Documentation_plain="" Id="PAVEXAD31_REL_0001" Name="relationships" PmAuthor="baophuc" PmCreateDateTime="2026-10-03T09:00:00.000" PmLastModified="2026-10-03T09:00:00.000" QualityReason_IsNull="true" QualityScore="-1">
+      <ModelChildren>
+        <ModelRelationshipContainer Documentation_plain="" Id="PAVEXAD31_REL_0002" Name="ControlFlow" PmAuthor="baophuc" PmCreateDateTime="2026-10-03T09:00:00.000" PmLastModified="2026-10-03T09:00:00.000" QualityReason_IsNull="true" QualityScore="-1">
+          <ModelChildren>
+            <ControlFlow Documentation_plain="" Id="PAVEXAD31_CONR_0001" Name="" PmAuthor="baophuc" PmCreateDateTime="2026-10-03T09:00:00.000" PmLastModified="2026-10-03T09:00:00.000" QualityReason_IsNull="true" QualityScore="-1" From="PAVEXAD31_DEC_0001" To="PAVEXAD31_ACT_0006" Visibility="Unspecified" Guard="hủy công việc">
+              <MasterView>
+                <ControlFlow Idref="PAVEXAD31_CON_0001" Name="" />
+              </MasterView>
+            </ControlFlow>
+            <ControlFlow Documentation_plain="" Id="PAVEXAD31_CONR_0002" Name="" PmAuthor="baophuc" PmCreateDateTime="2026-10-03T09:00:00.000" PmLastModified="2026-10-03T09:00:00.000" QualityReason_IsNull="true" QualityScore="-1" From="PAVEXAD31_ACT_0006" To="PAVEXAD31_ACT_0007" Visibility="Unspecified">
+              <MasterView>
+                <ControlFlow Idref="PAVEXAD31_CON_0002" Name="" />
+              </MasterView>
+            </ControlFlow>
+            <ControlFlow Documentation_plain="" Id="PAVEXAD31_CONR_0003" Name="" PmAuthor="baophuc" PmCreateDateTime="2026-10-03T09:00:00.000" PmLastModified="2026-10-03T09:00:00.000" QualityReason_IsNull="true" QualityScore="-1" From="PAVEXAD31_DEC_0002" To="PAVEXAD31_ACT_0010" Visibility="Unspecified" Guard="không có nhân sự">
+              <MasterView>
+                <ControlFlow Idref="PAVEXAD31_CON_0003" Name="" />
+              </MasterView>
+            </ControlFlow>
+            <ControlFlow Documentation_plain="" Id="PAVEXAD31_CONR_0004" Name="" PmAuthor="baophuc" PmCreateDateTime="2026-10-03T09:00:00.000" PmLastModified="2026-10-03T09:00:00.000" QualityReason_IsNull="true" QualityScore="-1" From="PAVEXAD31_ACT_0010" To="PAVEXAD31_ACT_0011" Visibility="Unspecified">
+              <MasterView>
+                <ControlFlow Idref="PAVEXAD31_CON_0004" Name="" />
+              </MasterView>
+            </ControlFlow>
+            <ControlFlow Documentation_plain="" Id="PAVEXAD31_CONR_0005" Name="" PmAuthor="baophuc" PmCreateDateTime="2026-10-03T09:00:00.000" PmLastModified="2026-10-03T09:00:00.000" QualityReason_IsNull="true" QualityScore="-1" From="PAVEXAD31_DEC_0003" To="PAVEXAD31_ACT_0014" Visibility="Unspecified" Guard="quá tải / đã hết ca">
+              <MasterView>
+                <ControlFlow Idref="PAVEXAD31_CON_0005" Name="" />
+              </MasterView>
+            </ControlFlow>
+            <ControlFlow Documentation_plain="" Id="PAVEXAD31_CONR_0006" Name="" PmAuthor="baophuc" PmCreateDateTime="2026-10-03T09:00:00.000" PmLastModified="2026-10-03T09:00:00.000" QualityReason_IsNull="true" QualityScore="-1" From="PAVEXAD31_FOR_0001" To="PAVEXAD31_ACT_0016" Visibility="Unspecified">
+              <MasterView>
+                <ControlFlow Idref="PAVEXAD31_CON_0006" Name="" />
+              </MasterView>
+            </ControlFlow>
+            <ControlFlow Documentation_plain="" Id="PAVEXAD31_CONR_0007" Name="" PmAuthor="baophuc" PmCreateDateTime="2026-10-03T09:00:00.000" PmLastModified="2026-10-03T09:00:00.000" QualityReason_IsNull="true" QualityScore="-1" From="PAVEXAD31_ACT_0016" To="PAVEXAD31_JOI_0001" Visibility="Unspecified">
+              <MasterView>
+                <ControlFlow Idref="PAVEXAD31_CON_0007" Name="" />
+              </MasterView>
+            </ControlFlow>
+            <ControlFlow Documentation_plain="" Id="PAVEXAD31_CONR_0008" Name="" PmAuthor="baophuc" PmCreateDateTime="2026-10-03T09:00:00.000" PmLastModified="2026-10-03T09:00:00.000" QualityReason_IsNull="true" QualityScore="-1" From="PAVEXAD31_FOR_0001" To="PAVEXAD31_ACT_0017" Visibility="Unspecified">
+              <MasterView>
+                <ControlFlow Idref="PAVEXAD31_CON_0008" Name="" />
+              </MasterView>
+            </ControlFlow>
+            <ControlFlow Documentation_plain="" Id="PAVEXAD31_CONR_0009" Name="" PmAuthor="baophuc" PmCreateDateTime="2026-10-03T09:00:00.000" PmLastModified="2026-10-03T09:00:00.000" QualityReason_IsNull="true" QualityScore="-1" From="PAVEXAD31_ACT_0017" To="PAVEXAD31_JOI_0001" Visibility="Unspecified">
+              <MasterView>
+                <ControlFlow Idref="PAVEXAD31_CON_0009" Name="" />
+              </MasterView>
+            </ControlFlow>
+            <ControlFlow Documentation_plain="" Id="PAVEXAD31_CONR_0010" Name="" PmAuthor="baophuc" PmCreateDateTime="2026-10-03T09:00:00.000" PmLastModified="2026-10-03T09:00:00.000" QualityReason_IsNull="true" QualityScore="-1" From="PAVEXAD31_ACT_0004" To="PAVEXAD31_ACT_0005" Visibility="Unspecified">
+              <MasterView>
+                <ControlFlow Idref="PAVEXAD31_CON_0010" Name="" />
+              </MasterView>
+            </ControlFlow>
+            <ControlFlow Documentation_plain="" Id="PAVEXAD31_CONR_0011" Name="" PmAuthor="baophuc" PmCreateDateTime="2026-10-03T09:00:00.000" PmLastModified="2026-10-03T09:00:00.000" QualityReason_IsNull="true" QualityScore="-1" From="PAVEXAD31_ACT_0005" To="PAVEXAD31_DEC_0001" Visibility="Unspecified">
+              <MasterView>
+                <ControlFlow Idref="PAVEXAD31_CON_0011" Name="" />
+              </MasterView>
+            </ControlFlow>
+            <ControlFlow Documentation_plain="" Id="PAVEXAD31_CONR_0012" Name="" PmAuthor="baophuc" PmCreateDateTime="2026-10-03T09:00:00.000" PmLastModified="2026-10-03T09:00:00.000" QualityReason_IsNull="true" QualityScore="-1" From="PAVEXAD31_DEC_0001" To="PAVEXAD31_ACT_0008" Visibility="Unspecified" Guard="phân công / phân công lại">
+              <MasterView>
+                <ControlFlow Idref="PAVEXAD31_CON_0012" Name="" />
+              </MasterView>
+            </ControlFlow>
+            <ControlFlow Documentation_plain="" Id="PAVEXAD31_CONR_0013" Name="" PmAuthor="baophuc" PmCreateDateTime="2026-10-03T09:00:00.000" PmLastModified="2026-10-03T09:00:00.000" QualityReason_IsNull="true" QualityScore="-1" From="PAVEXAD31_ACT_0008" To="PAVEXAD31_ACT_0009" Visibility="Unspecified">
+              <MasterView>
+                <ControlFlow Idref="PAVEXAD31_CON_0013" Name="" />
+              </MasterView>
+            </ControlFlow>
+            <ControlFlow Documentation_plain="" Id="PAVEXAD31_CONR_0014" Name="" PmAuthor="baophuc" PmCreateDateTime="2026-10-03T09:00:00.000" PmLastModified="2026-10-03T09:00:00.000" QualityReason_IsNull="true" QualityScore="-1" From="PAVEXAD31_ACT_0009" To="PAVEXAD31_DEC_0002" Visibility="Unspecified">
+              <MasterView>
+                <ControlFlow Idref="PAVEXAD31_CON_0014" Name="" />
+              </MasterView>
+            </ControlFlow>
+            <ControlFlow Documentation_plain="" Id="PAVEXAD31_CONR_0015" Name="" PmAuthor="baophuc" PmCreateDateTime="2026-10-03T09:00:00.000" PmLastModified="2026-10-03T09:00:00.000" QualityReason_IsNull="true" QualityScore="-1" From="PAVEXAD31_DEC_0002" To="PAVEXAD31_MER_0001" Visibility="Unspecified" Guard="có nhân sự phù hợp">
+              <MasterView>
+                <ControlFlow Idref="PAVEXAD31_CON_0015" Name="" />
+              </MasterView>
+            </ControlFlow>
+            <ControlFlow Documentation_plain="" Id="PAVEXAD31_CONR_0016" Name="" PmAuthor="baophuc" PmCreateDateTime="2026-10-03T09:00:00.000" PmLastModified="2026-10-03T09:00:00.000" QualityReason_IsNull="true" QualityScore="-1" From="PAVEXAD31_MER_0001" To="PAVEXAD31_ACT_0012" Visibility="Unspecified">
+              <MasterView>
+                <ControlFlow Idref="PAVEXAD31_CON_0016" Name="" />
+              </MasterView>
+            </ControlFlow>
+            <ControlFlow Documentation_plain="" Id="PAVEXAD31_CONR_0017" Name="" PmAuthor="baophuc" PmCreateDateTime="2026-10-03T09:00:00.000" PmLastModified="2026-10-03T09:00:00.000" QualityReason_IsNull="true" QualityScore="-1" From="PAVEXAD31_ACT_0012" To="PAVEXAD31_ACT_0013" Visibility="Unspecified">
+              <MasterView>
+                <ControlFlow Idref="PAVEXAD31_CON_0017" Name="" />
+              </MasterView>
+            </ControlFlow>
+            <ControlFlow Documentation_plain="" Id="PAVEXAD31_CONR_0018" Name="" PmAuthor="baophuc" PmCreateDateTime="2026-10-03T09:00:00.000" PmLastModified="2026-10-03T09:00:00.000" QualityReason_IsNull="true" QualityScore="-1" From="PAVEXAD31_ACT_0013" To="PAVEXAD31_DEC_0003" Visibility="Unspecified">
+              <MasterView>
+                <ControlFlow Idref="PAVEXAD31_CON_0018" Name="" />
+              </MasterView>
+            </ControlFlow>
+            <ControlFlow Documentation_plain="" Id="PAVEXAD31_CONR_0019" Name="" PmAuthor="baophuc" PmCreateDateTime="2026-10-03T09:00:00.000" PmLastModified="2026-10-03T09:00:00.000" QualityReason_IsNull="true" QualityScore="-1" From="PAVEXAD31_DEC_0003" To="PAVEXAD31_ACT_0015" Visibility="Unspecified" Guard="còn hợp lệ">
+              <MasterView>
+                <ControlFlow Idref="PAVEXAD31_CON_0019" Name="" />
+              </MasterView>
+            </ControlFlow>
+            <ControlFlow Documentation_plain="" Id="PAVEXAD31_CONR_0020" Name="" PmAuthor="baophuc" PmCreateDateTime="2026-10-03T09:00:00.000" PmLastModified="2026-10-03T09:00:00.000" QualityReason_IsNull="true" QualityScore="-1" From="PAVEXAD31_ACT_0015" To="PAVEXAD31_FOR_0001" Visibility="Unspecified">
+              <MasterView>
+                <ControlFlow Idref="PAVEXAD31_CON_0020" Name="" />
+              </MasterView>
+            </ControlFlow>
+            <ControlFlow Documentation_plain="" Id="PAVEXAD31_CONR_0021" Name="" PmAuthor="baophuc" PmCreateDateTime="2026-10-03T09:00:00.000" PmLastModified="2026-10-03T09:00:00.000" QualityReason_IsNull="true" QualityScore="-1" From="PAVEXAD31_INI_0001" To="PAVEXAD31_ACT_0004" Visibility="Unspecified">
+              <MasterView>
+                <ControlFlow Idref="PAVEXAD31_CON_0021" Name="" />
+              </MasterView>
+            </ControlFlow>
+            <ControlFlow Documentation_plain="" Id="PAVEXAD31_CONR_0022" Name="" PmAuthor="baophuc" PmCreateDateTime="2026-10-03T09:00:00.000" PmLastModified="2026-10-03T09:00:00.000" QualityReason_IsNull="true" QualityScore="-1" From="PAVEXAD31_ACT_0014" To="PAVEXAD31_MER_0001" Visibility="Unspecified">
+              <MasterView>
+                <ControlFlow Idref="PAVEXAD31_CON_0022" Name="" />
+              </MasterView>
+            </ControlFlow>
+            <ControlFlow Documentation_plain="" Id="PAVEXAD31_CONR_0023" Name="" PmAuthor="baophuc" PmCreateDateTime="2026-10-03T09:00:00.000" PmLastModified="2026-10-03T09:00:00.000" QualityReason_IsNull="true" QualityScore="-1" From="PAVEXAD31_JOI_0001" To="PAVEXAD31_ACT_0018" Visibility="Unspecified">
+              <MasterView>
+                <ControlFlow Idref="PAVEXAD31_CON_0023" Name="" />
+              </MasterView>
+            </ControlFlow>
+          </ModelChildren>
+        </ModelRelationshipContainer>
+      </ModelChildren>
+    </ModelRelationshipContainer>
+  </Models>
+  <Diagrams>
+    <ActivityDiagram AlignToGrid="false" AutoFitShapesSize="false" ConnectionPointStyle="0" DiagramBackground="rgb(255, 255, 255)" Documentation_plain="Sơ đồ hoạt động của use case UC31 – Điều phối công việc." Editable="true" Id="PAVEXAD31_DIA_0001" Name="AD-UC31 Điều phối công việc" PmAuthor="baophuc" PmCreateDateTime="2026-10-03T09:00:00.000" PmLastModified="2026-10-03T09:00:00.000" QualityScore="-1" ShowDiagramFrame="false">
+      <Shapes>
+        <ActivitySwimlane2 Background="rgb(122, 207, 245)" ConnectToPoint="false" ConnectionPointType="2" CoverConnector="false" Foreground="rgb(0, 0, 0)" Height="1115" Id="PAVEXAD31_SHP_0001" MetaModelElement="PAVEXAD31_ACT_0001" Model="PAVEXAD31_ACT_0001" ModelElementNameAlignment="9" Name="Swimlane UC31" OverrideAppearanceWithStereotypeIcon="true" PresentationOption="4" PrimitiveShapeType="0" RequestDefaultSize="false" RequestFitSize="false" RequestResetCaption="false" Selectable="true" Width="950" X="8" Y="32" ZOrder="1">
+          <ElementFont Color="rgb(0, 0, 0)" Name="Dialog" Size="11" Style="0" />
+          <Line Cap="0" Color="rgb(0, 0, 0)" Transparency="0" Weight="1.0">
+            <Stroke />
+          </Line>
+          <FillColor Color="rgb(122, 207, 245)" Style="1" Transparency="0" Type="1" />
+        </ActivitySwimlane2>
+        <ActivityPartition Background="rgb(122, 207, 245)" ConnectToPoint="false" ConnectionPointType="2" CoverConnector="false" Foreground="rgb(0, 0, 0)" Height="1115" Id="PAVEXAD31_SHP_0002" MetaModelElement="PAVEXAD31_ACT_0002" Model="PAVEXAD31_ACT_0002" ModelElementNameAlignment="9" Name="Hub Dispatch" OverrideAppearanceWithStereotypeIcon="true" PresentationOption="4" PrimitiveShapeType="0" RequestDefaultSize="false" RequestFitSize="false" RequestResetCaption="false" Selectable="true" Width="380" X="8" Y="32" ZOrder="2">
+          <ElementFont Color="rgb(0, 0, 0)" Name="Dialog" Size="11" Style="0" />
+          <Line Cap="0" Color="rgb(0, 0, 0)" Transparency="0" Weight="1.0">
+            <Stroke />
+          </Line>
+          <FillColor Color="rgb(122, 207, 245)" Style="1" Transparency="0" Type="1" />
+        </ActivityPartition>
+        <ActivityPartition Background="rgb(122, 207, 245)" ConnectToPoint="false" ConnectionPointType="2" CoverConnector="false" Foreground="rgb(0, 0, 0)" Height="1115" Id="PAVEXAD31_SHP_0003" MetaModelElement="PAVEXAD31_ACT_0003" Model="PAVEXAD31_ACT_0003" ModelElementNameAlignment="9" Name="Hệ thống PAVEX" OverrideAppearanceWithStereotypeIcon="true" PresentationOption="4" PrimitiveShapeType="0" RequestDefaultSize="false" RequestFitSize="false" RequestResetCaption="false" Selectable="true" Width="570" X="388" Y="32" ZOrder="3">
+          <ElementFont Color="rgb(0, 0, 0)" Name="Dialog" Size="11" Style="0" />
+          <Line Cap="0" Color="rgb(0, 0, 0)" Transparency="0" Weight="1.0">
+            <Stroke />
+          </Line>
+          <FillColor Color="rgb(122, 207, 245)" Style="1" Transparency="0" Type="1" />
+        </ActivityPartition>
+        <InitialNode Background="rgb(122, 207, 245)" ConnectToPoint="false" ConnectionPointType="2" CoverConnector="false" Foreground="rgb(0, 0, 0)" Height="20" Id="PAVEXAD31_SHP_0004" MetaModelElement="PAVEXAD31_INI_0001" Model="PAVEXAD31_INI_0001" ModelElementNameAlignment="9" Name="Bắt đầu" OverrideAppearanceWithStereotypeIcon="true" PresentationOption="4" PrimitiveShapeType="0" RequestDefaultSize="false" RequestFitSize="false" RequestResetCaption="false" Selectable="true" Width="20" X="188" Y="68" ZOrder="4">
+          <ElementFont Color="rgb(0, 0, 0)" Name="Dialog" Size="11" Style="0" />
+          <Line Cap="0" Color="rgb(0, 0, 0)" Transparency="0" Weight="1.0">
+            <Stroke />
+          </Line>
+          <FillColor Color="rgb(122, 207, 245)" Style="1" Transparency="0" Type="1" />
+        </InitialNode>
+        <ActivityAction Background="rgb(122, 207, 245)" ConnectToPoint="false" ConnectionPointType="2" CoverConnector="false" Foreground="rgb(0, 0, 0)" Height="40" Id="PAVEXAD31_SHP_0005" MetaModelElement="PAVEXAD31_ACT_0004" Model="PAVEXAD31_ACT_0004" ModelElementNameAlignment="9" Name="Mở Điều phối công việc" OverrideAppearanceWithStereotypeIcon="true" PresentationOption="4" PrimitiveShapeType="0" RequestDefaultSize="false" RequestFitSize="false" RequestResetCaption="false" Selectable="true" Width="220" X="88" Y="108" ZOrder="5">
+          <ElementFont Color="rgb(0, 0, 0)" Name="Dialog" Size="11" Style="0" />
+          <Line Cap="0" Color="rgb(0, 0, 0)" Transparency="0" Weight="1.0">
+            <Stroke />
+          </Line>
+          <FillColor Color="rgb(122, 207, 245)" Style="1" Transparency="0" Type="1" />
+        </ActivityAction>
+        <ActivityAction Background="rgb(122, 207, 245)" ConnectToPoint="false" ConnectionPointType="2" CoverConnector="false" Foreground="rgb(0, 0, 0)" Height="46" Id="PAVEXAD31_SHP_0006" MetaModelElement="PAVEXAD31_ACT_0005" Model="PAVEXAD31_ACT_0005" ModelElementNameAlignment="9" Name="Hiển thị công việc chờ theo ưu tiên" OverrideAppearanceWithStereotypeIcon="true" PresentationOption="4" PrimitiveShapeType="0" RequestDefaultSize="false" RequestFitSize="false" RequestResetCaption="false" Selectable="true" Width="220" X="443" Y="178" ZOrder="6">
+          <ElementFont Color="rgb(0, 0, 0)" Name="Dialog" Size="11" Style="0" />
+          <Line Cap="0" Color="rgb(0, 0, 0)" Transparency="0" Weight="1.0">
+            <Stroke />
+          </Line>
+          <FillColor Color="rgb(122, 207, 245)" Style="1" Transparency="0" Type="1" />
+        </ActivityAction>
+        <DecisionNode Background="rgb(122, 207, 245)" ConnectToPoint="false" ConnectionPointType="2" CoverConnector="false" Foreground="rgb(0, 0, 0)" Height="30" Id="PAVEXAD31_SHP_0007" MetaModelElement="PAVEXAD31_DEC_0001" Model="PAVEXAD31_DEC_0001" ModelElementNameAlignment="9" Name="" OverrideAppearanceWithStereotypeIcon="true" PresentationOption="4" PrimitiveShapeType="0" RequestDefaultSize="false" RequestFitSize="false" RequestResetCaption="false" Selectable="true" Width="30" X="183" Y="254" ZOrder="7">
+          <ElementFont Color="rgb(0, 0, 0)" Name="Dialog" Size="11" Style="0" />
+          <Line Cap="0" Color="rgb(0, 0, 0)" Transparency="0" Weight="1.0">
+            <Stroke />
+          </Line>
+          <FillColor Color="rgb(122, 207, 245)" Style="1" Transparency="0" Type="1" />
+        </DecisionNode>
+        <ActivityAction Background="rgb(122, 207, 245)" ConnectToPoint="false" ConnectionPointType="2" CoverConnector="false" Foreground="rgb(0, 0, 0)" Height="42" Id="PAVEXAD31_SHP_0008" MetaModelElement="PAVEXAD31_ACT_0006" Model="PAVEXAD31_ACT_0006" ModelElementNameAlignment="9" Name="Yêu cầu ghi chú, chuyển CANCELLED" OverrideAppearanceWithStereotypeIcon="true" PresentationOption="4" PrimitiveShapeType="0" RequestDefaultSize="false" RequestFitSize="false" RequestResetCaption="false" Selectable="true" Width="172" X="707" Y="248" ZOrder="8">
+          <ElementFont Color="rgb(0, 0, 0)" Name="Dialog" Size="11" Style="0" />
+          <Line Cap="0" Color="rgb(0, 0, 0)" Transparency="0" Weight="1.0">
+            <Stroke />
+          </Line>
+          <FillColor Color="rgb(122, 207, 245)" Style="1" Transparency="0" Type="1" />
+        </ActivityAction>
+        <ActivityFinalNode Background="rgb(122, 207, 245)" ConnectToPoint="false" ConnectionPointType="2" CoverConnector="false" Foreground="rgb(0, 0, 0)" Height="22" Id="PAVEXAD31_SHP_0009" MetaModelElement="PAVEXAD31_ACT_0007" Model="PAVEXAD31_ACT_0007" ModelElementNameAlignment="9" Name="Kết thúc" OverrideAppearanceWithStereotypeIcon="true" PresentationOption="4" PrimitiveShapeType="0" RequestDefaultSize="false" RequestFitSize="false" RequestResetCaption="false" Selectable="true" Width="22" X="782" Y="306" ZOrder="9">
+          <ElementFont Color="rgb(0, 0, 0)" Name="Dialog" Size="11" Style="0" />
+          <Line Cap="0" Color="rgb(0, 0, 0)" Transparency="0" Weight="1.0">
+            <Stroke />
+          </Line>
+          <FillColor Color="rgb(122, 207, 245)" Style="1" Transparency="0" Type="1" />
+        </ActivityFinalNode>
+        <ActivityAction Background="rgb(122, 207, 245)" ConnectToPoint="false" ConnectionPointType="2" CoverConnector="false" Foreground="rgb(0, 0, 0)" Height="40" Id="PAVEXAD31_SHP_0010" MetaModelElement="PAVEXAD31_ACT_0008" Model="PAVEXAD31_ACT_0008" ModelElementNameAlignment="9" Name="Chọn công việc" OverrideAppearanceWithStereotypeIcon="true" PresentationOption="4" PrimitiveShapeType="0" RequestDefaultSize="false" RequestFitSize="false" RequestResetCaption="false" Selectable="true" Width="220" X="88" Y="364" ZOrder="10">
+          <ElementFont Color="rgb(0, 0, 0)" Name="Dialog" Size="11" Style="0" />
+          <Line Cap="0" Color="rgb(0, 0, 0)" Transparency="0" Weight="1.0">
+            <Stroke />
+          </Line>
+          <FillColor Color="rgb(122, 207, 245)" Style="1" Transparency="0" Type="1" />
+        </ActivityAction>
+        <ActivityAction Background="rgb(122, 207, 245)" ConnectToPoint="false" ConnectionPointType="2" CoverConnector="false" Foreground="rgb(0, 0, 0)" Height="46" Id="PAVEXAD31_SHP_0011" MetaModelElement="PAVEXAD31_ACT_0009" Model="PAVEXAD31_ACT_0009" ModelElementNameAlignment="9" Name="UC24 Xem nhân sự vận hành (lọc nhân sự phù hợp)" OverrideAppearanceWithStereotypeIcon="true" PresentationOption="4" PrimitiveShapeType="0" RequestDefaultSize="false" RequestFitSize="false" RequestResetCaption="false" Selectable="true" Width="220" X="443" Y="434" ZOrder="11">
+          <ElementFont Color="rgb(0, 0, 0)" Name="Dialog" Size="11" Style="0" />
+          <Line Cap="0" Color="rgb(0, 0, 0)" Transparency="0" Weight="1.0">
+            <Stroke />
+          </Line>
+          <FillColor Color="rgb(122, 207, 245)" Style="1" Transparency="0" Type="1" />
+        </ActivityAction>
+        <DecisionNode Background="rgb(122, 207, 245)" ConnectToPoint="false" ConnectionPointType="2" CoverConnector="false" Foreground="rgb(0, 0, 0)" Height="30" Id="PAVEXAD31_SHP_0012" MetaModelElement="PAVEXAD31_DEC_0002" Model="PAVEXAD31_DEC_0002" ModelElementNameAlignment="9" Name="" OverrideAppearanceWithStereotypeIcon="true" PresentationOption="4" PrimitiveShapeType="0" RequestDefaultSize="false" RequestFitSize="false" RequestResetCaption="false" Selectable="true" Width="30" X="538" Y="510" ZOrder="12">
+          <ElementFont Color="rgb(0, 0, 0)" Name="Dialog" Size="11" Style="0" />
+          <Line Cap="0" Color="rgb(0, 0, 0)" Transparency="0" Weight="1.0">
+            <Stroke />
+          </Line>
+          <FillColor Color="rgb(122, 207, 245)" Style="1" Transparency="0" Type="1" />
+        </DecisionNode>
+        <ActivityAction Background="rgb(122, 207, 245)" ConnectToPoint="false" ConnectionPointType="2" CoverConnector="false" Foreground="rgb(0, 0, 0)" Height="42" Id="PAVEXAD31_SHP_0013" MetaModelElement="PAVEXAD31_ACT_0010" Model="PAVEXAD31_ACT_0010" ModelElementNameAlignment="9" Name="Thông báo không có nhân sự sẵn sàng" OverrideAppearanceWithStereotypeIcon="true" PresentationOption="4" PrimitiveShapeType="0" RequestDefaultSize="false" RequestFitSize="false" RequestResetCaption="false" Selectable="true" Width="172" X="707" Y="504" ZOrder="13">
+          <ElementFont Color="rgb(0, 0, 0)" Name="Dialog" Size="11" Style="0" />
+          <Line Cap="0" Color="rgb(0, 0, 0)" Transparency="0" Weight="1.0">
+            <Stroke />
+          </Line>
+          <FillColor Color="rgb(122, 207, 245)" Style="1" Transparency="0" Type="1" />
+        </ActivityAction>
+        <ActivityFinalNode Background="rgb(122, 207, 245)" ConnectToPoint="false" ConnectionPointType="2" CoverConnector="false" Foreground="rgb(0, 0, 0)" Height="22" Id="PAVEXAD31_SHP_0014" MetaModelElement="PAVEXAD31_ACT_0011" Model="PAVEXAD31_ACT_0011" ModelElementNameAlignment="9" Name="Kết thúc" OverrideAppearanceWithStereotypeIcon="true" PresentationOption="4" PrimitiveShapeType="0" RequestDefaultSize="false" RequestFitSize="false" RequestResetCaption="false" Selectable="true" Width="22" X="782" Y="562" ZOrder="14">
+          <ElementFont Color="rgb(0, 0, 0)" Name="Dialog" Size="11" Style="0" />
+          <Line Cap="0" Color="rgb(0, 0, 0)" Transparency="0" Weight="1.0">
+            <Stroke />
+          </Line>
+          <FillColor Color="rgb(122, 207, 245)" Style="1" Transparency="0" Type="1" />
+        </ActivityFinalNode>
+        <MergeNode Background="rgb(122, 207, 245)" ConnectToPoint="false" ConnectionPointType="2" CoverConnector="false" Foreground="rgb(0, 0, 0)" Height="30" Id="PAVEXAD31_SHP_0015" MetaModelElement="PAVEXAD31_MER_0001" Model="PAVEXAD31_MER_0001" ModelElementNameAlignment="9" Name="" OverrideAppearanceWithStereotypeIcon="true" PresentationOption="4" PrimitiveShapeType="0" RequestDefaultSize="false" RequestFitSize="false" RequestResetCaption="false" Selectable="true" Width="30" X="183" Y="620" ZOrder="15">
+          <ElementFont Color="rgb(0, 0, 0)" Name="Dialog" Size="11" Style="0" />
+          <Line Cap="0" Color="rgb(0, 0, 0)" Transparency="0" Weight="1.0">
+            <Stroke />
+          </Line>
+          <FillColor Color="rgb(122, 207, 245)" Style="1" Transparency="0" Type="1" />
+        </MergeNode>
+        <ActivityAction Background="rgb(122, 207, 245)" ConnectToPoint="false" ConnectionPointType="2" CoverConnector="false" Foreground="rgb(0, 0, 0)" Height="40" Id="PAVEXAD31_SHP_0016" MetaModelElement="PAVEXAD31_ACT_0012" Model="PAVEXAD31_ACT_0012" ModelElementNameAlignment="9" Name="Chọn nhân sự và nhấn Phân công" OverrideAppearanceWithStereotypeIcon="true" PresentationOption="4" PrimitiveShapeType="0" RequestDefaultSize="false" RequestFitSize="false" RequestResetCaption="false" Selectable="true" Width="220" X="88" Y="674" ZOrder="16">
+          <ElementFont Color="rgb(0, 0, 0)" Name="Dialog" Size="11" Style="0" />
+          <Line Cap="0" Color="rgb(0, 0, 0)" Transparency="0" Weight="1.0">
+            <Stroke />
+          </Line>
+          <FillColor Color="rgb(122, 207, 245)" Style="1" Transparency="0" Type="1" />
+        </ActivityAction>
+        <ActivityAction Background="rgb(122, 207, 245)" ConnectToPoint="false" ConnectionPointType="2" CoverConnector="false" Foreground="rgb(0, 0, 0)" Height="46" Id="PAVEXAD31_SHP_0017" MetaModelElement="PAVEXAD31_ACT_0013" Model="PAVEXAD31_ACT_0013" ModelElementNameAlignment="9" Name="Kiểm tra lại điều kiện của nhân sự" OverrideAppearanceWithStereotypeIcon="true" PresentationOption="4" PrimitiveShapeType="0" RequestDefaultSize="false" RequestFitSize="false" RequestResetCaption="false" Selectable="true" Width="220" X="443" Y="744" ZOrder="17">
+          <ElementFont Color="rgb(0, 0, 0)" Name="Dialog" Size="11" Style="0" />
+          <Line Cap="0" Color="rgb(0, 0, 0)" Transparency="0" Weight="1.0">
+            <Stroke />
+          </Line>
+          <FillColor Color="rgb(122, 207, 245)" Style="1" Transparency="0" Type="1" />
+        </ActivityAction>
+        <DecisionNode Background="rgb(122, 207, 245)" ConnectToPoint="false" ConnectionPointType="2" CoverConnector="false" Foreground="rgb(0, 0, 0)" Height="30" Id="PAVEXAD31_SHP_0018" MetaModelElement="PAVEXAD31_DEC_0003" Model="PAVEXAD31_DEC_0003" ModelElementNameAlignment="9" Name="" OverrideAppearanceWithStereotypeIcon="true" PresentationOption="4" PrimitiveShapeType="0" RequestDefaultSize="false" RequestFitSize="false" RequestResetCaption="false" Selectable="true" Width="30" X="538" Y="820" ZOrder="18">
+          <ElementFont Color="rgb(0, 0, 0)" Name="Dialog" Size="11" Style="0" />
+          <Line Cap="0" Color="rgb(0, 0, 0)" Transparency="0" Weight="1.0">
+            <Stroke />
+          </Line>
+          <FillColor Color="rgb(122, 207, 245)" Style="1" Transparency="0" Type="1" />
+        </DecisionNode>
+        <ActivityAction Background="rgb(122, 207, 245)" ConnectToPoint="false" ConnectionPointType="2" CoverConnector="false" Foreground="rgb(0, 0, 0)" Height="42" Id="PAVEXAD31_SHP_0019" MetaModelElement="PAVEXAD31_ACT_0014" Model="PAVEXAD31_ACT_0014" ModelElementNameAlignment="9" Name="Cảnh báo, yêu cầu chọn nhân sự khác" OverrideAppearanceWithStereotypeIcon="true" PresentationOption="4" PrimitiveShapeType="0" RequestDefaultSize="false" RequestFitSize="false" RequestResetCaption="false" Selectable="true" Width="172" X="707" Y="814" ZOrder="19">
+          <ElementFont Color="rgb(0, 0, 0)" Name="Dialog" Size="11" Style="0" />
+          <Line Cap="0" Color="rgb(0, 0, 0)" Transparency="0" Weight="1.0">
+            <Stroke />
+          </Line>
+          <FillColor Color="rgb(122, 207, 245)" Style="1" Transparency="0" Type="1" />
+        </ActivityAction>
+        <ActivityAction Background="rgb(122, 207, 245)" ConnectToPoint="false" ConnectionPointType="2" CoverConnector="false" Foreground="rgb(0, 0, 0)" Height="46" Id="PAVEXAD31_SHP_0020" MetaModelElement="PAVEXAD31_ACT_0015" Model="PAVEXAD31_ACT_0015" ModelElementNameAlignment="9" Name="Cập nhật ASSIGNED, ghi người phân công, thời điểm" OverrideAppearanceWithStereotypeIcon="true" PresentationOption="4" PrimitiveShapeType="0" RequestDefaultSize="false" RequestFitSize="false" RequestResetCaption="false" Selectable="true" Width="220" X="443" Y="890" ZOrder="20">
+          <ElementFont Color="rgb(0, 0, 0)" Name="Dialog" Size="11" Style="0" />
+          <Line Cap="0" Color="rgb(0, 0, 0)" Transparency="0" Weight="1.0">
+            <Stroke />
+          </Line>
+          <FillColor Color="rgb(122, 207, 245)" Style="1" Transparency="0" Type="1" />
+        </ActivityAction>
+        <ForkNode Background="rgb(122, 207, 245)" ConnectToPoint="false" ConnectionPointType="2" CoverConnector="false" Foreground="rgb(0, 0, 0)" Height="5" Id="PAVEXAD31_SHP_0021" MetaModelElement="PAVEXAD31_FOR_0001" Model="PAVEXAD31_FOR_0001" ModelElementNameAlignment="9" Name="" OverrideAppearanceWithStereotypeIcon="true" PresentationOption="4" PrimitiveShapeType="0" RequestDefaultSize="false" RequestFitSize="false" RequestResetCaption="false" Selectable="true" Width="300" X="498" Y="970" ZOrder="21">
+          <ElementFont Color="rgb(0, 0, 0)" Name="Dialog" Size="11" Style="0" />
+          <Line Cap="0" Color="rgb(0, 0, 0)" Transparency="0" Weight="1.0">
+            <Stroke />
+          </Line>
+          <FillColor Color="rgb(122, 207, 245)" Style="1" Transparency="0" Type="1" />
+        </ForkNode>
+        <JoinNode Background="rgb(122, 207, 245)" ConnectToPoint="false" ConnectionPointType="2" CoverConnector="false" Foreground="rgb(0, 0, 0)" Height="5" Id="PAVEXAD31_SHP_0022" MetaModelElement="PAVEXAD31_JOI_0001" Model="PAVEXAD31_JOI_0001" ModelElementNameAlignment="9" Name="" OverrideAppearanceWithStereotypeIcon="true" PresentationOption="4" PrimitiveShapeType="0" RequestDefaultSize="false" RequestFitSize="false" RequestResetCaption="false" Selectable="true" Width="300" X="498" Y="1068" ZOrder="22">
+          <ElementFont Color="rgb(0, 0, 0)" Name="Dialog" Size="11" Style="0" />
+          <Line Cap="0" Color="rgb(0, 0, 0)" Transparency="0" Weight="1.0">
+            <Stroke />
+          </Line>
+          <FillColor Color="rgb(122, 207, 245)" Style="1" Transparency="0" Type="1" />
+        </JoinNode>
+        <ActivityAction Background="rgb(122, 207, 245)" ConnectToPoint="false" ConnectionPointType="2" CoverConnector="false" Foreground="rgb(0, 0, 0)" Height="46" Id="PAVEXAD31_SHP_0023" MetaModelElement="PAVEXAD31_ACT_0016" Model="PAVEXAD31_ACT_0016" ModelElementNameAlignment="9" Name="Đẩy công việc đến ứng dụng của nhân sự" OverrideAppearanceWithStereotypeIcon="true" PresentationOption="4" PrimitiveShapeType="0" RequestDefaultSize="false" RequestFitSize="false" RequestResetCaption="false" Selectable="true" Width="220" X="418" Y="996" ZOrder="23">
+          <ElementFont Color="rgb(0, 0, 0)" Name="Dialog" Size="11" Style="0" />
+          <Line Cap="0" Color="rgb(0, 0, 0)" Transparency="0" Weight="1.0">
+            <Stroke />
+          </Line>
+          <FillColor Color="rgb(122, 207, 245)" Style="1" Transparency="0" Type="1" />
+        </ActivityAction>
+        <ActivityAction Background="rgb(122, 207, 245)" ConnectToPoint="false" ConnectionPointType="2" CoverConnector="false" Foreground="rgb(0, 0, 0)" Height="40" Id="PAVEXAD31_SHP_0024" MetaModelElement="PAVEXAD31_ACT_0017" Model="PAVEXAD31_ACT_0017" ModelElementNameAlignment="9" Name="Hiển thị “Phân công thành công”" OverrideAppearanceWithStereotypeIcon="true" PresentationOption="4" PrimitiveShapeType="0" RequestDefaultSize="false" RequestFitSize="false" RequestResetCaption="false" Selectable="true" Width="220" X="658" Y="996" ZOrder="24">
+          <ElementFont Color="rgb(0, 0, 0)" Name="Dialog" Size="11" Style="0" />
+          <Line Cap="0" Color="rgb(0, 0, 0)" Transparency="0" Weight="1.0">
+            <Stroke />
+          </Line>
+          <FillColor Color="rgb(122, 207, 245)" Style="1" Transparency="0" Type="1" />
+        </ActivityAction>
+        <ActivityFinalNode Background="rgb(122, 207, 245)" ConnectToPoint="false" ConnectionPointType="2" CoverConnector="false" Foreground="rgb(0, 0, 0)" Height="22" Id="PAVEXAD31_SHP_0025" MetaModelElement="PAVEXAD31_ACT_0018" Model="PAVEXAD31_ACT_0018" ModelElementNameAlignment="9" Name="Kết thúc" OverrideAppearanceWithStereotypeIcon="true" PresentationOption="4" PrimitiveShapeType="0" RequestDefaultSize="false" RequestFitSize="false" RequestResetCaption="false" Selectable="true" Width="22" X="542" Y="1114" ZOrder="25">
+          <ElementFont Color="rgb(0, 0, 0)" Name="Dialog" Size="11" Style="0" />
+          <Line Cap="0" Color="rgb(0, 0, 0)" Transparency="0" Weight="1.0">
+            <Stroke />
+          </Line>
+          <FillColor Color="rgb(122, 207, 245)" Style="1" Transparency="0" Type="1" />
+        </ActivityFinalNode>
+      </Shapes>
+      <Connectors>
+        <ControlFlow Background="rgb(122, 207, 245)" ConnectorStyle="Follow Diagram" Foreground="rgb(0, 0, 0)" From="PAVEXAD31_SHP_0007" FromConnectType="0" FromPinType="1" Id="PAVEXAD31_CON_0001" MetaModelElement="PAVEXAD31_CONR_0001" Model="PAVEXAD31_CONR_0001" ModelElementNameAlignment="9" Name="" Selectable="true" To="PAVEXAD31_SHP_0008" ToConnectType="0" ToPinType="1" UseFromShapeCenter="true" UseToShapeCenter="true" ZOrder="26">
+          <ElementFont Color="rgb(0, 0, 0)" Name="Dialog" Size="11" Style="0" />
+          <Line Cap="0" Color="rgb(0, 0, 0)" Transparency="0" Weight="1.0">
+            <Stroke />
+          </Line>
+          <Caption Height="0" InternalHeight="-2147483648" InternalWidth="-2147483648" Side="None" Visible="true" Width="20" X="0" Y="0" />
+          <Points>
+            <Point X="213.0" Y="269.0" />
+            <Point X="707.0" Y="269.0" />
+          </Points>
+        </ControlFlow>
+        <ControlFlow Background="rgb(122, 207, 245)" ConnectorStyle="Follow Diagram" Foreground="rgb(0, 0, 0)" From="PAVEXAD31_SHP_0008" FromConnectType="0" FromPinType="1" Id="PAVEXAD31_CON_0002" MetaModelElement="PAVEXAD31_CONR_0002" Model="PAVEXAD31_CONR_0002" ModelElementNameAlignment="9" Name="" Selectable="true" To="PAVEXAD31_SHP_0009" ToConnectType="0" ToPinType="1" UseFromShapeCenter="true" UseToShapeCenter="true" ZOrder="27">
+          <ElementFont Color="rgb(0, 0, 0)" Name="Dialog" Size="11" Style="0" />
+          <Line Cap="0" Color="rgb(0, 0, 0)" Transparency="0" Weight="1.0">
+            <Stroke />
+          </Line>
+          <Caption Height="0" InternalHeight="-2147483648" InternalWidth="-2147483648" Side="None" Visible="true" Width="20" X="0" Y="0" />
+          <Points>
+            <Point X="793.0" Y="290.0" />
+            <Point X="793.0" Y="306.0" />
+          </Points>
+        </ControlFlow>
+        <ControlFlow Background="rgb(122, 207, 245)" ConnectorStyle="Follow Diagram" Foreground="rgb(0, 0, 0)" From="PAVEXAD31_SHP_0012" FromConnectType="0" FromPinType="1" Id="PAVEXAD31_CON_0003" MetaModelElement="PAVEXAD31_CONR_0003" Model="PAVEXAD31_CONR_0003" ModelElementNameAlignment="9" Name="" Selectable="true" To="PAVEXAD31_SHP_0013" ToConnectType="0" ToPinType="1" UseFromShapeCenter="true" UseToShapeCenter="true" ZOrder="28">
+          <ElementFont Color="rgb(0, 0, 0)" Name="Dialog" Size="11" Style="0" />
+          <Line Cap="0" Color="rgb(0, 0, 0)" Transparency="0" Weight="1.0">
+            <Stroke />
+          </Line>
+          <Caption Height="0" InternalHeight="-2147483648" InternalWidth="-2147483648" Side="None" Visible="true" Width="20" X="0" Y="0" />
+          <Points>
+            <Point X="568.0" Y="525.0" />
+            <Point X="707.0" Y="525.0" />
+          </Points>
+        </ControlFlow>
+        <ControlFlow Background="rgb(122, 207, 245)" ConnectorStyle="Follow Diagram" Foreground="rgb(0, 0, 0)" From="PAVEXAD31_SHP_0013" FromConnectType="0" FromPinType="1" Id="PAVEXAD31_CON_0004" MetaModelElement="PAVEXAD31_CONR_0004" Model="PAVEXAD31_CONR_0004" ModelElementNameAlignment="9" Name="" Selectable="true" To="PAVEXAD31_SHP_0014" ToConnectType="0" ToPinType="1" UseFromShapeCenter="true" UseToShapeCenter="true" ZOrder="29">
+          <ElementFont Color="rgb(0, 0, 0)" Name="Dialog" Size="11" Style="0" />
+          <Line Cap="0" Color="rgb(0, 0, 0)" Transparency="0" Weight="1.0">
+            <Stroke />
+          </Line>
+          <Caption Height="0" InternalHeight="-2147483648" InternalWidth="-2147483648" Side="None" Visible="true" Width="20" X="0" Y="0" />
+          <Points>
+            <Point X="793.0" Y="546.0" />
+            <Point X="793.0" Y="562.0" />
+          </Points>
+        </ControlFlow>
+        <ControlFlow Background="rgb(122, 207, 245)" ConnectorStyle="Follow Diagram" Foreground="rgb(0, 0, 0)" From="PAVEXAD31_SHP_0018" FromConnectType="0" FromPinType="1" Id="PAVEXAD31_CON_0005" MetaModelElement="PAVEXAD31_CONR_0005" Model="PAVEXAD31_CONR_0005" ModelElementNameAlignment="9" Name="" Selectable="true" To="PAVEXAD31_SHP_0019" ToConnectType="0" ToPinType="1" UseFromShapeCenter="true" UseToShapeCenter="true" ZOrder="30">
+          <ElementFont Color="rgb(0, 0, 0)" Name="Dialog" Size="11" Style="0" />
+          <Line Cap="0" Color="rgb(0, 0, 0)" Transparency="0" Weight="1.0">
+            <Stroke />
+          </Line>
+          <Caption Height="0" InternalHeight="-2147483648" InternalWidth="-2147483648" Side="None" Visible="true" Width="20" X="0" Y="0" />
+          <Points>
+            <Point X="568.0" Y="835.0" />
+            <Point X="707.0" Y="835.0" />
+          </Points>
+        </ControlFlow>
+        <ControlFlow Background="rgb(122, 207, 245)" ConnectorStyle="Follow Diagram" Foreground="rgb(0, 0, 0)" From="PAVEXAD31_SHP_0021" FromConnectType="0" FromPinType="1" Id="PAVEXAD31_CON_0006" MetaModelElement="PAVEXAD31_CONR_0006" Model="PAVEXAD31_CONR_0006" ModelElementNameAlignment="9" Name="" Selectable="true" To="PAVEXAD31_SHP_0023" ToConnectType="0" ToPinType="1" UseFromShapeCenter="true" UseToShapeCenter="true" ZOrder="31">
+          <ElementFont Color="rgb(0, 0, 0)" Name="Dialog" Size="11" Style="0" />
+          <Line Cap="0" Color="rgb(0, 0, 0)" Transparency="0" Weight="1.0">
+            <Stroke />
+          </Line>
+          <Caption Height="0" InternalHeight="-2147483648" InternalWidth="-2147483648" Side="None" Visible="true" Width="20" X="0" Y="0" />
+          <Points>
+            <Point X="528.0" Y="975.0" />
+            <Point X="528.0" Y="996.0" />
+          </Points>
+        </ControlFlow>
+        <ControlFlow Background="rgb(122, 207, 245)" ConnectorStyle="Follow Diagram" Foreground="rgb(0, 0, 0)" From="PAVEXAD31_SHP_0023" FromConnectType="0" FromPinType="1" Id="PAVEXAD31_CON_0007" MetaModelElement="PAVEXAD31_CONR_0007" Model="PAVEXAD31_CONR_0007" ModelElementNameAlignment="9" Name="" Selectable="true" To="PAVEXAD31_SHP_0022" ToConnectType="0" ToPinType="1" UseFromShapeCenter="true" UseToShapeCenter="true" ZOrder="32">
+          <ElementFont Color="rgb(0, 0, 0)" Name="Dialog" Size="11" Style="0" />
+          <Line Cap="0" Color="rgb(0, 0, 0)" Transparency="0" Weight="1.0">
+            <Stroke />
+          </Line>
+          <Caption Height="0" InternalHeight="-2147483648" InternalWidth="-2147483648" Side="None" Visible="true" Width="20" X="0" Y="0" />
+          <Points>
+            <Point X="528.0" Y="1042.0" />
+            <Point X="528.0" Y="1068.0" />
+          </Points>
+        </ControlFlow>
+        <ControlFlow Background="rgb(122, 207, 245)" ConnectorStyle="Follow Diagram" Foreground="rgb(0, 0, 0)" From="PAVEXAD31_SHP_0021" FromConnectType="0" FromPinType="1" Id="PAVEXAD31_CON_0008" MetaModelElement="PAVEXAD31_CONR_0008" Model="PAVEXAD31_CONR_0008" ModelElementNameAlignment="9" Name="" Selectable="true" To="PAVEXAD31_SHP_0024" ToConnectType="0" ToPinType="1" UseFromShapeCenter="true" UseToShapeCenter="true" ZOrder="33">
+          <ElementFont Color="rgb(0, 0, 0)" Name="Dialog" Size="11" Style="0" />
+          <Line Cap="0" Color="rgb(0, 0, 0)" Transparency="0" Weight="1.0">
+            <Stroke />
+          </Line>
+          <Caption Height="0" InternalHeight="-2147483648" InternalWidth="-2147483648" Side="None" Visible="true" Width="20" X="0" Y="0" />
+          <Points>
+            <Point X="768.0" Y="975.0" />
+            <Point X="768.0" Y="996.0" />
+          </Points>
+        </ControlFlow>
+        <ControlFlow Background="rgb(122, 207, 245)" ConnectorStyle="Follow Diagram" Foreground="rgb(0, 0, 0)" From="PAVEXAD31_SHP_0024" FromConnectType="0" FromPinType="1" Id="PAVEXAD31_CON_0009" MetaModelElement="PAVEXAD31_CONR_0009" Model="PAVEXAD31_CONR_0009" ModelElementNameAlignment="9" Name="" Selectable="true" To="PAVEXAD31_SHP_0022" ToConnectType="0" ToPinType="1" UseFromShapeCenter="true" UseToShapeCenter="true" ZOrder="34">
+          <ElementFont Color="rgb(0, 0, 0)" Name="Dialog" Size="11" Style="0" />
+          <Line Cap="0" Color="rgb(0, 0, 0)" Transparency="0" Weight="1.0">
+            <Stroke />
+          </Line>
+          <Caption Height="0" InternalHeight="-2147483648" InternalWidth="-2147483648" Side="None" Visible="true" Width="20" X="0" Y="0" />
+          <Points>
+            <Point X="768.0" Y="1036.0" />
+            <Point X="768.0" Y="1068.0" />
+          </Points>
+        </ControlFlow>
+        <ControlFlow Background="rgb(122, 207, 245)" ConnectorStyle="Rectilinear" Foreground="rgb(0, 0, 0)" From="PAVEXAD31_SHP_0005" FromConnectType="0" FromPinType="1" Id="PAVEXAD31_CON_0010" MetaModelElement="PAVEXAD31_CONR_0010" Model="PAVEXAD31_CONR_0010" ModelElementNameAlignment="9" Name="" Selectable="true" To="PAVEXAD31_SHP_0006" ToConnectType="0" ToPinType="1" UseFromShapeCenter="false" UseToShapeCenter="false" ZOrder="35">
+          <ElementFont Color="rgb(0, 0, 0)" Name="Dialog" Size="11" Style="0" />
+          <Line Cap="0" Color="rgb(0, 0, 0)" Transparency="0" Weight="1.0">
+            <Stroke />
+          </Line>
+          <Caption Height="0" InternalHeight="-2147483648" InternalWidth="-2147483648" Side="None" Visible="true" Width="20" X="0" Y="0" />
+          <Points>
+            <Point X="198.0" Y="148.0" />
+            <Point X="198.0" Y="164.0" />
+            <Point X="553.0" Y="164.0" />
+            <Point X="553.0" Y="178.0" />
+          </Points>
+        </ControlFlow>
+        <ControlFlow Background="rgb(122, 207, 245)" ConnectorStyle="Rectilinear" Foreground="rgb(0, 0, 0)" From="PAVEXAD31_SHP_0006" FromConnectType="0" FromPinType="1" Id="PAVEXAD31_CON_0011" MetaModelElement="PAVEXAD31_CONR_0011" Model="PAVEXAD31_CONR_0011" ModelElementNameAlignment="9" Name="" Selectable="true" To="PAVEXAD31_SHP_0007" ToConnectType="0" ToPinType="1" UseFromShapeCenter="false" UseToShapeCenter="false" ZOrder="36">
+          <ElementFont Color="rgb(0, 0, 0)" Name="Dialog" Size="11" Style="0" />
+          <Line Cap="0" Color="rgb(0, 0, 0)" Transparency="0" Weight="1.0">
+            <Stroke />
+          </Line>
+          <Caption Height="0" InternalHeight="-2147483648" InternalWidth="-2147483648" Side="None" Visible="true" Width="20" X="0" Y="0" />
+          <Points>
+            <Point X="553.0" Y="224.0" />
+            <Point X="553.0" Y="240.0" />
+            <Point X="198.0" Y="240.0" />
+            <Point X="198.0" Y="254.0" />
+          </Points>
+        </ControlFlow>
+        <ControlFlow Background="rgb(122, 207, 245)" ConnectorStyle="Follow Diagram" Foreground="rgb(0, 0, 0)" From="PAVEXAD31_SHP_0007" FromConnectType="0" FromPinType="1" Id="PAVEXAD31_CON_0012" MetaModelElement="PAVEXAD31_CONR_0012" Model="PAVEXAD31_CONR_0012" ModelElementNameAlignment="9" Name="" Selectable="true" To="PAVEXAD31_SHP_0010" ToConnectType="0" ToPinType="1" UseFromShapeCenter="true" UseToShapeCenter="true" ZOrder="37">
+          <ElementFont Color="rgb(0, 0, 0)" Name="Dialog" Size="11" Style="0" />
+          <Line Cap="0" Color="rgb(0, 0, 0)" Transparency="0" Weight="1.0">
+            <Stroke />
+          </Line>
+          <Caption Height="0" InternalHeight="-2147483648" InternalWidth="-2147483648" Side="None" Visible="true" Width="20" X="0" Y="0" />
+          <Points>
+            <Point X="198.0" Y="284.0" />
+            <Point X="198.0" Y="364.0" />
+          </Points>
+        </ControlFlow>
+        <ControlFlow Background="rgb(122, 207, 245)" ConnectorStyle="Rectilinear" Foreground="rgb(0, 0, 0)" From="PAVEXAD31_SHP_0010" FromConnectType="0" FromPinType="1" Id="PAVEXAD31_CON_0013" MetaModelElement="PAVEXAD31_CONR_0013" Model="PAVEXAD31_CONR_0013" ModelElementNameAlignment="9" Name="" Selectable="true" To="PAVEXAD31_SHP_0011" ToConnectType="0" ToPinType="1" UseFromShapeCenter="false" UseToShapeCenter="false" ZOrder="38">
+          <ElementFont Color="rgb(0, 0, 0)" Name="Dialog" Size="11" Style="0" />
+          <Line Cap="0" Color="rgb(0, 0, 0)" Transparency="0" Weight="1.0">
+            <Stroke />
+          </Line>
+          <Caption Height="0" InternalHeight="-2147483648" InternalWidth="-2147483648" Side="None" Visible="true" Width="20" X="0" Y="0" />
+          <Points>
+            <Point X="198.0" Y="404.0" />
+            <Point X="198.0" Y="420.0" />
+            <Point X="553.0" Y="420.0" />
+            <Point X="553.0" Y="434.0" />
+          </Points>
+        </ControlFlow>
+        <ControlFlow Background="rgb(122, 207, 245)" ConnectorStyle="Follow Diagram" Foreground="rgb(0, 0, 0)" From="PAVEXAD31_SHP_0011" FromConnectType="0" FromPinType="1" Id="PAVEXAD31_CON_0014" MetaModelElement="PAVEXAD31_CONR_0014" Model="PAVEXAD31_CONR_0014" ModelElementNameAlignment="9" Name="" Selectable="true" To="PAVEXAD31_SHP_0012" ToConnectType="0" ToPinType="1" UseFromShapeCenter="true" UseToShapeCenter="true" ZOrder="39">
+          <ElementFont Color="rgb(0, 0, 0)" Name="Dialog" Size="11" Style="0" />
+          <Line Cap="0" Color="rgb(0, 0, 0)" Transparency="0" Weight="1.0">
+            <Stroke />
+          </Line>
+          <Caption Height="0" InternalHeight="-2147483648" InternalWidth="-2147483648" Side="None" Visible="true" Width="20" X="0" Y="0" />
+          <Points>
+            <Point X="553.0" Y="480.0" />
+            <Point X="553.0" Y="510.0" />
+          </Points>
+        </ControlFlow>
+        <ControlFlow Background="rgb(122, 207, 245)" ConnectorStyle="Rectilinear" Foreground="rgb(0, 0, 0)" From="PAVEXAD31_SHP_0012" FromConnectType="0" FromPinType="1" Id="PAVEXAD31_CON_0015" MetaModelElement="PAVEXAD31_CONR_0015" Model="PAVEXAD31_CONR_0015" ModelElementNameAlignment="9" Name="" Selectable="true" To="PAVEXAD31_SHP_0015" ToConnectType="0" ToPinType="1" UseFromShapeCenter="false" UseToShapeCenter="false" ZOrder="40">
+          <ElementFont Color="rgb(0, 0, 0)" Name="Dialog" Size="11" Style="0" />
+          <Line Cap="0" Color="rgb(0, 0, 0)" Transparency="0" Weight="1.0">
+            <Stroke />
+          </Line>
+          <Caption Height="0" InternalHeight="-2147483648" InternalWidth="-2147483648" Side="None" Visible="true" Width="20" X="0" Y="0" />
+          <Points>
+            <Point X="553.0" Y="540.0" />
+            <Point X="553.0" Y="606.0" />
+            <Point X="198.0" Y="606.0" />
+            <Point X="198.0" Y="620.0" />
+          </Points>
+        </ControlFlow>
+        <ControlFlow Background="rgb(122, 207, 245)" ConnectorStyle="Follow Diagram" Foreground="rgb(0, 0, 0)" From="PAVEXAD31_SHP_0015" FromConnectType="0" FromPinType="1" Id="PAVEXAD31_CON_0016" MetaModelElement="PAVEXAD31_CONR_0016" Model="PAVEXAD31_CONR_0016" ModelElementNameAlignment="9" Name="" Selectable="true" To="PAVEXAD31_SHP_0016" ToConnectType="0" ToPinType="1" UseFromShapeCenter="true" UseToShapeCenter="true" ZOrder="41">
+          <ElementFont Color="rgb(0, 0, 0)" Name="Dialog" Size="11" Style="0" />
+          <Line Cap="0" Color="rgb(0, 0, 0)" Transparency="0" Weight="1.0">
+            <Stroke />
+          </Line>
+          <Caption Height="0" InternalHeight="-2147483648" InternalWidth="-2147483648" Side="None" Visible="true" Width="20" X="0" Y="0" />
+          <Points>
+            <Point X="198.0" Y="650.0" />
+            <Point X="198.0" Y="674.0" />
+          </Points>
+        </ControlFlow>
+        <ControlFlow Background="rgb(122, 207, 245)" ConnectorStyle="Rectilinear" Foreground="rgb(0, 0, 0)" From="PAVEXAD31_SHP_0016" FromConnectType="0" FromPinType="1" Id="PAVEXAD31_CON_0017" MetaModelElement="PAVEXAD31_CONR_0017" Model="PAVEXAD31_CONR_0017" ModelElementNameAlignment="9" Name="" Selectable="true" To="PAVEXAD31_SHP_0017" ToConnectType="0" ToPinType="1" UseFromShapeCenter="false" UseToShapeCenter="false" ZOrder="42">
+          <ElementFont Color="rgb(0, 0, 0)" Name="Dialog" Size="11" Style="0" />
+          <Line Cap="0" Color="rgb(0, 0, 0)" Transparency="0" Weight="1.0">
+            <Stroke />
+          </Line>
+          <Caption Height="0" InternalHeight="-2147483648" InternalWidth="-2147483648" Side="None" Visible="true" Width="20" X="0" Y="0" />
+          <Points>
+            <Point X="198.0" Y="714.0" />
+            <Point X="198.0" Y="730.0" />
+            <Point X="553.0" Y="730.0" />
+            <Point X="553.0" Y="744.0" />
+          </Points>
+        </ControlFlow>
+        <ControlFlow Background="rgb(122, 207, 245)" ConnectorStyle="Follow Diagram" Foreground="rgb(0, 0, 0)" From="PAVEXAD31_SHP_0017" FromConnectType="0" FromPinType="1" Id="PAVEXAD31_CON_0018" MetaModelElement="PAVEXAD31_CONR_0018" Model="PAVEXAD31_CONR_0018" ModelElementNameAlignment="9" Name="" Selectable="true" To="PAVEXAD31_SHP_0018" ToConnectType="0" ToPinType="1" UseFromShapeCenter="true" UseToShapeCenter="true" ZOrder="43">
+          <ElementFont Color="rgb(0, 0, 0)" Name="Dialog" Size="11" Style="0" />
+          <Line Cap="0" Color="rgb(0, 0, 0)" Transparency="0" Weight="1.0">
+            <Stroke />
+          </Line>
+          <Caption Height="0" InternalHeight="-2147483648" InternalWidth="-2147483648" Side="None" Visible="true" Width="20" X="0" Y="0" />
+          <Points>
+            <Point X="553.0" Y="790.0" />
+            <Point X="553.0" Y="820.0" />
+          </Points>
+        </ControlFlow>
+        <ControlFlow Background="rgb(122, 207, 245)" ConnectorStyle="Follow Diagram" Foreground="rgb(0, 0, 0)" From="PAVEXAD31_SHP_0018" FromConnectType="0" FromPinType="1" Id="PAVEXAD31_CON_0019" MetaModelElement="PAVEXAD31_CONR_0019" Model="PAVEXAD31_CONR_0019" ModelElementNameAlignment="9" Name="" Selectable="true" To="PAVEXAD31_SHP_0020" ToConnectType="0" ToPinType="1" UseFromShapeCenter="true" UseToShapeCenter="true" ZOrder="44">
+          <ElementFont Color="rgb(0, 0, 0)" Name="Dialog" Size="11" Style="0" />
+          <Line Cap="0" Color="rgb(0, 0, 0)" Transparency="0" Weight="1.0">
+            <Stroke />
+          </Line>
+          <Caption Height="0" InternalHeight="-2147483648" InternalWidth="-2147483648" Side="None" Visible="true" Width="20" X="0" Y="0" />
+          <Points>
+            <Point X="553.0" Y="850.0" />
+            <Point X="553.0" Y="890.0" />
+          </Points>
+        </ControlFlow>
+        <ControlFlow Background="rgb(122, 207, 245)" ConnectorStyle="Follow Diagram" Foreground="rgb(0, 0, 0)" From="PAVEXAD31_SHP_0020" FromConnectType="0" FromPinType="1" Id="PAVEXAD31_CON_0020" MetaModelElement="PAVEXAD31_CONR_0020" Model="PAVEXAD31_CONR_0020" ModelElementNameAlignment="9" Name="" Selectable="true" To="PAVEXAD31_SHP_0021" ToConnectType="0" ToPinType="1" UseFromShapeCenter="true" UseToShapeCenter="true" ZOrder="45">
+          <ElementFont Color="rgb(0, 0, 0)" Name="Dialog" Size="11" Style="0" />
+          <Line Cap="0" Color="rgb(0, 0, 0)" Transparency="0" Weight="1.0">
+            <Stroke />
+          </Line>
+          <Caption Height="0" InternalHeight="-2147483648" InternalWidth="-2147483648" Side="None" Visible="true" Width="20" X="0" Y="0" />
+          <Points>
+            <Point X="553.0" Y="936.0" />
+            <Point X="553.0" Y="970.0" />
+          </Points>
+        </ControlFlow>
+        <ControlFlow Background="rgb(122, 207, 245)" ConnectorStyle="Follow Diagram" Foreground="rgb(0, 0, 0)" From="PAVEXAD31_SHP_0004" FromConnectType="0" FromPinType="1" Id="PAVEXAD31_CON_0021" MetaModelElement="PAVEXAD31_CONR_0021" Model="PAVEXAD31_CONR_0021" ModelElementNameAlignment="9" Name="" Selectable="true" To="PAVEXAD31_SHP_0005" ToConnectType="0" ToPinType="1" UseFromShapeCenter="true" UseToShapeCenter="true" ZOrder="46">
+          <ElementFont Color="rgb(0, 0, 0)" Name="Dialog" Size="11" Style="0" />
+          <Line Cap="0" Color="rgb(0, 0, 0)" Transparency="0" Weight="1.0">
+            <Stroke />
+          </Line>
+          <Caption Height="0" InternalHeight="-2147483648" InternalWidth="-2147483648" Side="None" Visible="true" Width="20" X="0" Y="0" />
+          <Points>
+            <Point X="198.0" Y="88.0" />
+            <Point X="198.0" Y="108.0" />
+          </Points>
+        </ControlFlow>
+        <ControlFlow Background="rgb(122, 207, 245)" ConnectorStyle="Rectilinear" Foreground="rgb(0, 0, 0)" From="PAVEXAD31_SHP_0019" FromConnectType="0" FromPinType="1" Id="PAVEXAD31_CON_0022" MetaModelElement="PAVEXAD31_CONR_0022" Model="PAVEXAD31_CONR_0022" ModelElementNameAlignment="9" Name="" Selectable="true" To="PAVEXAD31_SHP_0015" ToConnectType="0" ToPinType="1" UseFromShapeCenter="false" UseToShapeCenter="false" ZOrder="47">
+          <ElementFont Color="rgb(0, 0, 0)" Name="Dialog" Size="11" Style="0" />
+          <Line Cap="0" Color="rgb(0, 0, 0)" Transparency="0" Weight="1.0">
+            <Stroke />
+          </Line>
+          <Caption Height="0" InternalHeight="-2147483648" InternalWidth="-2147483648" Side="None" Visible="true" Width="20" X="0" Y="0" />
+          <Points>
+            <Point X="879.0" Y="835.0" />
+            <Point X="948.0" Y="835.0" />
+            <Point X="948.0" Y="635.0" />
+            <Point X="213.0" Y="635.0" />
+          </Points>
+        </ControlFlow>
+        <ControlFlow Background="rgb(122, 207, 245)" ConnectorStyle="Follow Diagram" Foreground="rgb(0, 0, 0)" From="PAVEXAD31_SHP_0022" FromConnectType="0" FromPinType="1" Id="PAVEXAD31_CON_0023" MetaModelElement="PAVEXAD31_CONR_0023" Model="PAVEXAD31_CONR_0023" ModelElementNameAlignment="9" Name="" Selectable="true" To="PAVEXAD31_SHP_0025" ToConnectType="0" ToPinType="1" UseFromShapeCenter="true" UseToShapeCenter="true" ZOrder="48">
+          <ElementFont Color="rgb(0, 0, 0)" Name="Dialog" Size="11" Style="0" />
+          <Line Cap="0" Color="rgb(0, 0, 0)" Transparency="0" Weight="1.0">
+            <Stroke />
+          </Line>
+          <Caption Height="0" InternalHeight="-2147483648" InternalWidth="-2147483648" Side="None" Visible="true" Width="20" X="0" Y="0" />
+          <Points>
+            <Point X="553.0" Y="1073.0" />
+            <Point X="553.0" Y="1114.0" />
+          </Points>
+        </ControlFlow>
+      </Connectors>
+    </ActivityDiagram>
+  </Diagrams>
+</Project>

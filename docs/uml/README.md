@@ -36,7 +36,9 @@ Thư mục `xml/` có **một file cho mỗi sơ đồ** (giống các hình tro
 | `02-domain-packages.xml` | Sơ đồ package các bounded context, phụ thuộc «use» |
 | `03-domain-overview.xml` | Sơ đồ domain tổng thể (34 entity / aggregate root, 56 association) |
 | `04-class-identity.xml` … `12-class-shared.xml` | Sơ đồ lớp từng bounded context (thuộc tính + phương thức) |
+| `20-ad-uc01.xml` … `32-ad-uc40.xml` | 13 sơ đồ hoạt động AD-UCxx (cùng nút, guard, vị trí như hình trong báo cáo) |
 
+Các file activity (`20`–`32`) mỗi file một sơ đồ với tiền tố Id riêng (PAVEXADxx).
 Mọi file domain (`02`–`12`) đều chứa **toàn bộ** domain model với cùng Id, chỉ khác sơ đồ. Import nhiều
 file vào **cùng một project trống** thì Visual Paradigm gộp chung một model, mỗi file thêm một sơ đồ.
 Phương thức (operation) trong lớp được rút ra từ use case và trạng thái của aggregate
@@ -128,6 +130,7 @@ cd docs/uml/generator
 python3 build_domain.py     # tạo pavex-domain-model.xml, domain-catalog.md, preview/domain-model.svg
 python3 build_usecase.py    # tạo pavex-usecase-model.xml, usecase-catalog.md, preview/usecase-diagram.svg
 python3 build_xml.py        # tạo xml/: mỗi sơ đồ một file (chạy sau build_usecase.py)
+python3 build_activity_xml.py   # tạo xml/2x-ad-ucxx.xml từ docs/report/generator/activities.py
 ```
 
 Script chỉ dùng thư viện chuẩn của Python 3. Ảnh PNG trong `preview/` được render từ file SVG bằng Chromium headless.

@@ -263,6 +263,8 @@ class Project:
                     a.update({"From": r.src.id, "To": r.dst.id, "Visibility": "Unspecified"})
                     if k == "Generalization":
                         a.update({"ConnectToCodeModel": "1", "Substitutable": "false"})
+                    if getattr(r, "guard", None):  # ControlFlow guard of an activity diagram
+                        a["Guard"] = r.guard
                     self._master_view(ET.SubElement(smc, k, a), r.id)
 
 

@@ -10,7 +10,7 @@
   Visual Paradigm), execution specifications (activation bars, nested for self
   calls), synchronous calls (filled arrowhead), asynchronous signals to
   external systems (open arrowhead), replies (dashed, open arrowhead) and
-  combined fragments alt / opt / loop with guarded operands.
+  combined fragments alt / opt / loop / break / ref with guarded operands.
 """
 
 from __future__ import annotations
@@ -84,7 +84,7 @@ def _label(st):
     return st[n] if len(st) > n else None
 
 
-def activity(title: str, lanes: tuple[str, str], steps: list) -> str:
+def activity(title: str, lanes: tuple[str, str], steps: list, graph: dict | None = None) -> str:
     X0 = 8
     x1, x2, x3 = X0, X0 + LA, X0 + LA + LS
     W = x3 + 8
@@ -150,114 +150,131 @@ def activity(title: str, lanes: tuple[str, str], steps: list) -> str:
             y = jy + 5 + GAP
     end_y = y + 8
     H = math.ceil(end_y + 44)
-    o = [f'<svg xmlns="http://www.w3.org/2000/svg" width="{W}" height="{H}" viewBox="0 0 {W} {H}" font-family="{FONT}">',
-         _defs(), f'<rect width="{W}" height="{H}" fill="#fff"/>', _frame(W, H, f"act {title}")]
-    top, bottom = 32, H - 8
-    o.append(f'<rect x="{x1}" y="{top}" width="{x3 - x1}" height="{bottom - top}" fill="none" stroke="{STROKE}"/>')
-    o.append(f'<line x1="{x2}" y1="{top}" x2="{x2}" y2="{bottom}" stroke="{STROKE}"/>')
-    o.append(f'<line x1="{x1}" y1="{top + 26}" x2="{x3}" y2="{top + 26}" stroke="{STROKE}"/>')
-    o.append(_text_block((x1 + x2) / 2, top + 13, [lanes[0]], 11.5, "bold"))
-    o.append(_text_block((x2 + x3) / 2, top + 13, [lanes[1]], 11.5, "bold"))
 
-    def final(cx, cy):
-        return (f'<circle cx="{cx}" cy="{cy}" r="11" fill="#fff" stroke="{STROKE}" stroke-width="1.5"/>'
-                f'<circle cx="{cx}" cy="{cy}" r="6.5" fill="{STROKE}"/>')
+    # ---- graph: every node and edge with its geometry (drawn as SVG below, exported to VP XML) ----
+    G = dict(title=title, lanes=lanes, W=W, H=H, x1=x1, x2=x2, x3=x3, nodes=[], edges=[])
 
-    def arrow(path):
-        return f'<path d="{path}" fill="none" stroke="{STROKE}" marker-end="url(#arr)"/>'
+    def node(kind, x, y, w, h, text="", lane="S", lines=None, size=11):
+        G["nodes"].append(dict(id=f"N{len(G['nodes'])}", kind=kind, x=x, y=y, w=w, h=h, text=text, lane=lane,
+                               lines=lines or [], size=size))
+        return G["nodes"][-1]["id"]
 
-    def guard(x, y, text, width, anchor="start"):
-        lines = _wrap(f"[{text}]", width, 5.6)
-        return "".join(f'<text x="{x:.1f}" y="{y - (len(lines) - 1 - i) * 12:.1f}" font-size="10" text-anchor="{anchor}" fill="#222" '
-                       f'paint-order="stroke" stroke="#fff" stroke-width="3">{escape(t)}</text>' for i, t in enumerate(lines))
+    def edge(src, dst, pts, guard=None, gpos=None):
+        G["edges"].append(dict(src=src, dst=dst, pts=pts, guard=guard, gpos=gpos))
 
-    def diamond(x, yy):
-        d = D / 2
-        return f'<path d="M{x},{yy - d} L{x + d},{yy} L{x},{yy + d} L{x - d},{yy} Z" fill="#fff" stroke="{STROKE}" stroke-width="1.2"/>'
+    def lane_of(x):
+        return "A" if x < x2 else "S"
 
-    def action(x, yy, w, h, lines, call, size=11):
-        out = f'<rect x="{x - w / 2}" y="{yy - h / 2}" width="{w}" height="{h}" rx="13" fill="{FILL}" stroke="{STROKE}"/>' + _text_block(x, yy - (4 if call else 0), lines, size)
-        if call:  # call behavior action: rake symbol in the lower right corner
-            rx, ry = x + w / 2 - 16, yy + h / 2 - 13
-            out += (f'<path d="M{rx},{ry} L{rx},{ry + 9} M{rx - 6},{ry + 4} L{rx + 6},{ry + 4} M{rx - 6},{ry + 4} L{rx - 6},{ry + 9} '
-                    f'M{rx + 6},{ry + 4} L{rx + 6},{ry + 9}" fill="none" stroke="{STROKE}" stroke-width="1.3"/>')
-        return out
-
-    def top_of(n):
-        return n["fy"] if n["kind"] == "fork" else n["y"] - n["h"] / 2
-
-    def bottom_of(n):
-        return n["jy"] + 5 if n["kind"] == "fork" else n["y"] + n["h"] / 2
-
-    merge_of = {n["label"]: n for n in nodes if n["kind"] == "merge"}
     first = nodes[0]
-    o.append(f'<circle cx="{first["x"]}" cy="78" r="10" fill="{STROKE}"/>')
-    o.append(arrow(f'M{first["x"]},88 L{first["x"]},{top_of(first)}'))
-    loops = []  # (path start, y, merge): routed after all nodes so that channels nest
+    start = node("initial", first["x"], 78, 20, 20, lane=first["lane"])
+    loops = []
     for i, n in enumerate(nodes):
         x, yy = n["x"], n["y"]
         if n["kind"] == "act":
-            o.append(action(x, yy, n["w"], n["h"], n["lines"], n["call"]))
+            n["in"] = n["out"] = node("call" if n["call"] else "action", x, yy, n["w"], n["h"], " ".join(n["lines"]), n["lane"], n["lines"])
         elif n["kind"] == "merge":
-            o.append(diamond(x, yy))
+            n["in"] = n["out"] = node("merge", x, yy, D, D, lane=n["lane"])
         elif n["kind"] == "fork":
             prev_x = nodes[i - 1]["x"] if i else x
             xs = [b_["x"] for b_ in n["boxes"]] + [prev_x, x]  # bars span the parallel branches only
             bl, br = min(xs) - 30, max(xs) + 30
-            o.append(f'<rect x="{bl}" y="{n["fy"]}" width="{br - bl}" height="5" fill="{STROKE}"/>')
-            o.append(f'<rect x="{bl}" y="{n["jy"]}" width="{br - bl}" height="5" fill="{STROKE}"/>')
+            fk = node("fork", (bl + br) / 2, n["fy"] + 2.5, br - bl, 5)
+            jn = node("join", (bl + br) / 2, n["jy"] + 2.5, br - bl, 5)
             for b_ in n["boxes"]:
-                o.append(arrow(f'M{b_["x"]},{n["fy"] + 5} L{b_["x"]},{b_["y"] - b_["h"] / 2}'))
-                o.append(action(b_["x"], b_["y"], b_["w"], b_["h"], b_["lines"], False))
-                o.append(arrow(f'M{b_["x"]},{b_["y"] + b_["h"] / 2} L{b_["x"]},{n["jy"]}'))
+                bid = node("action", b_["x"], b_["y"], b_["w"], b_["h"], " ".join(b_["lines"]), lane_of(b_["x"]), b_["lines"])
+                edge(fk, bid, [(b_["x"], n["fy"] + 5), (b_["x"], b_["y"] - b_["h"] / 2)])
+                edge(bid, jn, [(b_["x"], b_["y"] + b_["h"] / 2), (b_["x"], n["jy"])])
+            n["in"], n["out"] = fk, jn
         else:  # decision
             d = D / 2
-            o.append(diamond(x, yy))
+            dec = node("decision", x, yy, D, D, lane=n["lane"])
+            n["in"] = n["out"] = dec
             trunk = x + d + 22
             for k, br_ in enumerate(n["brs"]):
                 bx, by, bh = br_["x"], br_["y"], br_["h"]
                 left = bx - BW / 2 if bh else bx - 11
-                lead = f'M{x + d},{yy} L{left},{yy}' if k == 0 else f'M{trunk},{yy} L{trunk},{by} L{left},{by}'
+                lead = [(x + d, yy), (left, yy)] if k == 0 else [(trunk, yy), (trunk, by), (left, by)]
                 gx = x + d + 5 if k == 0 else trunk + 5
-                o.append(guard(gx, by - 6, br_["guard"], left - gx - 8))
-                if bh or br_["target"] == "end":
-                    o.append(arrow(lead))
+                gpos = dict(x=gx, y=by - 6, width=left - gx - 8, anchor="start")
                 if bh:
-                    o.append(action(bx, by, BW, bh, br_["lines"], br_["call"], 10))
-                    src_x, src_bottom = bx + BW / 2, by + bh / 2
-                else:
-                    src_x, src_bottom = left, by
-                if br_["target"] == "end":
-                    if bh:
-                        o.append(arrow(f'M{bx},{src_bottom} L{bx},{src_bottom + 16}'))
-                        o.append(final(bx, src_bottom + 27))
+                    box = node("call" if br_["call"] else "action", bx, by, BW, bh, " ".join(br_["lines"]), lane_of(bx), br_["lines"], 10)
+                    edge(dec, box, lead, br_["guard"], gpos)
+                    if br_["target"] == "end":
+                        fin = node("final", bx, by + bh / 2 + 27, 22, 22, lane=lane_of(bx))
+                        edge(box, fin, [(bx, by + bh / 2), (bx, by + bh / 2 + 16)])
                     else:
-                        o.append(final(bx, by))
-                else:
-                    # a branch without action is one continuous edge from the decision to the merge
-                    loops.append(((f'M{src_x},{by} ' if bh else lead + " "), by, merge_of[br_["target"]]))
-        if i + 1 < len(nodes):
-            nx = nodes[i + 1]
-            if n["kind"] == "fork":
-                sx, sy = x, bottom_of(n)
-            else:
-                sx, sy = x, bottom_of(n)
-            ex, ey = (sx if nx["kind"] == "fork" else nx["x"]), top_of(nx)
-            if abs(sx - ex) < 1:
-                o.append(arrow(f'M{sx},{sy} L{ex},{ey}'))
-            else:
-                ym = ey - 14
-                o.append(arrow(f'M{sx},{sy} L{sx},{ym} L{ex},{ym} L{ex},{ey}'))
-            if n["kind"] == "dec":  # guard of the main flow sits left of the edge, branches go right
-                o.append(guard(x - 6, sy + 13, n["main"], 150, "end"))
+                        loops.append((box, [(bx + BW / 2, by)], by, br_["target"], None, None))
+                elif br_["target"] == "end":
+                    fin = node("final", bx, by, 22, 22, lane=lane_of(bx))
+                    edge(dec, fin, lead, br_["guard"], gpos)
+                else:  # no action: one continuous edge from the decision to the merge
+                    loops.append((dec, lead, by, br_["target"], br_["guard"], gpos))
+    order = [n for n in nodes]
+    for i, n in enumerate(order[:-1]):
+        nx = order[i + 1]
+        sx, sy = n["x"], (n["jy"] + 5 if n["kind"] == "fork" else n["y"] + n["h"] / 2)
+        ex, ey = (sx if nx["kind"] == "fork" else nx["x"]), (nx["fy"] if nx["kind"] == "fork" else nx["y"] - nx["h"] / 2)
+        pts = [(sx, sy), (ex, ey)] if abs(sx - ex) < 1 else [(sx, sy), (sx, ey - 14), (ex, ey - 14), (ex, ey)]
+        if n["kind"] == "dec":  # guard of the main flow sits left of the edge, branches go right
+            edge(n["out"], nx["in"], pts, n["main"], dict(x=n["x"] - 6, y=sy + 13, width=150, anchor="end"))
+        else:
+            edge(n["out"], nx["in"], pts)
+    first_top = first["fy"] if first["kind"] == "fork" else first["y"] - first["h"] / 2
+    edge(start, first["in"], [(first["x"], 88), (first["x"], first_top)])
+    merge_by_label = {n["label"]: n for n in nodes if n["kind"] == "merge"}
     # the loop spanning more of the diagram takes the outer channel, so loops nest instead of crossing
-    for k, (start, by, m) in enumerate(sorted(loops, key=lambda q: -abs(q[1] - q[2]["y"]))):
+    for k, (src, lead, by, target, guard, gpos) in enumerate(sorted(loops, key=lambda q: -abs(q[2] - merge_by_label[q[3]]["y"]))):
+        m = merge_by_label[target]
         rx = x3 - 10 - 9 * k
-        o.append(arrow(start + f'L{rx},{by} L{rx},{m["y"]} L{m["x"] + D / 2},{m["y"]}'))
+        edge(src, m["in"], lead + [(rx, by), (rx, m["y"]), (m["x"] + D / 2, m["y"])], guard, gpos)
     last = nodes[-1]
-    ex, ey = last["x"], end_y + 14
-    o.append(arrow(f'M{ex},{bottom_of(last)} L{ex},{ey - 11}'))
-    o.append(final(ex, ey))
+    fin = node("final", last["x"], end_y + 14, 22, 22, lane=last["lane"])
+    edge(last["out"], fin, [(last["x"], last["jy"] + 5 if last["kind"] == "fork" else last["y"] + last["h"] / 2), (last["x"], end_y + 3)])
+    if graph is not None:
+        graph.update(G)
+    return _activity_svg(G)
+
+
+def _activity_svg(G):
+    W, H, x1, x2, x3 = G["W"], G["H"], G["x1"], G["x2"], G["x3"]
+    o = [f'<svg xmlns="http://www.w3.org/2000/svg" width="{W}" height="{H}" viewBox="0 0 {W} {H}" font-family="{FONT}">',
+         _defs(), f'<rect width="{W}" height="{H}" fill="#fff"/>', _frame(W, H, f"act {G['title']}")]
+    top, bottom = 32, H - 8
+    o.append(f'<rect x="{x1}" y="{top}" width="{x3 - x1}" height="{bottom - top}" fill="none" stroke="{STROKE}"/>')
+    o.append(f'<line x1="{x2}" y1="{top}" x2="{x2}" y2="{bottom}" stroke="{STROKE}"/>')
+    o.append(f'<line x1="{x1}" y1="{top + 26}" x2="{x3}" y2="{top + 26}" stroke="{STROKE}"/>')
+    o.append(_text_block((x1 + x2) / 2, top + 13, [G["lanes"][0]], 11.5, "bold"))
+    o.append(_text_block((x2 + x3) / 2, top + 13, [G["lanes"][1]], 11.5, "bold"))
+    for e in G["edges"]:
+        path = "M" + " L".join(f"{px:.1f},{py:.1f}" for px, py in e["pts"])
+        o.append(f'<path d="{path}" fill="none" stroke="{STROKE}" marker-end="url(#arr)"/>')
+    for e in G["edges"]:
+        if e["guard"]:
+            g = e["gpos"]
+            lines = _wrap(f"[{e['guard']}]", g["width"], 5.6)
+            o += [f'<text x="{g["x"]:.1f}" y="{g["y"] - (len(lines) - 1 - i) * 12 if g["anchor"] == "start" else g["y"] + i * 12:.1f}" '
+                  f'font-size="10" text-anchor="{g["anchor"]}" fill="#222" paint-order="stroke" stroke="#fff" stroke-width="3">{escape(t)}</text>'
+                  for i, t in enumerate(lines)]
+    for n in G["nodes"]:
+        x, yy, w, h = n["x"], n["y"], n["w"], n["h"]
+        k = n["kind"]
+        if k == "initial":
+            o.append(f'<circle cx="{x}" cy="{yy}" r="10" fill="{STROKE}"/>')
+        elif k == "final":
+            o.append(f'<circle cx="{x}" cy="{yy}" r="11" fill="#fff" stroke="{STROKE}" stroke-width="1.5"/><circle cx="{x}" cy="{yy}" r="6.5" fill="{STROKE}"/>')
+        elif k in ("decision", "merge"):
+            d = D / 2
+            o.append(f'<path d="M{x},{yy - d} L{x + d},{yy} L{x},{yy + d} L{x - d},{yy} Z" fill="#fff" stroke="{STROKE}" stroke-width="1.2"/>')
+        elif k in ("fork", "join"):
+            o.append(f'<rect x="{x - w / 2}" y="{yy - h / 2}" width="{w}" height="{h}" fill="{STROKE}"/>')
+        else:
+            call = k == "call"
+            o.append(f'<rect x="{x - w / 2}" y="{yy - h / 2}" width="{w}" height="{h}" rx="13" fill="{FILL}" stroke="{STROKE}"/>')
+            o.append(_text_block(x, yy - (4 if call else 0), n["lines"], n["size"]))
+            if call:  # call behavior action: rake symbol in the lower right corner
+                rx, ry = x + w / 2 - 16, yy + h / 2 - 13
+                o.append(f'<path d="M{rx},{ry} L{rx},{ry + 9} M{rx - 6},{ry + 4} L{rx + 6},{ry + 4} M{rx - 6},{ry + 4} L{rx - 6},{ry + 9} '
+                         f'M{rx + 6},{ry + 4} L{rx + 6},{ry + 9}" fill="none" stroke="{STROKE}" stroke-width="1.3"/>')
     o.append("</svg>")
     return "".join(o)
 
@@ -287,6 +304,22 @@ def _icon(kind, cx, cy, name):
             f'<text x="{cx}" y="{cy - 5}" font-size="10" text-anchor="middle">«system»</text>')
 
 
+def _frags(frags):
+    """Normalise fragments to dicts: a, b (first / last message), op, cond, elses [(message, guard)]."""
+    out = []
+    for fr in frags or []:
+        if isinstance(fr, dict):
+            out.append(fr)
+        else:
+            elses = [(fr[4], fr[5])] if len(fr) > 4 else []
+            out.append(dict(a=fr[0], b=fr[1], op=fr[2], cond=fr[3], elses=elses))
+    return out
+
+
+def _is_ret(m):
+    return len(m) > 3 and m[3] == "ret"
+
+
 def _activations(parts, msgs, frags):
     """Execution specifications: (lifeline, first_msg, last_msg, self_call)."""
     n = len(msgs)
@@ -297,8 +330,7 @@ def _activations(parts, msgs, frags):
 
     for i, m in enumerate(msgs):
         f, t = m[0], m[1]
-        ret = len(m) > 3 and m[3] == "ret"
-        if ret or parts[t][0] == "actor":
+        if _is_ret(m) or parts[t][0] == "actor":
             continue
         if f == t:
             out.append((t, i, i, True))
@@ -309,19 +341,26 @@ def _activations(parts, msgs, frags):
             if fj == t and tj == f:            # reply (or answer message) to the caller
                 end = j
                 break
-            if tj == t and fj == f and not (len(msgs[j]) > 3 and msgs[j][3] == "ret"):
+            if tj == t and fj == f and not _is_ret(msgs[j]):
                 cand = [k for k in range(i + 1, j) if involved(k, t)]
                 end = cand[-1] if cand else i  # caller starts a new call: previous one is over
                 break
         if end is None:
             cand = [k for k in range(i + 1, n) if involved(k, t)]
             end = cand[-1] if cand and parts[t][0] in ("boundary", "control") else i
-        # alt: the activation also covers the reply sent in the other operand
-        for fr in frags or []:
-            if len(fr) > 4 and i < fr[0] and fr[0] <= end < fr[4]:
-                for j in range(fr[4], fr[1] + 1):
+        # a reply inside a break / alt / opt operand does not end a call that began before the fragment:
+        # the call lasts until its reply after the fragment, or else until its last reply in the fragment
+        for fr in sorted(frags, key=lambda q: q["b"] - q["a"]):
+            if i < fr["a"] <= end <= fr["b"]:
+                after = None
+                for j in range(fr["b"] + 1, n):
+                    if msgs[j][0] == f and msgs[j][1] == t and not _is_ret(msgs[j]):
+                        break
                     if msgs[j][0] == t and msgs[j][1] == f:
-                        end = max(end, j)
+                        after = j
+                        break
+                inside = [j for j in range(fr["a"], fr["b"] + 1) if msgs[j][0] == t and msgs[j][1] == f]
+                end = after if after is not None else max(inside + [end])
         out.append((t, i, end, False))
     return out
 
@@ -330,20 +369,25 @@ def sequence(title: str, parts: list, msgs: list, frags: list | None = None) -> 
     """parts: [(kind, name)], kind in actor|boundary|control|entity|system.
     msgs: (from, to, text) or (from, to, text, "ret"); from == to is a self call;
     a call to a «system» participant is an asynchronous signal.
-    frags: [(first_msg, last_msg, "alt"|"opt"|"loop", "[guard]"[, else_msg, "[guard]"])]."""
-    frags = frags or []
+    frags: dicts (a, b, op, cond, elses) or tuples (a, b, op, cond[, else_msg, guard]);
+    op in alt / opt / loop / break / ref."""
+    frags = _frags(frags)
     COL = 190
     W = COL * len(parts) + 50
     xs = [30 + COL / 2 + i * COL for i in range(len(parts))]
+
+    def inner(g, fr):  # g lies strictly inside fr
+        return g is not fr and fr["a"] <= g["a"] and g["b"] <= fr["b"] and (g["b"] - g["a"]) < (fr["b"] - fr["a"])
+
     top = 112
     y = top + 22
     rows = []
     num = 0
     for k, m in enumerate(msgs):
         f, t, text = m[0], m[1], m[2]
-        ret = len(m) > 3 and m[3] == "ret"
-        y += 32 * sum(1 for fr in frags if fr[0] == k)
-        y += 30 * sum(1 for fr in frags if len(fr) > 4 and fr[4] == k)
+        ret = _is_ret(m)
+        y += 30 * sum(1 for fr in frags for e, _g in fr["elses"] if e == k)
+        y += 32 * sum(1 for fr in frags if fr["a"] == k)
         prefix = "" if ret else f"{(num := num + 1)}: "
         span = COL * abs(t - f) - 26 if f != t else COL - 40
         lines = _wrap(text, span - len(prefix) * 6.1, 6.1)  # keep the number on the first line
@@ -352,7 +396,7 @@ def sequence(title: str, parts: list, msgs: list, frags: list | None = None) -> 
         h = 14 * (len(lines) - 1) + (30 if f == t else 12)
         rows.append(dict(y=y, ly=ly, f=f, t=t, lines=lines, ret=ret, bottom=y + h))
         y += h + 12
-        y += 10 * sum(1 for fr in frags if fr[1] == k)
+        y += 10 * sum(1 for fr in frags if fr["b"] == k)
     H = math.ceil(y + 30)
     o = [f'<svg xmlns="http://www.w3.org/2000/svg" width="{W}" height="{H}" viewBox="0 0 {W} {H}" font-family="{FONT}">',
          _defs(), f'<rect width="{W}" height="{H}" fill="#fff"/>', _frame(W, H, f"sd {title}")]
@@ -361,29 +405,29 @@ def sequence(title: str, parts: list, msgs: list, frags: list | None = None) -> 
         o.append(_text_block(x, 66 if kind == "system" else 102, [name], 11))
         o.append(f'<line x1="{x}" y1="{top}" x2="{x}" y2="{H - 16}" stroke="{STROKE}" stroke-dasharray="5,4"/>')
     # execution specifications
-    acts = _activations(parts, msgs, frags)
-    active_at = {}
-    for t, a, b, selfc in sorted(acts, key=lambda q: (q[1], q[3])):
+    placed = []
+    for t, a, b, selfc in sorted(_activations(parts, msgs, frags), key=lambda q: (q[1], q[3])):
         if selfc:
             y1, y2 = rows[a]["ly"] + 16, rows[a]["ly"] + 30
         else:
             y1, y2 = rows[a]["ly"] - 2, max(rows[b]["ly"] + 2, rows[a]["ly"] + 18)
-        depth = sum(1 for (tt, yy1, yy2) in active_at.get("list", []) if tt == t and yy1 <= y1 < yy2)
-        active_at.setdefault("list", []).append((t, y1, y2))
+        depth = sum(1 for (tt, yy1, yy2) in placed if tt == t and yy1 <= y1 < yy2)
+        placed.append((t, y1, y2))
         x = xs[t] - 5 + 6 * depth
         o.append(f'<rect x="{x}" y="{y1}" width="10" height="{y2 - y1}" fill="#fff" stroke="{STROKE}"/>')
+    halo = 'paint-order="stroke" stroke="#fff" stroke-width="4" stroke-linejoin="round"'
     for r in rows:
         f, t = r["f"], r["t"]
         x1, x2 = xs[f], xs[t]
         if f == t:
             ty = r["y"] + 4
-            o.append("".join(f'<text x="{x1 + 14}" y="{ty + i * 14}" font-size="10.5" paint-order="stroke" stroke="#fff" stroke-width="4" stroke-linejoin="round">{escape(s)}</text>' for i, s in enumerate(r["lines"])))
+            o.append("".join(f'<text x="{x1 + 14}" y="{ty + i * 14}" font-size="10.5" {halo}>{escape(s)}</text>' for i, s in enumerate(r["lines"])))
             ly = r["ly"] + 6
             o.append(f'<path d="M{x1 + 5},{ly} L{x1 + 42},{ly} L{x1 + 42},{ly + 14} L{x1 + 12},{ly + 14}" fill="none" stroke="{STROKE}" marker-end="url(#arr)"/>')
             continue
         ly = r["ly"]
         mid = (x1 + x2) / 2
-        o.append("".join(f'<text x="{mid}" y="{r["y"] + i * 14}" font-size="10.5" text-anchor="middle" paint-order="stroke" stroke="#fff" stroke-width="4" stroke-linejoin="round">{escape(s)}</text>' for i, s in enumerate(r["lines"])))
+        o.append("".join(f'<text x="{mid}" y="{r["y"] + i * 14}" font-size="10.5" text-anchor="middle" {halo}>{escape(s)}</text>' for i, s in enumerate(r["lines"])))
         right = x2 > x1
         sx = x1 + ((5 if right else -5) if parts[f][0] != "actor" else 0)
         ex = x2 - ((5 if right else -5) if parts[t][0] != "actor" else 0)
@@ -393,25 +437,26 @@ def sequence(title: str, parts: list, msgs: list, frags: list | None = None) -> 
             o.append(f'<line x1="{sx}" y1="{ly}" x2="{ex}" y2="{ly}" stroke="{STROKE}" marker-end="url(#open)"/>')
         else:
             o.append(f'<line x1="{sx}" y1="{ly}" x2="{ex}" y2="{ly}" stroke="{STROKE}" marker-end="url(#arr)"/>')
-    # combined fragments: span only the lifelines they cover
+    # combined fragments: span only the lifelines they cover; nested ones are inset
     for fr in frags:
-        a, b, op, cond = fr[0], fr[1], fr[2], fr[3]
+        a, b, op, cond = fr["a"], fr["b"], fr["op"], fr["cond"]
         lo = min(min(msgs[k][0], msgs[k][1]) for k in range(a, b + 1))
         hi = max(max(msgs[k][0], msgs[k][1]) for k in range(a, b + 1))
         selfhi = any(msgs[k][0] == msgs[k][1] == hi for k in range(a, b + 1))
-        inset = 8 * sum(1 for g in frags if g is not fr and g[0] <= a and b <= g[1] and (g[0], g[1]) != (a, b))
-        fx1 = xs[lo] - 46 + inset
-        fx2 = min(W - 10, xs[hi] + (150 if selfhi else 46)) - inset
+        depth = sum(1 for g in frags if inner(fr, g))
+        fx1 = xs[lo] - 52 + 9 * depth
+        fx2 = min(W - 10, xs[hi] + (150 if selfhi else 52)) - 9 * depth
         fx2 = max(fx2, fx1 + len(cond) * 6 + 80)
-        y1 = rows[a]["y"] - 30 - 32 * sum(1 for g in frags if g[0] == a and g is not fr and g[1] < b)
-        y2 = rows[b]["bottom"] + 6
+        y1 = rows[a]["y"] - 30 - 32 * sum(1 for g in frags if g["a"] == a and inner(g, fr))
+        y2 = rows[b]["bottom"] + 6 + 10 * sum(1 for g in frags if g["b"] == b and inner(g, fr))
+        tw = max(40, len(op) * 7 + 12)
         o.append(f'<rect x="{fx1}" y="{y1}" width="{fx2 - fx1}" height="{y2 - y1}" fill="none" stroke="#444"/>')
-        o.append(f'<path d="M{fx1},{y1} L{fx1 + 40},{y1} L{fx1 + 40},{y1 + 11} L{fx1 + 33},{y1 + 18} L{fx1},{y1 + 18} Z" fill="#fff" stroke="#444"/>')
+        o.append(f'<path d="M{fx1},{y1} L{fx1 + tw},{y1} L{fx1 + tw},{y1 + 11} L{fx1 + tw - 7},{y1 + 18} L{fx1},{y1 + 18} Z" fill="#fff" stroke="#444"/>')
         o.append(f'<text x="{fx1 + 6}" y="{y1 + 13}" font-size="10.5" font-weight="bold">{op}</text>')
-        o.append(f'<text x="{fx1 + 48}" y="{y1 + 13}" font-size="10.5" paint-order="stroke" stroke="#fff" stroke-width="4" stroke-linejoin="round">{escape(cond)}</text>')
-        if len(fr) > 4:
-            ye = rows[fr[4]]["y"] - 30
+        o.append(f'<text x="{fx1 + tw + 8}" y="{y1 + 13}" font-size="10.5" {halo}>{escape(cond)}</text>')
+        for e, guard in fr["elses"]:
+            ye = rows[e]["y"] - 30 - 32 * sum(1 for g in frags if g["a"] == e and inner(g, fr))
             o.append(f'<line x1="{fx1}" y1="{ye}" x2="{fx2}" y2="{ye}" stroke="#444" stroke-dasharray="6,4"/>')
-            o.append(f'<text x="{fx1 + 8}" y="{ye + 13}" font-size="10.5" paint-order="stroke" stroke="#fff" stroke-width="4" stroke-linejoin="round">{escape(fr[5])}</text>')
+            o.append(f'<text x="{fx1 + 8}" y="{ye + 13}" font-size="10.5" {halo}>{escape(guard)}</text>')
     o.append("</svg>")
     return "".join(o)
