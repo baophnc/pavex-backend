@@ -133,227 +133,227 @@
   {
    "level": 3,
    "text": "4.2.2. UC03 – Đăng ký tài khoản",
-   "page": 21
-  },
-  {
-   "level": 3,
-   "text": "4.2.3. UC06 – Quản lý người dùng",
    "page": 23
   },
   {
    "level": 3,
+   "text": "4.2.3. UC06 – Quản lý người dùng",
+   "page": 25
+  },
+  {
+   "level": 3,
    "text": "4.2.4. UC08 – Quản lý vai trò & quyền",
-   "page": 24
+   "page": 28
   },
   {
    "level": 3,
    "text": "4.2.5. UC13 – Duyệt và quản lý cửa hàng",
-   "page": 26
+   "page": 31
   },
   {
    "level": 3,
    "text": "4.2.6. UC14 – Tra cứu vận đơn",
-   "page": 27
+   "page": 33
   },
   {
    "level": 3,
    "text": "4.2.7. UC15 – Tra cứu giá cước",
-   "page": 29
-  },
-  {
-   "level": 3,
-   "text": "4.2.8. UC17 – Tạo đơn hàng",
-   "page": 30
-  },
-  {
-   "level": 3,
-   "text": "4.2.9. UC25 – Quản lý ca làm việc",
-   "page": 32
-  },
-  {
-   "level": 3,
-   "text": "4.2.10. UC31 – Điều phối công việc",
-   "page": 34
-  },
-  {
-   "level": 3,
-   "text": "4.2.11. UC33 – Thực hiện công việc",
    "page": 35
   },
   {
    "level": 3,
-   "text": "4.2.12. UC35 – Ghi nhận kết quả giao hàng",
+   "text": "4.2.8. UC17 – Tạo đơn hàng",
    "page": 37
   },
   {
    "level": 3,
+   "text": "4.2.9. UC25 – Quản lý ca làm việc",
+   "page": 40
+  },
+  {
+   "level": 3,
+   "text": "4.2.10. UC31 – Điều phối công việc",
+   "page": 43
+  },
+  {
+   "level": 3,
+   "text": "4.2.11. UC33 – Thực hiện công việc",
+   "page": 45
+  },
+  {
+   "level": 3,
+   "text": "4.2.12. UC35 – Ghi nhận kết quả giao hàng",
+   "page": 48
+  },
+  {
+   "level": 3,
    "text": "4.2.13. UC40 – Xử lý yêu cầu ngoại lệ",
-   "page": 38
+   "page": 50
   },
   {
    "level": 2,
    "text": "4.3. Mô hình domain",
-   "page": 40
+   "page": 53
   },
   {
    "level": 3,
    "text": "4.3.1. Các bounded context",
-   "page": 40
+   "page": 53
   },
   {
    "level": 3,
    "text": "4.3.2. Sơ đồ domain tổng thể",
-   "page": 42
+   "page": 55
   },
   {
    "level": 2,
    "text": "4.4. Class diagram toàn hệ thống",
-   "page": 44
+   "page": 57
   },
   {
    "level": 3,
    "text": "4.4.1. Quy ước",
-   "page": 44
+   "page": 57
   },
   {
    "level": 3,
    "text": "4.4.2. Class diagram",
-   "page": 44
+   "page": 57
   },
   {
    "level": 3,
    "text": "4.4.3. Đối chiếu class diagram với sơ đồ tuần tự",
-   "page": 44
+   "page": 57
   },
   {
    "level": 2,
    "text": "4.5. Kiến trúc hệ thống",
-   "page": 45
+   "page": 58
   },
   {
    "level": 3,
    "text": "4.5.1. Kiến trúc tổng thể",
-   "page": 45
+   "page": 58
   },
   {
    "level": 3,
    "text": "4.5.2. Các lớp kiến trúc",
-   "page": 45
+   "page": 58
   },
   {
    "level": 1,
    "text": "CHƯƠNG 5. GIẢI PHÁP CÔNG NGHỆ",
-   "page": 46
+   "page": 59
   },
   {
    "level": 2,
    "text": "5.1. Kiến trúc client – BFF – backend",
-   "page": 46
+   "page": 59
   },
   {
    "level": 2,
    "text": "5.2. Xác thực, phân quyền và toàn vẹn dữ liệu",
-   "page": 46
+   "page": 59
   },
   {
    "level": 2,
    "text": "5.3. Định giá có phiên bản và báo giá có thời hạn",
-   "page": 46
+   "page": 59
   },
   {
    "level": 2,
    "text": "5.4. Định tuyến và giữ chỗ tải trọng",
-   "page": 47
+   "page": 60
   },
   {
    "level": 2,
    "text": "5.5. Điều phối công việc theo ca và năng lực nhân sự",
-   "page": 47
+   "page": 60
   },
   {
    "level": 2,
    "text": "5.6. Quét mã kiện hàng và hành trình vận đơn",
-   "page": 47
+   "page": 60
   },
   {
    "level": 1,
    "text": "CHƯƠNG 6. HIỆN THỰC, TRIỂN KHAI VÀ KIỂM THỬ",
-   "page": 48
+   "page": 61
   },
   {
    "level": 2,
    "text": "6.1. Môi trường phát triển và công cụ",
-   "page": 48
+   "page": 61
   },
   {
    "level": 2,
    "text": "6.2. Tình trạng hiện thực",
-   "page": 48
+   "page": 61
   },
   {
    "level": 2,
    "text": "6.3. Giao diện cổng quản trị",
-   "page": 49
+   "page": 62
   },
   {
    "level": 2,
    "text": "6.4. Kiểm thử hệ thống",
-   "page": 50
+   "page": 63
   },
   {
    "level": 3,
    "text": "6.4.1. Phương pháp kiểm thử",
-   "page": 50
+   "page": 63
   },
   {
    "level": 3,
    "text": "6.4.2. Danh sách test case",
-   "page": 50
+   "page": 63
   },
   {
    "level": 3,
    "text": "6.4.3. Test case chi tiết",
-   "page": 51
+   "page": 64
   },
   {
    "level": 1,
    "text": "CHƯƠNG 7. ĐÁNH GIÁ VÀ THẢO LUẬN",
-   "page": 55
+   "page": 68
   },
   {
    "level": 2,
    "text": "7.1. Kết quả đạt được",
-   "page": 55
+   "page": 68
   },
   {
    "level": 2,
    "text": "7.2. Hạn chế còn tồn tại",
-   "page": 55
+   "page": 68
   },
   {
    "level": 2,
    "text": "7.3. Thảo luận và bài học kinh nghiệm",
-   "page": 55
+   "page": 68
   },
   {
    "level": 1,
    "text": "CHƯƠNG 8. KẾT LUẬN",
-   "page": 56
+   "page": 69
   },
   {
    "level": 2,
    "text": "8.1. Kết luận",
-   "page": 56
+   "page": 69
   },
   {
    "level": 2,
    "text": "8.2. Hướng phát triển",
-   "page": 56
+   "page": 69
   },
   {
    "level": 1,
    "text": "PHỤ LỤC A. DANH SÁCH TEST CASE THEO THIẾT KẾ",
-   "page": 57
+   "page": 70
   }
  ],
  "figures": [
@@ -365,172 +365,172 @@
   {
    "level": 2,
    "text": "Hình 4.2. Sơ đồ hoạt động AD-UC01 – Đăng nhập",
-   "page": 21
-  },
-  {
-   "level": 2,
-   "text": "Hình 4.3. Sơ đồ tuần tự SD-UC01 – Đăng nhập",
-   "page": 21
-  },
-  {
-   "level": 2,
-   "text": "Hình 4.4. Sơ đồ hoạt động AD-UC03 – Đăng ký tài khoản",
    "page": 22
   },
   {
    "level": 2,
+   "text": "Hình 4.3. Sơ đồ tuần tự SD-UC01 – Đăng nhập",
+   "page": 22
+  },
+  {
+   "level": 2,
+   "text": "Hình 4.4. Sơ đồ hoạt động AD-UC03 – Đăng ký tài khoản",
+   "page": 24
+  },
+  {
+   "level": 2,
    "text": "Hình 4.5. Sơ đồ tuần tự SD-UC03 – Đăng ký tài khoản",
-   "page": 23
+   "page": 25
   },
   {
    "level": 2,
    "text": "Hình 4.6. Sơ đồ hoạt động AD-UC06 – Quản lý người dùng",
-   "page": 24
+   "page": 27
   },
   {
    "level": 2,
    "text": "Hình 4.7. Sơ đồ tuần tự SD-UC06 – Quản lý người dùng",
-   "page": 24
-  },
-  {
-   "level": 2,
-   "text": "Hình 4.8. Sơ đồ hoạt động AD-UC08 – Quản lý vai trò & quyền",
-   "page": 26
-  },
-  {
-   "level": 2,
-   "text": "Hình 4.9. Sơ đồ tuần tự SD-UC08 – Quản lý vai trò & quyền",
-   "page": 26
-  },
-  {
-   "level": 2,
-   "text": "Hình 4.10. Sơ đồ hoạt động AD-UC13 – Duyệt và quản lý cửa hàng",
-   "page": 27
-  },
-  {
-   "level": 2,
-   "text": "Hình 4.11. Sơ đồ tuần tự SD-UC13 – Duyệt và quản lý cửa hàng",
-   "page": 27
-  },
-  {
-   "level": 2,
-   "text": "Hình 4.12. Sơ đồ hoạt động AD-UC14 – Tra cứu vận đơn",
    "page": 28
   },
   {
    "level": 2,
+   "text": "Hình 4.8. Sơ đồ hoạt động AD-UC08 – Quản lý vai trò & quyền",
+   "page": 30
+  },
+  {
+   "level": 2,
+   "text": "Hình 4.9. Sơ đồ tuần tự SD-UC08 – Quản lý vai trò & quyền",
+   "page": 31
+  },
+  {
+   "level": 2,
+   "text": "Hình 4.10. Sơ đồ hoạt động AD-UC13 – Duyệt và quản lý cửa hàng",
+   "page": 32
+  },
+  {
+   "level": 2,
+   "text": "Hình 4.11. Sơ đồ tuần tự SD-UC13 – Duyệt và quản lý cửa hàng",
+   "page": 33
+  },
+  {
+   "level": 2,
+   "text": "Hình 4.12. Sơ đồ hoạt động AD-UC14 – Tra cứu vận đơn",
+   "page": 34
+  },
+  {
+   "level": 2,
    "text": "Hình 4.13. Sơ đồ tuần tự SD-UC14 – Tra cứu vận đơn",
-   "page": 29
+   "page": 34
   },
   {
    "level": 2,
    "text": "Hình 4.14. Sơ đồ hoạt động AD-UC15 – Tra cứu giá cước",
-   "page": 30
-  },
-  {
-   "level": 2,
-   "text": "Hình 4.15. Sơ đồ tuần tự SD-UC15 – Tra cứu giá cước",
-   "page": 30
-  },
-  {
-   "level": 2,
-   "text": "Hình 4.16. Sơ đồ hoạt động AD-UC17 – Tạo đơn hàng",
-   "page": 32
-  },
-  {
-   "level": 2,
-   "text": "Hình 4.17. Sơ đồ tuần tự SD-UC17 – Tạo đơn hàng",
-   "page": 32
-  },
-  {
-   "level": 2,
-   "text": "Hình 4.18. Sơ đồ hoạt động AD-UC25 – Quản lý ca làm việc",
-   "page": 33
-  },
-  {
-   "level": 2,
-   "text": "Hình 4.19. Sơ đồ tuần tự SD-UC25 – Quản lý ca làm việc",
-   "page": 33
-  },
-  {
-   "level": 2,
-   "text": "Hình 4.20. Sơ đồ hoạt động AD-UC31 – Điều phối công việc",
-   "page": 35
-  },
-  {
-   "level": 2,
-   "text": "Hình 4.21. Sơ đồ tuần tự SD-UC31 – Điều phối công việc",
-   "page": 35
-  },
-  {
-   "level": 2,
-   "text": "Hình 4.22. Sơ đồ hoạt động AD-UC33 – Thực hiện công việc",
    "page": 36
   },
   {
    "level": 2,
-   "text": "Hình 4.23. Sơ đồ tuần tự SD-UC33 – Thực hiện công việc",
+   "text": "Hình 4.15. Sơ đồ tuần tự SD-UC15 – Tra cứu giá cước",
    "page": 37
   },
   {
    "level": 2,
-   "text": "Hình 4.24. Sơ đồ hoạt động AD-UC35 – Ghi nhận kết quả giao hàng",
-   "page": 38
-  },
-  {
-   "level": 2,
-   "text": "Hình 4.25. Sơ đồ tuần tự SD-UC35 – Ghi nhận kết quả giao hàng",
-   "page": 38
-  },
-  {
-   "level": 2,
-   "text": "Hình 4.26. Sơ đồ hoạt động AD-UC40 – Xử lý yêu cầu ngoại lệ",
+   "text": "Hình 4.16. Sơ đồ hoạt động AD-UC17 – Tạo đơn hàng",
    "page": 39
   },
   {
    "level": 2,
-   "text": "Hình 4.27. Sơ đồ tuần tự SD-UC40 – Xử lý yêu cầu ngoại lệ",
+   "text": "Hình 4.17. Sơ đồ tuần tự SD-UC17 – Tạo đơn hàng",
    "page": 40
   },
   {
    "level": 2,
-   "text": "Hình 4.28. Sơ đồ package các bounded context của PAVEX",
-   "page": 41
+   "text": "Hình 4.18. Sơ đồ hoạt động AD-UC25 – Quản lý ca làm việc",
+   "page": 42
   },
   {
    "level": 2,
-   "text": "Hình 4.29. Sơ đồ domain tổng thể của hệ thống PAVEX",
+   "text": "Hình 4.19. Sơ đồ tuần tự SD-UC25 – Quản lý ca làm việc",
    "page": 43
   },
   {
    "level": 2,
-   "text": "Hình 4.30. Class diagram toàn hệ thống PAVEX",
+   "text": "Hình 4.20. Sơ đồ hoạt động AD-UC31 – Điều phối công việc",
    "page": 44
   },
   {
    "level": 2,
-   "text": "Hình 4.31. Kiến trúc tổng thể client – BFF – backend – PostgreSQL",
+   "text": "Hình 4.21. Sơ đồ tuần tự SD-UC31 – Điều phối công việc",
    "page": 45
   },
   {
    "level": 2,
-   "text": "Hình 6.1. Đăng nhập cổng quản trị",
+   "text": "Hình 4.22. Sơ đồ hoạt động AD-UC33 – Thực hiện công việc",
+   "page": 47
+  },
+  {
+   "level": 2,
+   "text": "Hình 4.23. Sơ đồ tuần tự SD-UC33 – Thực hiện công việc",
+   "page": 48
+  },
+  {
+   "level": 2,
+   "text": "Hình 4.24. Sơ đồ hoạt động AD-UC35 – Ghi nhận kết quả giao hàng",
    "page": 49
+  },
+  {
+   "level": 2,
+   "text": "Hình 4.25. Sơ đồ tuần tự SD-UC35 – Ghi nhận kết quả giao hàng",
+   "page": 50
+  },
+  {
+   "level": 2,
+   "text": "Hình 4.26. Sơ đồ hoạt động AD-UC40 – Xử lý yêu cầu ngoại lệ",
+   "page": 52
+  },
+  {
+   "level": 2,
+   "text": "Hình 4.27. Sơ đồ tuần tự SD-UC40 – Xử lý yêu cầu ngoại lệ",
+   "page": 53
+  },
+  {
+   "level": 2,
+   "text": "Hình 4.28. Sơ đồ package các bounded context của PAVEX",
+   "page": 54
+  },
+  {
+   "level": 2,
+   "text": "Hình 4.29. Sơ đồ domain tổng thể của hệ thống PAVEX",
+   "page": 56
+  },
+  {
+   "level": 2,
+   "text": "Hình 4.30. Class diagram toàn hệ thống PAVEX",
+   "page": 57
+  },
+  {
+   "level": 2,
+   "text": "Hình 4.31. Kiến trúc tổng thể client – BFF – backend – PostgreSQL",
+   "page": 58
+  },
+  {
+   "level": 2,
+   "text": "Hình 6.1. Đăng nhập cổng quản trị",
+   "page": 62
   },
   {
    "level": 2,
    "text": "Hình 6.2. Bảng điều hành",
-   "page": 49
+   "page": 62
   },
   {
    "level": 2,
    "text": "Hình 6.3. Quản lý người dùng",
-   "page": 50
+   "page": 63
   },
   {
    "level": 2,
    "text": "Hình 6.4. Vai trò và quyền",
-   "page": 50
+   "page": 63
   }
  ],
  "tables": [
@@ -557,7 +557,7 @@
   {
    "level": 2,
    "text": "Bảng 4.2. Quy ước đặt tên trong đặc tả và sơ đồ",
-   "page": 19
+   "page": 20
   },
   {
    "level": 2,
@@ -567,117 +567,117 @@
   {
    "level": 2,
    "text": "Bảng 4.4. Đặc tả use case UC03 – Đăng ký tài khoản",
-   "page": 21
-  },
-  {
-   "level": 2,
-   "text": "Bảng 4.5. Đặc tả use case UC06 – Quản lý người dùng",
    "page": 23
   },
   {
    "level": 2,
+   "text": "Bảng 4.5. Đặc tả use case UC06 – Quản lý người dùng",
+   "page": 25
+  },
+  {
+   "level": 2,
    "text": "Bảng 4.6. Đặc tả use case UC08 – Quản lý vai trò & quyền",
-   "page": 24
+   "page": 28
   },
   {
    "level": 2,
    "text": "Bảng 4.7. Đặc tả use case UC13 – Duyệt và quản lý cửa hàng",
-   "page": 26
+   "page": 31
   },
   {
    "level": 2,
    "text": "Bảng 4.8. Đặc tả use case UC14 – Tra cứu vận đơn",
-   "page": 27
+   "page": 33
   },
   {
    "level": 2,
    "text": "Bảng 4.9. Đặc tả use case UC15 – Tra cứu giá cước",
-   "page": 29
-  },
-  {
-   "level": 2,
-   "text": "Bảng 4.10. Đặc tả use case UC17 – Tạo đơn hàng",
-   "page": 30
-  },
-  {
-   "level": 2,
-   "text": "Bảng 4.11. Đặc tả use case UC25 – Quản lý ca làm việc",
-   "page": 32
-  },
-  {
-   "level": 2,
-   "text": "Bảng 4.12. Đặc tả use case UC31 – Điều phối công việc",
-   "page": 34
-  },
-  {
-   "level": 2,
-   "text": "Bảng 4.13. Đặc tả use case UC33 – Thực hiện công việc",
    "page": 35
   },
   {
    "level": 2,
-   "text": "Bảng 4.14. Đặc tả use case UC35 – Ghi nhận kết quả giao hàng",
+   "text": "Bảng 4.10. Đặc tả use case UC17 – Tạo đơn hàng",
    "page": 37
   },
   {
    "level": 2,
-   "text": "Bảng 4.15. Đặc tả use case UC40 – Xử lý yêu cầu ngoại lệ",
-   "page": 38
+   "text": "Bảng 4.11. Đặc tả use case UC25 – Quản lý ca làm việc",
+   "page": 40
   },
   {
    "level": 2,
-   "text": "Bảng 4.16. Các bounded context của mô hình domain",
-   "page": 41
+   "text": "Bảng 4.12. Đặc tả use case UC31 – Điều phối công việc",
+   "page": 43
   },
   {
    "level": 2,
-   "text": "Bảng 4.17. Đối chiếu phương thức của lớp với sơ đồ tuần tự",
-   "page": 44
-  },
-  {
-   "level": 2,
-   "text": "Bảng 4.18. Các lớp trong kiến trúc hệ thống",
+   "text": "Bảng 4.13. Đặc tả use case UC33 – Thực hiện công việc",
    "page": 45
   },
   {
    "level": 2,
-   "text": "Bảng 6.1. Môi trường và công cụ phát triển",
+   "text": "Bảng 4.14. Đặc tả use case UC35 – Ghi nhận kết quả giao hàng",
    "page": 48
   },
   {
    "level": 2,
-   "text": "Bảng 6.2. Tình trạng hiện thực các chức năng",
-   "page": 48
-  },
-  {
-   "level": 2,
-   "text": "Bảng 6.3. Danh sách test case",
+   "text": "Bảng 4.15. Đặc tả use case UC40 – Xử lý yêu cầu ngoại lệ",
    "page": 50
   },
   {
    "level": 2,
-   "text": "Bảng 6.4. Test case TC01 – Đăng nhập",
-   "page": 51
-  },
-  {
-   "level": 2,
-   "text": "Bảng 6.5. Test case TC02 – Đăng xuất",
-   "page": 52
-  },
-  {
-   "level": 2,
-   "text": "Bảng 6.6. Test case TC03 – Tra cứu và lọc người dùng",
-   "page": 53
-  },
-  {
-   "level": 2,
-   "text": "Bảng 6.7. Test case TC04 – Xem vai trò và quyền",
+   "text": "Bảng 4.16. Các bounded context của mô hình domain",
    "page": 54
   },
   {
    "level": 2,
-   "text": "Bảng A.1. Danh sách test case theo thiết kế của các chức năng chưa hiện thực",
+   "text": "Bảng 4.17. Đối chiếu phương thức của lớp với sơ đồ tuần tự",
    "page": 57
+  },
+  {
+   "level": 2,
+   "text": "Bảng 4.18. Các lớp trong kiến trúc hệ thống",
+   "page": 58
+  },
+  {
+   "level": 2,
+   "text": "Bảng 6.1. Môi trường và công cụ phát triển",
+   "page": 61
+  },
+  {
+   "level": 2,
+   "text": "Bảng 6.2. Tình trạng hiện thực các chức năng",
+   "page": 61
+  },
+  {
+   "level": 2,
+   "text": "Bảng 6.3. Danh sách test case",
+   "page": 63
+  },
+  {
+   "level": 2,
+   "text": "Bảng 6.4. Test case TC01 – Đăng nhập",
+   "page": 64
+  },
+  {
+   "level": 2,
+   "text": "Bảng 6.5. Test case TC02 – Đăng xuất",
+   "page": 65
+  },
+  {
+   "level": 2,
+   "text": "Bảng 6.6. Test case TC03 – Tra cứu và lọc người dùng",
+   "page": 66
+  },
+  {
+   "level": 2,
+   "text": "Bảng 6.7. Test case TC04 – Xem vai trò và quyền",
+   "page": 67
+  },
+  {
+   "level": 2,
+   "text": "Bảng A.1. Danh sách test case theo thiết kế của các chức năng chưa hiện thực",
+   "page": 70
   }
  ]
 }

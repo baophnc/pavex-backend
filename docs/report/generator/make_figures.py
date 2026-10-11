@@ -1,11 +1,12 @@
 """Render the report figures to ../figures (SVG + PNG): activity and sequence diagrams of the core
-use cases, the package diagram of the domain model and one class diagram per bounded context."""
+use cases, the package diagram and the overall diagram of the domain model."""
 import os
 import pathlib
 import subprocess
 
-from diagrams import activity, sequence
-from specs import CORE, GUARDS
+from diagrams import activity
+from activities import ACTIVITIES, LANE
+from specs import CORE
 
 OUT = pathlib.Path(__file__).resolve().parent.parent / "figures"
 OUT.mkdir(exist_ok=True)
@@ -16,26 +17,19 @@ def slug(uc):
 
 
 def class_figures():
-    """Package diagram, overall domain model and one class diagram per bounded context."""
+    """Package diagram and overall domain model."""
     import classdiag
 
     (OUT / "domain-packages.svg").write_text(classdiag.package_svg(), encoding="utf-8")
     (OUT / "domain-overview.svg").write_text(classdiag.overview_svg(), encoding="utf-8")
-    for slug, _pkg, d in classdiag.context_diagrams():
-        (OUT / f"class-{slug}.svg").write_text(d.to_svg(), encoding="utf-8")
 
 
 def main():
     class_figures()
-    svgs = []
-    for uc in (u for u in CORE if "activity" in u):  # specs without diagram data yet are skipped
-        lane_actor = uc["seq"]["parts"][0][1]  # same actor name as the sequence diagram
-        a = activity(uc["name"], (lane_actor, "Hệ thống PAVEX"), uc["activity"], GUARDS)
-        s = sequence(uc["name"], uc["seq"]["parts"], uc["seq"]["msgs"], uc["seq"].get("frags"))
-        for kind, svg in (("act", a), ("seq", s)):
-            p = OUT / f"{slug(uc)}-{kind}.svg"
-            p.write_text(svg, encoding="utf-8")
-            svgs.append(str(p))
+    names = {u["code"]: u["name"] for u in CORE}
+    for code, steps in ACTIVITIES.items():  # AD-UCxx
+        svg = activity(f"AD-{code} {names[code]}", (LANE[code], "Hệ thống PAVEX"), steps)
+        (OUT / f"ad-{code.lower()}.svg").write_text(svg, encoding="utf-8")
     env = dict(os.environ, NODE_PATH="/opt/node22/lib/node_modules")
     subprocess.run(["node", str(pathlib.Path(__file__).with_name("render_svg.cjs")), str(OUT)], check=True, env=env)
 

@@ -2,7 +2,7 @@
 
 main: ordered steps ("A", text) = actor, ("S", text) = system; the builder numbers them.
 alt:  (step/condition, handling)
-activity: see diagrams.activity; seq: see diagrams.sequence.
+seq: see diagrams.sequence. Activity diagrams: activities.py.
 """
 
 U = "Người dùng"
@@ -28,19 +28,7 @@ CORE = [
             ("4a. Thiếu email/mật khẩu hoặc email sai định dạng", "Hệ thống báo lỗi tại trường nhập, quay lại bước 3."),
             ("5a. Email hoặc mật khẩu không đúng", "Hệ thống thông báo “Email hoặc mật khẩu không đúng”, quay lại bước 3."),
             ("5b. Tài khoản bị tạm khóa (SUSPENDED) hoặc vô hiệu hóa (DISABLED)", "Hệ thống thông báo tài khoản bị khóa và kết thúc use case."),
-            ("7a. Access token hết hạn trong khi sử dụng", "Hệ thống dùng refresh token để cấp token mới; nếu refresh thất bại thì yêu cầu đăng nhập lại."),
-            ("3a. Người dùng chọn “Quên mật khẩu”", "Chuyển sang use case Quên mật khẩu (extend)."),
-        ],
-        activity=[
-            ("A", "Truy cập trang Đăng nhập"),
-            ("S", "Hiển thị form đăng nhập"),
-            ("A", "Nhập email, mật khẩu và nhấn Đăng nhập"),
-            ("S", "Kiểm tra dữ liệu nhập"),
-            ("?", "Hợp lệ?", ("S", "Báo lỗi tại trường nhập"), 2),
-            ("S", "Xác thực email, mật khẩu và trạng thái tài khoản"),
-            ("?", "Đúng và đang hoạt động?", ("S", "Thông báo sai thông tin hoặc tài khoản bị khóa"), 2),
-            ("S", "Cấp access token và refresh token"),
-            ("S", "Chuyển đến trang chính theo vai trò"),
+            ("3a. Người dùng chọn “Quên mật khẩu”", "Chuyển sang UC01.1 Quên mật khẩu (extend), kết thúc use case."),
         ],
         seq=dict(
             parts=[("actor", U), ("boundary", "GD_DangNhap"), ("control", "CTRL_XacThuc"), ("entity", "UserAccount"), ("entity", "Role")],
@@ -85,19 +73,6 @@ CORE = [
             ("8a. Liên kết xác minh hết hạn", "Hệ thống cho phép gửi lại email xác minh."),
             ("3a. Khách nhấn “Hủy”", "Kết thúc use case, không lưu dữ liệu."),
         ],
-        activity=[
-            ("A", "Chọn Đăng ký tài khoản"),
-            ("S", "Hiển thị form đăng ký"),
-            ("A", "Nhập họ tên, email, mật khẩu và nhấn Đăng ký"),
-            ("S", "Kiểm tra dữ liệu nhập"),
-            ("?", "Hợp lệ?", ("S", "Báo lỗi từng trường"), 2),
-            ("S", "Kiểm tra email đã tồn tại"),
-            ("?", "Email mới?", ("S", "Thông báo email đã được đăng ký"), "end"),
-            ("S", "Tạo tài khoản và hồ sơ (INCOMPLETE)"),
-            ("S", "Gửi email xác minh, báo đăng ký thành công"),
-            ("A", "Mở liên kết xác minh"),
-            ("S", "Xác nhận email, chuyển đến Đăng nhập"),
-        ],
         seq=dict(
             parts=[("actor", "Guest"), ("boundary", "GD_DangKy"), ("control", "CTRL_TaiKhoan"), ("entity", "UserAccount"), ("system", "Dịch vụ Email")],
             msgs=[
@@ -136,22 +111,10 @@ CORE = [
         ],
         alt=[
             ("4a. Thiếu thông tin hoặc sai định dạng", "Hệ thống báo lỗi, quay lại bước 3."),
-            ("4b. Vượt khối lượng/kích thước tối đa", "Hệ thống thông báo kiện hàng vượt giới hạn nhận gửi."),
-            ("4c. Tiền COD hoặc giá trị khai báo vượt mức tối đa", "Hệ thống thông báo mức tối đa cho phép."),
+            ("4b. Vượt khối lượng/kích thước tối đa", "Hệ thống thông báo kiện hàng vượt giới hạn nhận gửi, quay lại bước 3."),
+            ("4c. Tiền COD hoặc giá trị khai báo vượt mức tối đa", "Hệ thống thông báo mức tối đa cho phép, quay lại bước 3."),
             ("5a. Địa chỉ ngoài vùng phục vụ", "Hệ thống thông báo “Chưa hỗ trợ khu vực này”."),
             ("7a. Không có bảng giá đang áp dụng", "Hệ thống thông báo lỗi và đề nghị thử lại sau."),
-        ],
-        activity=[
-            ("A", "Mở trang Tính cước"),
-            ("S", "Hiển thị form tính cước"),
-            ("A", "Nhập điểm gửi, điểm nhận, kiện hàng, COD và nhấn Tính cước"),
-            ("S", "Kiểm tra dữ liệu và giới hạn nhận gửi"),
-            ("?", "Hợp lệ?", ("S", "Báo lỗi hoặc vượt giới hạn"), 2),
-            ("S", "Xác định khu vực phục vụ và vùng giá"),
-            ("?", "Trong vùng phục vụ?", ("S", "Thông báo chưa hỗ trợ khu vực"), "end"),
-            ("S", "Tính khối lượng quy đổi và khối lượng tính cước"),
-            ("S", "Áp dụng quy tắc giá, phụ phí, COD, bảo hiểm"),
-            ("S", "Lưu báo giá, hiển thị các phương án dịch vụ"),
         ],
         seq=dict(
             parts=[("actor", "Public User"), ("boundary", "GD_TinhCuoc"), ("control", "CTRL_BaoGia"), ("entity", "ServiceAreaCoverage"), ("entity", "RatePlan"), ("entity", "QuoteRequest")],
@@ -205,23 +168,6 @@ CORE = [
             ("12a. Không tìm được lộ trình hoặc hết tải trọng", "Đơn vẫn được tạo với trạng thái định tuyến ROUTING_FAILED và được đưa vào danh sách ngoại lệ để điều phối viên xử lý."),
             ("1a. Cửa hàng chưa được xác minh", "Hệ thống không cho tạo đơn và hướng dẫn gửi yêu cầu xác minh."),
         ],
-        activity=[
-            ("A", "Chọn Tạo đơn hàng"),
-            ("S", "Hiển thị form người gửi / người nhận"),
-            ("A", "Nhập người gửi, người nhận"),
-            ("S", "Kiểm tra số điện thoại, địa chỉ"),
-            ("?", "Hợp lệ?", ("S", "Báo lỗi thông tin liên hệ"), 2),
-            ("A", "Khai báo kiện hàng, COD, giá trị khai báo"),
-            ("S", "Kiểm tra giới hạn, tính cước các phương án"),
-            ("?", "Hợp lệ?", ("S", "Báo vượt giới hạn / mức COD"), 5),
-            ("A", "Chọn dịch vụ, nhấn Xác nhận tạo đơn"),
-            ("S", "Kiểm tra báo giá còn hiệu lực"),
-            ("?", "Còn hạn?", ("S", "Tính lại cước"), 8),
-            ("S", "Tạo vận đơn, kiện hàng, sinh mã vận đơn"),
-            ("S", "Định tuyến và giữ chỗ tải"),
-            ("S", "Tạo công việc lấy hàng, ghi sự kiện"),
-            ("S", "Hiển thị mã vận đơn, trạng thái Chờ lấy hàng"),
-        ],
         seq=dict(
             parts=[("actor", "Merchant"), ("boundary", "GD_TaoDonHang"), ("control", "CTRL_DonHang"), ("control", "CTRL_BaoGia"), ("entity", "Shipment"), ("entity", "LaneCapacityReservation"), ("entity", "OperationalAssignment")],
             msgs=[
@@ -267,17 +213,6 @@ CORE = [
             ("5a. Không tìm thấy vận đơn", "Hệ thống thông báo “Vận đơn không tồn tại”."),
             ("7a. Người tra cứu không phải chủ vận đơn", "Hệ thống chỉ hiển thị thông tin rút gọn, ẩn số điện thoại và địa chỉ chi tiết của người gửi, người nhận."),
         ],
-        activity=[
-            ("A", "Truy cập Tra cứu vận đơn"),
-            ("S", "Hiển thị ô nhập mã vận đơn"),
-            ("A", "Nhập mã vận đơn, nhấn Tra cứu"),
-            ("S", "Kiểm tra định dạng mã"),
-            ("?", "Hợp lệ?", ("S", "Báo lỗi mã vận đơn"), 2),
-            ("S", "Tìm vận đơn theo mã"),
-            ("?", "Tồn tại?", ("S", "Thông báo vận đơn không tồn tại"), "end"),
-            ("S", "Lấy sự kiện hành trình"),
-            ("S", "Hiển thị trạng thái, tiến trình, timeline"),
-        ],
         seq=dict(
             parts=[("actor", "Người tra cứu"), ("boundary", "GD_TraCuuVanDon"), ("control", "CTRL_VanDon"), ("entity", "Shipment"), ("entity", "ShipmentEvent")],
             msgs=[
@@ -306,7 +241,7 @@ CORE = [
         main=[
             ("A", "Admin mở “Quản lý cửa hàng”."),
             ("S", "Hệ thống hiển thị danh sách cửa hàng, cho phép lọc theo trạng thái và tìm theo mã/tên."),
-            ("A", "Admin chọn một cửa hàng đang chờ xác minh."),
+            ("A", "Admin chọn một cửa hàng."),
             ("S", "Hệ thống hiển thị chi tiết: tên kinh doanh, mã số thuế, người liên hệ, địa chỉ lấy hàng."),
             ("A", "Admin kiểm tra thông tin và chọn “Duyệt”."),
             ("S", "Hệ thống kiểm tra trạng thái hiện tại cho phép chuyển sang ACTIVE."),
@@ -318,18 +253,6 @@ CORE = [
             ("5b. Admin tạm ngưng cửa hàng đang hoạt động", "Hệ thống yêu cầu lý do và chuyển SUSPENDED; cửa hàng không thể tạo đơn mới."),
             ("5c. Admin khôi phục cửa hàng bị tạm ngưng", "Hệ thống chuyển lại ACTIVE."),
             ("6a. Trạng thái đã bị người khác thay đổi", "Hệ thống báo xung đột dữ liệu và tải lại chi tiết."),
-        ],
-        activity=[
-            ("A", "Mở Quản lý cửa hàng"),
-            ("S", "Hiển thị danh sách, lọc theo trạng thái"),
-            ("A", "Chọn cửa hàng chờ xác minh"),
-            ("S", "Hiển thị chi tiết cửa hàng"),
-            ("A", "Chọn Duyệt hoặc Từ chối"),
-            ("?", "Duyệt?", ("S", "Yêu cầu lý do, chuyển REJECTED, thông báo"), "end"),
-            ("S", "Kiểm tra trạng thái cho phép chuyển"),
-            ("?", "Hợp lệ?", ("S", "Báo xung đột, tải lại chi tiết"), 3),
-            ("S", "Chuyển ACTIVE, ghi người duyệt"),
-            ("S", "Thông báo cho chủ cửa hàng"),
         ],
         seq=dict(
             parts=[("actor", "Platform Admin"), ("boundary", "GD_QuanLyCuaHang"), ("control", "CTRL_CuaHang"), ("entity", "Merchant"), ("system", "Dịch vụ thông báo")],
@@ -372,18 +295,6 @@ CORE = [
             ("6a. Nhân sự vừa quá tải hoặc đã kết thúc ca", "Hệ thống cảnh báo và yêu cầu chọn nhân sự khác."),
             ("3a. Phân công lại", "Điều phối viên chọn công việc ASSIGNED/ACCEPTED và đổi người thực hiện; hệ thống ghi lại người thao tác."),
             ("3b. Hủy công việc", "Điều phối viên nhập ghi chú; hệ thống chuyển CANCELLED."),
-        ],
-        activity=[
-            ("A", "Mở Điều phối công việc"),
-            ("S", "Hiển thị công việc chờ tại hub"),
-            ("A", "Chọn công việc"),
-            ("S", "Lọc nhân sự phù hợp (loại, ca, sẵn sàng, tải việc)"),
-            ("?", "Có nhân sự?", ("S", "Thông báo không có nhân sự sẵn sàng"), "end"),
-            ("A", "Chọn nhân sự, nhấn Phân công"),
-            ("S", "Kiểm tra lại điều kiện nhân sự"),
-            ("?", "Còn hợp lệ?", ("S", "Cảnh báo, yêu cầu chọn nhân sự khác"), 5),
-            ("S", "Cập nhật ASSIGNED, gán người thực hiện"),
-            ("S", "Gửi công việc đến ứng dụng nhân sự"),
         ],
         seq=dict(
             parts=[("actor", "Hub Dispatch"), ("boundary", "GD_DieuPhoi"), ("control", "CTRL_PhanCong"), ("entity", "OperationalAssignment"), ("entity", "WorkforceMember"), ("system", "Ứng dụng vận hành")],
@@ -433,21 +344,8 @@ CORE = [
             ("8b. Kiện đã được quét trước đó", "Hệ thống báo quét trùng và bỏ qua."),
             ("8c. Kiện không xác định được vận đơn", "Nhân sự chọn “Báo cáo sự cố” (loại UNIDENTIFIED_PARCEL)."),
             ("11a. Chưa quét đủ kiện", "Hệ thống không cho hoàn thành và hiển thị danh sách kiện còn thiếu."),
-            ("10a. Không thể hoàn thành công việc", "Nhân sự chọn “Báo không hoàn thành” và nhập lý do; hệ thống chuyển FAILED."),
-        ],
-        activity=[
-            ("A", "Mở Công việc của tôi"),
-            ("S", "Hiển thị công việc được giao"),
-            ("A", "Nhận việc và nhấn Bắt đầu"),
-            ("S", "Chuyển IN_PROGRESS, bật quét mã"),
-            ("A", "Quét mã kiện hàng"),
-            ("S", "Kiểm tra kiện thuộc công việc, đúng hub"),
-            ("?", "Hợp lệ?", ("S", "Cảnh báo mã sai hoặc quét trùng"), 4),
-            ("S", "Cập nhật custody, vị trí, ghi sự kiện"),
-            ("A", "Nhấn Hoàn thành"),
-            ("S", "Kiểm tra đã quét đủ kiện"),
-            ("?", "Đủ kiện?", ("S", "Hiển thị kiện còn thiếu"), 4),
-            ("S", "Chuyển COMPLETED, tạo công việc chặng tiếp"),
+            ("10a. Còn kiện chưa quét", "Nhân sự tiếp tục quét, quay lại bước 7."),
+            ("10b. Không thể hoàn thành công việc", "Nhân sự chọn “Báo không hoàn thành” và nhập lý do; hệ thống chuyển FAILED và kết thúc use case."),
         ],
         seq=dict(
             parts=[("actor", "Operational Staff"), ("boundary", "GD_QuetMa"), ("control", "CTRL_CongViec"), ("entity", "OperationalAssignment"), ("entity", "Parcel"), ("entity", "ShipmentEvent")],
@@ -493,18 +391,6 @@ CORE = [
             ("6a. Thiếu bằng chứng giao", "Hệ thống yêu cầu bổ sung trước khi xác nhận."),
             ("5a. Số tiền COD thu không khớp", "Hệ thống cảnh báo và yêu cầu kiểm tra lại."),
         ],
-        activity=[
-            ("A", "Mở vận đơn tại địa chỉ người nhận"),
-            ("S", "Hiển thị người nhận, COD, danh sách kiện"),
-            ("A", "Chọn kết quả giao"),
-            ("?", "Giao thành công?", ("S", "Ghi lần giao thất bại kèm lý do, đưa vào ngoại lệ"), "end"),
-            ("S", "Yêu cầu bằng chứng giao, tên người nhận"),
-            ("A", "Cung cấp bằng chứng, xác nhận thu COD"),
-            ("S", "Kiểm tra bằng chứng"),
-            ("?", "Đầy đủ?", ("S", "Yêu cầu bổ sung bằng chứng"), 5),
-            ("S", "Ghi DeliveryAttempt, vận đơn DELIVERED"),
-            ("S", "Ghi sự kiện, hoàn tất công việc"),
-        ],
         seq=dict(
             parts=[("actor", "Courier"), ("boundary", "GD_GiaoHang"), ("control", "CTRL_GiaoHang"), ("entity", "DeliveryAttempt"), ("entity", "Shipment"), ("entity", "ShipmentEvent")],
             msgs=[
@@ -548,18 +434,6 @@ CORE = [
             ("6a. Vận đơn đã giao hoặc đã hủy", "Hệ thống không cho phê duyệt và thông báo lý do."),
             ("7a. Không tìm được lộ trình mới", "Yêu cầu giữ APPROVED, vận đơn ở trạng thái định tuyến lại thất bại và được cảnh báo cho điều phối viên."),
         ],
-        activity=[
-            ("A", "Mở danh sách yêu cầu ngoại lệ"),
-            ("S", "Hiển thị yêu cầu đang chờ"),
-            ("A", "Chọn yêu cầu, xem chi tiết"),
-            ("A", "Chọn Phê duyệt hoặc Từ chối"),
-            ("?", "Phê duyệt?", ("S", "Ghi chú, chuyển REJECTED, thông báo"), "end"),
-            ("S", "Kiểm tra vận đơn còn cho phép thay đổi"),
-            ("?", "Cho phép?", ("S", "Thông báo không thể phê duyệt"), "end"),
-            ("S", "Chuyển APPROVED, định tuyến lại nếu cần"),
-            ("S", "Cập nhật vận đơn, tạo công việc"),
-            ("S", "Chuyển COMPLETED, thông báo người yêu cầu"),
-        ],
         seq=dict(
             parts=[("actor", "Hub Dispatch"), ("boundary", "GD_YeuCauNgoaiLe"), ("control", "CTRL_NgoaiLe"), ("entity", "ShipmentExceptionRequest"), ("control", "CTRL_DinhTuyen"), ("entity", "Shipment")],
             msgs=[
@@ -600,20 +474,8 @@ CORE = [
         alt=[
             ("4a. Thời gian không hợp lệ hoặc trùng mã ca", "Hệ thống báo lỗi, quay lại bước 3."),
             ("7a. Nhân sự đã có ca trùng thời gian", "Hệ thống cảnh báo và bỏ qua nhân sự đó."),
-            ("5a. Hủy ca", "Người quản lý nhập lý do; hệ thống chuyển ca CANCELLED và hủy các phân công."),
-            ("5b. Đánh dấu vắng mặt", "Người quản lý chọn nhân sự không đến ca; hệ thống chuyển phân công sang ABSENT."),
-        ],
-        activity=[
-            ("A", "Mở Ca làm việc"),
-            ("S", "Hiển thị lịch ca theo hub"),
-            ("A", "Tạo ca: mã, tên, giờ bắt đầu, kết thúc"),
-            ("S", "Kiểm tra thời gian, mã ca"),
-            ("?", "Hợp lệ?", ("S", "Báo lỗi thời gian / trùng mã"), 2),
-            ("S", "Lưu ca SCHEDULED"),
-            ("A", "Chọn nhân sự để phân công"),
-            ("S", "Kiểm tra nhân sự thuộc hub, không trùng ca"),
-            ("?", "Hợp lệ?", ("S", "Cảnh báo trùng ca, bỏ qua nhân sự"), 6),
-            ("S", "Tạo phân công ca, thông báo nhân sự"),
+            ("3a. Người quản lý chọn “Hủy ca”", "Người quản lý nhập lý do; hệ thống chuyển ca CANCELLED, hủy các phân công và kết thúc use case."),
+            ("3b. Người quản lý chọn “Đánh dấu vắng mặt”", "Người quản lý chọn nhân sự không đến ca; hệ thống chuyển phân công sang ABSENT và kết thúc use case."),
         ],
         seq=dict(
             parts=[("actor", "Hub Manager"), ("boundary", "GD_CaLamViec"), ("control", "CTRL_CaLamViec"), ("entity", "WorkShift"), ("entity", "WorkforceShiftAssignment"), ("system", "Ứng dụng vận hành")],
@@ -690,21 +552,3 @@ CORE = [
     ),
 ]
 
-
-# guards of the decision nodes in the activity diagrams: question -> ([yes], [no])
-GUARDS = {
-    "Hợp lệ?": ("hợp lệ", "không hợp lệ"),
-    "Đúng và đang hoạt động?": ("đúng, ACTIVE", "sai / bị khóa"),
-    "Email mới?": ("email chưa tồn tại", "email đã tồn tại"),
-    "Trong vùng phục vụ?": ("trong vùng phục vụ", "ngoài vùng"),
-    "Còn hạn?": ("báo giá còn hạn", "báo giá hết hạn"),
-    "Tồn tại?": ("tìm thấy", "không tìm thấy"),
-    "Duyệt?": ("duyệt", "từ chối"),
-    "Có nhân sự?": ("có nhân sự sẵn sàng", "không có nhân sự"),
-    "Còn hợp lệ?": ("còn hợp lệ", "không còn hợp lệ"),
-    "Đủ kiện?": ("đủ kiện", "còn thiếu kiện"),
-    "Giao thành công?": ("giao thành công", "giao thất bại"),
-    "Đầy đủ?": ("đủ bằng chứng", "thiếu bằng chứng"),
-    "Phê duyệt?": ("phê duyệt", "từ chối"),
-    "Cho phép?": ("được phép", "không được phép"),
-}

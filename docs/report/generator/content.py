@@ -217,6 +217,14 @@ table(["Mã", "Use case", "Tác nhân chính", "Phân hệ"],
 
 h2("4.2. Đặc tả use case chính")
 p("Mỗi use case được trình bày theo cùng một cấu trúc: bảng đặc tả (luồng sự kiện chính và luồng thay thế), sơ đồ hoạt động thể hiện luồng nghiệp vụ, điều kiện rẽ nhánh, luồng thay thế, ngoại lệ và điểm kết thúc; sơ đồ tuần tự thể hiện tác nhân, lớp biên, lớp điều khiển, lớp thực thể và thứ tự thông điệp giữa chúng.")
+p("Sơ đồ hoạt động được vẽ theo ký pháp UML 2.5 như sau:")
+bullets([
+    "Khung “act AD-UCxx <tên use case>”, chia hai làn (partition): tác nhân chính và Hệ thống PAVEX; mỗi hành động nằm trong làn của bên thực hiện nó.",
+    "Nút bắt đầu (chấm tròn đặc), hành động (hình chữ nhật bo góc), nút kết thúc (chấm tròn có viền). Mỗi luồng thay thế kết thúc use case có nút kết thúc riêng.",
+    "Nút quyết định (hình thoi) có điều kiện [guard] trên mọi nhánh ra; nhánh chính đi thẳng xuống, các nhánh thay thế đi sang phải. Nút hợp (hình thoi) đặt tại mọi điểm các luồng gặp lại nhau, nên không hành động nào có hai luồng vào.",
+    "Mỗi luồng thay thế trong bảng đặc tả là một nhánh của sơ đồ, quay lại đúng bước được ghi trong đặc tả hoặc kết thúc.",
+    "Thanh fork / join chỉ dùng khi hai việc thực sự chạy song song (gửi thông báo bất đồng bộ trong khi hiển thị kết quả). Use case được include hoặc extend được gọi bằng hành động gọi hành vi (call behavior action, có ký hiệu chĩa ba).",
+])
 table(["Thành phần", "Quy ước đặt tên", "Ví dụ"], [
     ["Use case", "UCxx + tên nghiệp vụ", "UC17 Tạo đơn hàng"],
     ["Sơ đồ", "AD-UCxx (hoạt động), SD-UCxx (tuần tự)", "AD-UC17, SD-UC17"],
@@ -231,7 +239,7 @@ for n, code in enumerate(ORDER, 1):
     tab_no[chapter] = tab_no.get(chapter, 0) + 1
     B.append({"t": "caption", "text": f"Bảng {chapter}.{tab_no[chapter]}. Đặc tả use case {code} – {u['name']}"})
     B.append({"t": "spec", "uc": u})
-    placeholder(f"Sơ đồ hoạt động AD-{code} – {u['name']}", f"[Chèn sơ đồ hoạt động AD-{code} – {u['name']}]")
+    fig(FIG / f"ad-{code.lower()}.png", f"Sơ đồ hoạt động AD-{code} – {u['name']}", 15.5, 21.5)
     placeholder(f"Sơ đồ tuần tự SD-{code} – {u['name']}", f"[Chèn sơ đồ tuần tự SD-{code} – {u['name']}]")
 
 h2("4.3. Mô hình domain")

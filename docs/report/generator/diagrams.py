@@ -1,9 +1,10 @@
 """SVG renderers for the report figures, following UML 2.5 notation.
 
 * activity(): activity diagram in a frame ("act <name>") with two activity
-  partitions (actor | system). Initial node, actions, decision nodes with a
-  guard on every outgoing edge, merge nodes where a flow loops back (no action
-  ever has two incoming edges), activity final nodes.
+  partitions (actor | system). Initial node, actions, call behavior actions
+  (included use cases), decision nodes with a guard on every outgoing edge,
+  merge nodes wherever flows come together (no action ever has two incoming
+  edges), fork / join bars for parallel work, activity final nodes.
 * sequence(): interaction in a frame ("sd <name>"). Lifelines with
   actor / boundary / control / entity heads (robustness stereotypes, as in
   Visual Paradigm), execution specifications (activation bars, nested for self
@@ -64,56 +65,94 @@ def _frame(W, H, label):
 # ---------------------------------------------------------------------------
 # activity
 # ---------------------------------------------------------------------------
+# Step format (see activities.py):
+#   ("A" | "S", text[, label])            action in the actor / system partition
+#   ("C", lane, text[, label])            call behavior action (calls another use case)
+#   ("?", lane, main_guard, branches[, label])
+#        branches = [(guard, action | None, target)], action = (lane, text) or ("C", lane, text);
+#        target = label of the node the branch flows to (a merge node is put in front of it) or "end"
+#   ("F", [(lane, text), ...][, label])   fork -> parallel actions -> join
+# The main flow runs top to bottom; every branch leaves its decision to the right.
+
+LA, LS = 380, 570            # widths of the actor / system partitions
+AW, BW, D = 220, 172, 30     # main action width, branch action width, diamond size
+GAP = 30
 
 
-def _guards(question, guards):
-    if guards and question in guards:
-        return guards[question]
-    q = question.rstrip("?").strip()
-    q = q[0].lower() + q[1:]
-    return q, f"không {q}"
+def _label(st):
+    n = {"A": 2, "S": 2, "C": 3, "?": 4, "F": 2}[st[0]]
+    return st[n] if len(st) > n else None
 
 
-def activity(title: str, lanes: tuple[str, str], steps: list, guards: dict | None = None) -> str:
-    """steps: ("A"|"S", text) actions in the actor / system partition, or
-    ("?", question, (lane, text_of_else_action), target) where target is the
-    index (in steps) of the node the else flow returns to, or "end".
-    The question becomes the pair of guards [yes] / [no] (see `guards`)."""
-    LW = 420
-    W = LW * 2 + 56
-    X0 = 8                                   # left edge of the partitions
-    AW, GAP = 210, 30
-    main_x = {"A": X0 + 240, "S": X0 + LW + 138}
-    branch_x = {"A": X0 + 80, "S": X0 + LW + 350}
-    D = 30                                   # decision / merge diamond size
-    targets = {st[3] for st in steps if st[0] == "?" and st[3] != "end"}
-    y = 104
-    nodes = []
-    for i, st in enumerate(steps):
-        lane = st[0] if st[0] in ("A", "S") else nodes[-1]["lane"]
-        if i in targets:  # merge node in front of the node a loop returns to
-            nodes.append(dict(kind="merge", lane=lane, x=main_x[lane], y=y + D / 2, w=D, h=D, step=i))
-            y += D + GAP - 8
-        if st[0] in ("A", "S"):
-            lines = _wrap(st[1], AW - 24)
-            h = max(40, 16 + 14 * len(lines))
-            nodes.append(dict(kind="act", lane=lane, x=main_x[lane], y=y + h / 2, w=AW, h=h, lines=lines, step=i))
+def activity(title: str, lanes: tuple[str, str], steps: list) -> str:
+    X0 = 8
+    x1, x2, x3 = X0, X0 + LA, X0 + LA + LS
+    W = x3 + 8
+    main_x = {"A": x1 + LA / 2, "S": x2 + 165}
+    branch_x = {"A": x1 + 95, "S": x2 + 405}
+    targets = {br[2] for st in steps if st[0] == "?" for br in st[3] if br[2] != "end"}
+    labels = {_label(st) for st in steps if _label(st)}
+    missing = targets - labels
+    assert not missing, f"{title}: unknown targets {missing}"
+
+    nodes, y = [], 108
+    for st in steps:
+        kind, lab = st[0], _label(st)
+        lane = st[1] if kind in ("C", "?") else ("S" if kind == "F" else kind)
+        if lab in targets:  # merge node in front of every node a branch flows into
+            nodes.append(dict(kind="merge", lane=lane, x=main_x[lane], y=y + D / 2, h=D, label=lab))
+            y += D + GAP - 6
+        if kind in ("A", "S", "C"):
+            text = st[1] if kind != "C" else st[2]
+            lines = _wrap(text, AW - 26)
+            h = max(40, 18 + 14 * len(lines))
+            nodes.append(dict(kind="act", call=kind == "C", lane=lane, x=main_x[lane], y=y + h / 2, w=AW, h=h, lines=lines))
             y += h + GAP
-        else:
-            nl, ntext = st[2]
-            lines = _wrap(ntext, 140, 6.0)
-            bh = max(40, 14 + 13 * len(lines))
-            hh = max(D, bh)
-            yes, no = _guards(st[1], guards)
-            nodes.append(dict(kind="dec", lane=lane, x=main_x[lane], y=y + hh / 2, w=D, h=D, step=i,
-                              bx=branch_x[nl], bh=bh, blines=lines, target=st[3], yes=yes, no=no))
-            y += hh + GAP + 6
+        elif kind == "?":
+            brs, by = [], y
+            for k, (guard, act, target) in enumerate(st[3]):
+                if act is None:
+                    bh, blines, bcall, blane = 0, [], False, "S"
+                else:
+                    bcall = act[0] == "C"
+                    blane, btext = (act[1], act[2]) if bcall else act
+                    blines = _wrap(btext, BW - 22, 6.0)
+                    bh = max(40, 16 + 13 * len(blines))
+                cy = (y + D / 2) if k == 0 else by + max(bh, 24) / 2
+                if k == 0:
+                    by = y + D / 2 - max(bh, 24) / 2
+                brs.append(dict(guard=guard, h=bh, lines=blines, call=bcall, x=branch_x[blane], y=cy, target=target))
+                by = cy + max(bh, 24) / 2 + (40 if target == "end" else 0) + 16
+            hh = max(D, by - y - 16)
+            nodes.append(dict(kind="dec", lane=lane, x=main_x[lane], y=y + D / 2, h=D, main=st[2], brs=brs, span=hh))
+            y += hh + GAP + 4
+        else:  # fork / join
+            items = st[1]
+            per_lane = {}
+            for ln, _t in items:
+                per_lane.setdefault(ln, 0)
+                per_lane[ln] += 1
+            used, boxes = {}, []
+            for ln, text in items:
+                n_l = per_lane[ln]
+                left, right = (x1 + 20, x2 - 20) if ln == "A" else (x2 + 20, x3 - 70)
+                i = used.get(ln, 0)
+                used[ln] = i + 1
+                cx = left + (right - left) * (i + 0.5) / n_l
+                lines = _wrap(text, min(AW, (right - left) / n_l - 20) - 22)
+                boxes.append(dict(x=cx, lines=lines, h=max(40, 18 + 14 * len(lines)), w=min(AW, (right - left) / n_l - 20)))
+            bh = max(b["h"] for b in boxes)
+            fy = y + 4
+            for b_ in boxes:
+                b_["y"] = fy + 26 + b_["h"] / 2
+            jy = fy + 26 + bh + 26
+            nodes.append(dict(kind="fork", lane="S", x=main_x["S"], fy=fy, jy=jy, boxes=boxes, y=(fy + jy) / 2, h=jy - fy + 5))
+            y = jy + 5 + GAP
     end_y = y + 8
     H = math.ceil(end_y + 44)
     o = [f'<svg xmlns="http://www.w3.org/2000/svg" width="{W}" height="{H}" viewBox="0 0 {W} {H}" font-family="{FONT}">',
          _defs(), f'<rect width="{W}" height="{H}" fill="#fff"/>', _frame(W, H, f"act {title}")]
-    # activity partitions (swimlanes)
-    top, bottom, x1, x2, x3 = 32, H - 8, X0, X0 + LW, W - 8
+    top, bottom = 32, H - 8
     o.append(f'<rect x="{x1}" y="{top}" width="{x3 - x1}" height="{bottom - top}" fill="none" stroke="{STROKE}"/>')
     o.append(f'<line x1="{x2}" y1="{top}" x2="{x2}" y2="{bottom}" stroke="{STROKE}"/>')
     o.append(f'<line x1="{x1}" y1="{top + 26}" x2="{x3}" y2="{top + 26}" stroke="{STROKE}"/>')
@@ -127,56 +166,97 @@ def activity(title: str, lanes: tuple[str, str], steps: list, guards: dict | Non
     def arrow(path):
         return f'<path d="{path}" fill="none" stroke="{STROKE}" marker-end="url(#arr)"/>'
 
-    def guard(x, y, text, anchor="start"):
-        return f'<text x="{x:.1f}" y="{y:.1f}" font-size="10" text-anchor="{anchor}" fill="#222">[{escape(text)}]</text>'
+    def guard(x, y, text, width, anchor="start"):
+        lines = _wrap(f"[{text}]", width, 5.6)
+        return "".join(f'<text x="{x:.1f}" y="{y - (len(lines) - 1 - i) * 12:.1f}" font-size="10" text-anchor="{anchor}" fill="#222" '
+                       f'paint-order="stroke" stroke="#fff" stroke-width="3">{escape(t)}</text>' for i, t in enumerate(lines))
 
     def diamond(x, yy):
         d = D / 2
         return f'<path d="M{x},{yy - d} L{x + d},{yy} L{x},{yy + d} L{x - d},{yy} Z" fill="#fff" stroke="{STROKE}" stroke-width="1.2"/>'
 
+    def action(x, yy, w, h, lines, call, size=11):
+        out = f'<rect x="{x - w / 2}" y="{yy - h / 2}" width="{w}" height="{h}" rx="13" fill="{FILL}" stroke="{STROKE}"/>' + _text_block(x, yy - (4 if call else 0), lines, size)
+        if call:  # call behavior action: rake symbol in the lower right corner
+            rx, ry = x + w / 2 - 16, yy + h / 2 - 13
+            out += (f'<path d="M{rx},{ry} L{rx},{ry + 9} M{rx - 6},{ry + 4} L{rx + 6},{ry + 4} M{rx - 6},{ry + 4} L{rx - 6},{ry + 9} '
+                    f'M{rx + 6},{ry + 4} L{rx + 6},{ry + 9}" fill="none" stroke="{STROKE}" stroke-width="1.3"/>')
+        return out
+
+    def top_of(n):
+        return n["fy"] if n["kind"] == "fork" else n["y"] - n["h"] / 2
+
+    def bottom_of(n):
+        return n["jy"] + 5 if n["kind"] == "fork" else n["y"] + n["h"] / 2
+
+    merge_of = {n["label"]: n for n in nodes if n["kind"] == "merge"}
     first = nodes[0]
-    o.append(f'<circle cx="{first["x"]}" cy="{78}" r="10" fill="{STROKE}"/>')
-    o.append(arrow(f'M{first["x"]},88 L{first["x"]},{first["y"] - first["h"] / 2}'))
-    merge_of = {n["step"]: n for n in nodes if n["kind"] == "merge"}
-    loops = 0
+    o.append(f'<circle cx="{first["x"]}" cy="78" r="10" fill="{STROKE}"/>')
+    o.append(arrow(f'M{first["x"]},88 L{first["x"]},{top_of(first)}'))
+    loops = []  # (path start, y, merge): routed after all nodes so that channels nest
     for i, n in enumerate(nodes):
         x, yy = n["x"], n["y"]
         if n["kind"] == "act":
-            o.append(f'<rect x="{x - n["w"] / 2}" y="{yy - n["h"] / 2}" width="{n["w"]}" height="{n["h"]}" rx="13" fill="{FILL}" stroke="{STROKE}"/>')
-            o.append(_text_block(x, yy, n["lines"]))
+            o.append(action(x, yy, n["w"], n["h"], n["lines"], n["call"]))
         elif n["kind"] == "merge":
             o.append(diamond(x, yy))
-        else:
+        elif n["kind"] == "fork":
+            prev_x = nodes[i - 1]["x"] if i else x
+            xs = [b_["x"] for b_ in n["boxes"]] + [prev_x, x]  # bars span the parallel branches only
+            bl, br = min(xs) - 30, max(xs) + 30
+            o.append(f'<rect x="{bl}" y="{n["fy"]}" width="{br - bl}" height="5" fill="{STROKE}"/>')
+            o.append(f'<rect x="{bl}" y="{n["jy"]}" width="{br - bl}" height="5" fill="{STROKE}"/>')
+            for b_ in n["boxes"]:
+                o.append(arrow(f'M{b_["x"]},{n["fy"] + 5} L{b_["x"]},{b_["y"] - b_["h"] / 2}'))
+                o.append(action(b_["x"], b_["y"], b_["w"], b_["h"], b_["lines"], False))
+                o.append(arrow(f'M{b_["x"]},{b_["y"] + b_["h"] / 2} L{b_["x"]},{n["jy"]}'))
+        else:  # decision
             d = D / 2
             o.append(diamond(x, yy))
-            bx, bw, bh = n["bx"], 150, n["bh"]
-            o.append(f'<rect x="{bx - bw / 2}" y="{yy - bh / 2}" width="{bw}" height="{bh}" rx="12" fill="{FILL}" stroke="{STROKE}"/>')
-            o.append(_text_block(bx, yy, n["blines"], 10))
-            sgn = 1 if bx > x else -1
-            o.append(arrow(f'M{x + sgn * d},{yy} L{bx - sgn * bw / 2},{yy}'))
-            o.append(guard(x + sgn * (d + 4), yy - 6, n["no"], "start" if sgn > 0 else "end"))
-            if n["target"] == "end":
-                o.append(arrow(f'M{bx},{yy + bh / 2} L{bx},{yy + bh / 2 + 16}'))
-                o.append(final(bx, yy + bh / 2 + 27))
-            else:
-                m = merge_of[n["target"]]
-                loops += 1
-                rx = W - 16 - 9 * ((loops - 1) % 3)
-                o.append(arrow(f'M{bx + bw / 2},{yy} L{rx},{yy} L{rx},{m["y"]} L{m["x"] + D / 2},{m["y"]}'))
+            trunk = x + d + 22
+            for k, br_ in enumerate(n["brs"]):
+                bx, by, bh = br_["x"], br_["y"], br_["h"]
+                left = bx - BW / 2 if bh else bx - 11
+                lead = f'M{x + d},{yy} L{left},{yy}' if k == 0 else f'M{trunk},{yy} L{trunk},{by} L{left},{by}'
+                gx = x + d + 5 if k == 0 else trunk + 5
+                o.append(guard(gx, by - 6, br_["guard"], left - gx - 8))
+                if bh or br_["target"] == "end":
+                    o.append(arrow(lead))
+                if bh:
+                    o.append(action(bx, by, BW, bh, br_["lines"], br_["call"], 10))
+                    src_x, src_bottom = bx + BW / 2, by + bh / 2
+                else:
+                    src_x, src_bottom = left, by
+                if br_["target"] == "end":
+                    if bh:
+                        o.append(arrow(f'M{bx},{src_bottom} L{bx},{src_bottom + 16}'))
+                        o.append(final(bx, src_bottom + 27))
+                    else:
+                        o.append(final(bx, by))
+                else:
+                    # a branch without action is one continuous edge from the decision to the merge
+                    loops.append(((f'M{src_x},{by} ' if bh else lead + " "), by, merge_of[br_["target"]]))
         if i + 1 < len(nodes):
             nx = nodes[i + 1]
-            x2_, y2 = nx["x"], nx["y"] - nx["h"] / 2
-            y1 = yy + n["h"] / 2
-            if abs(x - x2_) < 1:
-                o.append(arrow(f'M{x},{y1} L{x2_},{y2}'))
+            if n["kind"] == "fork":
+                sx, sy = x, bottom_of(n)
             else:
-                ym = y2 - 14
-                o.append(arrow(f'M{x},{y1} L{x},{ym} L{x2_},{ym} L{x2_},{y2}'))
-            if n["kind"] == "dec":
-                o.append(guard(x + 6, y1 + 12, n["yes"]))
+                sx, sy = x, bottom_of(n)
+            ex, ey = (sx if nx["kind"] == "fork" else nx["x"]), top_of(nx)
+            if abs(sx - ex) < 1:
+                o.append(arrow(f'M{sx},{sy} L{ex},{ey}'))
+            else:
+                ym = ey - 14
+                o.append(arrow(f'M{sx},{sy} L{sx},{ym} L{ex},{ym} L{ex},{ey}'))
+            if n["kind"] == "dec":  # guard of the main flow sits left of the edge, branches go right
+                o.append(guard(x - 6, sy + 13, n["main"], 150, "end"))
+    # the loop spanning more of the diagram takes the outer channel, so loops nest instead of crossing
+    for k, (start, by, m) in enumerate(sorted(loops, key=lambda q: -abs(q[1] - q[2]["y"]))):
+        rx = x3 - 10 - 9 * k
+        o.append(arrow(start + f'L{rx},{by} L{rx},{m["y"]} L{m["x"] + D / 2},{m["y"]}'))
     last = nodes[-1]
     ex, ey = last["x"], end_y + 14
-    o.append(arrow(f'M{ex},{last["y"] + last["h"] / 2} L{ex},{ey - 11}'))
+    o.append(arrow(f'M{ex},{bottom_of(last)} L{ex},{ey - 11}'))
     o.append(final(ex, ey))
     o.append("</svg>")
     return "".join(o)
