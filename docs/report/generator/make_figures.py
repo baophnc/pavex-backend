@@ -4,8 +4,9 @@ import os
 import pathlib
 import subprocess
 
-from diagrams import activity
+from diagrams import activity, sequence
 from activities import ACTIVITIES, LANE
+from sequences import SEQ
 from specs import CORE
 
 OUT = pathlib.Path(__file__).resolve().parent.parent / "figures"
@@ -30,6 +31,9 @@ def main():
     for code, steps in ACTIVITIES.items():  # AD-UCxx
         svg = activity(f"AD-{code} {names[code]}", (LANE[code], "Hệ thống PAVEX"), steps)
         (OUT / f"ad-{code.lower()}.svg").write_text(svg, encoding="utf-8")
+    for code, sd in SEQ.items():  # SD-UCxx
+        svg = sequence(f"SD-{code} {names[code]}", sd["parts"], sd["msgs"], sd["frags"])
+        (OUT / f"sd-{code.lower()}.svg").write_text(svg, encoding="utf-8")
     env = dict(os.environ, NODE_PATH="/opt/node22/lib/node_modules")
     subprocess.run(["node", str(pathlib.Path(__file__).with_name("render_svg.cjs")), str(OUT)], check=True, env=env)
 

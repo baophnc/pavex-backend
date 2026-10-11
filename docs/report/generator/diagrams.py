@@ -299,9 +299,9 @@ def _icon(kind, cx, cy, name):
     if kind == "entity":
         return (f'<circle cx="{cx}" cy="{cy}" r="13" fill="{FILL}" stroke="{s}"/>'
                 f'<line x1="{cx - 14}" y1="{cy + 15}" x2="{cx + 14}" y2="{cy + 15}" stroke="{s}" stroke-width="1.5"/>')
-    w = max(90, len(name) * 6.6 + 16)  # external system: classifier rectangle «system»
-    return (f'<rect x="{cx - w / 2}" y="{cy - 20}" width="{w}" height="40" fill="#fff" stroke="{s}"/>'
-            f'<text x="{cx}" y="{cy - 5}" font-size="10" text-anchor="middle">«system»</text>')
+    w = max(90, len(name) * 6.8 + 20)  # external system: classifier rectangle «system» + name
+    return (f'<rect x="{cx - w / 2}" y="{cy - 22}" width="{w}" height="46" fill="#fff" stroke="{s}"/>'
+            f'<text x="{cx}" y="{cy - 6}" font-size="10" text-anchor="middle">«system»</text>')
 
 
 def _frags(frags):
@@ -352,13 +352,16 @@ def _activations(parts, msgs, frags):
         # the call lasts until its reply after the fragment, or else until its last reply in the fragment
         for fr in sorted(frags, key=lambda q: q["b"] - q["a"]):
             if i < fr["a"] <= end <= fr["b"]:
-                after = None
+                after, busy = None, None
                 for j in range(fr["b"] + 1, n):
                     if msgs[j][0] == f and msgs[j][1] == t and not _is_ret(msgs[j]):
                         break
                     if msgs[j][0] == t and msgs[j][1] == f:
                         after = j
                         break
+                    if involved(j, t):  # still working for this call (e.g. receives the reply of its own call)
+                        busy = j
+                after = after if after is not None else busy
                 inside = [j for j in range(fr["a"], fr["b"] + 1) if msgs[j][0] == t and msgs[j][1] == f]
                 end = after if after is not None else max(inside + [end])
         out.append((t, i, end, False))
@@ -402,7 +405,7 @@ def sequence(title: str, parts: list, msgs: list, frags: list | None = None) -> 
          _defs(), f'<rect width="{W}" height="{H}" fill="#fff"/>', _frame(W, H, f"sd {title}")]
     for (kind, name), x in zip(parts, xs):
         o.append(_icon(kind, x, 66, name))
-        o.append(_text_block(x, 66 if kind == "system" else 102, [name], 11))
+        o.append(_text_block(x, 75 if kind == "system" else 102, [name], 11))
         o.append(f'<line x1="{x}" y1="{top}" x2="{x}" y2="{H - 16}" stroke="{STROKE}" stroke-dasharray="5,4"/>')
     # execution specifications
     placed = []
