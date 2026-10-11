@@ -225,17 +225,25 @@ for (const b of blocks) {
     case "front":
       cur.push(new Paragraph({ alignment: AlignmentType.CENTER, pageBreakBefore: cur.length > 0, spacing: { before: 120, after: 240 }, children: runs(b.text, { bold: true, size: 30 }) }));
       break;
-    case "toc": {
+    case "toc":
+    case "lof":
+    case "lot": {
+      // static lists with page numbers measured from a rendered pass (see make_report.py)
       const tocFile = path.join(HERE, "toc.json");
-      if (!fs.existsSync(tocFile)) { cur.push(new TableOfContents("MỤC LỤC", { hyperlink: true, headingStyleRange: "1-3" })); break; }
-      // static TOC with page numbers measured from a rendered pass (see make_report.py)
-      for (const e of JSON.parse(fs.readFileSync(tocFile, "utf8"))) {
+      if (!fs.existsSync(tocFile)) {
+        if (b.t === "toc") cur.push(new TableOfContents("MỤC LỤC", { hyperlink: true, headingStyleRange: "1-3" }));
+        break;
+      }
+      const data = JSON.parse(fs.readFileSync(tocFile, "utf8"));
+      const entries = Array.isArray(data) ? (b.t === "toc" ? data : []) : data[{ toc: "headings", lof: "figures", lot: "tables" }[b.t]] || [];
+      for (const e of entries) {
+        const lvl = e.level || 2;
         cur.push(new Paragraph({
           tabStops: [{ type: TabStopType.RIGHT, position: TEXT_W, leader: "dot" }],
-          indent: { left: (e.level - 1) * 400 },
-          spacing: { before: e.level === 1 ? 120 : 0, after: 40, line: 276 },
-          children: [new TextRun({ text: e.text, font: FONT, size: 26, bold: e.level === 1, italics: e.level === 3 }),
-                     new TextRun({ text: `\t${e.page ?? ""}`, font: FONT, size: 26, bold: e.level === 1 })],
+          indent: { left: b.t === "toc" ? (lvl - 1) * 400 : 0 },
+          spacing: { before: b.t === "toc" && lvl === 1 ? 120 : 0, after: 40, line: 276 },
+          children: [new TextRun({ text: e.text, font: FONT, size: 26, bold: b.t === "toc" && lvl === 1, italics: b.t === "toc" && lvl === 3 }),
+                     new TextRun({ text: `\t${e.page ?? ""}`, font: FONT, size: 26, bold: b.t === "toc" && lvl === 1 })],
         }));
       }
       break;

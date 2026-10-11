@@ -28,7 +28,7 @@ def class_figures():
 def main():
     class_figures()
     svgs = []
-    for uc in CORE:
+    for uc in (u for u in CORE if "activity" in u):  # specs without diagram data yet are skipped
         lane_actor = uc["seq"]["parts"][0][1]  # same actor name as the sequence diagram
         a = activity(uc["name"], (lane_actor, "Hệ thống PAVEX"), uc["activity"], GUARDS)
         s = sequence(uc["name"], uc["seq"]["parts"], uc["seq"]["msgs"], uc["seq"].get("frags"))

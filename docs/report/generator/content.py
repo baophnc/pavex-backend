@@ -55,6 +55,12 @@ def placeholder(caption, note):
     B.append({"t": "placeholder", "text": note, "caption": f"Hình {chapter}.{fig_no[chapter]}. {caption}"})
 
 
+def appendix(letter, t):
+    global chapter
+    chapter = letter
+    B.append({"t": "h1", "text": f"PHỤ LỤC {letter}. {t}"})
+
+
 def table(header, rows, widths, caption=None, size=11):
     if caption:
         tab_no[chapter] = tab_no.get(chapter, 0) + 1
@@ -70,6 +76,27 @@ p("Lời đầu tiên, nhóm thực hiện đề tài xin gửi lời cảm ơn 
   "Mặc dù đã nỗ lực hoàn thành báo cáo với tất cả sự nghiêm túc, do giới hạn về thời gian và kinh nghiệm thực tế, đồ án không tránh khỏi những thiếu sót. Nhóm kính mong nhận được những ý kiến góp ý của quý Thầy/Cô để đề tài được hoàn thiện hơn.")
 B.append({"t": "front", "text": "MỤC LỤC"})
 B.append({"t": "toc"})
+B.append({"t": "front", "text": "DANH MỤC HÌNH"})
+B.append({"t": "lof"})
+B.append({"t": "front", "text": "DANH MỤC BẢNG"})
+B.append({"t": "lot"})
+B.append({"t": "front", "text": "DANH MỤC TỪ VIẾT TẮT"})
+table(["Từ viết tắt", "Ý nghĩa"], [
+    ["AD", "Activity Diagram – sơ đồ hoạt động"],
+    ["API", "Application Programming Interface – giao diện lập trình ứng dụng"],
+    ["BFF", "Backend-for-Frontend – lớp máy chủ trung gian riêng cho từng giao diện"],
+    ["COD", "Cash on Delivery – thu hộ tiền khi giao hàng"],
+    ["DDD", "Domain-Driven Design – thiết kế hướng miền"],
+    ["ECB", "Entity – Control – Boundary – mô hình phân lớp đối tượng phân tích"],
+    ["JWT", "JSON Web Token – chuẩn token xác thực"],
+    ["RBAC", "Role-Based Access Control – phân quyền theo vai trò"],
+    ["REST", "Representational State Transfer – kiểu kiến trúc API dựa trên HTTP"],
+    ["SD", "Sequence Diagram – sơ đồ tuần tự"],
+    ["TC", "Test case – ca kiểm thử"],
+    ["UC", "Use case – ca sử dụng"],
+    ["UI", "User Interface – giao diện người dùng"],
+    ["UML", "Unified Modeling Language – ngôn ngữ mô hình hóa thống nhất"],
+], [2200, 6106])
 
 # ---------------------------------------------------------------------------
 h1("GIỚI THIỆU")
@@ -99,28 +126,39 @@ bullets([
 h2("1.5. Bố cục báo cáo")
 bullets([
     "Chương 1 – Giới thiệu: lý do, mục tiêu, phạm vi và phương pháp.",
-    "Chương 2 – Cơ sở lý thuyết: bài toán vận chuyển, DDD, REST/JWT, kiến trúc web và mã kiện hàng.",
+    "Chương 2 – Cơ sở lý thuyết: bài toán vận chuyển, UML 2.5, mô hình Entity – Control – Boundary, DDD, REST/JWT, kiến trúc web, mã kiện hàng và kiểm thử.",
     "Chương 3 – Phân tích yêu cầu: yêu cầu kinh doanh, người dùng, chức năng và phi chức năng.",
-    "Chương 4 – Thiết kế hệ thống: sơ đồ use case, đặc tả use case cốt lõi kèm sơ đồ hoạt động và tuần tự, sơ đồ package và sơ đồ lớp của mô hình miền.",
+    "Chương 4 – Phân tích và thiết kế hệ thống: mô hình use case, đặc tả 13 use case chính (mỗi use case một sơ đồ hoạt động và một sơ đồ tuần tự), mô hình domain, class diagram toàn hệ thống và kiến trúc.",
     "Chương 5 – Giải pháp công nghệ: kiến trúc, bảo mật, định giá, định tuyến và quét mã.",
     "Chương 6 – Hiện thực, triển khai và kiểm thử: môi trường, tình trạng hiện thực, giao diện và test case của các chức năng đã hiện thực.",
     "Chương 7 – Đánh giá và thảo luận. Chương 8 – Kết luận và hướng phát triển.",
+    "Phụ lục A – Danh sách test case theo thiết kế cho các chức năng chưa hiện thực.",
 ])
 
 # ---------------------------------------------------------------------------
 h1("CƠ SỞ LÝ THUYẾT")
 h2("2.1. Bài toán vận chuyển chặng đầu – chặng giữa – chặng cuối")
 p("Một vận đơn trong mạng lưới chuyển phát đi qua ba chặng: chặng đầu (first mile) lấy hàng từ người gửi về hub gốc; chặng giữa (middle mile / line-haul) trung chuyển giữa các hub theo tuyến và lịch chạy cố định; chặng cuối (last mile) giao từ hub đích đến người nhận. Mô hình hub-and-spoke giúp gom hàng theo tuyến để tối ưu chi phí, nhưng đòi hỏi hệ thống phải biết năng lực (tải trọng) của từng chuyến và vị trí của từng kiện tại mọi thời điểm. Chặng cuối là chặng tốn kém và dễ phát sinh ngoại lệ nhất (không liên lạc được người nhận, sai địa chỉ, từ chối nhận), vì vậy cần cơ chế ghi nhận lần giao và xử lý ngoại lệ rõ ràng.")
-h2("2.2. Thiết kế hướng miền (Domain-Driven Design)")
+h2("2.2. Ngôn ngữ mô hình hóa UML 2.5")
+p("UML (Unified Modeling Language) là ngôn ngữ mô hình hóa chuẩn của OMG. Báo cáo sử dụng bốn loại sơ đồ của UML 2.5, mỗi loại trả lời một câu hỏi khác nhau về hệ thống:")
+table(["Sơ đồ", "Mục đích", "Thành phần chính"], [
+    ["Use case", "Hệ thống cung cấp chức năng gì, cho ai", "Tác nhân, use case, ranh giới hệ thống, quan hệ «include», «extend», tổng quát hóa"],
+    ["Activity", "Luồng nghiệp vụ của một use case diễn ra thế nào", "Nút bắt đầu/kết thúc, action, decision/merge có guard, fork/join, partition (làn)"],
+    ["Sequence", "Các đối tượng trao đổi thông điệp theo thứ tự nào", "Lifeline, thông điệp đồng bộ/bất đồng bộ/trả về, activation, khối alt/opt/loop"],
+    ["Class", "Cấu trúc tĩnh: lớp, thuộc tính, phương thức và quan hệ", "Lớp, visibility, kiểu dữ liệu, association, aggregation/composition, generalization, dependency, bội số"],
+], [1500, 3000, 3806], "Các sơ đồ UML sử dụng trong báo cáo", size=10)
+h2("2.3. Mô hình Entity – Control – Boundary")
+p("Mô hình Entity – Control – Boundary (ECB) phân loại các đối tượng tham gia một use case thành ba nhóm. Lớp biên (boundary, «boundary») là giao diện mà tác nhân thao tác trực tiếp, ví dụ trang đăng nhập; lớp điều khiển (control, «control») điều phối luồng xử lý của use case và kiểm tra quy tắc nghiệp vụ; lớp thực thể (entity, «entity») giữ dữ liệu và hành vi nghiệp vụ lâu dài. Trong sơ đồ tuần tự, tác nhân chỉ giao tiếp với lớp biên, lớp biên gọi lớp điều khiển và lớp điều khiển thao tác với các lớp thực thể. Các lớp thực thể này chính là các lớp của class diagram, nhờ đó sơ đồ tuần tự và class diagram nhất quán với nhau.")
+h2("2.4. Thiết kế hướng miền (Domain-Driven Design)")
 p("Domain-Driven Design tổ chức phần mềm xoay quanh nghiệp vụ. Hệ thống được chia thành các bounded context – mỗi context có mô hình và ngôn ngữ riêng. Trong mỗi context, aggregate root là thực thể gốc bảo vệ tính nhất quán của một cụm dữ liệu (ví dụ Shipment cùng các Parcel, ShipmentEvent, DeliveryAttempt); entity có định danh riêng; value object là giá trị bất biến không có định danh (ví dụ Weight, FeeBreakdown, ContactAddress). Các aggregate khác nhau tham chiếu nhau bằng định danh, giúp mỗi phần của hệ thống có thể phát triển độc lập.")
-h2("2.3. REST API, JWT và phân quyền theo vai trò")
+h2("2.5. REST API, JWT và phân quyền theo vai trò")
 p("REST API cung cấp tài nguyên qua HTTP với các phương thức GET, POST, PUT, PATCH, DELETE và được phiên bản hóa theo đường dẫn (/api/v1/...). JSON Web Token (JWT) cho phép xác thực không trạng thái: sau khi đăng nhập, máy chủ cấp access token có thời hạn ngắn và refresh token có thời hạn dài hơn; client gửi access token trong header Authorization: Bearer cho mỗi yêu cầu và dùng refresh token để lấy token mới khi hết hạn. Phân quyền theo vai trò (RBAC) gán quyền nguyên tử (ví dụ identity.users.read) cho vai trò, rồi gán vai trò cho tài khoản.")
-h2("2.4. Ứng dụng web hiện đại và mô hình Backend-for-Frontend")
+h2("2.6. Ứng dụng web hiện đại và mô hình Backend-for-Frontend")
 p("Các cổng web được xây dựng bằng Next.js (React, TypeScript). Next.js cho phép kết hợp giao diện chạy trên trình duyệt với các route chạy trên máy chủ. PAVEX tận dụng điều này theo mô hình Backend-for-Frontend (BFF): trình duyệt chỉ gọi các route nội bộ của cổng web, còn route này giữ token trong cookie httpOnly, đính kèm token khi chuyển tiếp yêu cầu đến backend và tự động làm mới token khi nhận lỗi 401. Nhờ vậy token không bị lộ cho mã JavaScript phía trình duyệt.")
-h2("2.5. Mã kiện hàng và chuỗi giám sát (chain of custody)")
+h2("2.7. Mã kiện hàng và chuỗi giám sát (chain of custody)")
 p("Mỗi kiện hàng được gắn mã (mã vạch hoặc QR) in trên nhãn. Khi nhân sự quét mã ở mỗi công đoạn, hệ thống ghi nhận ai đang giữ kiện (custody), kiện đang ở hub nào và ở công đoạn nào, đồng thời thêm một sự kiện vào hành trình của vận đơn. Chuỗi các lần quét tạo thành chuỗi giám sát giúp truy vết trách nhiệm khi xảy ra thất lạc hoặc hư hỏng.")
-h2("2.6. Kiểm thử hộp đen")
-p("Kiểm thử hộp đen kiểm tra phần mềm dựa trên đặc tả mà không cần biết mã nguồn; ca kiểm thử được suy ra từ luồng sự kiện của use case. Chuẩn ISO/IEC/IEEE 29119-3 (thay thế IEEE 829) quy định nội dung của tài liệu đặc tả ca kiểm thử (test case specification): mã định danh, mục tiêu, tiền điều kiện, dữ liệu vào, các bước thực hiện và kết quả mong đợi; kết quả thực tế và trạng thái (Đạt/Không đạt) được ghi khi thực thi. Chuẩn không bắt buộc vị trí của tài liệu kiểm thử trong báo cáo, vì vậy nhóm đặt các ca kiểm thử ngay trong chương hiện thực và kiểm thử, cạnh phần giao diện của chức năng tương ứng.")
+h2("2.8. Kiểm thử hộp đen và chuẩn ISO/IEC/IEEE 29119-3")
+p("Kiểm thử hộp đen kiểm tra phần mềm dựa trên đặc tả mà không cần biết mã nguồn; ca kiểm thử được suy ra từ luồng sự kiện của use case. Chuẩn ISO/IEC/IEEE 29119-3 (thay thế IEEE 829) quy định nội dung của tài liệu đặc tả ca kiểm thử (test case specification): mã định danh, mục tiêu, tiền điều kiện, dữ liệu vào, các bước thực hiện và kết quả mong đợi; kết quả thực tế và trạng thái (Đạt/Không đạt) được ghi khi thực thi. Chuẩn không bắt buộc vị trí của tài liệu kiểm thử trong báo cáo, vì vậy nhóm đặt các ca kiểm thử của chức năng đã hiện thực trong chương 6 và danh sách ca kiểm thử theo thiết kế của các chức năng còn lại trong Phụ lục A.")
 
 # ---------------------------------------------------------------------------
 h1("PHÂN TÍCH YÊU CẦU")
@@ -163,41 +201,44 @@ bullets([
 ])
 
 # ---------------------------------------------------------------------------
-h1("THIẾT KẾ HỆ THỐNG")
-h2("4.1. Sơ đồ use case tổng thể")
+h1("PHÂN TÍCH VÀ THIẾT KẾ HỆ THỐNG")
+p("Chương này trình bày kết quả phân tích và thiết kế theo bốn lớp mô hình: mô hình use case (hệ thống làm gì), đặc tả các use case chính kèm sơ đồ hoạt động và sơ đồ tuần tự (làm như thế nào), mô hình domain ở mức khái niệm (nghiệp vụ gồm những khái niệm nào) và class diagram toàn hệ thống ở mức thiết kế (cài đặt bằng những lớp nào).")
+h2("4.1. Mô hình use case")
+h3("4.1.1. Sơ đồ use case tổng thể")
 p("Sơ đồ use case tổng thể gồm 13 tác nhân (10 vai trò và 3 tác nhân trừu tượng theo frame) và 41 use case trong ranh giới hệ thống PAVEX Logistics Platform. Quan hệ «include» thể hiện bước bắt buộc dùng chung (Xem hành trình vận đơn, Quét kiện hàng, Gán vai trò cho người dùng, Tra cứu giá cước, Xem nhân sự vận hành); quan hệ «extend» thể hiện chức năng mở rộng tùy chọn.")
 fig(UML / "preview" / "usecase-diagram.png", "Sơ đồ use case tổng thể hệ thống PAVEX", 16, 22.5)
-h2("4.2. Đặc tả chi tiết các use case cốt lõi")
-p("Phần này đặc tả 12 use case cốt lõi – các luồng nghiệp vụ chính của hệ thống. Mỗi use case gồm bảng đặc tả, sơ đồ hoạt động và sơ đồ tuần tự, vẽ theo ký pháp UML 2.5.")
-bullets([
-    "Sơ đồ hoạt động: đặt trong khung “act <tên use case>”, chia 2 phân vùng (partition) Tác nhân – Hệ thống PAVEX; gồm nút khởi đầu, hành động, nút quyết định có điều kiện (guard) trên mọi nhánh ra, nút hợp (merge) tại điểm luồng quay lại và nút kết thúc.",
-    "Sơ đồ tuần tự: đặt trong khung “sd <tên use case>”; lifeline theo mô hình boundary – control – entity (lớp giao diện tiền tố GD_, lớp điều khiển CTRL_, lớp thực thể dùng tên aggregate trong mô hình miền); thanh kích hoạt (execution specification) trên đối tượng đang xử lý; thông điệp đồng bộ (mũi tên đặc), bất đồng bộ tới hệ thống ngoài (mũi tên mở), thông điệp trả về (nét đứt); các khối kết hợp alt / opt / loop có điều kiện cho từng nhánh.",
-])
-sections = [("4.2.1. Nhóm use case dùng chung và cổng khách hàng", ["UC01", "UC03", "UC15", "UC17", "UC14 / UC19"]),
-            ("4.2.2. Nhóm use case của cổng quản trị", ["UC13", "UC31", "UC40", "UC25", "UC06 / UC08"]),
-            ("4.2.3. Nhóm use case của ứng dụng vận hành", ["UC33 / UC34", "UC35"])]
+h3("4.1.2. Danh sách use case chính")
+p("Trong 41 use case, nhóm chọn 13 use case chính đại diện cho các luồng nghiệp vụ cốt lõi của cả ba phân hệ để đặc tả chi tiết. Mỗi use case có một mã riêng và đúng hai sơ đồ: một sơ đồ hoạt động (AD-UCxx) và một sơ đồ tuần tự (SD-UCxx).")
+ORDER = ["UC01", "UC03", "UC06", "UC08", "UC13", "UC14", "UC15", "UC17", "UC25", "UC31", "UC33", "UC35", "UC40"]
 by_code = {u["code"]: u for u in CORE}
-k = 0
-for title, codes in sections:
-    h3(title)
-    for code in codes:
-        u = by_code[code]
-        k += 1
-        B.append({"t": "h4", "text": f"Use case {u['name'].lower()} ({u['code']})"})
-        B.append({"t": "spec", "uc": u})
-        slug = u["code"].split(" ")[0].lower()
-        fig(FIG / f"{slug}-act.png", f"Sơ đồ hoạt động – {u['name']}", 15, 21)
-        fig(FIG / f"{slug}-seq.png", f"Sơ đồ tuần tự – {u['name']}", 16, 20)
+table(["Mã", "Use case", "Tác nhân chính", "Phân hệ"],
+      [[c, by_code[c]["name"], by_code[c]["actor"], by_code[c]["group"]] for c in ORDER],
+      [900, 2600, 2700, 2106], "Danh sách use case chính được đặc tả", size=10)
 
-h2("4.3. Thiết kế kiến trúc và cơ sở dữ liệu")
-h3("4.3.1. Mô hình miền")
-p("Mô hình miền được thiết kế theo DDD gồm 8 package (bounded context): Identity & Access, Partner, Network, Pricing, Shipment, Exception Handling, Workforce & Operations và Shared Kernel. Quan hệ giữa các entity được biểu diễn bằng association có tên vai trò và bội số; composition (hình thoi đặc) thể hiện phần tử sống và mất cùng aggregate.")
-p("Sơ đồ package dưới đây thể hiện các bounded context, aggregate root của từng context và quan hệ phụ thuộc «use» giữa chúng. Phụ thuộc luôn đi từ context hạ nguồn (downstream) về context thượng nguồn (upstream): Shipment dùng Partner, Pricing và Network; Workforce & Operations và Exception Handling dùng Shipment và Network; mọi context dùng các value object của Shared Kernel.")
+h2("4.2. Đặc tả use case chính")
+p("Mỗi use case được trình bày theo cùng một cấu trúc: bảng đặc tả (luồng sự kiện chính và luồng thay thế), sơ đồ hoạt động thể hiện luồng nghiệp vụ, điều kiện rẽ nhánh, luồng thay thế, ngoại lệ và điểm kết thúc; sơ đồ tuần tự thể hiện tác nhân, lớp biên, lớp điều khiển, lớp thực thể và thứ tự thông điệp giữa chúng.")
+table(["Thành phần", "Quy ước đặt tên", "Ví dụ"], [
+    ["Use case", "UCxx + tên nghiệp vụ", "UC17 Tạo đơn hàng"],
+    ["Sơ đồ", "AD-UCxx (hoạt động), SD-UCxx (tuần tự)", "AD-UC17, SD-UC17"],
+    ["Lớp biên «boundary»", "<Màn hình>Page, theo đúng màn hình của cổng web", "LoginPage, UsersPage, CreateShipmentPage"],
+    ["Lớp điều khiển «control»", "<Phân hệ>Controller, mỗi phân hệ một lớp, tương ứng API /api/v1", "AuthController, UserController, ShipmentController"],
+    ["Lớp thực thể «entity»", "Tên lớp trong class diagram", "UserAccount, Shipment, Parcel"],
+    ["Phương thức", "camelCase, bắt đầu bằng động từ; trùng với phương thức trong class diagram", "login(), findByEmail(), markDelivered()"],
+], [2100, 3700, 2506], "Quy ước đặt tên trong đặc tả và sơ đồ", size=10)
+for n, code in enumerate(ORDER, 1):
+    u = by_code[code]
+    h3(f"4.2.{n}. {code} – {u['name']}")
+    tab_no[chapter] = tab_no.get(chapter, 0) + 1
+    B.append({"t": "caption", "text": f"Bảng {chapter}.{tab_no[chapter]}. Đặc tả use case {code} – {u['name']}"})
+    B.append({"t": "spec", "uc": u})
+    placeholder(f"Sơ đồ hoạt động AD-{code} – {u['name']}", f"[Chèn sơ đồ hoạt động AD-{code} – {u['name']}]")
+    placeholder(f"Sơ đồ tuần tự SD-{code} – {u['name']}", f"[Chèn sơ đồ tuần tự SD-{code} – {u['name']}]")
+
+h2("4.3. Mô hình domain")
+p("Mô hình domain mô tả các khái niệm nghiệp vụ và quan hệ giữa chúng ở mức khái niệm, độc lập với công nghệ cài đặt: mỗi khái niệm chỉ gồm tên và các thuộc tính chính, quan hệ ghi bội số; mô hình không có kiểu dữ liệu, visibility hay phương thức. Mô hình được chia theo thiết kế hướng miền thành các bounded context.")
+h3("4.3.1. Các bounded context")
+p("Sơ đồ package thể hiện các bounded context, aggregate root của từng context và quan hệ phụ thuộc «use» giữa chúng. Phụ thuộc luôn đi từ context hạ nguồn (downstream) về context thượng nguồn (upstream): Shipment dùng Partner, Pricing và Network; Workforce & Operations và Exception Handling dùng Shipment và Network; mọi context dùng các value object của Shared Kernel.")
 fig(FIG / "domain-packages.png", "Sơ đồ package các bounded context của PAVEX", 15.5, 21)
-p("Sơ đồ domain tổng thể gồm toàn bộ 34 aggregate root và entity của hệ thống cùng 56 quan hệ, mỗi lớp được tô màu theo bounded context. Ở mức tổng quan, sơ đồ chỉ thể hiện tên lớp, stereotype và bội số của quan hệ; thuộc tính, phương thức và tên vai trò được trình bày chi tiết trong sơ đồ lớp của từng bounded context (mục 4.3.2).")
-B.append({"t": "landscape_start"})
-fig(FIG / "domain-overview.png", "Sơ đồ domain tổng thể của hệ thống PAVEX", 24.5, 14.5)
-B.append({"t": "landscape_end"})
 table(["Bounded context", "Aggregate root / entity chính", "Vai trò"], [
     ["Identity & Access", "UserAccount, UserProfile, UserAddress, Role, Permission", "Tài khoản, hồ sơ, sổ địa chỉ, RBAC"],
     ["Partner", "Merchant, MerchantPickupAddress", "Cửa hàng và vòng đời xác minh"],
@@ -207,30 +248,33 @@ table(["Bounded context", "Aggregate root / entity chính", "Vai trò"], [
     ["Exception Handling", "ShipmentExceptionRequest, ShipmentCase, ShipmentWeightAdjustment", "Yêu cầu ngoại lệ, sự cố, điều chỉnh khối lượng"],
     ["Workforce & Operations", "WorkforceMember, HubMembership, WorkforceAvailability, WorkShift, WorkforceShiftAssignment, OperationalAssignment", "Nhân sự, ca làm việc, công việc vận hành"],
     ["Shared Kernel", "ContactAddress, Weight, Dimensions, FeeBreakdown, DeliveryEstimate, GeoPoint", "Value object dùng chung"],
-], [2000, 3606, 2700], "Các bounded context của mô hình miền", size=10)
-h3("4.3.2. Sơ đồ lớp theo bounded context")
-p("Mỗi bounded context được vẽ thành một sơ đồ lớp (khung “class <tên context>”) theo các quy ước sau:")
+], [2000, 3606, 2700], "Các bounded context của mô hình domain", size=10)
+h3("4.3.2. Sơ đồ domain tổng thể")
+p("Sơ đồ domain tổng thể gồm toàn bộ 34 khái niệm (aggregate root và entity) cùng 56 quan hệ của hệ thống, mỗi khái niệm được tô màu theo bounded context.")
+B.append({"t": "landscape_start"})
+fig(FIG / "domain-overview.png", "Sơ đồ domain tổng thể của hệ thống PAVEX", 24.5, 14.5)
+B.append({"t": "landscape_end"})
+
+h2("4.4. Class diagram toàn hệ thống")
+p("Class diagram mô tả cấu trúc tĩnh của hệ thống ở mức thiết kế: các lớp thực thể (từ mô hình domain, bổ sung kiểu dữ liệu, visibility và phương thức) và các lớp điều khiển dùng trong sơ đồ tuần tự. Toàn hệ thống được thể hiện trên một class diagram chung.")
+h3("4.4.1. Quy ước")
 bullets([
-    "Lớp có 3 ngăn: tên kèm stereotype DDD («aggregate root», «entity», «value object», «enumeration»), thuộc tính dạng -tên : Kiểu [bội số] và phương thức dạng +tên(tham số) : Kiểu trả về. Phương thức được rút ra từ các use case và các trạng thái của aggregate (ví dụ Merchant.verify(), OperationalAssignment.accept()).",
-    "Association ghi tên vai trò và bội số ở hai đầu; composition (hình thoi đặc) ở phía aggregate root sở hữu vòng đời của phần tử; aggregation (hình thoi rỗng) cho quan hệ gom nhóm lỏng.",
-    "Lớp thuộc context khác được vẽ thu gọn (nền xám) với tên đầy đủ Package::Lớp; quan hệ giữa hai context chỉ vẽ ở sơ đồ của context hạ nguồn.",
-    "Value object và enumeration được dùng làm kiểu thuộc tính nên được liệt kê bên dưới mà không nối đường.",
+    "Lớp có ba ngăn: tên kèm stereotype («entity», «control», «enumeration», «value object»), thuộc tính và phương thức.",
+    "Visibility: - (private) cho thuộc tính, + (public) cho phương thức; thuộc tính ghi dạng tên : Kiểu [bội số], phương thức ghi dạng tên(tham số : Kiểu) : Kiểu trả về; phương thức truy vấn của lớp ({static}) được gạch chân.",
+    "Association ghi bội số ở hai đầu; composition (hình thoi đặc) khi phần tử sống và mất cùng lớp tổng thể; aggregation (hình thoi rỗng) cho quan hệ gom nhóm lỏng; generalization chỉ dùng khi có quan hệ kế thừa thực sự trong nghiệp vụ.",
+    "Dependency (nét đứt, mũi tên mở) từ lớp điều khiển tới các lớp thực thể mà nó sử dụng.",
 ])
-CTX = [("identity", "Identity & Access", "Tài khoản đăng nhập (UserAccount) sở hữu hồ sơ và sổ địa chỉ; vai trò (Role) gom các quyền (Permission) để phân quyền RBAC."),
-       ("partner", "Partner", "Cửa hàng (Merchant) do một tài khoản khách hàng sở hữu, có vòng đời xác minh và danh sách điểm lấy hàng."),
-       ("network", "Network", "Mạng lưới vùng – khu vực phục vụ – hub, tuyến giữa hai hub với lịch chạy, mẫu lộ trình và giữ chỗ tải trên từng chuyến."),
-       ("pricing", "Pricing", "Bảng giá có phiên bản (RatePlan) gồm các quy tắc giá; báo giá (QuoteRequest) lưu kiện hàng và các phương án giá có thời hạn."),
-       ("shipment", "Shipment", "Vận đơn là aggregate root sở hữu kiện hàng, sự kiện hành trình và lần giao; tham chiếu cửa hàng, bảng giá, báo giá, hub và giữ chỗ tải."),
-       ("shipment-types", "Shipment – value object và enumeration", "Các kiểu dữ liệu của context Shipment: địa chỉ chụp tại thời điểm tạo đơn, điểm đầu/cuối, trạng thái tạm giữ và các tập giá trị trạng thái."),
-       ("exception", "Exception Handling", "Yêu cầu ngoại lệ (hoàn, chuyển tiếp, giao lại, hủy), hồ sơ sự cố và điều chỉnh khối lượng, đều tham chiếu vận đơn, kiện và hub."),
-       ("workforce", "Workforce & Operations", "Nhân sự vận hành, thành viên hub, trạng thái sẵn sàng, ca làm việc và công việc vận hành sinh ra từ từng chặng của vận đơn."),
-       ("shared", "Shared Kernel", "Các value object dùng chung giữa các context.")]
-for slug, title, desc in CTX:
-    B.append({"t": "h4", "text": f"Sơ đồ lớp – {title}"})
-    p(desc)
-    fig(FIG / f"class-{slug}.png", f"Sơ đồ lớp – {title}", 16, 21.5)
-h3("4.3.3. Kiến trúc tổng thể")
+h3("4.4.2. Class diagram")
+placeholder("Class diagram toàn hệ thống PAVEX", "[Chèn class diagram toàn hệ thống PAVEX]")
+h3("4.4.3. Đối chiếu class diagram với sơ đồ tuần tự")
+p("Bảng sau đối chiếu mỗi phương thức của lớp thực thể với các sơ đồ tuần tự sử dụng nó, bảo đảm mọi thông điệp gửi tới lớp thực thể trong sơ đồ tuần tự đều là một phương thức có trong class diagram.")
+table(["Lớp", "Phương thức", "Sử dụng trong"], [["…", "…", "…"]], [2400, 3400, 2506], "Đối chiếu phương thức của lớp với sơ đồ tuần tự", size=10)
+
+h2("4.5. Kiến trúc hệ thống")
+h3("4.5.1. Kiến trúc tổng thể")
 p("Hệ thống theo kiến trúc client – server nhiều lớp. Ba ứng dụng client (cổng khách hàng, cổng quản trị, ứng dụng vận hành) giao tiếp với một backend duy nhất qua REST API /api/v1. Backend được tổ chức theo module tương ứng với các bounded context, mỗi module gồm các lớp: API (controller), ứng dụng (service), miền (domain) và hạ tầng (repository). Dữ liệu được lưu trong hệ quản trị cơ sở dữ liệu PostgreSQL; mỗi aggregate tương ứng một nhóm bảng, quan hệ giữa các aggregate được thể hiện bằng khóa ngoại tới định danh.")
+placeholder("Kiến trúc tổng thể client – BFF – backend – PostgreSQL", "[Chèn sơ đồ kiến trúc tổng thể]")
+h3("4.5.2. Các lớp kiến trúc")
 table(["Lớp", "Thành phần", "Trách nhiệm"], [
     ["Client", "Cổng khách hàng, Cổng quản trị (Next.js), Ứng dụng vận hành", "Giao diện người dùng, gọi API qua BFF"],
     ["BFF", "Route /api/backend/* của từng cổng web", "Giữ token trong cookie httpOnly, chuyển tiếp yêu cầu, tự làm mới token"],
@@ -298,10 +342,11 @@ for cap in ["Đăng nhập cổng quản trị", "Bảng điều hành", "Quản
     placeholder(cap, f"[Chèn ảnh màn hình: {cap}]")
 h2("6.4. Kiểm thử hệ thống")
 h3("6.4.1. Phương pháp kiểm thử")
-p("Nhóm áp dụng kiểm thử hộp đen theo use case. Mỗi chức năng đã hiện thực có một test case, được trình bày dưới dạng bảng dọc theo các mục của chuẩn ISO/IEC/IEEE 29119-3: mã test case, use case, mục tiêu, tiền điều kiện, dữ liệu vào, các bước thực hiện, kết quả mong đợi, kết quả thực tế và trạng thái. Các chức năng chưa hiện thực không được đưa vào kiểm thử ở giai đoạn này.")
+p("Nhóm áp dụng kiểm thử hộp đen theo use case. Mỗi chức năng có một test case, được trình bày dưới dạng bảng dọc theo các mục của chuẩn ISO/IEC/IEEE 29119-3: mã test case, use case, mục tiêu, tiền điều kiện, dữ liệu vào, các bước thực hiện, kết quả mong đợi, kết quả thực tế và trạng thái. Chương này trình bày test case của các chức năng đã hiện thực; test case của các chức năng còn lại được liệt kê trong Phụ lục A và sẽ được viết chi tiết, thực thi khi chức năng được hiện thực.")
+h3("6.4.2. Danh sách test case")
 table(["Mã TC", "Use case", "Chức năng được kiểm thử"],
       [[c["id"], c["uc"], c["name"]] for c in CASES], [1500, 1500, 5306], "Danh sách test case")
-h3("6.4.2. Test case chi tiết")
+h3("6.4.3. Test case chi tiết")
 for c in CASES:
     B.append({"t": "h4", "text": f"Test case {c['id']} – {c['name']}"})
     tab_no[chapter] = tab_no.get(chapter, 0) + 1
@@ -312,11 +357,11 @@ for c in CASES:
 h1("ĐÁNH GIÁ VÀ THẢO LUẬN")
 h2("7.1. Kết quả đạt được")
 bullets([
-    "Hoàn thành phân tích và thiết kế theo UML 2.5: sơ đồ use case tổng thể (13 tác nhân, 41 use case), đặc tả 12 use case cốt lõi kèm sơ đồ hoạt động và sơ đồ tuần tự, sơ đồ package và 9 sơ đồ lớp của mô hình miền theo DDD (8 bounded context).",
+    "Hoàn thành phân tích và thiết kế theo UML 2.5: sơ đồ use case tổng thể (13 tác nhân, 41 use case), đặc tả 13 use case chính, mỗi use case một sơ đồ hoạt động và một sơ đồ tuần tự; mô hình domain theo DDD (8 bounded context) và class diagram toàn hệ thống.",
     "Hiện thực cổng quản trị theo mô hình BFF trên Next.js: đăng nhập, đăng xuất, tự làm mới phiên, menu theo quyền; tra cứu và lọc người dùng; xem vai trò và quyền.",
     "Tích hợp với Identity API của backend: xác thực JWT, refresh token, phân quyền RBAC; dữ liệu lưu trên PostgreSQL.",
     "Thiết kế cơ chế tính cước có phiên bản, định tuyến với giữ chỗ tải và điều phối công việc theo ca để làm cơ sở hiện thực các giai đoạn sau.",
-    "Xây dựng test case cho toàn bộ chức năng đã hiện thực theo chuẩn ISO/IEC/IEEE 29119-3.",
+    "Xây dựng test case cho toàn bộ chức năng đã hiện thực theo chuẩn ISO/IEC/IEEE 29119-3 và danh sách test case theo thiết kế cho các chức năng còn lại (Phụ lục A).",
 ])
 h2("7.2. Hạn chế còn tồn tại")
 bullets([
@@ -341,6 +386,18 @@ bullets([
     "Ứng dụng di động native cho nhân sự vận hành với chế độ ngoại tuyến.",
     "Phân tích dữ liệu để dự báo sản lượng và điều phối nhân sự theo khu vực.",
 ])
+# ---------------------------------------------------------------------------
+appendix("A", "DANH SÁCH TEST CASE THEO THIẾT KẾ")
+p("Phụ lục này liệt kê test case của các chức năng đã được phân tích, thiết kế nhưng chưa hiện thực, mỗi chức năng một test case. Khi chức năng được hiện thực, test case tương ứng được viết chi tiết theo mẫu bảng ở mục 6.4.3, thực thi và chuyển vào chương 6.")
+done = {c["uc"] for c in CASES}
+SHARED = [("UC06.5", "Gán vai trò cho người dùng", "Platform Admin"), ("UC14.1", "Xem hành trình vận đơn", "Public User, Merchant"),
+          ("UC34", "Quét kiện hàng", "Operational Staff")]
+funcs = [(code, name, ", ".join(actors)) for _g, _n, ucs in BU.GROUPS for code, name, actors, *_r in ucs] + SHARED
+funcs = sorted((f for f in funcs if f[0] not in done), key=lambda f: [int(x) for x in f[0][2:].split(".")])
+table(["Mã TC", "Use case", "Chức năng", "Tác nhân", "Tình trạng"],
+      [[f"TC{len(CASES) + i:02d}", code, name, actors, "Chưa hiện thực"] for i, (code, name, actors) in enumerate(funcs, 1)],
+      [900, 1000, 2900, 2300, 1206], "Danh sách test case theo thiết kế của các chức năng chưa hiện thực", size=10)
+
 for t in ["NHẬN XÉT CỦA GIÁO VIÊN HƯỚNG DẪN", "NHẬN XÉT CỦA GIÁO VIÊN PHẢN BIỆN 1", "NHẬN XÉT CỦA GIÁO VIÊN PHẢN BIỆN 2"]:
     B.append({"t": "sign", "text": t})
 

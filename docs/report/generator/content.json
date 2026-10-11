@@ -26,6 +26,94 @@
   "t": "toc"
  },
  {
+  "t": "front",
+  "text": "DANH MỤC HÌNH"
+ },
+ {
+  "t": "lof"
+ },
+ {
+  "t": "front",
+  "text": "DANH MỤC BẢNG"
+ },
+ {
+  "t": "lot"
+ },
+ {
+  "t": "front",
+  "text": "DANH MỤC TỪ VIẾT TẮT"
+ },
+ {
+  "t": "table",
+  "header": [
+   "Từ viết tắt",
+   "Ý nghĩa"
+  ],
+  "rows": [
+   [
+    "AD",
+    "Activity Diagram – sơ đồ hoạt động"
+   ],
+   [
+    "API",
+    "Application Programming Interface – giao diện lập trình ứng dụng"
+   ],
+   [
+    "BFF",
+    "Backend-for-Frontend – lớp máy chủ trung gian riêng cho từng giao diện"
+   ],
+   [
+    "COD",
+    "Cash on Delivery – thu hộ tiền khi giao hàng"
+   ],
+   [
+    "DDD",
+    "Domain-Driven Design – thiết kế hướng miền"
+   ],
+   [
+    "ECB",
+    "Entity – Control – Boundary – mô hình phân lớp đối tượng phân tích"
+   ],
+   [
+    "JWT",
+    "JSON Web Token – chuẩn token xác thực"
+   ],
+   [
+    "RBAC",
+    "Role-Based Access Control – phân quyền theo vai trò"
+   ],
+   [
+    "REST",
+    "Representational State Transfer – kiểu kiến trúc API dựa trên HTTP"
+   ],
+   [
+    "SD",
+    "Sequence Diagram – sơ đồ tuần tự"
+   ],
+   [
+    "TC",
+    "Test case – ca kiểm thử"
+   ],
+   [
+    "UC",
+    "Use case – ca sử dụng"
+   ],
+   [
+    "UI",
+    "User Interface – giao diện người dùng"
+   ],
+   [
+    "UML",
+    "Unified Modeling Language – ngôn ngữ mô hình hóa thống nhất"
+   ]
+  ],
+  "widths": [
+   2200,
+   6106
+  ],
+  "size": 11
+ },
+ {
   "t": "h1",
   "text": "CHƯƠNG 1. GIỚI THIỆU"
  },
@@ -87,12 +175,13 @@
   "t": "bullets",
   "items": [
    "Chương 1 – Giới thiệu: lý do, mục tiêu, phạm vi và phương pháp.",
-   "Chương 2 – Cơ sở lý thuyết: bài toán vận chuyển, DDD, REST/JWT, kiến trúc web và mã kiện hàng.",
+   "Chương 2 – Cơ sở lý thuyết: bài toán vận chuyển, UML 2.5, mô hình Entity – Control – Boundary, DDD, REST/JWT, kiến trúc web, mã kiện hàng và kiểm thử.",
    "Chương 3 – Phân tích yêu cầu: yêu cầu kinh doanh, người dùng, chức năng và phi chức năng.",
-   "Chương 4 – Thiết kế hệ thống: sơ đồ use case, đặc tả use case cốt lõi kèm sơ đồ hoạt động và tuần tự, sơ đồ package và sơ đồ lớp của mô hình miền.",
+   "Chương 4 – Phân tích và thiết kế hệ thống: mô hình use case, đặc tả 13 use case chính (mỗi use case một sơ đồ hoạt động và một sơ đồ tuần tự), mô hình domain, class diagram toàn hệ thống và kiến trúc.",
    "Chương 5 – Giải pháp công nghệ: kiến trúc, bảo mật, định giá, định tuyến và quét mã.",
    "Chương 6 – Hiện thực, triển khai và kiểm thử: môi trường, tình trạng hiện thực, giao diện và test case của các chức năng đã hiện thực.",
-   "Chương 7 – Đánh giá và thảo luận. Chương 8 – Kết luận và hướng phát triển."
+   "Chương 7 – Đánh giá và thảo luận. Chương 8 – Kết luận và hướng phát triển.",
+   "Phụ lục A – Danh sách test case theo thiết kế cho các chức năng chưa hiện thực."
   ]
  },
  {
@@ -109,7 +198,63 @@
  },
  {
   "t": "h2",
-  "text": "2.2. Thiết kế hướng miền (Domain-Driven Design)"
+  "text": "2.2. Ngôn ngữ mô hình hóa UML 2.5"
+ },
+ {
+  "t": "p",
+  "text": "UML (Unified Modeling Language) là ngôn ngữ mô hình hóa chuẩn của OMG. Báo cáo sử dụng bốn loại sơ đồ của UML 2.5, mỗi loại trả lời một câu hỏi khác nhau về hệ thống:"
+ },
+ {
+  "t": "caption",
+  "text": "Bảng 2.1. Các sơ đồ UML sử dụng trong báo cáo"
+ },
+ {
+  "t": "table",
+  "header": [
+   "Sơ đồ",
+   "Mục đích",
+   "Thành phần chính"
+  ],
+  "rows": [
+   [
+    "Use case",
+    "Hệ thống cung cấp chức năng gì, cho ai",
+    "Tác nhân, use case, ranh giới hệ thống, quan hệ «include», «extend», tổng quát hóa"
+   ],
+   [
+    "Activity",
+    "Luồng nghiệp vụ của một use case diễn ra thế nào",
+    "Nút bắt đầu/kết thúc, action, decision/merge có guard, fork/join, partition (làn)"
+   ],
+   [
+    "Sequence",
+    "Các đối tượng trao đổi thông điệp theo thứ tự nào",
+    "Lifeline, thông điệp đồng bộ/bất đồng bộ/trả về, activation, khối alt/opt/loop"
+   ],
+   [
+    "Class",
+    "Cấu trúc tĩnh: lớp, thuộc tính, phương thức và quan hệ",
+    "Lớp, visibility, kiểu dữ liệu, association, aggregation/composition, generalization, dependency, bội số"
+   ]
+  ],
+  "widths": [
+   1500,
+   3000,
+   3806
+  ],
+  "size": 10
+ },
+ {
+  "t": "h2",
+  "text": "2.3. Mô hình Entity – Control – Boundary"
+ },
+ {
+  "t": "p",
+  "text": "Mô hình Entity – Control – Boundary (ECB) phân loại các đối tượng tham gia một use case thành ba nhóm. Lớp biên (boundary, «boundary») là giao diện mà tác nhân thao tác trực tiếp, ví dụ trang đăng nhập; lớp điều khiển (control, «control») điều phối luồng xử lý của use case và kiểm tra quy tắc nghiệp vụ; lớp thực thể (entity, «entity») giữ dữ liệu và hành vi nghiệp vụ lâu dài. Trong sơ đồ tuần tự, tác nhân chỉ giao tiếp với lớp biên, lớp biên gọi lớp điều khiển và lớp điều khiển thao tác với các lớp thực thể. Các lớp thực thể này chính là các lớp của class diagram, nhờ đó sơ đồ tuần tự và class diagram nhất quán với nhau."
+ },
+ {
+  "t": "h2",
+  "text": "2.4. Thiết kế hướng miền (Domain-Driven Design)"
  },
  {
   "t": "p",
@@ -117,7 +262,7 @@
  },
  {
   "t": "h2",
-  "text": "2.3. REST API, JWT và phân quyền theo vai trò"
+  "text": "2.5. REST API, JWT và phân quyền theo vai trò"
  },
  {
   "t": "p",
@@ -125,7 +270,7 @@
  },
  {
   "t": "h2",
-  "text": "2.4. Ứng dụng web hiện đại và mô hình Backend-for-Frontend"
+  "text": "2.6. Ứng dụng web hiện đại và mô hình Backend-for-Frontend"
  },
  {
   "t": "p",
@@ -133,7 +278,7 @@
  },
  {
   "t": "h2",
-  "text": "2.5. Mã kiện hàng và chuỗi giám sát (chain of custody)"
+  "text": "2.7. Mã kiện hàng và chuỗi giám sát (chain of custody)"
  },
  {
   "t": "p",
@@ -141,11 +286,11 @@
  },
  {
   "t": "h2",
-  "text": "2.6. Kiểm thử hộp đen"
+  "text": "2.8. Kiểm thử hộp đen và chuẩn ISO/IEC/IEEE 29119-3"
  },
  {
   "t": "p",
-  "text": "Kiểm thử hộp đen kiểm tra phần mềm dựa trên đặc tả mà không cần biết mã nguồn; ca kiểm thử được suy ra từ luồng sự kiện của use case. Chuẩn ISO/IEC/IEEE 29119-3 (thay thế IEEE 829) quy định nội dung của tài liệu đặc tả ca kiểm thử (test case specification): mã định danh, mục tiêu, tiền điều kiện, dữ liệu vào, các bước thực hiện và kết quả mong đợi; kết quả thực tế và trạng thái (Đạt/Không đạt) được ghi khi thực thi. Chuẩn không bắt buộc vị trí của tài liệu kiểm thử trong báo cáo, vì vậy nhóm đặt các ca kiểm thử ngay trong chương hiện thực và kiểm thử, cạnh phần giao diện của chức năng tương ứng."
+  "text": "Kiểm thử hộp đen kiểm tra phần mềm dựa trên đặc tả mà không cần biết mã nguồn; ca kiểm thử được suy ra từ luồng sự kiện của use case. Chuẩn ISO/IEC/IEEE 29119-3 (thay thế IEEE 829) quy định nội dung của tài liệu đặc tả ca kiểm thử (test case specification): mã định danh, mục tiêu, tiền điều kiện, dữ liệu vào, các bước thực hiện và kết quả mong đợi; kết quả thực tế và trạng thái (Đạt/Không đạt) được ghi khi thực thi. Chuẩn không bắt buộc vị trí của tài liệu kiểm thử trong báo cáo, vì vậy nhóm đặt các ca kiểm thử của chức năng đã hiện thực trong chương 6 và danh sách ca kiểm thử theo thiết kế của các chức năng còn lại trong Phụ lục A."
  },
  {
   "t": "h1",
@@ -545,11 +690,19 @@
  },
  {
   "t": "h1",
-  "text": "CHƯƠNG 4. THIẾT KẾ HỆ THỐNG"
+  "text": "CHƯƠNG 4. PHÂN TÍCH VÀ THIẾT KẾ HỆ THỐNG"
+ },
+ {
+  "t": "p",
+  "text": "Chương này trình bày kết quả phân tích và thiết kế theo bốn lớp mô hình: mô hình use case (hệ thống làm gì), đặc tả các use case chính kèm sơ đồ hoạt động và sơ đồ tuần tự (làm như thế nào), mô hình domain ở mức khái niệm (nghiệp vụ gồm những khái niệm nào) và class diagram toàn hệ thống ở mức thiết kế (cài đặt bằng những lớp nào)."
  },
  {
   "t": "h2",
-  "text": "4.1. Sơ đồ use case tổng thể"
+  "text": "4.1. Mô hình use case"
+ },
+ {
+  "t": "h3",
+  "text": "4.1.1. Sơ đồ use case tổng thể"
  },
  {
   "t": "p",
@@ -563,27 +716,178 @@
   "caption": "Hình 4.1. Sơ đồ use case tổng thể hệ thống PAVEX"
  },
  {
-  "t": "h2",
-  "text": "4.2. Đặc tả chi tiết các use case cốt lõi"
+  "t": "h3",
+  "text": "4.1.2. Danh sách use case chính"
  },
  {
   "t": "p",
-  "text": "Phần này đặc tả 12 use case cốt lõi – các luồng nghiệp vụ chính của hệ thống. Mỗi use case gồm bảng đặc tả, sơ đồ hoạt động và sơ đồ tuần tự, vẽ theo ký pháp UML 2.5."
+  "text": "Trong 41 use case, nhóm chọn 13 use case chính đại diện cho các luồng nghiệp vụ cốt lõi của cả ba phân hệ để đặc tả chi tiết. Mỗi use case có một mã riêng và đúng hai sơ đồ: một sơ đồ hoạt động (AD-UCxx) và một sơ đồ tuần tự (SD-UCxx)."
  },
  {
-  "t": "bullets",
-  "items": [
-   "Sơ đồ hoạt động: đặt trong khung “act <tên use case>”, chia 2 phân vùng (partition) Tác nhân – Hệ thống PAVEX; gồm nút khởi đầu, hành động, nút quyết định có điều kiện (guard) trên mọi nhánh ra, nút hợp (merge) tại điểm luồng quay lại và nút kết thúc.",
-   "Sơ đồ tuần tự: đặt trong khung “sd <tên use case>”; lifeline theo mô hình boundary – control – entity (lớp giao diện tiền tố GD_, lớp điều khiển CTRL_, lớp thực thể dùng tên aggregate trong mô hình miền); thanh kích hoạt (execution specification) trên đối tượng đang xử lý; thông điệp đồng bộ (mũi tên đặc), bất đồng bộ tới hệ thống ngoài (mũi tên mở), thông điệp trả về (nét đứt); các khối kết hợp alt / opt / loop có điều kiện cho từng nhánh."
-  ]
+  "t": "caption",
+  "text": "Bảng 4.1. Danh sách use case chính được đặc tả"
+ },
+ {
+  "t": "table",
+  "header": [
+   "Mã",
+   "Use case",
+   "Tác nhân chính",
+   "Phân hệ"
+  ],
+  "rows": [
+   [
+    "UC01",
+    "Đăng nhập",
+    "Customer, Back-office User, Operational Staff",
+    "Chung (cả 3 phân hệ)"
+   ],
+   [
+    "UC03",
+    "Đăng ký tài khoản",
+    "Guest",
+    "Cổng khách hàng"
+   ],
+   [
+    "UC06",
+    "Quản lý người dùng",
+    "Platform Admin",
+    "Cổng quản trị"
+   ],
+   [
+    "UC08",
+    "Quản lý vai trò & quyền",
+    "Platform Admin",
+    "Cổng quản trị"
+   ],
+   [
+    "UC13",
+    "Duyệt và quản lý cửa hàng",
+    "Platform Admin",
+    "Cổng quản trị"
+   ],
+   [
+    "UC14",
+    "Tra cứu vận đơn",
+    "Public User (Guest, Customer, Merchant)",
+    "Cổng khách hàng"
+   ],
+   [
+    "UC15",
+    "Tra cứu giá cước",
+    "Public User (Guest, Customer, Merchant)",
+    "Cổng khách hàng"
+   ],
+   [
+    "UC17",
+    "Tạo đơn hàng",
+    "Merchant",
+    "Cổng khách hàng / Cổng quản trị"
+   ],
+   [
+    "UC25",
+    "Quản lý ca làm việc",
+    "Hub Manager, Operations Manager",
+    "Cổng quản trị"
+   ],
+   [
+    "UC31",
+    "Điều phối công việc",
+    "Hub Dispatch (Hub Manager kế thừa)",
+    "Cổng quản trị"
+   ],
+   [
+    "UC33",
+    "Thực hiện công việc",
+    "Operational Staff (Courier, Line-haul Driver, Warehouse Operator)",
+    "Ứng dụng vận hành"
+   ],
+   [
+    "UC35",
+    "Ghi nhận kết quả giao hàng",
+    "Courier",
+    "Ứng dụng vận hành"
+   ],
+   [
+    "UC40",
+    "Xử lý yêu cầu ngoại lệ",
+    "Hub Dispatch",
+    "Cổng quản trị"
+   ]
+  ],
+  "widths": [
+   900,
+   2600,
+   2700,
+   2106
+  ],
+  "size": 10
+ },
+ {
+  "t": "h2",
+  "text": "4.2. Đặc tả use case chính"
+ },
+ {
+  "t": "p",
+  "text": "Mỗi use case được trình bày theo cùng một cấu trúc: bảng đặc tả (luồng sự kiện chính và luồng thay thế), sơ đồ hoạt động thể hiện luồng nghiệp vụ, điều kiện rẽ nhánh, luồng thay thế, ngoại lệ và điểm kết thúc; sơ đồ tuần tự thể hiện tác nhân, lớp biên, lớp điều khiển, lớp thực thể và thứ tự thông điệp giữa chúng."
+ },
+ {
+  "t": "caption",
+  "text": "Bảng 4.2. Quy ước đặt tên trong đặc tả và sơ đồ"
+ },
+ {
+  "t": "table",
+  "header": [
+   "Thành phần",
+   "Quy ước đặt tên",
+   "Ví dụ"
+  ],
+  "rows": [
+   [
+    "Use case",
+    "UCxx + tên nghiệp vụ",
+    "UC17 Tạo đơn hàng"
+   ],
+   [
+    "Sơ đồ",
+    "AD-UCxx (hoạt động), SD-UCxx (tuần tự)",
+    "AD-UC17, SD-UC17"
+   ],
+   [
+    "Lớp biên «boundary»",
+    "<Màn hình>Page, theo đúng màn hình của cổng web",
+    "LoginPage, UsersPage, CreateShipmentPage"
+   ],
+   [
+    "Lớp điều khiển «control»",
+    "<Phân hệ>Controller, mỗi phân hệ một lớp, tương ứng API /api/v1",
+    "AuthController, UserController, ShipmentController"
+   ],
+   [
+    "Lớp thực thể «entity»",
+    "Tên lớp trong class diagram",
+    "UserAccount, Shipment, Parcel"
+   ],
+   [
+    "Phương thức",
+    "camelCase, bắt đầu bằng động từ; trùng với phương thức trong class diagram",
+    "login(), findByEmail(), markDelivered()"
+   ]
+  ],
+  "widths": [
+   2100,
+   3700,
+   2506
+  ],
+  "size": 10
  },
  {
   "t": "h3",
-  "text": "4.2.1. Nhóm use case dùng chung và cổng khách hàng"
+  "text": "4.2.1. UC01 – Đăng nhập"
  },
  {
-  "t": "h4",
-  "text": "Use case đăng nhập (UC01)"
+  "t": "caption",
+  "text": "Bảng 4.3. Đặc tả use case UC01 – Đăng nhập"
  },
  {
   "t": "spec",
@@ -799,22 +1103,22 @@
   }
  },
  {
-  "t": "img",
-  "path": "/home/user/pavex-backend/docs/report/figures/uc01-act.png",
-  "w": 15,
-  "maxh": 21,
-  "caption": "Hình 4.2. Sơ đồ hoạt động – Đăng nhập"
+  "t": "placeholder",
+  "text": "[Chèn sơ đồ hoạt động AD-UC01 – Đăng nhập]",
+  "caption": "Hình 4.2. Sơ đồ hoạt động AD-UC01 – Đăng nhập"
  },
  {
-  "t": "img",
-  "path": "/home/user/pavex-backend/docs/report/figures/uc01-seq.png",
-  "w": 16,
-  "maxh": 20,
-  "caption": "Hình 4.3. Sơ đồ tuần tự – Đăng nhập"
+  "t": "placeholder",
+  "text": "[Chèn sơ đồ tuần tự SD-UC01 – Đăng nhập]",
+  "caption": "Hình 4.3. Sơ đồ tuần tự SD-UC01 – Đăng nhập"
  },
  {
-  "t": "h4",
-  "text": "Use case đăng ký tài khoản (UC03)"
+  "t": "h3",
+  "text": "4.2.2. UC03 – Đăng ký tài khoản"
+ },
+ {
+  "t": "caption",
+  "text": "Bảng 4.4. Đặc tả use case UC03 – Đăng ký tài khoản"
  },
  {
   "t": "spec",
@@ -1042,22 +1346,655 @@
   }
  },
  {
-  "t": "img",
-  "path": "/home/user/pavex-backend/docs/report/figures/uc03-act.png",
-  "w": 15,
-  "maxh": 21,
-  "caption": "Hình 4.4. Sơ đồ hoạt động – Đăng ký tài khoản"
+  "t": "placeholder",
+  "text": "[Chèn sơ đồ hoạt động AD-UC03 – Đăng ký tài khoản]",
+  "caption": "Hình 4.4. Sơ đồ hoạt động AD-UC03 – Đăng ký tài khoản"
  },
  {
-  "t": "img",
-  "path": "/home/user/pavex-backend/docs/report/figures/uc03-seq.png",
-  "w": 16,
-  "maxh": 20,
-  "caption": "Hình 4.5. Sơ đồ tuần tự – Đăng ký tài khoản"
+  "t": "placeholder",
+  "text": "[Chèn sơ đồ tuần tự SD-UC03 – Đăng ký tài khoản]",
+  "caption": "Hình 4.5. Sơ đồ tuần tự SD-UC03 – Đăng ký tài khoản"
  },
  {
-  "t": "h4",
-  "text": "Use case tra cứu giá cước (UC15)"
+  "t": "h3",
+  "text": "4.2.3. UC06 – Quản lý người dùng"
+ },
+ {
+  "t": "caption",
+  "text": "Bảng 4.5. Đặc tả use case UC06 – Quản lý người dùng"
+ },
+ {
+  "t": "spec",
+  "uc": {
+   "code": "UC06",
+   "name": "Quản lý người dùng",
+   "group": "Cổng quản trị",
+   "desc": "Quản trị nền tảng tra cứu, lọc và xem chi tiết tài khoản người dùng, thay đổi trạng thái tài khoản (hoạt động, tạm khóa, vô hiệu hóa). Gán vai trò cho tài khoản là chức năng mở rộng (extend UC06.5 Gán vai trò cho người dùng).",
+   "actor": "Platform Admin",
+   "sub": "Không",
+   "pre": "Admin đã đăng nhập và có quyền identity.users.read (xem) và quyền cập nhật tài khoản (sửa).",
+   "post": "Danh sách tài khoản được hiển thị theo điều kiện lọc; nếu admin cập nhật thì trạng thái tài khoản được lưu, phiên bản dữ liệu tăng và tài khoản bị khóa mất mọi phiên đăng nhập.",
+   "main": [
+    [
+     "A",
+     "Admin chọn menu “Người dùng”."
+    ],
+    [
+     "S",
+     "Hệ thống hiển thị các chỉ số và danh sách tài khoản có phân trang: email, tên, vai trò, trạng thái tài khoản, trạng thái hồ sơ, ngày tạo."
+    ],
+    [
+     "A",
+     "Admin nhập từ khóa email/tên và chọn bộ lọc vai trò, trạng thái tài khoản, trạng thái hồ sơ."
+    ],
+    [
+     "S",
+     "Hệ thống trả về danh sách đã lọc và ghi điều kiện lọc lên URL."
+    ],
+    [
+     "A",
+     "Admin chọn một tài khoản."
+    ],
+    [
+     "S",
+     "Hệ thống hiển thị chi tiết tài khoản, hồ sơ và vai trò."
+    ],
+    [
+     "A",
+     "Admin chọn trạng thái mới cho tài khoản và nhấn “Lưu”."
+    ],
+    [
+     "S",
+     "Hệ thống kiểm tra quyền thao tác và phiên bản dữ liệu (version)."
+    ],
+    [
+     "S",
+     "Hệ thống cập nhật trạng thái tài khoản; nếu tài khoản bị tạm khóa hoặc vô hiệu hóa thì thu hồi các phiên đăng nhập."
+    ],
+    [
+     "S",
+     "Hệ thống thông báo “Cập nhật thành công”."
+    ]
+   ],
+   "alt": [
+    [
+     "1a. Không đủ quyền identity.users.read",
+     "Hệ thống ẩn menu; nếu truy cập trực tiếp thì trả lỗi 403."
+    ],
+    [
+     "4a. Không có tài khoản phù hợp",
+     "Hệ thống hiển thị “Không tìm thấy tài khoản.”"
+    ],
+    [
+     "7a. Admin chọn “Gán vai trò”",
+     "Chuyển sang UC06.5 Gán vai trò cho người dùng (extend)."
+    ],
+    [
+     "8a. Dữ liệu đã bị người khác thay đổi (xung đột version)",
+     "Hệ thống báo xung đột, tải lại dữ liệu mới nhất và quay lại bước 6."
+    ],
+    [
+     "8b. Admin tự khóa tài khoản của chính mình",
+     "Hệ thống không cho phép và giữ nguyên trạng thái."
+    ]
+   ]
+  }
+ },
+ {
+  "t": "placeholder",
+  "text": "[Chèn sơ đồ hoạt động AD-UC06 – Quản lý người dùng]",
+  "caption": "Hình 4.6. Sơ đồ hoạt động AD-UC06 – Quản lý người dùng"
+ },
+ {
+  "t": "placeholder",
+  "text": "[Chèn sơ đồ tuần tự SD-UC06 – Quản lý người dùng]",
+  "caption": "Hình 4.7. Sơ đồ tuần tự SD-UC06 – Quản lý người dùng"
+ },
+ {
+  "t": "h3",
+  "text": "4.2.4. UC08 – Quản lý vai trò & quyền"
+ },
+ {
+  "t": "caption",
+  "text": "Bảng 4.6. Đặc tả use case UC08 – Quản lý vai trò & quyền"
+ },
+ {
+  "t": "spec",
+  "uc": {
+   "code": "UC08",
+   "name": "Quản lý vai trò & quyền",
+   "group": "Cổng quản trị",
+   "desc": "Quản trị nền tảng xem danh sách vai trò và các quyền của từng vai trò, tìm quyền theo tên hoặc mã, tạo vai trò tùy chỉnh và cấp / thu hồi quyền cho vai trò. Vai trò hệ thống không được sửa hoặc xóa.",
+   "actor": "Platform Admin",
+   "sub": "Không",
+   "pre": "Admin đã đăng nhập và có quyền identity.roles.read (xem) và quyền quản lý vai trò (sửa).",
+   "post": "Danh sách vai trò và quyền được hiển thị; nếu admin cập nhật thì tập quyền của vai trò tùy chỉnh được lưu và có hiệu lực ở lần xác thực tiếp theo của người dùng mang vai trò đó.",
+   "main": [
+    [
+     "A",
+     "Admin chọn menu “Vai trò & quyền”."
+    ],
+    [
+     "S",
+     "Hệ thống hiển thị danh sách vai trò kèm số quyền và nhãn “Vai trò hệ thống”; vai trò đầu tiên được chọn sẵn."
+    ],
+    [
+     "A",
+     "Admin chọn một vai trò."
+    ],
+    [
+     "S",
+     "Hệ thống hiển thị mô tả và danh sách quyền của vai trò."
+    ],
+    [
+     "A",
+     "Admin nhập từ khóa vào ô tìm quyền."
+    ],
+    [
+     "S",
+     "Hệ thống lọc danh sách quyền theo tên hoặc mã."
+    ],
+    [
+     "A",
+     "Admin chọn cấp hoặc thu hồi quyền cho vai trò tùy chỉnh và nhấn “Lưu”."
+    ],
+    [
+     "S",
+     "Hệ thống kiểm tra vai trò không phải vai trò hệ thống và còn ít nhất một quyền."
+    ],
+    [
+     "S",
+     "Hệ thống lưu tập quyền mới của vai trò và thông báo “Cập nhật thành công”."
+    ]
+   ],
+   "alt": [
+    [
+     "1a. Không đủ quyền identity.roles.read",
+     "Hệ thống ẩn menu; nếu truy cập trực tiếp thì trả lỗi 403."
+    ],
+    [
+     "6a. Không có quyền phù hợp từ khóa",
+     "Hệ thống hiển thị “Không có quyền phù hợp.”"
+    ],
+    [
+     "7a. Admin chọn “Tạo vai trò”",
+     "Admin nhập mã, tên, mô tả và chọn quyền; hệ thống kiểm tra mã chưa tồn tại rồi tạo vai trò tùy chỉnh."
+    ],
+    [
+     "8a. Vai trò là vai trò hệ thống",
+     "Hệ thống không cho phép thay đổi và giữ nguyên tập quyền."
+    ],
+    [
+     "8b. Vai trò không còn quyền nào",
+     "Hệ thống báo vai trò phải có ít nhất một quyền, quay lại bước 7."
+    ]
+   ]
+  }
+ },
+ {
+  "t": "placeholder",
+  "text": "[Chèn sơ đồ hoạt động AD-UC08 – Quản lý vai trò & quyền]",
+  "caption": "Hình 4.8. Sơ đồ hoạt động AD-UC08 – Quản lý vai trò & quyền"
+ },
+ {
+  "t": "placeholder",
+  "text": "[Chèn sơ đồ tuần tự SD-UC08 – Quản lý vai trò & quyền]",
+  "caption": "Hình 4.9. Sơ đồ tuần tự SD-UC08 – Quản lý vai trò & quyền"
+ },
+ {
+  "t": "h3",
+  "text": "4.2.5. UC13 – Duyệt và quản lý cửa hàng"
+ },
+ {
+  "t": "caption",
+  "text": "Bảng 4.7. Đặc tả use case UC13 – Duyệt và quản lý cửa hàng"
+ },
+ {
+  "t": "spec",
+  "uc": {
+   "code": "UC13",
+   "name": "Duyệt và quản lý cửa hàng",
+   "group": "Cổng quản trị",
+   "desc": "Quản trị nền tảng xem các cửa hàng chờ xác minh, duyệt hoặc từ chối kèm lý do, và tạm ngưng / khôi phục cửa hàng đang hoạt động.",
+   "actor": "Platform Admin",
+   "sub": "Merchant (nhận thông báo)",
+   "pre": "Admin đã đăng nhập và có quyền quản lý cửa hàng; có cửa hàng ở trạng thái PENDING_VERIFICATION.",
+   "post": "Cửa hàng chuyển sang ACTIVE (ghi verifiedAt, verifiedBy) hoặc REJECTED/SUSPENDED kèm mã lý do; người thay đổi và thời điểm được ghi nhận; chủ cửa hàng được thông báo.",
+   "main": [
+    [
+     "A",
+     "Admin mở “Quản lý cửa hàng”."
+    ],
+    [
+     "S",
+     "Hệ thống hiển thị danh sách cửa hàng, cho phép lọc theo trạng thái và tìm theo mã/tên."
+    ],
+    [
+     "A",
+     "Admin chọn một cửa hàng đang chờ xác minh."
+    ],
+    [
+     "S",
+     "Hệ thống hiển thị chi tiết: tên kinh doanh, mã số thuế, người liên hệ, địa chỉ lấy hàng."
+    ],
+    [
+     "A",
+     "Admin kiểm tra thông tin và chọn “Duyệt”."
+    ],
+    [
+     "S",
+     "Hệ thống kiểm tra trạng thái hiện tại cho phép chuyển sang ACTIVE."
+    ],
+    [
+     "S",
+     "Hệ thống cập nhật trạng thái ACTIVE, ghi verifiedAt, verifiedBy, statusChangedAt."
+    ],
+    [
+     "S",
+     "Hệ thống thông báo cho chủ cửa hàng và hiển thị “Duyệt cửa hàng thành công”."
+    ]
+   ],
+   "alt": [
+    [
+     "5a. Admin chọn “Từ chối”",
+     "Admin chọn mã lý do (thiếu giấy tờ, thông tin không hợp lệ…) và nhập chi tiết; hệ thống chuyển REJECTED và thông báo cho chủ cửa hàng."
+    ],
+    [
+     "5b. Admin tạm ngưng cửa hàng đang hoạt động",
+     "Hệ thống yêu cầu lý do và chuyển SUSPENDED; cửa hàng không thể tạo đơn mới."
+    ],
+    [
+     "5c. Admin khôi phục cửa hàng bị tạm ngưng",
+     "Hệ thống chuyển lại ACTIVE."
+    ],
+    [
+     "6a. Trạng thái đã bị người khác thay đổi",
+     "Hệ thống báo xung đột dữ liệu và tải lại chi tiết."
+    ]
+   ],
+   "activity": [
+    [
+     "A",
+     "Mở Quản lý cửa hàng"
+    ],
+    [
+     "S",
+     "Hiển thị danh sách, lọc theo trạng thái"
+    ],
+    [
+     "A",
+     "Chọn cửa hàng chờ xác minh"
+    ],
+    [
+     "S",
+     "Hiển thị chi tiết cửa hàng"
+    ],
+    [
+     "A",
+     "Chọn Duyệt hoặc Từ chối"
+    ],
+    [
+     "?",
+     "Duyệt?",
+     [
+      "S",
+      "Yêu cầu lý do, chuyển REJECTED, thông báo"
+     ],
+     "end"
+    ],
+    [
+     "S",
+     "Kiểm tra trạng thái cho phép chuyển"
+    ],
+    [
+     "?",
+     "Hợp lệ?",
+     [
+      "S",
+      "Báo xung đột, tải lại chi tiết"
+     ],
+     3
+    ],
+    [
+     "S",
+     "Chuyển ACTIVE, ghi người duyệt"
+    ],
+    [
+     "S",
+     "Thông báo cho chủ cửa hàng"
+    ]
+   ],
+   "seq": {
+    "parts": [
+     [
+      "actor",
+      "Platform Admin"
+     ],
+     [
+      "boundary",
+      "GD_QuanLyCuaHang"
+     ],
+     [
+      "control",
+      "CTRL_CuaHang"
+     ],
+     [
+      "entity",
+      "Merchant"
+     ],
+     [
+      "system",
+      "Dịch vụ thông báo"
+     ]
+    ],
+    "msgs": [
+     [
+      0,
+      1,
+      "Mở Quản lý cửa hàng, lọc Chờ xác minh"
+     ],
+     [
+      1,
+      2,
+      "list(status=PENDING_VERIFICATION)"
+     ],
+     [
+      2,
+      3,
+      "findByStatus(...)"
+     ],
+     [
+      3,
+      2,
+      "merchants[]",
+      "ret"
+     ],
+     [
+      0,
+      1,
+      "Chọn cửa hàng, nhấn Duyệt"
+     ],
+     [
+      1,
+      2,
+      "verify(merchantId)"
+     ],
+     [
+      2,
+      3,
+      "findById(merchantId)"
+     ],
+     [
+      3,
+      2,
+      "merchant",
+      "ret"
+     ],
+     [
+      2,
+      2,
+      "Kiểm tra chuyển trạng thái hợp lệ"
+     ],
+     [
+      2,
+      3,
+      "update(status=ACTIVE, verifiedAt, verifiedBy)"
+     ],
+     [
+      2,
+      4,
+      "notify(owner, MERCHANT_VERIFIED)"
+     ],
+     [
+      2,
+      1,
+      "ok",
+      "ret"
+     ],
+     [
+      1,
+      0,
+      "Thông báo duyệt thành công"
+     ]
+    ]
+   }
+  }
+ },
+ {
+  "t": "placeholder",
+  "text": "[Chèn sơ đồ hoạt động AD-UC13 – Duyệt và quản lý cửa hàng]",
+  "caption": "Hình 4.10. Sơ đồ hoạt động AD-UC13 – Duyệt và quản lý cửa hàng"
+ },
+ {
+  "t": "placeholder",
+  "text": "[Chèn sơ đồ tuần tự SD-UC13 – Duyệt và quản lý cửa hàng]",
+  "caption": "Hình 4.11. Sơ đồ tuần tự SD-UC13 – Duyệt và quản lý cửa hàng"
+ },
+ {
+  "t": "h3",
+  "text": "4.2.6. UC14 – Tra cứu vận đơn"
+ },
+ {
+  "t": "caption",
+  "text": "Bảng 4.8. Đặc tả use case UC14 – Tra cứu vận đơn"
+ },
+ {
+  "t": "spec",
+  "uc": {
+   "code": "UC14",
+   "name": "Tra cứu vận đơn",
+   "group": "Cổng khách hàng",
+   "desc": "Người dùng (không cần đăng nhập) tra cứu vận đơn bằng mã vận đơn để xem trạng thái hiện tại, tiến trình và hành trình vận đơn (include UC14.1 Xem hành trình vận đơn).",
+   "actor": "Public User (Guest, Customer, Merchant)",
+   "sub": "Không",
+   "pre": "Người dùng có mã vận đơn.",
+   "post": "Hệ thống hiển thị trạng thái, thanh tiến trình, thời gian giao dự kiến và các sự kiện hành trình theo thứ tự thời gian.",
+   "main": [
+    [
+     "A",
+     "Người dùng truy cập “Tra cứu vận đơn”."
+    ],
+    [
+     "S",
+     "Hệ thống hiển thị ô nhập mã vận đơn."
+    ],
+    [
+     "A",
+     "Người dùng nhập mã vận đơn và nhấn “Tra cứu”."
+    ],
+    [
+     "S",
+     "Hệ thống kiểm tra định dạng mã vận đơn."
+    ],
+    [
+     "S",
+     "Hệ thống tìm vận đơn theo mã."
+    ],
+    [
+     "S",
+     "Hệ thống lấy các sự kiện hành trình (include Xem hành trình vận đơn)."
+    ],
+    [
+     "S",
+     "Hệ thống hiển thị trạng thái hiện tại, các bước tiến trình, thời gian giao dự kiến và timeline sự kiện."
+    ]
+   ],
+   "alt": [
+    [
+     "4a. Mã vận đơn trống hoặc sai định dạng",
+     "Hệ thống báo lỗi, quay lại bước 3."
+    ],
+    [
+     "5a. Không tìm thấy vận đơn",
+     "Hệ thống thông báo “Vận đơn không tồn tại”."
+    ],
+    [
+     "7a. Người tra cứu không phải chủ vận đơn",
+     "Hệ thống chỉ hiển thị thông tin rút gọn, ẩn số điện thoại và địa chỉ chi tiết của người gửi, người nhận."
+    ]
+   ],
+   "activity": [
+    [
+     "A",
+     "Truy cập Tra cứu vận đơn"
+    ],
+    [
+     "S",
+     "Hiển thị ô nhập mã vận đơn"
+    ],
+    [
+     "A",
+     "Nhập mã vận đơn, nhấn Tra cứu"
+    ],
+    [
+     "S",
+     "Kiểm tra định dạng mã"
+    ],
+    [
+     "?",
+     "Hợp lệ?",
+     [
+      "S",
+      "Báo lỗi mã vận đơn"
+     ],
+     2
+    ],
+    [
+     "S",
+     "Tìm vận đơn theo mã"
+    ],
+    [
+     "?",
+     "Tồn tại?",
+     [
+      "S",
+      "Thông báo vận đơn không tồn tại"
+     ],
+     "end"
+    ],
+    [
+     "S",
+     "Lấy sự kiện hành trình"
+    ],
+    [
+     "S",
+     "Hiển thị trạng thái, tiến trình, timeline"
+    ]
+   ],
+   "seq": {
+    "parts": [
+     [
+      "actor",
+      "Người tra cứu"
+     ],
+     [
+      "boundary",
+      "GD_TraCuuVanDon"
+     ],
+     [
+      "control",
+      "CTRL_VanDon"
+     ],
+     [
+      "entity",
+      "Shipment"
+     ],
+     [
+      "entity",
+      "ShipmentEvent"
+     ]
+    ],
+    "msgs": [
+     [
+      0,
+      1,
+      "Nhập mã vận đơn, nhấn Tra cứu"
+     ],
+     [
+      1,
+      2,
+      "track(trackingCode)"
+     ],
+     [
+      2,
+      3,
+      "findByTrackingCode(code)"
+     ],
+     [
+      3,
+      2,
+      "shipment",
+      "ret"
+     ],
+     [
+      2,
+      4,
+      "findByShipment(id) order by occurredAt"
+     ],
+     [
+      4,
+      2,
+      "events[]",
+      "ret"
+     ],
+     [
+      2,
+      2,
+      "Ẩn thông tin cá nhân nếu không phải chủ đơn"
+     ],
+     [
+      2,
+      1,
+      "trackingView",
+      "ret"
+     ],
+     [
+      1,
+      0,
+      "Hiển thị trạng thái và timeline"
+     ],
+     [
+      2,
+      1,
+      "404 – không tìm thấy",
+      "ret"
+     ],
+     [
+      1,
+      0,
+      "Thông báo vận đơn không tồn tại"
+     ]
+    ],
+    "frags": [
+     [
+      4,
+      10,
+      "alt",
+      "[tìm thấy vận đơn]",
+      9,
+      "[không tìm thấy]"
+     ]
+    ]
+   }
+  }
+ },
+ {
+  "t": "placeholder",
+  "text": "[Chèn sơ đồ hoạt động AD-UC14 – Tra cứu vận đơn]",
+  "caption": "Hình 4.12. Sơ đồ hoạt động AD-UC14 – Tra cứu vận đơn"
+ },
+ {
+  "t": "placeholder",
+  "text": "[Chèn sơ đồ tuần tự SD-UC14 – Tra cứu vận đơn]",
+  "caption": "Hình 4.13. Sơ đồ tuần tự SD-UC14 – Tra cứu vận đơn"
+ },
+ {
+  "t": "h3",
+  "text": "4.2.7. UC15 – Tra cứu giá cước"
+ },
+ {
+  "t": "caption",
+  "text": "Bảng 4.9. Đặc tả use case UC15 – Tra cứu giá cước"
  },
  {
   "t": "spec",
@@ -1296,22 +2233,22 @@
   }
  },
  {
-  "t": "img",
-  "path": "/home/user/pavex-backend/docs/report/figures/uc15-act.png",
-  "w": 15,
-  "maxh": 21,
-  "caption": "Hình 4.6. Sơ đồ hoạt động – Tra cứu giá cước"
+  "t": "placeholder",
+  "text": "[Chèn sơ đồ hoạt động AD-UC15 – Tra cứu giá cước]",
+  "caption": "Hình 4.14. Sơ đồ hoạt động AD-UC15 – Tra cứu giá cước"
  },
  {
-  "t": "img",
-  "path": "/home/user/pavex-backend/docs/report/figures/uc15-seq.png",
-  "w": 16,
-  "maxh": 20,
-  "caption": "Hình 4.7. Sơ đồ tuần tự – Tra cứu giá cước"
+  "t": "placeholder",
+  "text": "[Chèn sơ đồ tuần tự SD-UC15 – Tra cứu giá cước]",
+  "caption": "Hình 4.15. Sơ đồ tuần tự SD-UC15 – Tra cứu giá cước"
  },
  {
-  "t": "h4",
-  "text": "Use case tạo đơn hàng (UC17)"
+  "t": "h3",
+  "text": "4.2.8. UC17 – Tạo đơn hàng"
+ },
+ {
+  "t": "caption",
+  "text": "Bảng 4.10. Đặc tả use case UC17 – Tạo đơn hàng"
  },
  {
   "t": "spec",
@@ -1622,448 +2559,222 @@
   }
  },
  {
-  "t": "img",
-  "path": "/home/user/pavex-backend/docs/report/figures/uc17-act.png",
-  "w": 15,
-  "maxh": 21,
-  "caption": "Hình 4.8. Sơ đồ hoạt động – Tạo đơn hàng"
+  "t": "placeholder",
+  "text": "[Chèn sơ đồ hoạt động AD-UC17 – Tạo đơn hàng]",
+  "caption": "Hình 4.16. Sơ đồ hoạt động AD-UC17 – Tạo đơn hàng"
  },
  {
-  "t": "img",
-  "path": "/home/user/pavex-backend/docs/report/figures/uc17-seq.png",
-  "w": 16,
-  "maxh": 20,
-  "caption": "Hình 4.9. Sơ đồ tuần tự – Tạo đơn hàng"
+  "t": "placeholder",
+  "text": "[Chèn sơ đồ tuần tự SD-UC17 – Tạo đơn hàng]",
+  "caption": "Hình 4.17. Sơ đồ tuần tự SD-UC17 – Tạo đơn hàng"
  },
  {
-  "t": "h4",
-  "text": "Use case tra cứu và theo dõi vận đơn (UC14 / UC19)"
+  "t": "h3",
+  "text": "4.2.9. UC25 – Quản lý ca làm việc"
+ },
+ {
+  "t": "caption",
+  "text": "Bảng 4.11. Đặc tả use case UC25 – Quản lý ca làm việc"
  },
  {
   "t": "spec",
   "uc": {
-   "code": "UC14 / UC19",
-   "name": "Tra cứu và theo dõi vận đơn",
-   "group": "Cổng khách hàng",
-   "desc": "Người dùng tra cứu vận đơn bằng mã vận đơn để xem trạng thái hiện tại, tiến trình và hành trình (timeline). Chủ cửa hàng xem thêm chi tiết kiện hàng, cước phí và các lần giao.",
-   "actor": "Public User, Merchant",
-   "sub": "Không",
-   "pre": "Người dùng có mã vận đơn hợp lệ (Merchant: vận đơn thuộc cửa hàng của mình).",
-   "post": "Hệ thống hiển thị trạng thái, thanh tiến trình, thời gian giao dự kiến và các sự kiện hành trình theo thứ tự thời gian.",
+   "code": "UC25",
+   "name": "Quản lý ca làm việc",
+   "group": "Cổng quản trị",
+   "desc": "Trưởng hub hoặc quản lý vận hành tạo ca làm việc tại hub, phân công nhân sự vào ca, hủy ca hoặc đánh dấu vắng mặt.",
+   "actor": "Hub Manager, Operations Manager",
+   "sub": "Operational Staff (nhận lịch ca)",
+   "pre": "Người quản lý đã đăng nhập; hub có nhân sự đang hoạt động.",
+   "post": "Ca làm việc được tạo ở trạng thái SCHEDULED cùng danh sách phân công ASSIGNED; nhân sự nhận được lịch ca.",
    "main": [
     [
      "A",
-     "Người dùng truy cập “Tra cứu vận đơn” (hoặc chọn một đơn trong “Đơn hàng của tôi”)."
+     "Người quản lý mở “Ca làm việc”."
     ],
     [
      "S",
-     "Hệ thống hiển thị ô nhập mã vận đơn."
+     "Hệ thống hiển thị lịch ca theo hub và theo ngày."
     ],
     [
      "A",
-     "Người dùng nhập mã vận đơn và nhấn “Tra cứu”."
+     "Người quản lý chọn “Tạo ca”, nhập mã ca, tên ca, giờ bắt đầu, giờ kết thúc."
     ],
     [
      "S",
-     "Hệ thống kiểm tra định dạng mã vận đơn."
+     "Hệ thống kiểm tra thời gian (kết thúc sau bắt đầu) và mã ca không trùng."
     ],
     [
      "S",
-     "Hệ thống tìm vận đơn theo mã."
-    ],
-    [
-     "S",
-     "Hệ thống lấy các sự kiện hành trình (include Xem hành trình vận đơn)."
-    ],
-    [
-     "S",
-     "Hệ thống hiển thị trạng thái hiện tại, các bước tiến trình, thời gian giao dự kiến và timeline sự kiện."
+     "Hệ thống lưu ca ở trạng thái SCHEDULED."
     ],
     [
      "A",
-     "Merchant chọn “Chi tiết” để xem kiện hàng, cước phí, COD và các lần giao."
+     "Người quản lý chọn “Phân công nhân sự” và chọn các nhân sự."
     ],
     [
      "S",
-     "Hệ thống hiển thị thông tin chi tiết của vận đơn."
+     "Hệ thống kiểm tra nhân sự đang hoạt động, thuộc hub và không trùng ca khác."
+    ],
+    [
+     "S",
+     "Hệ thống tạo các phân công ca (ASSIGNED), gửi thông báo lịch ca cho nhân sự và hiển thị kết quả."
     ]
    ],
    "alt": [
     [
-     "4a. Mã vận đơn trống hoặc sai định dạng",
+     "4a. Thời gian không hợp lệ hoặc trùng mã ca",
      "Hệ thống báo lỗi, quay lại bước 3."
     ],
     [
-     "5a. Không tìm thấy vận đơn",
-     "Hệ thống thông báo “Vận đơn không tồn tại”."
+     "7a. Nhân sự đã có ca trùng thời gian",
+     "Hệ thống cảnh báo và bỏ qua nhân sự đó."
     ],
     [
-     "7a. Người tra cứu không phải chủ vận đơn",
-     "Hệ thống chỉ hiển thị thông tin rút gọn, ẩn số điện thoại và địa chỉ chi tiết."
+     "5a. Hủy ca",
+     "Người quản lý nhập lý do; hệ thống chuyển ca CANCELLED và hủy các phân công."
+    ],
+    [
+     "5b. Đánh dấu vắng mặt",
+     "Người quản lý chọn nhân sự không đến ca; hệ thống chuyển phân công sang ABSENT."
     ]
    ],
    "activity": [
     [
      "A",
-     "Truy cập Tra cứu vận đơn"
+     "Mở Ca làm việc"
     ],
     [
      "S",
-     "Hiển thị ô nhập mã vận đơn"
+     "Hiển thị lịch ca theo hub"
     ],
     [
      "A",
-     "Nhập mã vận đơn, nhấn Tra cứu"
+     "Tạo ca: mã, tên, giờ bắt đầu, kết thúc"
     ],
     [
      "S",
-     "Kiểm tra định dạng mã"
+     "Kiểm tra thời gian, mã ca"
     ],
     [
      "?",
      "Hợp lệ?",
      [
       "S",
-      "Báo lỗi mã vận đơn"
+      "Báo lỗi thời gian / trùng mã"
      ],
      2
     ],
     [
      "S",
-     "Tìm vận đơn theo mã"
-    ],
-    [
-     "?",
-     "Tồn tại?",
-     [
-      "S",
-      "Thông báo vận đơn không tồn tại"
-     ],
-     "end"
-    ],
-    [
-     "S",
-     "Lấy sự kiện hành trình"
-    ],
-    [
-     "S",
-     "Hiển thị trạng thái, tiến trình, timeline"
-    ]
-   ],
-   "seq": {
-    "parts": [
-     [
-      "actor",
-      "Người tra cứu"
-     ],
-     [
-      "boundary",
-      "GD_TraCuuVanDon"
-     ],
-     [
-      "control",
-      "CTRL_VanDon"
-     ],
-     [
-      "entity",
-      "Shipment"
-     ],
-     [
-      "entity",
-      "ShipmentEvent"
-     ]
-    ],
-    "msgs": [
-     [
-      0,
-      1,
-      "Nhập mã vận đơn, nhấn Tra cứu"
-     ],
-     [
-      1,
-      2,
-      "track(trackingCode)"
-     ],
-     [
-      2,
-      3,
-      "findByTrackingCode(code)"
-     ],
-     [
-      3,
-      2,
-      "shipment",
-      "ret"
-     ],
-     [
-      2,
-      4,
-      "findByShipment(id) order by occurredAt"
-     ],
-     [
-      4,
-      2,
-      "events[]",
-      "ret"
-     ],
-     [
-      2,
-      2,
-      "Ẩn thông tin cá nhân nếu không phải chủ đơn"
-     ],
-     [
-      2,
-      1,
-      "trackingView",
-      "ret"
-     ],
-     [
-      1,
-      0,
-      "Hiển thị trạng thái và timeline"
-     ],
-     [
-      2,
-      1,
-      "404 – không tìm thấy",
-      "ret"
-     ],
-     [
-      1,
-      0,
-      "Thông báo vận đơn không tồn tại"
-     ]
-    ],
-    "frags": [
-     [
-      4,
-      10,
-      "alt",
-      "[tìm thấy vận đơn]",
-      9,
-      "[không tìm thấy]"
-     ]
-    ]
-   }
-  }
- },
- {
-  "t": "img",
-  "path": "/home/user/pavex-backend/docs/report/figures/uc14-act.png",
-  "w": 15,
-  "maxh": 21,
-  "caption": "Hình 4.10. Sơ đồ hoạt động – Tra cứu và theo dõi vận đơn"
- },
- {
-  "t": "img",
-  "path": "/home/user/pavex-backend/docs/report/figures/uc14-seq.png",
-  "w": 16,
-  "maxh": 20,
-  "caption": "Hình 4.11. Sơ đồ tuần tự – Tra cứu và theo dõi vận đơn"
- },
- {
-  "t": "h3",
-  "text": "4.2.2. Nhóm use case của cổng quản trị"
- },
- {
-  "t": "h4",
-  "text": "Use case duyệt và quản lý cửa hàng (UC13)"
- },
- {
-  "t": "spec",
-  "uc": {
-   "code": "UC13",
-   "name": "Duyệt và quản lý cửa hàng",
-   "group": "Cổng quản trị",
-   "desc": "Quản trị nền tảng xem các cửa hàng chờ xác minh, duyệt hoặc từ chối kèm lý do, và tạm ngưng / khôi phục cửa hàng đang hoạt động.",
-   "actor": "Platform Admin",
-   "sub": "Merchant (nhận thông báo)",
-   "pre": "Admin đã đăng nhập và có quyền quản lý cửa hàng; có cửa hàng ở trạng thái PENDING_VERIFICATION.",
-   "post": "Cửa hàng chuyển sang ACTIVE (ghi verifiedAt, verifiedBy) hoặc REJECTED/SUSPENDED kèm mã lý do; người thay đổi và thời điểm được ghi nhận; chủ cửa hàng được thông báo.",
-   "main": [
-    [
-     "A",
-     "Admin mở “Quản lý cửa hàng”."
-    ],
-    [
-     "S",
-     "Hệ thống hiển thị danh sách cửa hàng, cho phép lọc theo trạng thái và tìm theo mã/tên."
+     "Lưu ca SCHEDULED"
     ],
     [
      "A",
-     "Admin chọn một cửa hàng đang chờ xác minh."
+     "Chọn nhân sự để phân công"
     ],
     [
      "S",
-     "Hệ thống hiển thị chi tiết: tên kinh doanh, mã số thuế, người liên hệ, địa chỉ lấy hàng."
-    ],
-    [
-     "A",
-     "Admin kiểm tra thông tin và chọn “Duyệt”."
-    ],
-    [
-     "S",
-     "Hệ thống kiểm tra trạng thái hiện tại cho phép chuyển sang ACTIVE."
-    ],
-    [
-     "S",
-     "Hệ thống cập nhật trạng thái ACTIVE, ghi verifiedAt, verifiedBy, statusChangedAt."
-    ],
-    [
-     "S",
-     "Hệ thống thông báo cho chủ cửa hàng và hiển thị “Duyệt cửa hàng thành công”."
-    ]
-   ],
-   "alt": [
-    [
-     "5a. Admin chọn “Từ chối”",
-     "Admin chọn mã lý do (thiếu giấy tờ, thông tin không hợp lệ…) và nhập chi tiết; hệ thống chuyển REJECTED và thông báo cho chủ cửa hàng."
-    ],
-    [
-     "5b. Admin tạm ngưng cửa hàng đang hoạt động",
-     "Hệ thống yêu cầu lý do và chuyển SUSPENDED; cửa hàng không thể tạo đơn mới."
-    ],
-    [
-     "5c. Admin khôi phục cửa hàng bị tạm ngưng",
-     "Hệ thống chuyển lại ACTIVE."
-    ],
-    [
-     "6a. Trạng thái đã bị người khác thay đổi",
-     "Hệ thống báo xung đột dữ liệu và tải lại chi tiết."
-    ]
-   ],
-   "activity": [
-    [
-     "A",
-     "Mở Quản lý cửa hàng"
-    ],
-    [
-     "S",
-     "Hiển thị danh sách, lọc theo trạng thái"
-    ],
-    [
-     "A",
-     "Chọn cửa hàng chờ xác minh"
-    ],
-    [
-     "S",
-     "Hiển thị chi tiết cửa hàng"
-    ],
-    [
-     "A",
-     "Chọn Duyệt hoặc Từ chối"
-    ],
-    [
-     "?",
-     "Duyệt?",
-     [
-      "S",
-      "Yêu cầu lý do, chuyển REJECTED, thông báo"
-     ],
-     "end"
-    ],
-    [
-     "S",
-     "Kiểm tra trạng thái cho phép chuyển"
+     "Kiểm tra nhân sự thuộc hub, không trùng ca"
     ],
     [
      "?",
      "Hợp lệ?",
      [
       "S",
-      "Báo xung đột, tải lại chi tiết"
+      "Cảnh báo trùng ca, bỏ qua nhân sự"
      ],
-     3
+     6
     ],
     [
      "S",
-     "Chuyển ACTIVE, ghi người duyệt"
-    ],
-    [
-     "S",
-     "Thông báo cho chủ cửa hàng"
+     "Tạo phân công ca, thông báo nhân sự"
     ]
    ],
    "seq": {
     "parts": [
      [
       "actor",
-      "Platform Admin"
+      "Hub Manager"
      ],
      [
       "boundary",
-      "GD_QuanLyCuaHang"
+      "GD_CaLamViec"
      ],
      [
       "control",
-      "CTRL_CuaHang"
+      "CTRL_CaLamViec"
      ],
      [
       "entity",
-      "Merchant"
+      "WorkShift"
+     ],
+     [
+      "entity",
+      "WorkforceShiftAssignment"
      ],
      [
       "system",
-      "Dịch vụ thông báo"
+      "Ứng dụng vận hành"
      ]
     ],
     "msgs": [
      [
       0,
       1,
-      "Mở Quản lý cửa hàng, lọc Chờ xác minh"
+      "Nhập thông tin ca, nhấn Tạo"
      ],
      [
       1,
       2,
-      "list(status=PENDING_VERIFICATION)"
+      "createShift(hubId, code, name, startsAt, endsAt)"
+     ],
+     [
+      2,
+      2,
+      "Kiểm tra thời gian, mã ca"
      ],
      [
       2,
       3,
-      "findByStatus(...)"
+      "save(SCHEDULED, createdBy)"
      ],
      [
       3,
       2,
-      "merchants[]",
+      "shiftId",
       "ret"
      ],
      [
       0,
       1,
-      "Chọn cửa hàng, nhấn Duyệt"
+      "Chọn nhân sự, nhấn Phân công"
      ],
      [
       1,
       2,
-      "verify(merchantId)"
-     ],
-     [
-      2,
-      3,
-      "findById(merchantId)"
-     ],
-     [
-      3,
-      2,
-      "merchant",
-      "ret"
-     ],
-     [
-      2,
-      2,
-      "Kiểm tra chuyển trạng thái hợp lệ"
-     ],
-     [
-      2,
-      3,
-      "update(status=ACTIVE, verifiedAt, verifiedBy)"
+      "assignMembers(shiftId, memberIds)"
      ],
      [
       2,
       4,
-      "notify(owner, MERCHANT_VERIFIED)"
+      "existsOverlap(memberId, startsAt, endsAt)"
+     ],
+     [
+      4,
+      2,
+      "false",
+      "ret"
+     ],
+     [
+      2,
+      4,
+      "save(ASSIGNED, assignedBy)"
+     ],
+     [
+      2,
+      5,
+      "notify(member, shift)"
      ],
      [
       2,
@@ -2074,29 +2785,37 @@
      [
       1,
       0,
-      "Thông báo duyệt thành công"
+      "Hiển thị lịch ca đã phân công"
+     ]
+    ],
+    "frags": [
+     [
+      7,
+      10,
+      "loop",
+      "[với mỗi nhân sự được chọn]"
      ]
     ]
    }
   }
  },
  {
-  "t": "img",
-  "path": "/home/user/pavex-backend/docs/report/figures/uc13-act.png",
-  "w": 15,
-  "maxh": 21,
-  "caption": "Hình 4.12. Sơ đồ hoạt động – Duyệt và quản lý cửa hàng"
+  "t": "placeholder",
+  "text": "[Chèn sơ đồ hoạt động AD-UC25 – Quản lý ca làm việc]",
+  "caption": "Hình 4.18. Sơ đồ hoạt động AD-UC25 – Quản lý ca làm việc"
  },
  {
-  "t": "img",
-  "path": "/home/user/pavex-backend/docs/report/figures/uc13-seq.png",
-  "w": 16,
-  "maxh": 20,
-  "caption": "Hình 4.13. Sơ đồ tuần tự – Duyệt và quản lý cửa hàng"
+  "t": "placeholder",
+  "text": "[Chèn sơ đồ tuần tự SD-UC25 – Quản lý ca làm việc]",
+  "caption": "Hình 4.19. Sơ đồ tuần tự SD-UC25 – Quản lý ca làm việc"
  },
  {
-  "t": "h4",
-  "text": "Use case điều phối công việc (UC31)"
+  "t": "h3",
+  "text": "4.2.10. UC31 – Điều phối công việc"
+ },
+ {
+  "t": "caption",
+  "text": "Bảng 4.12. Đặc tả use case UC31 – Điều phối công việc"
  },
  {
   "t": "spec",
@@ -2324,762 +3043,30 @@
   }
  },
  {
-  "t": "img",
-  "path": "/home/user/pavex-backend/docs/report/figures/uc31-act.png",
-  "w": 15,
-  "maxh": 21,
-  "caption": "Hình 4.14. Sơ đồ hoạt động – Điều phối công việc"
+  "t": "placeholder",
+  "text": "[Chèn sơ đồ hoạt động AD-UC31 – Điều phối công việc]",
+  "caption": "Hình 4.20. Sơ đồ hoạt động AD-UC31 – Điều phối công việc"
  },
  {
-  "t": "img",
-  "path": "/home/user/pavex-backend/docs/report/figures/uc31-seq.png",
-  "w": 16,
-  "maxh": 20,
-  "caption": "Hình 4.15. Sơ đồ tuần tự – Điều phối công việc"
- },
- {
-  "t": "h4",
-  "text": "Use case xử lý yêu cầu ngoại lệ (UC40)"
- },
- {
-  "t": "spec",
-  "uc": {
-   "code": "UC40",
-   "name": "Xử lý yêu cầu ngoại lệ",
-   "group": "Cổng quản trị",
-   "desc": "Điều phối viên hub xem và xử lý các yêu cầu ngoại lệ của vận đơn (hoàn hàng, chuyển tiếp địa chỉ mới, giao lại, hủy vận đơn): phê duyệt hoặc từ chối, định tuyến lại khi cần và hoàn tất yêu cầu.",
-   "actor": "Hub Dispatch",
-   "sub": "Merchant (người gửi yêu cầu)",
-   "pre": "Điều phối viên đã đăng nhập; có yêu cầu ngoại lệ PENDING thuộc hub.",
-   "post": "Yêu cầu ở trạng thái COMPLETED hoặc REJECTED với ghi chú duyệt; nếu cần định tuyến lại, vận đơn có lộ trình và giữ chỗ tải mới; người yêu cầu được thông báo.",
-   "main": [
-    [
-     "A",
-     "Điều phối viên mở “Yêu cầu ngoại lệ”."
-    ],
-    [
-     "S",
-     "Hệ thống hiển thị các yêu cầu đang chờ của hub."
-    ],
-    [
-     "A",
-     "Điều phối viên chọn một yêu cầu."
-    ],
-    [
-     "S",
-     "Hệ thống hiển thị loại yêu cầu, lý do, vận đơn liên quan và địa chỉ mới (nếu có)."
-    ],
-    [
-     "A",
-     "Điều phối viên chọn “Phê duyệt” và nhập ghi chú."
-    ],
-    [
-     "S",
-     "Hệ thống kiểm tra vận đơn còn cho phép thay đổi và chuyển yêu cầu sang APPROVED."
-    ],
-    [
-     "S",
-     "Nếu cần định tuyến lại: hệ thống giải phóng giữ chỗ cũ, tìm lộ trình và giữ chỗ tải mới."
-    ],
-    [
-     "S",
-     "Hệ thống cập nhật vận đơn theo loại yêu cầu (chiều hoàn, người nhận mới, giao lại hoặc hủy) và tạo công việc tương ứng."
-    ],
-    [
-     "S",
-     "Hệ thống chuyển yêu cầu sang COMPLETED và thông báo cho người yêu cầu."
-    ]
-   ],
-   "alt": [
-    [
-     "5a. Điều phối viên chọn “Từ chối”",
-     "Hệ thống yêu cầu ghi chú, chuyển REJECTED và thông báo cho người yêu cầu."
-    ],
-    [
-     "6a. Vận đơn đã giao hoặc đã hủy",
-     "Hệ thống không cho phê duyệt và thông báo lý do."
-    ],
-    [
-     "7a. Không tìm được lộ trình mới",
-     "Yêu cầu giữ APPROVED, vận đơn ở trạng thái định tuyến lại thất bại và được cảnh báo cho điều phối viên."
-    ]
-   ],
-   "activity": [
-    [
-     "A",
-     "Mở danh sách yêu cầu ngoại lệ"
-    ],
-    [
-     "S",
-     "Hiển thị yêu cầu đang chờ"
-    ],
-    [
-     "A",
-     "Chọn yêu cầu, xem chi tiết"
-    ],
-    [
-     "A",
-     "Chọn Phê duyệt hoặc Từ chối"
-    ],
-    [
-     "?",
-     "Phê duyệt?",
-     [
-      "S",
-      "Ghi chú, chuyển REJECTED, thông báo"
-     ],
-     "end"
-    ],
-    [
-     "S",
-     "Kiểm tra vận đơn còn cho phép thay đổi"
-    ],
-    [
-     "?",
-     "Cho phép?",
-     [
-      "S",
-      "Thông báo không thể phê duyệt"
-     ],
-     "end"
-    ],
-    [
-     "S",
-     "Chuyển APPROVED, định tuyến lại nếu cần"
-    ],
-    [
-     "S",
-     "Cập nhật vận đơn, tạo công việc"
-    ],
-    [
-     "S",
-     "Chuyển COMPLETED, thông báo người yêu cầu"
-    ]
-   ],
-   "seq": {
-    "parts": [
-     [
-      "actor",
-      "Hub Dispatch"
-     ],
-     [
-      "boundary",
-      "GD_YeuCauNgoaiLe"
-     ],
-     [
-      "control",
-      "CTRL_NgoaiLe"
-     ],
-     [
-      "entity",
-      "ShipmentExceptionRequest"
-     ],
-     [
-      "control",
-      "CTRL_DinhTuyen"
-     ],
-     [
-      "entity",
-      "Shipment"
-     ]
-    ],
-    "msgs": [
-     [
-      0,
-      1,
-      "Chọn yêu cầu, nhấn Phê duyệt"
-     ],
-     [
-      1,
-      2,
-      "approve(requestId, note)"
-     ],
-     [
-      2,
-      3,
-      "findById(requestId)"
-     ],
-     [
-      3,
-      2,
-      "request",
-      "ret"
-     ],
-     [
-      2,
-      5,
-      "checkModifiable(shipmentId)"
-     ],
-     [
-      5,
-      2,
-      "modifiable",
-      "ret"
-     ],
-     [
-      2,
-      3,
-      "update(APPROVED, reviewedBy, reviewedAt)"
-     ],
-     [
-      2,
-      4,
-      "reroute(shipmentId, newEndpoint)"
-     ],
-     [
-      4,
-      2,
-      "routeRevision mới",
-      "ret"
-     ],
-     [
-      2,
-      5,
-      "apply(kind: RETURN / FORWARD / REDELIVERY / CANCEL)"
-     ],
-     [
-      2,
-      3,
-      "update(COMPLETED, completedBy, completedAt)"
-     ],
-     [
-      2,
-      1,
-      "ok",
-      "ret"
-     ],
-     [
-      1,
-      0,
-      "Thông báo xử lý thành công"
-     ]
-    ],
-    "frags": [
-     [
-      7,
-      8,
-      "opt",
-      "[routingRequired = true]"
-     ]
-    ]
-   }
-  }
- },
- {
-  "t": "img",
-  "path": "/home/user/pavex-backend/docs/report/figures/uc40-act.png",
-  "w": 15,
-  "maxh": 21,
-  "caption": "Hình 4.16. Sơ đồ hoạt động – Xử lý yêu cầu ngoại lệ"
- },
- {
-  "t": "img",
-  "path": "/home/user/pavex-backend/docs/report/figures/uc40-seq.png",
-  "w": 16,
-  "maxh": 20,
-  "caption": "Hình 4.17. Sơ đồ tuần tự – Xử lý yêu cầu ngoại lệ"
- },
- {
-  "t": "h4",
-  "text": "Use case quản lý ca làm việc (UC25)"
- },
- {
-  "t": "spec",
-  "uc": {
-   "code": "UC25",
-   "name": "Quản lý ca làm việc",
-   "group": "Cổng quản trị",
-   "desc": "Trưởng hub hoặc quản lý vận hành tạo ca làm việc tại hub, phân công nhân sự vào ca, hủy ca hoặc đánh dấu vắng mặt.",
-   "actor": "Hub Manager, Operations Manager",
-   "sub": "Operational Staff (nhận lịch ca)",
-   "pre": "Người quản lý đã đăng nhập; hub có nhân sự đang hoạt động.",
-   "post": "Ca làm việc được tạo ở trạng thái SCHEDULED cùng danh sách phân công ASSIGNED; nhân sự nhận được lịch ca.",
-   "main": [
-    [
-     "A",
-     "Người quản lý mở “Ca làm việc”."
-    ],
-    [
-     "S",
-     "Hệ thống hiển thị lịch ca theo hub và theo ngày."
-    ],
-    [
-     "A",
-     "Người quản lý chọn “Tạo ca”, nhập mã ca, tên ca, giờ bắt đầu, giờ kết thúc."
-    ],
-    [
-     "S",
-     "Hệ thống kiểm tra thời gian (kết thúc sau bắt đầu) và mã ca không trùng."
-    ],
-    [
-     "S",
-     "Hệ thống lưu ca ở trạng thái SCHEDULED."
-    ],
-    [
-     "A",
-     "Người quản lý chọn “Phân công nhân sự” và chọn các nhân sự."
-    ],
-    [
-     "S",
-     "Hệ thống kiểm tra nhân sự đang hoạt động, thuộc hub và không trùng ca khác."
-    ],
-    [
-     "S",
-     "Hệ thống tạo các phân công ca (ASSIGNED), gửi thông báo lịch ca cho nhân sự và hiển thị kết quả."
-    ]
-   ],
-   "alt": [
-    [
-     "4a. Thời gian không hợp lệ hoặc trùng mã ca",
-     "Hệ thống báo lỗi, quay lại bước 3."
-    ],
-    [
-     "7a. Nhân sự đã có ca trùng thời gian",
-     "Hệ thống cảnh báo và bỏ qua nhân sự đó."
-    ],
-    [
-     "5a. Hủy ca",
-     "Người quản lý nhập lý do; hệ thống chuyển ca CANCELLED và hủy các phân công."
-    ],
-    [
-     "5b. Đánh dấu vắng mặt",
-     "Người quản lý chọn nhân sự không đến ca; hệ thống chuyển phân công sang ABSENT."
-    ]
-   ],
-   "activity": [
-    [
-     "A",
-     "Mở Ca làm việc"
-    ],
-    [
-     "S",
-     "Hiển thị lịch ca theo hub"
-    ],
-    [
-     "A",
-     "Tạo ca: mã, tên, giờ bắt đầu, kết thúc"
-    ],
-    [
-     "S",
-     "Kiểm tra thời gian, mã ca"
-    ],
-    [
-     "?",
-     "Hợp lệ?",
-     [
-      "S",
-      "Báo lỗi thời gian / trùng mã"
-     ],
-     2
-    ],
-    [
-     "S",
-     "Lưu ca SCHEDULED"
-    ],
-    [
-     "A",
-     "Chọn nhân sự để phân công"
-    ],
-    [
-     "S",
-     "Kiểm tra nhân sự thuộc hub, không trùng ca"
-    ],
-    [
-     "?",
-     "Hợp lệ?",
-     [
-      "S",
-      "Cảnh báo trùng ca, bỏ qua nhân sự"
-     ],
-     6
-    ],
-    [
-     "S",
-     "Tạo phân công ca, thông báo nhân sự"
-    ]
-   ],
-   "seq": {
-    "parts": [
-     [
-      "actor",
-      "Hub Manager"
-     ],
-     [
-      "boundary",
-      "GD_CaLamViec"
-     ],
-     [
-      "control",
-      "CTRL_CaLamViec"
-     ],
-     [
-      "entity",
-      "WorkShift"
-     ],
-     [
-      "entity",
-      "WorkforceShiftAssignment"
-     ],
-     [
-      "system",
-      "Ứng dụng vận hành"
-     ]
-    ],
-    "msgs": [
-     [
-      0,
-      1,
-      "Nhập thông tin ca, nhấn Tạo"
-     ],
-     [
-      1,
-      2,
-      "createShift(hubId, code, name, startsAt, endsAt)"
-     ],
-     [
-      2,
-      2,
-      "Kiểm tra thời gian, mã ca"
-     ],
-     [
-      2,
-      3,
-      "save(SCHEDULED, createdBy)"
-     ],
-     [
-      3,
-      2,
-      "shiftId",
-      "ret"
-     ],
-     [
-      0,
-      1,
-      "Chọn nhân sự, nhấn Phân công"
-     ],
-     [
-      1,
-      2,
-      "assignMembers(shiftId, memberIds)"
-     ],
-     [
-      2,
-      4,
-      "existsOverlap(memberId, startsAt, endsAt)"
-     ],
-     [
-      4,
-      2,
-      "false",
-      "ret"
-     ],
-     [
-      2,
-      4,
-      "save(ASSIGNED, assignedBy)"
-     ],
-     [
-      2,
-      5,
-      "notify(member, shift)"
-     ],
-     [
-      2,
-      1,
-      "ok",
-      "ret"
-     ],
-     [
-      1,
-      0,
-      "Hiển thị lịch ca đã phân công"
-     ]
-    ],
-    "frags": [
-     [
-      7,
-      10,
-      "loop",
-      "[với mỗi nhân sự được chọn]"
-     ]
-    ]
-   }
-  }
- },
- {
-  "t": "img",
-  "path": "/home/user/pavex-backend/docs/report/figures/uc25-act.png",
-  "w": 15,
-  "maxh": 21,
-  "caption": "Hình 4.18. Sơ đồ hoạt động – Quản lý ca làm việc"
- },
- {
-  "t": "img",
-  "path": "/home/user/pavex-backend/docs/report/figures/uc25-seq.png",
-  "w": 16,
-  "maxh": 20,
-  "caption": "Hình 4.19. Sơ đồ tuần tự – Quản lý ca làm việc"
- },
- {
-  "t": "h4",
-  "text": "Use case quản lý người dùng và phân quyền (UC06 / UC08)"
- },
- {
-  "t": "spec",
-  "uc": {
-   "code": "UC06 / UC08",
-   "name": "Quản lý người dùng và phân quyền",
-   "group": "Cổng quản trị",
-   "desc": "Quản trị nền tảng tra cứu, lọc và xem chi tiết tài khoản; thay đổi trạng thái tài khoản (hoạt động, tạm khóa, vô hiệu hóa), gán vai trò và phân quyền cho vai trò.",
-   "actor": "Platform Admin",
-   "sub": "Không",
-   "pre": "Admin đã đăng nhập và có quyền identity.users.read / identity.roles.read cùng quyền cập nhật tương ứng.",
-   "post": "Thông tin tài khoản, trạng thái hoặc vai trò được cập nhật; phiên bản dữ liệu tăng; nếu tài khoản bị khóa thì các phiên đăng nhập bị vô hiệu.",
-   "main": [
-    [
-     "A",
-     "Admin mở “Người dùng”."
-    ],
-    [
-     "S",
-     "Hệ thống hiển thị danh sách tài khoản có phân trang: email, tên, vai trò, trạng thái tài khoản, trạng thái hồ sơ, ngày tạo."
-    ],
-    [
-     "A",
-     "Admin tìm theo email/tên và lọc theo vai trò, trạng thái tài khoản, trạng thái hồ sơ."
-    ],
-    [
-     "S",
-     "Hệ thống trả về danh sách đã lọc."
-    ],
-    [
-     "A",
-     "Admin chọn một tài khoản."
-    ],
-    [
-     "S",
-     "Hệ thống hiển thị chi tiết tài khoản, hồ sơ và vai trò."
-    ],
-    [
-     "A",
-     "Admin thay đổi trạng thái hoặc vai trò và nhấn “Lưu”."
-    ],
-    [
-     "S",
-     "Hệ thống kiểm tra quyền thao tác và phiên bản dữ liệu (version)."
-    ],
-    [
-     "S",
-     "Hệ thống cập nhật tài khoản; nếu tài khoản bị khóa thì thu hồi các phiên đăng nhập."
-    ],
-    [
-     "S",
-     "Hệ thống thông báo “Cập nhật thành công”."
-    ]
-   ],
-   "alt": [
-    [
-     "8a. Dữ liệu đã bị thay đổi bởi người khác (xung đột version)",
-     "Hệ thống báo xung đột và tải lại dữ liệu mới nhất."
-    ],
-    [
-     "8b. Admin tự khóa tài khoản của chính mình",
-     "Hệ thống không cho phép."
-    ],
-    [
-     "8c. Sửa hoặc xóa vai trò hệ thống",
-     "Hệ thống không cho phép thay đổi vai trò hệ thống."
-    ],
-    [
-     "1a. Không đủ quyền",
-     "Hệ thống trả lỗi 403 và hiển thị thông báo chưa được cấp quyền."
-    ]
-   ],
-   "activity": [
-    [
-     "A",
-     "Mở Người dùng"
-    ],
-    [
-     "S",
-     "Hiển thị danh sách có phân trang"
-    ],
-    [
-     "A",
-     "Tìm kiếm, lọc theo vai trò / trạng thái"
-    ],
-    [
-     "S",
-     "Trả về danh sách đã lọc"
-    ],
-    [
-     "A",
-     "Chọn tài khoản, đổi trạng thái hoặc vai trò, nhấn Lưu"
-    ],
-    [
-     "S",
-     "Kiểm tra quyền và phiên bản dữ liệu"
-    ],
-    [
-     "?",
-     "Hợp lệ?",
-     [
-      "S",
-      "Báo xung đột / không đủ quyền, tải lại"
-     ],
-     4
-    ],
-    [
-     "S",
-     "Cập nhật tài khoản, thu hồi phiên nếu bị khóa"
-    ],
-    [
-     "S",
-     "Thông báo cập nhật thành công"
-    ]
-   ],
-   "seq": {
-    "parts": [
-     [
-      "actor",
-      "Platform Admin"
-     ],
-     [
-      "boundary",
-      "GD_NguoiDung"
-     ],
-     [
-      "control",
-      "CTRL_NguoiDung"
-     ],
-     [
-      "entity",
-      "UserAccount"
-     ],
-     [
-      "entity",
-      "Role"
-     ],
-     [
-      "entity",
-      "RefreshToken"
-     ]
-    ],
-    "msgs": [
-     [
-      0,
-      1,
-      "Tìm kiếm, lọc người dùng"
-     ],
-     [
-      1,
-      2,
-      "listUsers(page, search, role, status, profileStatus)"
-     ],
-     [
-      2,
-      3,
-      "search(criteria)"
-     ],
-     [
-      3,
-      2,
-      "page<UserListItem>",
-      "ret"
-     ],
-     [
-      0,
-      1,
-      "Đổi trạng thái / vai trò, nhấn Lưu"
-     ],
-     [
-      1,
-      2,
-      "updateUser(userId, status, roles, version)"
-     ],
-     [
-      2,
-      3,
-      "findById(userId)"
-     ],
-     [
-      3,
-      2,
-      "account(version)",
-      "ret"
-     ],
-     [
-      2,
-      2,
-      "Kiểm tra quyền, so sánh version"
-     ],
-     [
-      2,
-      4,
-      "findByCodes(roles)"
-     ],
-     [
-      2,
-      3,
-      "save(status, roles, version + 1)"
-     ],
-     [
-      2,
-      5,
-      "revokeAll(userId) nếu tài khoản bị khóa"
-     ],
-     [
-      2,
-      1,
-      "ok",
-      "ret"
-     ],
-     [
-      1,
-      0,
-      "Thông báo cập nhật thành công"
-     ]
-    ],
-    "frags": [
-     [
-      11,
-      11,
-      "opt",
-      "[status = SUSPENDED hoặc DISABLED]"
-     ]
-    ]
-   }
-  }
- },
- {
-  "t": "img",
-  "path": "/home/user/pavex-backend/docs/report/figures/uc06-act.png",
-  "w": 15,
-  "maxh": 21,
-  "caption": "Hình 4.20. Sơ đồ hoạt động – Quản lý người dùng và phân quyền"
- },
- {
-  "t": "img",
-  "path": "/home/user/pavex-backend/docs/report/figures/uc06-seq.png",
-  "w": 16,
-  "maxh": 20,
-  "caption": "Hình 4.21. Sơ đồ tuần tự – Quản lý người dùng và phân quyền"
+  "t": "placeholder",
+  "text": "[Chèn sơ đồ tuần tự SD-UC31 – Điều phối công việc]",
+  "caption": "Hình 4.21. Sơ đồ tuần tự SD-UC31 – Điều phối công việc"
  },
  {
   "t": "h3",
-  "text": "4.2.3. Nhóm use case của ứng dụng vận hành"
+  "text": "4.2.11. UC33 – Thực hiện công việc"
  },
  {
-  "t": "h4",
-  "text": "Use case thực hiện công việc và quét kiện hàng (UC33 / UC34)"
+  "t": "caption",
+  "text": "Bảng 4.13. Đặc tả use case UC33 – Thực hiện công việc"
  },
  {
   "t": "spec",
   "uc": {
-   "code": "UC33 / UC34",
-   "name": "Thực hiện công việc và quét kiện hàng",
+   "code": "UC33",
+   "name": "Thực hiện công việc",
    "group": "Ứng dụng vận hành",
-   "desc": "Nhân sự vận hành nhận công việc được giao, bắt đầu thực hiện, quét mã từng kiện để chuyển giao trách nhiệm (custody) và cập nhật vị trí, sau đó hoàn thành công việc.",
+   "desc": "Nhân sự vận hành nhận công việc được giao, bắt đầu thực hiện, quét mã từng kiện (include UC34 Quét kiện hàng) để chuyển giao trách nhiệm (custody) và cập nhật vị trí, sau đó hoàn thành công việc.",
    "actor": "Operational Staff (Courier, Line-haul Driver, Warehouse Operator)",
    "sub": "Không",
    "pre": "Nhân sự đã đăng nhập ứng dụng vận hành, đã check-in ca và có công việc ở trạng thái ASSIGNED.",
@@ -3111,7 +3098,7 @@
     ],
     [
      "A",
-     "Nhân sự quét mã từng kiện hàng."
+     "Nhân sự quét mã từng kiện hàng (include UC34 Quét kiện hàng)."
     ],
     [
      "S",
@@ -3339,22 +3326,22 @@
   }
  },
  {
-  "t": "img",
-  "path": "/home/user/pavex-backend/docs/report/figures/uc33-act.png",
-  "w": 15,
-  "maxh": 21,
-  "caption": "Hình 4.22. Sơ đồ hoạt động – Thực hiện công việc và quét kiện hàng"
+  "t": "placeholder",
+  "text": "[Chèn sơ đồ hoạt động AD-UC33 – Thực hiện công việc]",
+  "caption": "Hình 4.22. Sơ đồ hoạt động AD-UC33 – Thực hiện công việc"
  },
  {
-  "t": "img",
-  "path": "/home/user/pavex-backend/docs/report/figures/uc33-seq.png",
-  "w": 16,
-  "maxh": 20,
-  "caption": "Hình 4.23. Sơ đồ tuần tự – Thực hiện công việc và quét kiện hàng"
+  "t": "placeholder",
+  "text": "[Chèn sơ đồ tuần tự SD-UC33 – Thực hiện công việc]",
+  "caption": "Hình 4.23. Sơ đồ tuần tự SD-UC33 – Thực hiện công việc"
  },
  {
-  "t": "h4",
-  "text": "Use case ghi nhận kết quả giao hàng (UC35)"
+  "t": "h3",
+  "text": "4.2.12. UC35 – Ghi nhận kết quả giao hàng"
+ },
+ {
+  "t": "caption",
+  "text": "Bảng 4.14. Đặc tả use case UC35 – Ghi nhận kết quả giao hàng"
  },
  {
   "t": "spec",
@@ -3577,62 +3564,283 @@
   }
  },
  {
-  "t": "img",
-  "path": "/home/user/pavex-backend/docs/report/figures/uc35-act.png",
-  "w": 15,
-  "maxh": 21,
-  "caption": "Hình 4.24. Sơ đồ hoạt động – Ghi nhận kết quả giao hàng"
+  "t": "placeholder",
+  "text": "[Chèn sơ đồ hoạt động AD-UC35 – Ghi nhận kết quả giao hàng]",
+  "caption": "Hình 4.24. Sơ đồ hoạt động AD-UC35 – Ghi nhận kết quả giao hàng"
  },
  {
-  "t": "img",
-  "path": "/home/user/pavex-backend/docs/report/figures/uc35-seq.png",
-  "w": 16,
-  "maxh": 20,
-  "caption": "Hình 4.25. Sơ đồ tuần tự – Ghi nhận kết quả giao hàng"
- },
- {
-  "t": "h2",
-  "text": "4.3. Thiết kế kiến trúc và cơ sở dữ liệu"
+  "t": "placeholder",
+  "text": "[Chèn sơ đồ tuần tự SD-UC35 – Ghi nhận kết quả giao hàng]",
+  "caption": "Hình 4.25. Sơ đồ tuần tự SD-UC35 – Ghi nhận kết quả giao hàng"
  },
  {
   "t": "h3",
-  "text": "4.3.1. Mô hình miền"
+  "text": "4.2.13. UC40 – Xử lý yêu cầu ngoại lệ"
+ },
+ {
+  "t": "caption",
+  "text": "Bảng 4.15. Đặc tả use case UC40 – Xử lý yêu cầu ngoại lệ"
+ },
+ {
+  "t": "spec",
+  "uc": {
+   "code": "UC40",
+   "name": "Xử lý yêu cầu ngoại lệ",
+   "group": "Cổng quản trị",
+   "desc": "Điều phối viên hub xem và xử lý các yêu cầu ngoại lệ của vận đơn (hoàn hàng, chuyển tiếp địa chỉ mới, giao lại, hủy vận đơn): phê duyệt hoặc từ chối, định tuyến lại khi cần và hoàn tất yêu cầu.",
+   "actor": "Hub Dispatch",
+   "sub": "Merchant (người gửi yêu cầu)",
+   "pre": "Điều phối viên đã đăng nhập; có yêu cầu ngoại lệ PENDING thuộc hub.",
+   "post": "Yêu cầu ở trạng thái COMPLETED hoặc REJECTED với ghi chú duyệt; nếu cần định tuyến lại, vận đơn có lộ trình và giữ chỗ tải mới; người yêu cầu được thông báo.",
+   "main": [
+    [
+     "A",
+     "Điều phối viên mở “Yêu cầu ngoại lệ”."
+    ],
+    [
+     "S",
+     "Hệ thống hiển thị các yêu cầu đang chờ của hub."
+    ],
+    [
+     "A",
+     "Điều phối viên chọn một yêu cầu."
+    ],
+    [
+     "S",
+     "Hệ thống hiển thị loại yêu cầu, lý do, vận đơn liên quan và địa chỉ mới (nếu có)."
+    ],
+    [
+     "A",
+     "Điều phối viên chọn “Phê duyệt” và nhập ghi chú."
+    ],
+    [
+     "S",
+     "Hệ thống kiểm tra vận đơn còn cho phép thay đổi và chuyển yêu cầu sang APPROVED."
+    ],
+    [
+     "S",
+     "Nếu cần định tuyến lại: hệ thống giải phóng giữ chỗ cũ, tìm lộ trình và giữ chỗ tải mới."
+    ],
+    [
+     "S",
+     "Hệ thống cập nhật vận đơn theo loại yêu cầu (chiều hoàn, người nhận mới, giao lại hoặc hủy) và tạo công việc tương ứng."
+    ],
+    [
+     "S",
+     "Hệ thống chuyển yêu cầu sang COMPLETED và thông báo cho người yêu cầu."
+    ]
+   ],
+   "alt": [
+    [
+     "5a. Điều phối viên chọn “Từ chối”",
+     "Hệ thống yêu cầu ghi chú, chuyển REJECTED và thông báo cho người yêu cầu."
+    ],
+    [
+     "6a. Vận đơn đã giao hoặc đã hủy",
+     "Hệ thống không cho phê duyệt và thông báo lý do."
+    ],
+    [
+     "7a. Không tìm được lộ trình mới",
+     "Yêu cầu giữ APPROVED, vận đơn ở trạng thái định tuyến lại thất bại và được cảnh báo cho điều phối viên."
+    ]
+   ],
+   "activity": [
+    [
+     "A",
+     "Mở danh sách yêu cầu ngoại lệ"
+    ],
+    [
+     "S",
+     "Hiển thị yêu cầu đang chờ"
+    ],
+    [
+     "A",
+     "Chọn yêu cầu, xem chi tiết"
+    ],
+    [
+     "A",
+     "Chọn Phê duyệt hoặc Từ chối"
+    ],
+    [
+     "?",
+     "Phê duyệt?",
+     [
+      "S",
+      "Ghi chú, chuyển REJECTED, thông báo"
+     ],
+     "end"
+    ],
+    [
+     "S",
+     "Kiểm tra vận đơn còn cho phép thay đổi"
+    ],
+    [
+     "?",
+     "Cho phép?",
+     [
+      "S",
+      "Thông báo không thể phê duyệt"
+     ],
+     "end"
+    ],
+    [
+     "S",
+     "Chuyển APPROVED, định tuyến lại nếu cần"
+    ],
+    [
+     "S",
+     "Cập nhật vận đơn, tạo công việc"
+    ],
+    [
+     "S",
+     "Chuyển COMPLETED, thông báo người yêu cầu"
+    ]
+   ],
+   "seq": {
+    "parts": [
+     [
+      "actor",
+      "Hub Dispatch"
+     ],
+     [
+      "boundary",
+      "GD_YeuCauNgoaiLe"
+     ],
+     [
+      "control",
+      "CTRL_NgoaiLe"
+     ],
+     [
+      "entity",
+      "ShipmentExceptionRequest"
+     ],
+     [
+      "control",
+      "CTRL_DinhTuyen"
+     ],
+     [
+      "entity",
+      "Shipment"
+     ]
+    ],
+    "msgs": [
+     [
+      0,
+      1,
+      "Chọn yêu cầu, nhấn Phê duyệt"
+     ],
+     [
+      1,
+      2,
+      "approve(requestId, note)"
+     ],
+     [
+      2,
+      3,
+      "findById(requestId)"
+     ],
+     [
+      3,
+      2,
+      "request",
+      "ret"
+     ],
+     [
+      2,
+      5,
+      "checkModifiable(shipmentId)"
+     ],
+     [
+      5,
+      2,
+      "modifiable",
+      "ret"
+     ],
+     [
+      2,
+      3,
+      "update(APPROVED, reviewedBy, reviewedAt)"
+     ],
+     [
+      2,
+      4,
+      "reroute(shipmentId, newEndpoint)"
+     ],
+     [
+      4,
+      2,
+      "routeRevision mới",
+      "ret"
+     ],
+     [
+      2,
+      5,
+      "apply(kind: RETURN / FORWARD / REDELIVERY / CANCEL)"
+     ],
+     [
+      2,
+      3,
+      "update(COMPLETED, completedBy, completedAt)"
+     ],
+     [
+      2,
+      1,
+      "ok",
+      "ret"
+     ],
+     [
+      1,
+      0,
+      "Thông báo xử lý thành công"
+     ]
+    ],
+    "frags": [
+     [
+      7,
+      8,
+      "opt",
+      "[routingRequired = true]"
+     ]
+    ]
+   }
+  }
+ },
+ {
+  "t": "placeholder",
+  "text": "[Chèn sơ đồ hoạt động AD-UC40 – Xử lý yêu cầu ngoại lệ]",
+  "caption": "Hình 4.26. Sơ đồ hoạt động AD-UC40 – Xử lý yêu cầu ngoại lệ"
+ },
+ {
+  "t": "placeholder",
+  "text": "[Chèn sơ đồ tuần tự SD-UC40 – Xử lý yêu cầu ngoại lệ]",
+  "caption": "Hình 4.27. Sơ đồ tuần tự SD-UC40 – Xử lý yêu cầu ngoại lệ"
+ },
+ {
+  "t": "h2",
+  "text": "4.3. Mô hình domain"
  },
  {
   "t": "p",
-  "text": "Mô hình miền được thiết kế theo DDD gồm 8 package (bounded context): Identity & Access, Partner, Network, Pricing, Shipment, Exception Handling, Workforce & Operations và Shared Kernel. Quan hệ giữa các entity được biểu diễn bằng association có tên vai trò và bội số; composition (hình thoi đặc) thể hiện phần tử sống và mất cùng aggregate."
+  "text": "Mô hình domain mô tả các khái niệm nghiệp vụ và quan hệ giữa chúng ở mức khái niệm, độc lập với công nghệ cài đặt: mỗi khái niệm chỉ gồm tên và các thuộc tính chính, quan hệ ghi bội số; mô hình không có kiểu dữ liệu, visibility hay phương thức. Mô hình được chia theo thiết kế hướng miền thành các bounded context."
+ },
+ {
+  "t": "h3",
+  "text": "4.3.1. Các bounded context"
  },
  {
   "t": "p",
-  "text": "Sơ đồ package dưới đây thể hiện các bounded context, aggregate root của từng context và quan hệ phụ thuộc «use» giữa chúng. Phụ thuộc luôn đi từ context hạ nguồn (downstream) về context thượng nguồn (upstream): Shipment dùng Partner, Pricing và Network; Workforce & Operations và Exception Handling dùng Shipment và Network; mọi context dùng các value object của Shared Kernel."
+  "text": "Sơ đồ package thể hiện các bounded context, aggregate root của từng context và quan hệ phụ thuộc «use» giữa chúng. Phụ thuộc luôn đi từ context hạ nguồn (downstream) về context thượng nguồn (upstream): Shipment dùng Partner, Pricing và Network; Workforce & Operations và Exception Handling dùng Shipment và Network; mọi context dùng các value object của Shared Kernel."
  },
  {
   "t": "img",
   "path": "/home/user/pavex-backend/docs/report/figures/domain-packages.png",
   "w": 15.5,
   "maxh": 21,
-  "caption": "Hình 4.26. Sơ đồ package các bounded context của PAVEX"
- },
- {
-  "t": "p",
-  "text": "Sơ đồ domain tổng thể gồm toàn bộ 34 aggregate root và entity của hệ thống cùng 56 quan hệ, mỗi lớp được tô màu theo bounded context. Ở mức tổng quan, sơ đồ chỉ thể hiện tên lớp, stereotype và bội số của quan hệ; thuộc tính, phương thức và tên vai trò được trình bày chi tiết trong sơ đồ lớp của từng bounded context (mục 4.3.2)."
- },
- {
-  "t": "landscape_start"
- },
- {
-  "t": "img",
-  "path": "/home/user/pavex-backend/docs/report/figures/domain-overview.png",
-  "w": 24.5,
-  "maxh": 14.5,
-  "caption": "Hình 4.27. Sơ đồ domain tổng thể của hệ thống PAVEX"
- },
- {
-  "t": "landscape_end"
+  "caption": "Hình 4.28. Sơ đồ package các bounded context của PAVEX"
  },
  {
   "t": "caption",
-  "text": "Bảng 4.1. Các bounded context của mô hình miền"
+  "text": "Bảng 4.16. Các bounded context của mô hình domain"
  },
  {
   "t": "table",
@@ -3692,167 +3900,112 @@
  },
  {
   "t": "h3",
-  "text": "4.3.2. Sơ đồ lớp theo bounded context"
+  "text": "4.3.2. Sơ đồ domain tổng thể"
  },
  {
   "t": "p",
-  "text": "Mỗi bounded context được vẽ thành một sơ đồ lớp (khung “class <tên context>”) theo các quy ước sau:"
+  "text": "Sơ đồ domain tổng thể gồm toàn bộ 34 khái niệm (aggregate root và entity) cùng 56 quan hệ của hệ thống, mỗi khái niệm được tô màu theo bounded context."
+ },
+ {
+  "t": "landscape_start"
+ },
+ {
+  "t": "img",
+  "path": "/home/user/pavex-backend/docs/report/figures/domain-overview.png",
+  "w": 24.5,
+  "maxh": 14.5,
+  "caption": "Hình 4.29. Sơ đồ domain tổng thể của hệ thống PAVEX"
+ },
+ {
+  "t": "landscape_end"
+ },
+ {
+  "t": "h2",
+  "text": "4.4. Class diagram toàn hệ thống"
+ },
+ {
+  "t": "p",
+  "text": "Class diagram mô tả cấu trúc tĩnh của hệ thống ở mức thiết kế: các lớp thực thể (từ mô hình domain, bổ sung kiểu dữ liệu, visibility và phương thức) và các lớp điều khiển dùng trong sơ đồ tuần tự. Toàn hệ thống được thể hiện trên một class diagram chung."
+ },
+ {
+  "t": "h3",
+  "text": "4.4.1. Quy ước"
  },
  {
   "t": "bullets",
   "items": [
-   "Lớp có 3 ngăn: tên kèm stereotype DDD («aggregate root», «entity», «value object», «enumeration»), thuộc tính dạng -tên : Kiểu [bội số] và phương thức dạng +tên(tham số) : Kiểu trả về. Phương thức được rút ra từ các use case và các trạng thái của aggregate (ví dụ Merchant.verify(), OperationalAssignment.accept()).",
-   "Association ghi tên vai trò và bội số ở hai đầu; composition (hình thoi đặc) ở phía aggregate root sở hữu vòng đời của phần tử; aggregation (hình thoi rỗng) cho quan hệ gom nhóm lỏng.",
-   "Lớp thuộc context khác được vẽ thu gọn (nền xám) với tên đầy đủ Package::Lớp; quan hệ giữa hai context chỉ vẽ ở sơ đồ của context hạ nguồn.",
-   "Value object và enumeration được dùng làm kiểu thuộc tính nên được liệt kê bên dưới mà không nối đường."
+   "Lớp có ba ngăn: tên kèm stereotype («entity», «control», «enumeration», «value object»), thuộc tính và phương thức.",
+   "Visibility: - (private) cho thuộc tính, + (public) cho phương thức; thuộc tính ghi dạng tên : Kiểu [bội số], phương thức ghi dạng tên(tham số : Kiểu) : Kiểu trả về; phương thức truy vấn của lớp ({static}) được gạch chân.",
+   "Association ghi bội số ở hai đầu; composition (hình thoi đặc) khi phần tử sống và mất cùng lớp tổng thể; aggregation (hình thoi rỗng) cho quan hệ gom nhóm lỏng; generalization chỉ dùng khi có quan hệ kế thừa thực sự trong nghiệp vụ.",
+   "Dependency (nét đứt, mũi tên mở) từ lớp điều khiển tới các lớp thực thể mà nó sử dụng."
   ]
  },
  {
-  "t": "h4",
-  "text": "Sơ đồ lớp – Identity & Access"
+  "t": "h3",
+  "text": "4.4.2. Class diagram"
  },
  {
-  "t": "p",
-  "text": "Tài khoản đăng nhập (UserAccount) sở hữu hồ sơ và sổ địa chỉ; vai trò (Role) gom các quyền (Permission) để phân quyền RBAC."
- },
- {
-  "t": "img",
-  "path": "/home/user/pavex-backend/docs/report/figures/class-identity.png",
-  "w": 16,
-  "maxh": 21.5,
-  "caption": "Hình 4.28. Sơ đồ lớp – Identity & Access"
- },
- {
-  "t": "h4",
-  "text": "Sơ đồ lớp – Partner"
- },
- {
-  "t": "p",
-  "text": "Cửa hàng (Merchant) do một tài khoản khách hàng sở hữu, có vòng đời xác minh và danh sách điểm lấy hàng."
- },
- {
-  "t": "img",
-  "path": "/home/user/pavex-backend/docs/report/figures/class-partner.png",
-  "w": 16,
-  "maxh": 21.5,
-  "caption": "Hình 4.29. Sơ đồ lớp – Partner"
- },
- {
-  "t": "h4",
-  "text": "Sơ đồ lớp – Network"
- },
- {
-  "t": "p",
-  "text": "Mạng lưới vùng – khu vực phục vụ – hub, tuyến giữa hai hub với lịch chạy, mẫu lộ trình và giữ chỗ tải trên từng chuyến."
- },
- {
-  "t": "img",
-  "path": "/home/user/pavex-backend/docs/report/figures/class-network.png",
-  "w": 16,
-  "maxh": 21.5,
-  "caption": "Hình 4.30. Sơ đồ lớp – Network"
- },
- {
-  "t": "h4",
-  "text": "Sơ đồ lớp – Pricing"
- },
- {
-  "t": "p",
-  "text": "Bảng giá có phiên bản (RatePlan) gồm các quy tắc giá; báo giá (QuoteRequest) lưu kiện hàng và các phương án giá có thời hạn."
- },
- {
-  "t": "img",
-  "path": "/home/user/pavex-backend/docs/report/figures/class-pricing.png",
-  "w": 16,
-  "maxh": 21.5,
-  "caption": "Hình 4.31. Sơ đồ lớp – Pricing"
- },
- {
-  "t": "h4",
-  "text": "Sơ đồ lớp – Shipment"
- },
- {
-  "t": "p",
-  "text": "Vận đơn là aggregate root sở hữu kiện hàng, sự kiện hành trình và lần giao; tham chiếu cửa hàng, bảng giá, báo giá, hub và giữ chỗ tải."
- },
- {
-  "t": "img",
-  "path": "/home/user/pavex-backend/docs/report/figures/class-shipment.png",
-  "w": 16,
-  "maxh": 21.5,
-  "caption": "Hình 4.32. Sơ đồ lớp – Shipment"
- },
- {
-  "t": "h4",
-  "text": "Sơ đồ lớp – Shipment – value object và enumeration"
- },
- {
-  "t": "p",
-  "text": "Các kiểu dữ liệu của context Shipment: địa chỉ chụp tại thời điểm tạo đơn, điểm đầu/cuối, trạng thái tạm giữ và các tập giá trị trạng thái."
- },
- {
-  "t": "img",
-  "path": "/home/user/pavex-backend/docs/report/figures/class-shipment-types.png",
-  "w": 16,
-  "maxh": 21.5,
-  "caption": "Hình 4.33. Sơ đồ lớp – Shipment – value object và enumeration"
- },
- {
-  "t": "h4",
-  "text": "Sơ đồ lớp – Exception Handling"
- },
- {
-  "t": "p",
-  "text": "Yêu cầu ngoại lệ (hoàn, chuyển tiếp, giao lại, hủy), hồ sơ sự cố và điều chỉnh khối lượng, đều tham chiếu vận đơn, kiện và hub."
- },
- {
-  "t": "img",
-  "path": "/home/user/pavex-backend/docs/report/figures/class-exception.png",
-  "w": 16,
-  "maxh": 21.5,
-  "caption": "Hình 4.34. Sơ đồ lớp – Exception Handling"
- },
- {
-  "t": "h4",
-  "text": "Sơ đồ lớp – Workforce & Operations"
- },
- {
-  "t": "p",
-  "text": "Nhân sự vận hành, thành viên hub, trạng thái sẵn sàng, ca làm việc và công việc vận hành sinh ra từ từng chặng của vận đơn."
- },
- {
-  "t": "img",
-  "path": "/home/user/pavex-backend/docs/report/figures/class-workforce.png",
-  "w": 16,
-  "maxh": 21.5,
-  "caption": "Hình 4.35. Sơ đồ lớp – Workforce & Operations"
- },
- {
-  "t": "h4",
-  "text": "Sơ đồ lớp – Shared Kernel"
- },
- {
-  "t": "p",
-  "text": "Các value object dùng chung giữa các context."
- },
- {
-  "t": "img",
-  "path": "/home/user/pavex-backend/docs/report/figures/class-shared.png",
-  "w": 16,
-  "maxh": 21.5,
-  "caption": "Hình 4.36. Sơ đồ lớp – Shared Kernel"
+  "t": "placeholder",
+  "text": "[Chèn class diagram toàn hệ thống PAVEX]",
+  "caption": "Hình 4.30. Class diagram toàn hệ thống PAVEX"
  },
  {
   "t": "h3",
-  "text": "4.3.3. Kiến trúc tổng thể"
+  "text": "4.4.3. Đối chiếu class diagram với sơ đồ tuần tự"
+ },
+ {
+  "t": "p",
+  "text": "Bảng sau đối chiếu mỗi phương thức của lớp thực thể với các sơ đồ tuần tự sử dụng nó, bảo đảm mọi thông điệp gửi tới lớp thực thể trong sơ đồ tuần tự đều là một phương thức có trong class diagram."
+ },
+ {
+  "t": "caption",
+  "text": "Bảng 4.17. Đối chiếu phương thức của lớp với sơ đồ tuần tự"
+ },
+ {
+  "t": "table",
+  "header": [
+   "Lớp",
+   "Phương thức",
+   "Sử dụng trong"
+  ],
+  "rows": [
+   [
+    "…",
+    "…",
+    "…"
+   ]
+  ],
+  "widths": [
+   2400,
+   3400,
+   2506
+  ],
+  "size": 10
+ },
+ {
+  "t": "h2",
+  "text": "4.5. Kiến trúc hệ thống"
+ },
+ {
+  "t": "h3",
+  "text": "4.5.1. Kiến trúc tổng thể"
  },
  {
   "t": "p",
   "text": "Hệ thống theo kiến trúc client – server nhiều lớp. Ba ứng dụng client (cổng khách hàng, cổng quản trị, ứng dụng vận hành) giao tiếp với một backend duy nhất qua REST API /api/v1. Backend được tổ chức theo module tương ứng với các bounded context, mỗi module gồm các lớp: API (controller), ứng dụng (service), miền (domain) và hạ tầng (repository). Dữ liệu được lưu trong hệ quản trị cơ sở dữ liệu PostgreSQL; mỗi aggregate tương ứng một nhóm bảng, quan hệ giữa các aggregate được thể hiện bằng khóa ngoại tới định danh."
  },
  {
+  "t": "placeholder",
+  "text": "[Chèn sơ đồ kiến trúc tổng thể]",
+  "caption": "Hình 4.31. Kiến trúc tổng thể client – BFF – backend – PostgreSQL"
+ },
+ {
+  "t": "h3",
+  "text": "4.5.2. Các lớp kiến trúc"
+ },
+ {
   "t": "caption",
-  "text": "Bảng 4.2. Các lớp trong kiến trúc hệ thống"
+  "text": "Bảng 4.18. Các lớp trong kiến trúc hệ thống"
  },
  {
   "t": "table",
@@ -4154,7 +4307,11 @@
  },
  {
   "t": "p",
-  "text": "Nhóm áp dụng kiểm thử hộp đen theo use case. Mỗi chức năng đã hiện thực có một test case, được trình bày dưới dạng bảng dọc theo các mục của chuẩn ISO/IEC/IEEE 29119-3: mã test case, use case, mục tiêu, tiền điều kiện, dữ liệu vào, các bước thực hiện, kết quả mong đợi, kết quả thực tế và trạng thái. Các chức năng chưa hiện thực không được đưa vào kiểm thử ở giai đoạn này."
+  "text": "Nhóm áp dụng kiểm thử hộp đen theo use case. Mỗi chức năng có một test case, được trình bày dưới dạng bảng dọc theo các mục của chuẩn ISO/IEC/IEEE 29119-3: mã test case, use case, mục tiêu, tiền điều kiện, dữ liệu vào, các bước thực hiện, kết quả mong đợi, kết quả thực tế và trạng thái. Chương này trình bày test case của các chức năng đã hiện thực; test case của các chức năng còn lại được liệt kê trong Phụ lục A và sẽ được viết chi tiết, thực thi khi chức năng được hiện thực."
+ },
+ {
+  "t": "h3",
+  "text": "6.4.2. Danh sách test case"
  },
  {
   "t": "caption",
@@ -4198,7 +4355,7 @@
  },
  {
   "t": "h3",
-  "text": "6.4.2. Test case chi tiết"
+  "text": "6.4.3. Test case chi tiết"
  },
  {
   "t": "h4",
@@ -4359,11 +4516,11 @@
  {
   "t": "bullets",
   "items": [
-   "Hoàn thành phân tích và thiết kế theo UML 2.5: sơ đồ use case tổng thể (13 tác nhân, 41 use case), đặc tả 12 use case cốt lõi kèm sơ đồ hoạt động và sơ đồ tuần tự, sơ đồ package và 9 sơ đồ lớp của mô hình miền theo DDD (8 bounded context).",
+   "Hoàn thành phân tích và thiết kế theo UML 2.5: sơ đồ use case tổng thể (13 tác nhân, 41 use case), đặc tả 13 use case chính, mỗi use case một sơ đồ hoạt động và một sơ đồ tuần tự; mô hình domain theo DDD (8 bounded context) và class diagram toàn hệ thống.",
    "Hiện thực cổng quản trị theo mô hình BFF trên Next.js: đăng nhập, đăng xuất, tự làm mới phiên, menu theo quyền; tra cứu và lọc người dùng; xem vai trò và quyền.",
    "Tích hợp với Identity API của backend: xác thực JWT, refresh token, phân quyền RBAC; dữ liệu lưu trên PostgreSQL.",
    "Thiết kế cơ chế tính cước có phiên bản, định tuyến với giữ chỗ tải và điều phối công việc theo ca để làm cơ sở hiện thực các giai đoạn sau.",
-   "Xây dựng test case cho toàn bộ chức năng đã hiện thực theo chuẩn ISO/IEC/IEEE 29119-3."
+   "Xây dựng test case cho toàn bộ chức năng đã hiện thực theo chuẩn ISO/IEC/IEEE 29119-3 và danh sách test case theo thiết kế cho các chức năng còn lại (Phụ lục A)."
   ]
  },
  {
@@ -4413,6 +4570,318 @@
    "Ứng dụng di động native cho nhân sự vận hành với chế độ ngoại tuyến.",
    "Phân tích dữ liệu để dự báo sản lượng và điều phối nhân sự theo khu vực."
   ]
+ },
+ {
+  "t": "h1",
+  "text": "PHỤ LỤC A. DANH SÁCH TEST CASE THEO THIẾT KẾ"
+ },
+ {
+  "t": "p",
+  "text": "Phụ lục này liệt kê test case của các chức năng đã được phân tích, thiết kế nhưng chưa hiện thực, mỗi chức năng một test case. Khi chức năng được hiện thực, test case tương ứng được viết chi tiết theo mẫu bảng ở mục 6.4.3, thực thi và chuyển vào chương 6."
+ },
+ {
+  "t": "caption",
+  "text": "Bảng A.1. Danh sách test case theo thiết kế của các chức năng chưa hiện thực"
+ },
+ {
+  "t": "table",
+  "header": [
+   "Mã TC",
+   "Use case",
+   "Chức năng",
+   "Tác nhân",
+   "Tình trạng"
+  ],
+  "rows": [
+   [
+    "TC05",
+    "UC03",
+    "Đăng ký tài khoản",
+    "Guest",
+    "Chưa hiện thực"
+   ],
+   [
+    "TC06",
+    "UC04",
+    "Quản lý hồ sơ cá nhân",
+    "Customer, Back-office User, Operational Staff",
+    "Chưa hiện thực"
+   ],
+   [
+    "TC07",
+    "UC05",
+    "Quản lý sổ địa chỉ",
+    "Customer",
+    "Chưa hiện thực"
+   ],
+   [
+    "TC08",
+    "UC06.5",
+    "Gán vai trò cho người dùng",
+    "Platform Admin",
+    "Chưa hiện thực"
+   ],
+   [
+    "TC09",
+    "UC07",
+    "Tạo tài khoản nhân viên",
+    "Platform Admin",
+    "Chưa hiện thực"
+   ],
+   [
+    "TC10",
+    "UC09",
+    "Đăng ký cửa hàng",
+    "Customer",
+    "Chưa hiện thực"
+   ],
+   [
+    "TC11",
+    "UC10",
+    "Quản lý thông tin cửa hàng",
+    "Merchant",
+    "Chưa hiện thực"
+   ],
+   [
+    "TC12",
+    "UC11",
+    "Quản lý địa chỉ lấy hàng",
+    "Merchant",
+    "Chưa hiện thực"
+   ],
+   [
+    "TC13",
+    "UC12",
+    "Yêu cầu xác minh cửa hàng",
+    "Merchant",
+    "Chưa hiện thực"
+   ],
+   [
+    "TC14",
+    "UC13",
+    "Duyệt & quản lý cửa hàng",
+    "Platform Admin",
+    "Chưa hiện thực"
+   ],
+   [
+    "TC15",
+    "UC14",
+    "Tra cứu vận đơn",
+    "Public User",
+    "Chưa hiện thực"
+   ],
+   [
+    "TC16",
+    "UC14.1",
+    "Xem hành trình vận đơn",
+    "Public User, Merchant",
+    "Chưa hiện thực"
+   ],
+   [
+    "TC17",
+    "UC15",
+    "Tra cứu giá cước",
+    "Public User",
+    "Chưa hiện thực"
+   ],
+   [
+    "TC18",
+    "UC16",
+    "Tra cứu bưu cục",
+    "Public User",
+    "Chưa hiện thực"
+   ],
+   [
+    "TC19",
+    "UC17",
+    "Tạo đơn hàng",
+    "Merchant, Hub Dispatch",
+    "Chưa hiện thực"
+   ],
+   [
+    "TC20",
+    "UC18",
+    "Quản lý đơn hàng",
+    "Merchant",
+    "Chưa hiện thực"
+   ],
+   [
+    "TC21",
+    "UC19",
+    "Theo dõi vận đơn",
+    "Merchant",
+    "Chưa hiện thực"
+   ],
+   [
+    "TC22",
+    "UC20",
+    "Yêu cầu xử lý ngoại lệ vận đơn",
+    "Merchant, Hub Dispatch",
+    "Chưa hiện thực"
+   ],
+   [
+    "TC23",
+    "UC21",
+    "Quản lý bảng giá",
+    "Platform Admin",
+    "Chưa hiện thực"
+   ],
+   [
+    "TC24",
+    "UC22",
+    "Quản lý mạng lưới",
+    "Platform Admin",
+    "Chưa hiện thực"
+   ],
+   [
+    "TC25",
+    "UC23",
+    "Quản lý nhân sự vận hành",
+    "Hub Manager, Operations Manager",
+    "Chưa hiện thực"
+   ],
+   [
+    "TC26",
+    "UC24",
+    "Xem nhân sự vận hành",
+    "Hub Dispatch",
+    "Chưa hiện thực"
+   ],
+   [
+    "TC27",
+    "UC25",
+    "Quản lý ca làm việc",
+    "Hub Manager, Operations Manager",
+    "Chưa hiện thực"
+   ],
+   [
+    "TC28",
+    "UC26",
+    "Xem ca làm việc",
+    "Operational Staff",
+    "Chưa hiện thực"
+   ],
+   [
+    "TC29",
+    "UC27",
+    "Check-in / Check-out ca",
+    "Operational Staff",
+    "Chưa hiện thực"
+   ],
+   [
+    "TC30",
+    "UC28",
+    "Cập nhật trạng thái sẵn sàng",
+    "Operational Staff",
+    "Chưa hiện thực"
+   ],
+   [
+    "TC31",
+    "UC29",
+    "Xem tổng quan vận hành",
+    "Back-office User",
+    "Chưa hiện thực"
+   ],
+   [
+    "TC32",
+    "UC30",
+    "Theo dõi vận đơn vận hành",
+    "Hub Dispatch, Operations Manager",
+    "Chưa hiện thực"
+   ],
+   [
+    "TC33",
+    "UC31",
+    "Điều phối công việc",
+    "Hub Dispatch",
+    "Chưa hiện thực"
+   ],
+   [
+    "TC34",
+    "UC32",
+    "Xem công việc được giao",
+    "Operational Staff",
+    "Chưa hiện thực"
+   ],
+   [
+    "TC35",
+    "UC33",
+    "Thực hiện công việc",
+    "Operational Staff",
+    "Chưa hiện thực"
+   ],
+   [
+    "TC36",
+    "UC34",
+    "Quét kiện hàng",
+    "Operational Staff",
+    "Chưa hiện thực"
+   ],
+   [
+    "TC37",
+    "UC35",
+    "Ghi nhận kết quả giao hàng",
+    "Courier",
+    "Chưa hiện thực"
+   ],
+   [
+    "TC38",
+    "UC36",
+    "Bàn giao hàng trung chuyển",
+    "Line-haul Driver",
+    "Chưa hiện thực"
+   ],
+   [
+    "TC39",
+    "UC37",
+    "Điều chỉnh khối lượng kiện",
+    "Warehouse Operator",
+    "Chưa hiện thực"
+   ],
+   [
+    "TC40",
+    "UC38",
+    "Duyệt điều chỉnh khối lượng",
+    "Hub Manager",
+    "Chưa hiện thực"
+   ],
+   [
+    "TC41",
+    "UC39",
+    "Xem ngoại lệ vận đơn",
+    "Hub Dispatch",
+    "Chưa hiện thực"
+   ],
+   [
+    "TC42",
+    "UC40",
+    "Xử lý yêu cầu ngoại lệ",
+    "Hub Dispatch",
+    "Chưa hiện thực"
+   ],
+   [
+    "TC43",
+    "UC41",
+    "Báo cáo sự cố",
+    "Operational Staff",
+    "Chưa hiện thực"
+   ],
+   [
+    "TC44",
+    "UC42",
+    "Quản lý hồ sơ sự cố",
+    "Operations Manager",
+    "Chưa hiện thực"
+   ]
+  ],
+  "widths": [
+   900,
+   1000,
+   2900,
+   2300,
+   1206
+  ],
+  "size": 10
  },
  {
   "t": "sign",
