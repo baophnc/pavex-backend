@@ -99,6 +99,9 @@ shipment:
     confirm-timeout: ${SHIPMENT_OUTBOX_CONFIRM_TIMEOUT:PT5S}
 
 pavex:
+  # Local demo only: lets an admin forget every shipment and what it produced (demo/DemoReset.kt).
+  demo-reset:
+    enabled: ${PAVEX_DEMO_RESET_ENABLED:false}
   keys-dir: ${user.home}/.pavex/keys
   # Proof-of-delivery photos are kept in MinIO (compose service "minio"), not in the database.
   storage:
