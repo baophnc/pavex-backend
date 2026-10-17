@@ -92,6 +92,9 @@ billing:
       batch-size: ${BILLING_RECONCILIATION_BATCH_SIZE:50}
 
 pavex:
+  # Local demo only: lets an admin forget every shipment and what it produced (demo/DemoReset.kt).
+  demo-reset:
+    enabled: ${PAVEX_DEMO_RESET_ENABLED:false}
   keys-dir: ${user.home}/.pavex/keys
   openapi:
     gateway-url: ${PAVEX_PUBLIC_BASE_URL:http://localhost:8080}

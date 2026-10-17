@@ -330,6 +330,18 @@ Tài khoản `admin@pavex.com` (tự tạo khi khởi động) dùng mật khẩ
 |---|---|---|
 | `./scripts/seed-mini/apply.sh` | Xoá mạng lưới, nhân sự, cửa hàng, vận đơn, báo giá, tiền, chuyến xe; nạp lại seed-mini rồi chạy `dev-up.sh` | **Xoá và thay dữ liệu hiện có.** Luôn sao lưu vào `.local/backups/<thời điểm>-seed-mini/` trước. Thêm `--no-start` để không khởi động lại |
 
+**Chạy thử lại mà không seed lại:** đặt `PAVEX_DEMO_RESET_ENABLED=true` trong `.env` rồi chạy `dev-up.sh`. Quản trị
+(vai trò `ADMIN`) mở **Hệ thống → Giả lập → Đặt lại dữ liệu thử** ở management portal, gõ `DAT LAI` rồi bấm nút.
+
+- Bị xoá: vận đơn, kiện, lượt quét, giao hàng, sự cố (kèm ảnh chứng từ trong MinIO); việc đã phân công và sự kiện
+  điều phối chờ gửi; chỗ giữ trên tuyến; báo giá; chuyến xe và điểm GPS; tiền thu, phiếu nộp, đối soát, hoá đơn;
+  thông báo; sự kiện còn trong hàng đợi RabbitMQ.
+- Giữ nguyên: tài khoản, cửa hàng và điểm lấy hàng, mạng lưới, bảng giá, nhân sự, ca làm và trạng thái vào ca, tài khoản
+  nhận tiền của cửa hàng, đồng ý chia sẻ vị trí của tài xế. Không ai bị đăng xuất, không cần khởi động lại backend.
+- Shipment được xoá trước, rồi lần lượt Operations, Network, Pricing, Fleet, Billing, Notifications (mỗi service tự xoá
+  dữ liệu của mình qua `POST .../demo-reset`). Khi cờ tắt (mặc định), các endpoint này không tồn tại (404).
+- App tài xế đang gửi GPS cho chuyến đã xoá sẽ tự dừng.
+
 Khôi phục một database từ backup, ví dụ shipment:
 
 ```bash
