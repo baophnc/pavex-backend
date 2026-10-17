@@ -160,9 +160,7 @@ class WorkforceViewService(
             ) {
                 add(WorkforceScanAction.DEPART)
             }
-            if (OperationsAssignmentType.LAST_MILE_DELIVERY in types &&
-                statuses.any { it == ParcelStatus.AT_DESTINATION_HUB || it == ParcelStatus.DELIVERY_FAILED }
-            ) {
+            if (OperationsAssignmentType.LAST_MILE_DELIVERY in types && shipment.parcels.any { it.isReadyForDelivery() }) {
                 add(WorkforceScanAction.OUT_FOR_DELIVERY)
             }
             if (actor.hasAuthority(SCAN) && actor.hasAuthority(HUB_READ)) {

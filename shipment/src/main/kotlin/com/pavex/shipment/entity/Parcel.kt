@@ -88,7 +88,23 @@ class Parcel(
     var updatedAt: Instant = Instant.now(),
 ) {
     fun canTransitionTo(nextStatus: ParcelStatus): Boolean =
-        ALLOWED_TRANSITIONS[status].orEmpty().contains(nextStatus)
+        ALLOWED_TRANSITIONS[status].orEmpty().contains(nextStatus) || isSameHubDeparture(nextStatus)
+
+    /** In the delivery hub's stock (or back from a failed attempt), so a courier can take it out. */
+    fun isReadyForDelivery(): Boolean =
+        status == ParcelStatus.AT_DESTINATION_HUB ||
+            status == ParcelStatus.DELIVERY_FAILED ||
+            isSameHubDeparture(ParcelStatus.OUT_FOR_DELIVERY)
+
+    /**
+     * An order sent and delivered by the same post office never takes a truck: once it is in that
+     * hub's stock it goes out for delivery from there, without a separate destination arrival.
+     */
+    private fun isSameHubDeparture(nextStatus: ParcelStatus): Boolean =
+        status == ParcelStatus.AT_ORIGIN_HUB &&
+            nextStatus == ParcelStatus.OUT_FOR_DELIVERY &&
+            currentHubId != null &&
+            currentHubId == shipment.destinationHubId
 
     fun transitionTo(
         nextStatus: ParcelStatus,

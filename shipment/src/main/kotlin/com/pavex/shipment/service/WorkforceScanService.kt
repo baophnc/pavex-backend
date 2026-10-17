@@ -107,12 +107,13 @@ class WorkforceScanService(
             else -> ScanPlan.Skip(true, "already_done", "Kiện đã được lấy trước đó.")
         }
 
-        WorkforceScanAction.OUT_FOR_DELIVERY -> when (parcel.status) {
-            ParcelStatus.AT_DESTINATION_HUB, ParcelStatus.DELIVERY_FAILED ->
+        WorkforceScanAction.OUT_FOR_DELIVERY -> when {
+            parcel.status == ParcelStatus.OUT_FOR_DELIVERY ->
+                ScanPlan.Skip(true, "already_done", "Kiện đã ở trong chuyến giao của bạn.")
+            parcel.readyForDelivery ->
                 owned(assignments, OperationsAssignmentType.LAST_MILE_DELIVERY, null) { assignment ->
                     ScanPlan.Move(ParcelStatus.OUT_FOR_DELIVERY, targets.destinationHubId, assignment.id, null)
                 }
-            ParcelStatus.OUT_FOR_DELIVERY -> ScanPlan.Skip(true, "already_done", "Kiện đã ở trong chuyến giao của bạn.")
             else -> ScanPlan.Skip(false, "not_at_delivery_hub", "Kiện chưa về bưu cục giao nên chưa xuất giao được.")
         }
 
@@ -197,9 +198,16 @@ class WorkforceScanService(
         val status: ParcelStatus,
         val currentHubId: UUID?,
         val currentRouteLegId: UUID?,
+        val readyForDelivery: Boolean,
     ) {
         companion object {
-            fun of(parcel: Parcel) = ParcelState(parcel.code, parcel.status, parcel.currentHubId, parcel.currentRouteLegId)
+            fun of(parcel: Parcel) = ParcelState(
+                parcel.code,
+                parcel.status,
+                parcel.currentHubId,
+                parcel.currentRouteLegId,
+                parcel.isReadyForDelivery(),
+            )
         }
     }
 

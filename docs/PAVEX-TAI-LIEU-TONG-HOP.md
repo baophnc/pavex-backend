@@ -370,6 +370,9 @@ Danh sách tài khoản thử và mật khẩu ở `scripts/seed-mini/README.md`
    GPS). Nhân viên Tân Sơn Hoà quét Nhập kho khi xe tới.
 5. **Giao và tiền:** tiếp tục tới bưu cục phát; bưu tá giao, thu tiền, nộp tiền; kế toán duyệt và đối soát.
 
+Đơn gửi và giao trong cùng một bưu cục (ví dụ trong Phường Ba Đình) không có bước 4: nhập kho ở bước 3 xong là việc
+giao hàng mở cho bưu tá, bưu tá quét Xuất giao ngay từ kho đó.
+
 Email phát sinh khi thử (xác thực, xác nhận yêu cầu hỗ trợ…) xem ở Mailpit: http://localhost:8025.
 
 ---

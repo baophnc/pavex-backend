@@ -616,13 +616,17 @@ class OperationalAssignmentService(
                 )
             }
         }
-        drafts += AssignmentDraft(
-            sequence++,
-            null,
-            OperationalAssignmentType.DESTINATION_HUB_HANDLING,
-            WorkforceMemberKind.WAREHOUSE_OPERATOR,
-            plan.destinationHubId,
-        )
+        // An order within one post office never leaves it: the origin handling is its only sorting
+        // step, and finishing it releases the delivery straight away.
+        if (!plan.staysAtOneHub()) {
+            drafts += AssignmentDraft(
+                sequence++,
+                null,
+                OperationalAssignmentType.DESTINATION_HUB_HANDLING,
+                WorkforceMemberKind.WAREHOUSE_OPERATOR,
+                plan.destinationHubId,
+            )
+        }
         drafts += AssignmentDraft(
             sequence,
             null,
