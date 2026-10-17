@@ -65,6 +65,64 @@ class ShipmentAssignmentPlanTest {
         assertEquals(0, drafts.count { it.type == OperationalAssignmentType.PICKUP })
     }
 
+    @Test
+    fun `an order within one post office is sorted once there and then delivered`() {
+        val drafts = service.buildDrafts(sameHubPlan(startsAtOriginHub = false))
+
+        assertEquals(
+            listOf(
+                OperationalAssignmentType.PICKUP,
+                OperationalAssignmentType.ORIGIN_HUB_HANDLING,
+                OperationalAssignmentType.LAST_MILE_DELIVERY,
+            ),
+            drafts.map { it.type },
+        )
+        assertEquals(listOf(1, 2, 3), drafts.map { it.sequence })
+        assertEquals(setOf(origin), drafts.map { it.hubId }.toSet())
+    }
+
+    @Test
+    fun `a counter order delivered by the hub that took it in goes from its shelf straight to delivery`() {
+        val drafts = service.buildDrafts(sameHubPlan(startsAtOriginHub = true))
+
+        assertEquals(
+            listOf(OperationalAssignmentType.ORIGIN_HUB_HANDLING, OperationalAssignmentType.LAST_MILE_DELIVERY),
+            drafts.map { it.type },
+        )
+        assertEquals(listOf(1, 2), drafts.map { it.sequence })
+    }
+
+    @Test
+    fun `a direct truck between two post offices keeps the destination handling`() {
+        val drafts = service.buildDrafts(
+            ShipmentAssignmentPlan(
+                shipmentId = UUID.randomUUID(),
+                originHubId = origin,
+                destinationHubId = destination,
+                routeLegs = listOf(ShipmentAssignmentRouteLeg(UUID.randomUUID(), 1, origin, destination)),
+            ),
+        )
+
+        assertEquals(
+            listOf(
+                OperationalAssignmentType.PICKUP,
+                OperationalAssignmentType.ORIGIN_HUB_HANDLING,
+                OperationalAssignmentType.LINE_HAUL,
+                OperationalAssignmentType.DESTINATION_HUB_HANDLING,
+                OperationalAssignmentType.LAST_MILE_DELIVERY,
+            ),
+            drafts.map { it.type },
+        )
+    }
+
+    private fun sameHubPlan(startsAtOriginHub: Boolean) = ShipmentAssignmentPlan(
+        shipmentId = UUID.randomUUID(),
+        originHubId = origin,
+        destinationHubId = origin,
+        routeLegs = emptyList(),
+        startsAtOriginHub = startsAtOriginHub,
+    )
+
     private fun plan(startsAtOriginHub: Boolean) = ShipmentAssignmentPlan(
         shipmentId = UUID.randomUUID(),
         originHubId = origin,

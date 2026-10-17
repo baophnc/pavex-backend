@@ -4,8 +4,8 @@
 #   2. Bưu tá Ba Đình lấy hàng, bưu cục nhập kho, tài xế chở vào Tân Sơn Hoà, bưu cục đích nhập kho.
 #   3. Bưu tá Tân Sơn Hoà giao thành công (có ảnh).
 #   4. Vận đơn đóng, Billing ghi cước cửa hàng phải trả; quản lý vận hành lập bảng đối soát.
-# Đơn đi và đến cùng một bưu cục hiện chưa giao được (kiện không rời trạng thái "đã đến bưu cục gửi"),
-# nên kịch bản dùng đơn liên miền.
+# Kịch bản dùng đơn liên miền để đi qua cả chuyến xe; đơn nội thành (cùng một bưu cục) cũng giao được:
+# bưu cục nhập kho xong là bưu tá xuất giao luôn, không có bước nhập kho bưu cục đích.
 # Kết quả: một hoá đơn "Đã phát hành" ở http://localhost:3000/account/billing để thanh toán bằng QR.
 #
 #   scripts/sim/shop-invoice.sh

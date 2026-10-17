@@ -30,7 +30,10 @@ data class ShipmentAssignmentPlan(
     val routeLegs: List<ShipmentAssignmentRouteLeg>,
     val priority: Int = 50,
     val startsAtOriginHub: Boolean = false,
-)
+) {
+    /** Sent and delivered by the same post office, with no truck in between. */
+    fun staysAtOneHub(): Boolean = routeLegs.isEmpty() && originHubId == destinationHubId
+}
 
 data class OperationalAssignmentResponse(
     val id: UUID,

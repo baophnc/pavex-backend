@@ -158,6 +158,39 @@ class WorkforceScanServiceTest {
     }
 
     @Test
+    fun `a courier takes an order within one post office out for delivery from that hub's stock`() {
+        shipment.destinationHubId = shipment.originHubId
+        parcel.status = ParcelStatus.AT_ORIGIN_HUB
+        parcel.currentHubId = shipment.originHubId
+        assignments = listOf(
+            assignment(OperationsAssignmentType.LAST_MILE_DELIVERY, OperationsAssignmentStatus.IN_PROGRESS, shipment.originHubId),
+        )
+
+        val response = scan(courier(), WorkforceScanAction.OUT_FOR_DELIVERY)
+
+        assertTrue(response.results.single().ok)
+        val request = recorded.single()
+        assertEquals(ParcelStatus.OUT_FOR_DELIVERY, request.nextStatus)
+        assertEquals(shipment.originHubId, request.hubId)
+        assertEquals(assignments.single().id, request.assignmentId)
+    }
+
+    @Test
+    fun `a parcel still at an origin hub that does not deliver it cannot go out for delivery`() {
+        parcel.status = ParcelStatus.AT_ORIGIN_HUB
+        parcel.currentHubId = shipment.originHubId
+        assignments = listOf(
+            assignment(OperationsAssignmentType.LAST_MILE_DELIVERY, OperationsAssignmentStatus.IN_PROGRESS, shipment.destinationHubId),
+        )
+
+        val result = scan(courier(), WorkforceScanAction.OUT_FOR_DELIVERY).results.single()
+
+        assertFalse(result.ok)
+        assertEquals("not_at_delivery_hub", result.code)
+        assertTrue(recorded.isEmpty())
+    }
+
+    @Test
     fun `a hub off the route still cannot look up the shipment by scanning it`() {
         val otherHub = UUID.randomUUID()
         parcel.status = ParcelStatus.IN_TRANSIT
