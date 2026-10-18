@@ -1,4 +1,4 @@
-package com.pavex.partners.config
+package com.pavex.security
 
 import com.nimbusds.jwt.JWTParser
 import org.springframework.security.oauth2.jwt.BadJwtException

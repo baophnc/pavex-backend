@@ -1,124 +1,38 @@
 package com.pavex.network.config
 
-import org.springframework.beans.factory.annotation.Value
+import com.pavex.security.TrustedServiceTokens
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
-import org.springframework.core.io.Resource
-import org.springframework.security.converter.RsaKeyConverters
-import org.springframework.security.oauth2.core.DelegatingOAuth2TokenValidator
-import org.springframework.security.oauth2.core.OAuth2Error
-import org.springframework.security.oauth2.core.OAuth2TokenValidator
-import org.springframework.security.oauth2.core.OAuth2TokenValidatorResult
-import org.springframework.security.oauth2.jwt.Jwt
 import org.springframework.security.oauth2.jwt.JwtDecoder
-import org.springframework.security.oauth2.jwt.JwtValidators
-import org.springframework.security.oauth2.jwt.NimbusJwtDecoder
 
+/** The services that may call Network's internal API, and the one scope each must carry. */
 @Configuration
 class InternalServiceJwtConfig(
-    @Value("\${security.trusted-services.pricing.public-key}")
-    private val pricingPublicKey: Resource,
-    @Value("\${security.trusted-services.pricing.issuer}")
-    private val pricingIssuer: String,
-    @Value("\${security.trusted-services.shipment.public-key}")
-    private val shipmentPublicKey: Resource,
-    @Value("\${security.trusted-services.shipment.issuer}")
-    private val shipmentIssuer: String,
-    @Value("\${security.trusted-services.operations.public-key}")
-    private val operationsPublicKey: Resource,
-    @Value("\${security.trusted-services.operations.issuer}")
-    private val operationsIssuer: String,
-    @Value("\${security.trusted-services.fleet.public-key}")
-    private val fleetPublicKey: Resource,
-    @Value("\${security.trusted-services.fleet.issuer}")
-    private val fleetIssuer: String,
-    @Value("\${security.trusted-services.partners.public-key}")
-    private val partnersPublicKey: Resource,
-    @Value("\${security.trusted-services.partners.issuer}")
-    private val partnersIssuer: String,
+    private val trusted: TrustedServiceTokens,
 ) {
     @Bean("pricingServiceJwtDecoder")
-    fun pricingServiceJwtDecoder(): JwtDecoder = decoder(
-        publicKeyResource = pricingPublicKey,
-        issuer = pricingIssuer,
-        subject = PRICING_SERVICE,
-        requiredScope = NETWORK_PRICING_RESOLVE_SCOPE,
-    )
+    fun pricingServiceJwtDecoder(): JwtDecoder =
+        trusted.trustedService("pricing", PRICING_SERVICE, NETWORK_SERVICE, NETWORK_PRICING_RESOLVE_SCOPE)
 
     @Bean("shipmentServiceJwtDecoder")
-    fun shipmentServiceJwtDecoder(): JwtDecoder = decoder(
-        publicKeyResource = shipmentPublicKey,
-        issuer = shipmentIssuer,
-        subject = SHIPMENT_SERVICE,
-        requiredScope = NETWORK_SHIPMENT_RESERVE_SCOPE,
-    )
+    fun shipmentServiceJwtDecoder(): JwtDecoder =
+        trusted.trustedService("shipment", SHIPMENT_SERVICE, NETWORK_SERVICE, NETWORK_SHIPMENT_RESERVE_SCOPE)
 
     @Bean("operationsServiceJwtDecoder")
-    fun operationsServiceJwtDecoder(): JwtDecoder = decoder(
-        publicKeyResource = operationsPublicKey,
-        issuer = operationsIssuer,
-        subject = OPERATIONS_SERVICE,
-        requiredScope = NETWORK_OPERATIONS_READ_SCOPE,
-    )
+    fun operationsServiceJwtDecoder(): JwtDecoder =
+        trusted.trustedService("operations", OPERATIONS_SERVICE, NETWORK_SERVICE, NETWORK_OPERATIONS_READ_SCOPE)
 
     /** Fleet only reads the lane, hubs and planned times of line-haul route legs. */
     @Bean("fleetServiceJwtDecoder")
-    fun fleetServiceJwtDecoder(): JwtDecoder = decoder(
-        publicKeyResource = fleetPublicKey,
-        issuer = fleetIssuer,
-        subject = FLEET_SERVICE,
-        requiredScope = NETWORK_FLEET_READ_SCOPE,
-    )
+    fun fleetServiceJwtDecoder(): JwtDecoder =
+        trusted.trustedService("fleet", FLEET_SERVICE, NETWORK_SERVICE, NETWORK_FLEET_READ_SCOPE)
 
     /** Partners only asks which hub serves a merchant's warehouse ward. */
     @Bean("partnersServiceJwtDecoder")
-    fun partnersServiceJwtDecoder(): JwtDecoder = decoder(
-        publicKeyResource = partnersPublicKey,
-        issuer = partnersIssuer,
-        subject = PARTNERS_SERVICE,
-        requiredScope = NETWORK_PARTNERS_RESOLVE_SCOPE,
-    )
-
-    private fun decoder(
-        publicKeyResource: Resource,
-        issuer: String,
-        subject: String,
-        requiredScope: String,
-    ): JwtDecoder {
-        val publicKey = publicKeyResource.inputStream.use {
-            requireNotNull(RsaKeyConverters.x509().convert(it))
-        }
-        val decoder = NimbusJwtDecoder.withPublicKey(publicKey).build()
-        decoder.setJwtValidator(
-            DelegatingOAuth2TokenValidator(
-                JwtValidators.createDefaultWithIssuer(issuer),
-                exactClaim("sub", subject),
-                exactClaim("typ", SERVICE_TOKEN_TYPE),
-                audience(NETWORK_SERVICE),
-                scope(requiredScope),
-            ),
-        )
-        return decoder
-    }
-
-    private fun exactClaim(name: String, expected: String): OAuth2TokenValidator<Jwt> =
-        OAuth2TokenValidator { jwt -> result(jwt.getClaimAsString(name) == expected, "Invalid $name claim") }
-
-    private fun audience(expected: String): OAuth2TokenValidator<Jwt> =
-        OAuth2TokenValidator { jwt -> result(expected in jwt.audience.orEmpty(), "Invalid audience") }
-
-    private fun scope(expected: String): OAuth2TokenValidator<Jwt> =
-        OAuth2TokenValidator { jwt ->
-            val scopes = jwt.getClaimAsString("scope")?.split(' ').orEmpty()
-            result(expected in scopes, "Invalid scope")
-        }
-
-    private fun result(valid: Boolean, description: String): OAuth2TokenValidatorResult =
-        if (valid) OAuth2TokenValidatorResult.success()
-        else OAuth2TokenValidatorResult.failure(OAuth2Error("invalid_token", description, null))
+    fun partnersServiceJwtDecoder(): JwtDecoder =
+        trusted.trustedService("partners", PARTNERS_SERVICE, NETWORK_SERVICE, NETWORK_PARTNERS_RESOLVE_SCOPE)
 
     companion object {
-        private const val SERVICE_TOKEN_TYPE = "service"
         private const val PRICING_SERVICE = "pricing-service"
         private const val SHIPMENT_SERVICE = "shipment-service"
         private const val OPERATIONS_SERVICE = "operations-service"

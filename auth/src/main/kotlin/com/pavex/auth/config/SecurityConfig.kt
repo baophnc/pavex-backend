@@ -1,18 +1,14 @@
 package com.pavex.auth.config
 
+import com.pavex.security.serviceTokenChain
+import com.pavex.security.userTokenChain
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.core.annotation.Order
-import org.springframework.core.convert.converter.Converter
-import org.springframework.security.authentication.AbstractAuthenticationToken
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity
 import org.springframework.security.config.annotation.web.builders.HttpSecurity
-import org.springframework.security.config.http.SessionCreationPolicy
-import org.springframework.security.core.authority.SimpleGrantedAuthority
-import org.springframework.security.oauth2.jwt.Jwt
 import org.springframework.security.oauth2.jwt.JwtDecoder
-import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken
 import org.springframework.security.web.SecurityFilterChain
 
 @Configuration
@@ -26,21 +22,7 @@ class SecurityConfig {
         @Qualifier("identityServiceJwtDecoder")
         identityServiceJwtDecoder: JwtDecoder,
     ): SecurityFilterChain =
-        http
-            .securityMatcher("/internal/**")
-            .csrf { it.disable() }
-            .sessionManagement {
-                it.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-            }
-            .authorizeHttpRequests {
-                it.anyRequest().hasAuthority(AUTH_INTERNAL_AUTHORITY)
-            }
-            .oauth2ResourceServer { resourceServer ->
-                resourceServer.jwt { jwt ->
-                    jwt.decoder(identityServiceJwtDecoder)
-                }
-            }
-            .build()
+        http.serviceTokenChain(identityServiceJwtDecoder, "/internal/**") { it.anyRequest().hasAuthority(AUTH_INTERNAL_AUTHORITY) }
 
     @Bean
     @Order(2)
@@ -49,63 +31,21 @@ class SecurityConfig {
         @Qualifier("userJwtDecoder")
         userJwtDecoder: JwtDecoder,
     ): SecurityFilterChain =
-        http
-            .csrf { it.disable() }
-            .sessionManagement {
-                it.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-            }
-            .authorizeHttpRequests {
-                it.requestMatchers(
-                    "/v3/api-docs",
-                    "/v3/api-docs/**",
-                    "/api/v1/auth/register",
-                    "/api/v1/auth/login",
-                    "/api/v1/auth/refresh",
-                    "/api/v1/auth/logout",
-                    "/api/v1/auth/verify-email",
-                    "/api/v1/auth/resend-verification",
-                    "/api/v1/auth/forgot-password",
-                    "/api/v1/auth/reset-password",
-                    "/api/v1/auth/accept-invite",
-                    "/api/v1/auth/google",
-                    "/actuator/health",
-                    "/actuator/health/**",
-                    // Metrics for Prometheus on the internal network; served only where a deployment exposes them.
-                    "/actuator/prometheus",
-                ).permitAll()
-                    .anyRequest()
-                    .authenticated()
-            }
-            .oauth2ResourceServer { resourceServer ->
-                resourceServer.jwt { jwt ->
-                    jwt.decoder(userJwtDecoder)
-                    jwt.jwtAuthenticationConverter(jwtAuthenticationConverter())
-                }
-            }
-            .build()
-
-    @Bean
-    fun jwtAuthenticationConverter(): Converter<Jwt, AbstractAuthenticationToken> =
-        Converter { jwt ->
-            val authorities = mutableListOf<SimpleGrantedAuthority>()
-
-            jwt.getClaimAsStringList("roles")
-                .orEmpty()
-                .forEach { role ->
-                    authorities += SimpleGrantedAuthority("ROLE_$role")
-                }
-
-            jwt.getClaimAsStringList("permissions")
-                .orEmpty()
-                .forEach { permission ->
-                    authorities += SimpleGrantedAuthority(permission)
-                }
-
-            JwtAuthenticationToken(
-                jwt,
-                authorities,
-                requireNotNull(jwt.subject) { "JWT subject is missing" },
-            )
+        http.userTokenChain(userJwtDecoder) {
+            it.requestMatchers(
+                "/api/v1/auth/register",
+                "/api/v1/auth/login",
+                "/api/v1/auth/refresh",
+                "/api/v1/auth/logout",
+                "/api/v1/auth/verify-email",
+                "/api/v1/auth/resend-verification",
+                "/api/v1/auth/forgot-password",
+                "/api/v1/auth/reset-password",
+                "/api/v1/auth/accept-invite",
+                "/api/v1/auth/google",
+            ).permitAll()
+                .anyRequest()
+                .authenticated()
         }
 
     companion object {

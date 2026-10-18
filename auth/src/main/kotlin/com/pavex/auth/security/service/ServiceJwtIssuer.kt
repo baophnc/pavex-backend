@@ -1,66 +1,28 @@
 package com.pavex.auth.security.service
 
+import com.pavex.security.ServiceTokenIssuer
 import org.springframework.beans.factory.annotation.Value
-import org.springframework.security.oauth2.jose.jws.SignatureAlgorithm
-import org.springframework.security.oauth2.jwt.JwtClaimsSet
 import org.springframework.security.oauth2.jwt.JwtEncoder
-import org.springframework.security.oauth2.jwt.JwtEncoderParameters
-import org.springframework.security.oauth2.jwt.JwsHeader
 import org.springframework.stereotype.Service
 import java.time.Duration
 import java.time.Instant
-import java.util.UUID
 
+/** Auth signs its service tokens with the same key as its user tokens (`security.jwt.*`). */
 @Service
 class ServiceJwtIssuer(
-    private val jwtEncoder: JwtEncoder,
+    encoder: JwtEncoder,
     @Value("\${security.jwt.issuer}")
-    private val issuer: String,
+    issuer: String,
     @Value("\${security.service-jwt.ttl:PT1M}")
-    private val ttl: Duration,
+    ttl: Duration,
 ) {
+    private val tokens = ServiceTokenIssuer(encoder, issuer, AUTH_SERVICE, ttl)
 
     fun issueForIdentity(
         now: Instant = Instant.now(),
-    ): String =
-        issue(
-            subject = AUTH_SERVICE,
-            audience = IDENTITY_SERVICE,
-            scope = IDENTITY_INTERNAL_SCOPE,
-            now = now,
-        )
-
-    private fun issue(
-        subject: String,
-        audience: String,
-        scope: String,
-        now: Instant,
-    ): String {
-        val claims = JwtClaimsSet
-            .builder()
-            .issuer(issuer)
-            .subject(subject)
-            .audience(listOf(audience))
-            .issuedAt(now)
-            .expiresAt(now.plus(ttl))
-            .id(UUID.randomUUID().toString())
-            .claim(TOKEN_TYPE_CLAIM, SERVICE_TOKEN_TYPE)
-            .claim(SCOPE_CLAIM, scope)
-            .build()
-
-        val header = JwsHeader
-            .with(SignatureAlgorithm.RS256)
-            .build()
-
-        return jwtEncoder
-            .encode(JwtEncoderParameters.from(header, claims))
-            .tokenValue
-    }
+    ): String = tokens.issue(IDENTITY_SERVICE, IDENTITY_INTERNAL_SCOPE, now)
 
     companion object {
-        private const val TOKEN_TYPE_CLAIM = "typ"
-        private const val SCOPE_CLAIM = "scope"
-        private const val SERVICE_TOKEN_TYPE = "service"
         private const val AUTH_SERVICE = "auth-service"
         private const val IDENTITY_SERVICE = "identity-service"
         private const val IDENTITY_INTERNAL_SCOPE = "identity.internal"

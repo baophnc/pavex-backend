@@ -25,6 +25,16 @@
             <artifactId>platform-config</artifactId>
             <version>${project.version}</version>
         </dependency>
+        <dependency>
+            <groupId>com.pavex</groupId>
+            <artifactId>platform-security</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.pavex</groupId>
+            <artifactId>platform-outbox</artifactId>
+            <version>${project.version}</version>
+        </dependency>
 
         <!-- Cross-service Identity contracts -->
         <dependency>

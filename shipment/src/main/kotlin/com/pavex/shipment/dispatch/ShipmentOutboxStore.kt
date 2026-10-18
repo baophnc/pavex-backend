@@ -1,5 +1,6 @@
 package com.pavex.shipment.dispatch
 
+import com.pavex.outbox.JdbcOutboxLease
 import org.springframework.jdbc.core.JdbcTemplate
 import org.springframework.stereotype.Repository
 import org.springframework.transaction.annotation.Transactional
@@ -29,53 +30,41 @@ data class ShipmentOutboxDelivery(
 class ShipmentOutboxStore(
     private val jdbc: JdbcTemplate,
 ) {
-    @Transactional
-    fun claimBatch(lockId: UUID, now: Instant, batchSize: Int, lockDuration: Duration): List<ShipmentOutboxDelivery> {
-        val candidates = jdbc.query(
-            """
-            SELECT candidate.id, candidate.aggregate_id, candidate.aggregate_code, candidate.event_type,
-                   candidate.event_version, candidate.payload_json, candidate.occurred_at, candidate.attempts
-            FROM shipments.outbox_events candidate
-            WHERE candidate.status = 'PENDING'
-              AND candidate.next_attempt_at <= ?
-              AND (candidate.locked_until IS NULL OR candidate.locked_until <= ?)
-              AND NOT EXISTS (
-                  SELECT 1 FROM shipments.outbox_events predecessor
-                  WHERE predecessor.aggregate_id = candidate.aggregate_id
-                    AND predecessor.status = 'PENDING'
-                    AND (
-                        predecessor.occurred_at < candidate.occurred_at OR
-                        (predecessor.occurred_at = candidate.occurred_at AND predecessor.created_at < candidate.created_at) OR
-                        (predecessor.occurred_at = candidate.occurred_at AND predecessor.created_at = candidate.created_at AND predecessor.id < candidate.id)
-                    )
-              )
-            ORDER BY candidate.occurred_at, candidate.created_at, candidate.id
-            LIMIT ?
-            FOR UPDATE SKIP LOCKED
-            """.trimIndent(),
-            { rs, _ -> delivery(rs) },
-            Timestamp.from(now),
-            Timestamp.from(now),
-            batchSize,
-        )
-        if (candidates.isEmpty()) return emptyList()
+    private val lease = JdbcOutboxLease(
+        jdbc,
+        label = "Shipment outbox event",
+        selectDue = """
+        SELECT candidate.id, candidate.aggregate_id, candidate.aggregate_code, candidate.event_type,
+               candidate.event_version, candidate.payload_json, candidate.occurred_at, candidate.attempts
+        FROM shipments.outbox_events candidate
+        WHERE candidate.status = 'PENDING'
+          AND candidate.next_attempt_at <= ?
+          AND (candidate.locked_until IS NULL OR candidate.locked_until <= ?)
+          AND NOT EXISTS (
+              SELECT 1 FROM shipments.outbox_events predecessor
+              WHERE predecessor.aggregate_id = candidate.aggregate_id
+                AND predecessor.status = 'PENDING'
+                AND (
+                    predecessor.occurred_at < candidate.occurred_at OR
+                    (predecessor.occurred_at = candidate.occurred_at AND predecessor.created_at < candidate.created_at) OR
+                    (predecessor.occurred_at = candidate.occurred_at AND predecessor.created_at = candidate.created_at AND predecessor.id < candidate.id)
+                )
+          )
+        ORDER BY candidate.occurred_at, candidate.created_at, candidate.id
+        LIMIT ?
+        FOR UPDATE SKIP LOCKED
+        """.trimIndent(),
+        lease = """
+        UPDATE shipments.outbox_events
+        SET lock_id = ?, locked_until = ?, attempts = attempts + 1
+        WHERE id = ? AND status = 'PENDING'
+        """.trimIndent(),
+    )
 
-        val lockedUntil = now.plus(lockDuration)
-        candidates.forEach { candidate ->
-            val updated = jdbc.update(
-                """
-                UPDATE shipments.outbox_events
-                SET lock_id = ?, locked_until = ?, attempts = attempts + 1
-                WHERE id = ? AND status = 'PENDING'
-                """.trimIndent(),
-                lockId,
-                Timestamp.from(lockedUntil),
-                candidate.id,
-            )
-            check(updated == 1) { "Shipment outbox event ${candidate.id} could not be locked." }
-        }
-        return candidates.map { it.copy(attempts = it.attempts + 1) }
-    }
+    @Transactional
+    fun claimBatch(lockId: UUID, now: Instant, batchSize: Int, lockDuration: Duration): List<ShipmentOutboxDelivery> =
+        lease.claim(lockId, now, batchSize, lockDuration, { rs, _ -> delivery(rs) }, ShipmentOutboxDelivery::id)
+            .map { it.copy(attempts = it.attempts + 1) }
 
     fun markPublished(id: UUID, lockId: UUID, publishedAt: Instant): Boolean = jdbc.update(
         """
