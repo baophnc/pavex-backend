@@ -32,6 +32,8 @@ class SecurityConfig {
                     "/v3/api-docs/**",
                     "/actuator/health",
                     "/actuator/health/**",
+                    // Metrics for Prometheus on the internal network; served only where a deployment exposes them.
+                    "/actuator/prometheus",
                 ).permitAll()
                     .requestMatchers("/api/v1/tracking/**").permitAll()
                     .requestMatchers("/api/v1/shipments/**").authenticated()

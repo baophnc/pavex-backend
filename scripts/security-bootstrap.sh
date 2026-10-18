@@ -3,7 +3,8 @@ set -euo pipefail
 
 # Match pavex.keys-dir in every application.yaml, regardless of working directory.
 # No Docker volumes, environment files or key rotation during normal startup.
-key_root="$HOME/.pavex/keys"
+# deploy/gen-secrets.sh passes another folder for the key pairs of a deployment.
+key_root="${1:-$HOME/.pavex/keys}"
 command -v openssl >/dev/null 2>&1 || { echo "OpenSSL is required." >&2; exit 1; }
 umask 077
 mkdir -p "$key_root"
@@ -17,7 +18,7 @@ for issuer in auth identity partners pricing shipment operations billing fleet n
     fi
     openssl genpkey -algorithm RSA -pkeyopt rsa_keygen_bits:3072 \
       -out "$key_dir/private.pem" >/dev/null 2>&1
-    echo "[created] $issuer development keypair"
+    echo "[created] $issuer keypair"
   fi
   # Repair a stale public key from the existing private key; never rotate it.
   public_tmp="$(mktemp "$key_dir/public.XXXXXX")"

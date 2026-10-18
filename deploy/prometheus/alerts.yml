@@ -1,0 +1,49 @@
+groups:
+  - name: pavex
+    rules:
+      - alert: ServiceDown
+        expr: up == 0
+        for: 2m
+        labels: { severity: critical }
+        annotations:
+          summary: "{{ $labels.service }} không phản hồi"
+          description: "Prometheus không đọc được {{ $labels.instance }} trong 2 phút. Xem: docker compose -f deploy/compose.yml logs {{ $labels.instance }}"
+
+      - alert: HighServerErrorRate
+        expr: |
+          (
+            sum by (service) (rate(http_server_requests_seconds_count{status=~"5..", uri!~"/actuator.*"}[5m]))
+            / sum by (service) (rate(http_server_requests_seconds_count{uri!~"/actuator.*"}[5m]))
+          ) > 0.05
+          and sum by (service) (rate(http_server_requests_seconds_count{uri!~"/actuator.*"}[5m])) > 0.1
+        for: 5m
+        labels: { severity: warning }
+        annotations:
+          summary: "{{ $labels.service }}: hơn 5% request lỗi 5xx"
+          description: "Tỷ lệ 5xx 5 phút gần nhất: {{ $value | humanizePercentage }}."
+
+      - alert: DiskAlmostFull
+        expr: |
+          node_filesystem_avail_bytes{fstype!~"tmpfs|overlay|squashfs|nsfs|ramfs"}
+          / node_filesystem_size_bytes{fstype!~"tmpfs|overlay|squashfs|nsfs|ramfs"} < 0.10
+        for: 10m
+        labels: { severity: critical }
+        annotations:
+          summary: "Đĩa {{ $labels.mountpoint }} còn dưới 10%"
+          description: "Còn {{ $value | humanizePercentage }}. Dọn image cũ: docker image prune -a; xem deploy/backups."
+
+      - alert: DeadLetterMessages
+        expr: sum by (queue) (rabbitmq_detailed_queue_messages{queue=~".*\\.(dlq|dead)"}) > 0
+        for: 10m
+        labels: { severity: warning }
+        annotations:
+          summary: "Hàng đợi lỗi {{ $labels.queue }} có {{ $value }} tin"
+          description: "Tin nhắn xử lý thất bại nhiều lần. Xem trong RabbitMQ (SSH tunnel cổng 15672)."
+
+      - alert: BackupTooOld
+        expr: time() - pavex_backup_last_success_timestamp_seconds > 26 * 3600
+        for: 30m
+        labels: { severity: critical }
+        annotations:
+          summary: "Bản sao lưu PostgreSQL gần nhất đã quá 26 giờ"
+          description: "Xem: docker compose -f deploy/compose.yml logs backup"

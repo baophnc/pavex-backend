@@ -3251,13 +3251,14 @@ Docker thì các test này được bỏ qua chứ không báo lỗi. Phần dù
 | Theo dõi xe | Bưu cục đã có toạ độ (có thể để trống), nhưng Fleet chưa dùng để tự nhận biết xe vào/rời hub; chưa có danh mục xe (biển số do tài xế tự nhập); chưa dự báo giờ tới |
 | GPS nền trên iPhone | Cần tài xế cho phép vị trí; iOS có thể dừng app nếu tài xế vuốt tắt hẳn app giữa chuyến |
 | Kiểm thử | Phần lớn là unit test. Test trên PostgreSQL thật mới có ở mức migration và entity cho mỗi service (mục 7), cộng một luồng đối soát COD của Billing; chưa có test chạy nhiều service cùng lúc qua RabbitMQ |
-| Triển khai thật | Mặc định đã an toàn để deploy và có Dockerfile cho mọi service (mục 9). Chưa chọn nơi chạy; chưa có CI, giám sát, nơi giữ secret và cấu hình chạy (compose/manifest) cho môi trường thật |
+| Triển khai thật | Mặc định an toàn để deploy, Dockerfile cho mọi service, CI trên GitHub Actions và bộ dựng staging trên một VPS (`deploy/`, mục 9.7: Caddy HTTPS, giám sát, sao lưu). Chưa chọn VPS và domain; client portal chưa có image production; ảnh trong MinIO chưa được sao lưu |
 
 ---
 
 ## 9. Triển khai thật
 
-Mục này chỉ nói về backend: biến môi trường và image. Chọn nơi chạy, CI, giám sát và nơi giữ secret là quyết định riêng.
+Mục 9.1–9.6: biến môi trường và image của backend, đúng cho mọi nơi chạy. Mục 9.7: dựng cả hệ thống (backend, hai portal,
+HTTPS, giám sát, sao lưu) trên một VPS bằng thư mục `deploy/`.
 
 ### 9.1 Nguyên tắc
 
@@ -3352,3 +3353,222 @@ Các cờ dưới đây mặc định đã tắt; **không đặt** chúng ở m
 | `FLEET_SIMULATOR_ENABLED` | Xe giả lập tự chạy trên bản đồ |
 | `OPERATIONS_SHIFT_FULL_DAY`, `OPERATIONS_ACCEPT_TIMEOUT` | Chế độ test ca làm và nhận việc (`.env.example`, mục 6) |
 | `PAVEX_BOOTSTRAPADMIN_RESET_PASSWORD` | Xem mục 9.3 |
+
+### 9.7 Dựng staging trên một VPS
+
+Thư mục `deploy/` chạy toàn bộ Pavex trên **một máy Linux có Docker**, không phụ thuộc nhà cung cấp: 12 service Java,
+hai portal, PostgreSQL, RabbitMQ, Redis, MinIO, Caddy (HTTPS tự động), Prometheus + Alertmanager + Grafana và một
+container sao lưu. Mọi thứ khác nhau giữa các server (domain, email, SMTP, payOS, S3) nằm trong `deploy/.env`.
+
+| File | Vai trò |
+|---|---|
+| `deploy/compose.yml` | Toàn bộ hệ thống. Chỉ Caddy mở cổng; các container nói chuyện qua mạng riêng `pavex` |
+| `deploy/.env.example` | Mẫu cấu hình server: copy thành `deploy/.env` |
+| `deploy/gen-secrets.sh` | Sinh mật khẩu, khoá và cặp khoá JWT vào `deploy/secrets/` |
+| `deploy/caddy/Caddyfile` | Domain → container, HTTPS, HSTS |
+| `deploy/postgres/init-databases.sh` | Mỗi service một database và một login riêng |
+| `deploy/prometheus/`, `deploy/alertmanager/`, `deploy/grafana/` | Thu số liệu, luật cảnh báo, dashboard |
+| `deploy/backup/`, `deploy/restore.sh` | Sao lưu hằng đêm và khôi phục |
+
+**Các lựa chọn và lý do:**
+
+- **Một PostgreSQL, mười database.** Mười server PostgreSQL trên cùng một máy tốn thêm khoảng 1 GB RAM mà không cách ly
+  hơn (vẫn chung đĩa, chung CPU). Mỗi service có login riêng (`pavex_auth`, …), chỉ vào được database của mình.
+- **Secret là file, không phải biến môi trường.** Mỗi container chỉ mount (chỉ đọc) đúng các file nó cần trong
+  `/run/secrets/`; Spring đọc chúng như cấu hình (`SPRING_CONFIG_IMPORT=optional:configtree:/run/secrets/`), nên
+  `docker inspect` không lộ mật khẩu. Riêng khoá do bên ngoài cấp (SMTP, payOS, S3) nằm trong `deploy/.env`
+  (`chmod 600`).
+- **Grafana sau Caddy** ở `https://grafana.<domain>`, có mật khẩu riêng; giới hạn IP được bằng `GRAFANA_ALLOW_FROM`.
+  Grafana chỉ đọc số liệu, có trang đăng nhập và nhiều người cần xem, nên tiện hơn SSH tunnel. Các trang có quyền
+  sửa hệ thống (RabbitMQ, MinIO, Prometheus, Alertmanager) **không** ra internet: chỉ mở trên loopback của VPS, vào
+  bằng SSH tunnel (mục 9.7.7).
+- Đã cố định trong `compose.yml` (không cần và không nên đặt trong `.env`): `PAVEX_DEMO_RESET_ENABLED=false`, Swagger và
+  API docs tắt, bảng giá/mạng lưới demo và xe giả lập tắt, `BILLING_RECONCILIATION_ENABLED=true`,
+  `GATEWAY_ALLOWED_ORIGIN=https://<domain>`, `GATEWAY_TRUSTED_PROXIES=<mạng pavex>` (Caddy và hai portal; Caddy thay
+  `X-Forwarded-For` bằng IP thật của trình duyệt, nên giới hạn tần suất của gateway tính đúng theo người dùng).
+
+#### 9.7.1 Cần chuẩn bị
+
+| Thứ | Yêu cầu |
+|---|---|
+| VPS | Ubuntu 22.04/24.04 (hoặc Linux bất kỳ có Docker), **4 vCPU, 8 GB RAM, 80 GB SSD**. Đo khi chạy thử không tải: 12 service Java ~350–450 MB mỗi service, tổng cả hệ thống ~6 GB. 4 GB RAM không đủ |
+| Phần mềm | Docker Engine 24+ có plugin `docker compose` (`curl -fsSL https://get.docker.com \| sh`), `git`, `openssl` |
+| Tường lửa | Chỉ mở cổng **22, 80, 443** (TCP; thêm 443/UDP cho HTTP/3). Let's Encrypt cần cả 80 và 443 |
+| Domain | Một domain hoặc subdomain, ví dụ `staging.pavex.vn`, quản lý được DNS |
+| Email | Một tài khoản SMTP thật (email xác thực, quên mật khẩu, mời nhân viên, cảnh báo) |
+| payOS (tuỳ chọn) | Khoá kênh thanh toán, nếu staging dùng tiền thật (mục 9.5) |
+
+**Bản ghi DNS** (A, thêm AAAA nếu VPS có IPv6), tất cả trỏ về IP của VPS. Với `PAVEX_DOMAIN=staging.pavex.vn`:
+
+| Tên | Dùng cho |
+|---|---|
+| `staging.pavex.vn` | Client portal (khách hàng, shop) |
+| `www.staging.pavex.vn` | Chuyển hướng về `staging.pavex.vn` |
+| `admin.staging.pavex.vn` | Management portal (nhân viên) |
+| `api.staging.pavex.vn` | API gateway: app hiện trường, webhook payOS, ảnh đại diện |
+| `grafana.staging.pavex.vn` | Grafana |
+
+Tạo DNS **trước** lần chạy đầu: Caddy xin chứng chỉ ngay khi khởi động.
+
+#### 9.7.2 Image
+
+- **Backend:** `docker compose ... up -d --build` build cả 12 image trên VPS từ `Dockerfile` ở thư mục gốc (lần đầu
+  ~10–15 phút). Hoặc build ở nơi khác, đẩy lên registry với tên `<PAVEX_IMAGE_PREFIX>/<service>:<PAVEX_TAG>` (ví dụ
+  `ghcr.io/pavex/auth-service:2026-10-18`), đặt hai biến đó trong `.env`, rồi `docker compose ... pull` và
+  `up -d --no-build`.
+- **Management portal:** trong repo `pavex-management-portal`: `docker build -t pavex/management-portal:staging .`
+- **Client portal:** repo `pavex-client-portal-env` **chưa có image production** (Dockerfile hiện chỉ chạy `pnpm dev`).
+  Cần thêm một stage `next build` + `next start`; lưu ý `NEXT_PUBLIC_SITE_URL` được ghi vào lúc build, nên build với
+  `NEXT_PUBLIC_SITE_URL=https://<domain>`.
+- Tên image hai portal đặt bằng `CLIENT_PORTAL_IMAGE`, `MANAGEMENT_PORTAL_IMAGE`. Không có registry thì chuyển image
+  thẳng sang VPS: `docker save pavex/management-portal:staging | ssh user@vps docker load`.
+
+#### 9.7.3 Lần chạy đầu
+
+```bash
+git clone https://github.com/baophnc/pavex-backend.git && cd pavex-backend   # nhánh/tag cần chạy
+cp deploy/.env.example deploy/.env && chmod 600 deploy/.env
+nano deploy/.env                    # PAVEX_DOMAIN, ACME_EMAIL, PAVEX_BOOTSTRAPADMIN_EMAIL, MAIL_*, ...
+./deploy/gen-secrets.sh             # mật khẩu, khoá, khoá JWT → deploy/secrets/
+docker compose -f deploy/compose.yml up -d --build
+docker compose -f deploy/compose.yml ps   # đợi mọi service "healthy" (2–4 phút)
+```
+
+1. Mở `https://admin.<domain>`, đăng nhập bằng `PAVEX_BOOTSTRAPADMIN_EMAIL` và mật khẩu trong
+   `deploy/secrets/values/PAVEX_BOOTSTRAPADMIN_PASSWORD`. **Đổi mật khẩu ngay**, tạo các quản trị viên khác.
+2. Đặt `PAVEX_BOOTSTRAPADMIN_ENABLED=false` trong `deploy/.env`, chạy lại `docker compose -f deploy/compose.yml up -d`.
+3. Nhập mạng lưới và bảng giá thật (dữ liệu demo tắt).
+4. Mở `https://<domain>`, đăng ký thử một tài khoản khách: email xác thực phải đến hộp thư thật.
+5. Chép `deploy/secrets/` ra nơi an toàn ngoài VPS (trình quản lý mật khẩu, ổ mã hoá). Mất thư mục này thì dữ liệu
+   khôi phục vẫn đọc được nhưng mọi người bị đăng xuất, tin outbox chưa gửi của Auth không đọc được, và phải sinh lại
+   khoá JWT.
+
+`./deploy/gen-secrets.sh` chạy lại được: chỉ tạo giá trị còn thiếu, không đổi giá trị có sẵn. Mật khẩu database,
+RabbitMQ và MinIO chỉ được áp dụng khi volume dữ liệu của chúng được tạo lần đầu; đổi sau đó thì phải đổi cả trong
+PostgreSQL (`ALTER ROLE`), RabbitMQ (`rabbitmqctl change_password`), MinIO.
+
+#### 9.7.4 Cập nhật phiên bản
+
+```bash
+cd pavex-backend && git pull                       # hoặc checkout tag mới
+./deploy/gen-secrets.sh                            # thêm secret mà bản mới cần (nếu có)
+docker compose -f deploy/compose.yml exec backup pavex-backup   # sao lưu ngay trước khi nâng cấp
+docker compose -f deploy/compose.yml up -d --build
+docker compose -f deploy/compose.yml ps
+```
+
+Flyway tự chạy migration khi service khởi động. Mỗi service khởi động lại mất khoảng 1 phút; trong lúc đó các API
+của service đó trả lỗi 503. Quay lại bản cũ: checkout bản cũ, `up -d --build`, và nếu migration mới đã đổi dữ liệu
+thì khôi phục bản sao lưu vừa làm (mục 9.7.6). Dọn image cũ cho đỡ đầy đĩa: `docker image prune`.
+
+#### 9.7.5 Webhook payOS
+
+1. Trong `deploy/.env`: `BILLING_PAYMENT_PROVIDER=payos`, `PAYOS_ENABLED=true`, `PAYOS_CLIENT_ID`, `PAYOS_API_KEY`,
+   `PAYOS_CHECKSUM_KEY`, rồi `docker compose -f deploy/compose.yml up -d billing-service`.
+2. Trong trang quản lý payOS (kênh thanh toán), đặt Webhook URL:
+   `https://api.<domain>/api/v1/integrations/payos/webhook` (payOS gửi thử một request khi lưu: phải thành công).
+3. `PAYOS_RETURN_URL`/`PAYOS_CANCEL_URL` đã trỏ về `https://<domain>/account/billing`. Billing tự hỏi lại payOS mỗi
+   2 phút cho các thanh toán chưa nhận được webhook.
+
+#### 9.7.6 Sao lưu và khôi phục
+
+- Container `backup` chạy `pg_dump` **mọi database `pavex_*` lúc 02:30 mỗi đêm** (giờ Việt Nam; `BACKUP_SCHEDULE`, `TZ`)
+  vào `deploy/backups/daily/<ngày_giờ>/` (một file `.dump` mỗi database, `globals.sql`, `SHA256SUMS`). Giữ **7 bản
+  ngày**; bản Chủ nhật được giữ thêm làm **bản tuần**, giữ **4 bản tuần** (`deploy/backups/weekly/`).
+- Có `BACKUP_S3_BUCKET` (cùng `BACKUP_S3_ENDPOINT`, `BACKUP_S3_ACCESS_KEY`, `BACKUP_S3_SECRET_KEY`, …) thì sau mỗi lần
+  sao lưu, các bản được chép lên S3/R2/B2/MinIO (bucket phải có sẵn); bản trên đó cũ hơn `BACKUP_S3_KEEP` (35 ngày)
+  bị xoá. Chỉ chép thêm, không đồng bộ xoá: lỡ xoá thư mục local thì bản trên S3 vẫn còn.
+- Sao lưu ngay: `docker compose -f deploy/compose.yml exec backup pavex-backup`. Kết quả: `logs backup`; Grafana có ô
+  "Sao lưu gần nhất", và cảnh báo `BackupTooOld` khi bản gần nhất cũ hơn 26 giờ.
+- **Chưa sao lưu:** ảnh và tệp trong MinIO (ảnh giao hàng, tệp đính kèm, ảnh đại diện). Volume `minio_data` cần được
+  chụp (snapshot VPS) hoặc chép bằng `mc mirror` nếu staging giữ ảnh quan trọng.
+
+**Khôi phục** (dừng service sở hữu database, xoá và tạo lại database, nạp bản dump, chạy lại service):
+
+```bash
+ls deploy/backups/daily/
+./deploy/restore.sh deploy/backups/daily/2026-10-18_0230                   # mọi database của bản đó
+./deploy/restore.sh deploy/backups/daily/2026-10-18_0230 pavex_billing     # chỉ một database
+```
+
+Script hỏi gõ `RESTORE` để xác nhận (`--yes` để bỏ qua). Khôi phục trên một VPS mới: dựng như mục 9.7.3 **với thư mục
+`deploy/secrets/` cũ** (chép vào trước khi chạy `gen-secrets.sh`), chép bản sao lưu vào `deploy/backups/`, rồi chạy
+`restore.sh`. Khôi phục một phần (chỉ vài database) có thể làm lệch dữ liệu giữa các service; khi nghi ngờ, khôi phục
+cả bộ.
+
+**Diễn tập đã chạy (18/10/2026, trên máy local với bộ `deploy/` này):** sao lưu 10 database (kèm chép lên MinIO thay
+cho S3) → đăng ký thêm một tài khoản → xoá sạch bảng tài khoản của Auth (admin không đăng nhập được nữa) →
+`./deploy/restore.sh --yes deploy/backups/daily/2026-10-18_1854`. Kết quả: 10 database được nạp lại trong 107 giây;
+bảng thuộc lại login `pavex_auth`; khoảng 1 phút sau khi service healthy, admin đăng nhập lại được ở management
+portal, tài khoản shop đăng nhập được ở client portal; tài khoản tạo sau bản sao lưu không còn (đúng như mong đợi).
+Nên diễn tập lại mỗi quý trên một VPS thử.
+
+#### 9.7.7 Giám sát và cảnh báo
+
+- **Grafana:** `https://grafana.<domain>`, user `admin`, mật khẩu trong `deploy/secrets/values/GRAFANA_ADMIN_PASSWORD`.
+  Dashboard "Pavex — tổng quan": service nào đang chạy, request/giây, lỗi 5xx, độ trễ p95, tỷ lệ 4xx, heap JVM, CPU,
+  GC, kết nối DB, hàng đợi lỗi RabbitMQ (DLQ), đĩa trống, RAM, tuổi bản sao lưu.
+- **Số liệu:** mỗi service Java có `/actuator/prometheus`, chỉ bật trong `deploy/compose.yml` và chỉ đọc được trong
+  mạng riêng. Caddy trả 404 cho mọi `/actuator/*` trên `api.<domain>` trừ `/actuator/health` (vẫn công khai như cũ,
+  dùng được cho dịch vụ kiểm tra uptime bên ngoài).
+- **Cảnh báo** (`deploy/prometheus/alerts.yml`), gửi email tới `ALERT_EMAIL_TO` qua SMTP ở `.env`:
+
+  | Cảnh báo | Khi nào |
+  |---|---|
+  | `ServiceDown` | Một service không phản hồi Prometheus quá 2 phút |
+  | `HighServerErrorRate` | Hơn 5% request (không tính `/actuator`) của một service lỗi 5xx trong 5 phút |
+  | `DiskAlmostFull` | Một ổ đĩa còn dưới 10% |
+  | `DeadLetterMessages` | Hàng đợi lỗi (`*.dlq`, `*.dead`) có tin quá 10 phút |
+  | `BackupTooOld` | Bản sao lưu gần nhất cũ hơn 26 giờ |
+
+  Lúc mới khởi động cả hệ thống có thể nhận vài email `ServiceDown` (service Java chưa kịp lên); chúng tự gửi
+  "RESOLVED" sau đó.
+- **Trang quản trị nội bộ** (RabbitMQ, MinIO, Prometheus, Alertmanager) chỉ mở trên loopback của VPS. Từ máy mình:
+
+  ```bash
+  ssh -N -L 15672:localhost:15672 -L 9001:localhost:9001 -L 9090:localhost:9090 -L 9093:localhost:9093 user@<ip-vps>
+  ```
+
+  rồi mở `http://localhost:15672` (RabbitMQ: user `pavex`, mật khẩu `deploy/secrets/values/RABBITMQ_PASSWORD`),
+  `http://localhost:9001` (MinIO: `pavex` / `MINIO_SECRET_KEY`), `http://localhost:9090` (Prometheus),
+  `http://localhost:9093` (Alertmanager).
+
+#### 9.7.8 Log
+
+| Xem gì | Lệnh |
+|---|---|
+| Một service | `docker compose -f deploy/compose.yml logs -f --tail=200 billing-service` |
+| Tất cả, từ 10 phút trước | `docker compose -f deploy/compose.yml logs --since 10m` |
+| Truy cập HTTP (JSON, có IP, domain, mã trả về) | `docker compose -f deploy/compose.yml logs -f caddy` |
+| Sao lưu | `docker compose -f deploy/compose.yml logs backup` |
+
+Log nằm trong Docker (`json-file`), mỗi container tối đa 5 file × 20 MB, tự xoay vòng. Chưa có nơi gom log tập trung.
+
+#### 9.7.9 Thử toàn bộ trên máy local
+
+Dùng domain giả `pavex.localhost` (trình duyệt và `curl` tự trỏ `*.localhost` về máy mình) và CA riêng của Caddy.
+`deploy/.env` cho máy local:
+
+```dotenv
+PAVEX_DOMAIN=pavex.localhost
+ACME_EMAIL=ops@pavex.localhost
+CADDY_TLS=internal
+PAVEX_BOOTSTRAPADMIN_ENABLED=true
+PAVEX_BOOTSTRAPADMIN_EMAIL=admin@pavex.localhost
+MAIL_HOST=mailpit
+MAIL_PORT=1025
+MAIL_SMTP_AUTH=false
+MAIL_STARTTLS=false
+MAIL_FROM=no-reply@pavex.localhost
+COMPOSE_PROFILES=mailtest
+# Tránh cổng của bộ chạy dev (./scripts/dev-up.sh):
+OPS_RABBITMQ_PORT=25672
+OPS_MINIO_PORT=29001
+OPS_PROMETHEUS_PORT=29090
+OPS_ALERTMANAGER_PORT=29093
+```
+
+Chạy như mục 9.7.3; bộ này dùng project `pavex-staging` nên không đụng container của `./scripts/dev-up.sh`, chỉ cần
+cổng 80 và 443 còn trống. Trình duyệt sẽ báo chứng chỉ không tin cậy (CA nội bộ của Caddy); `curl -k` để thử bằng
+dòng lệnh. Email vào Mailpit (`docker compose -f deploy/compose.yml exec mailpit wget -qO- localhost:8025/api/v1/messages`).
+Dừng: `docker compose -f deploy/compose.yml down` (thêm `-v` để xoá cả dữ liệu).

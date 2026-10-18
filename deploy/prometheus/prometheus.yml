@@ -1,0 +1,73 @@
+# Scrapes every service over the private network of deploy/compose.yml. UI: http://localhost:9090 through an
+# SSH tunnel (docs section 9.7.7). Alert rules: alerts.yml; they are sent to Alertmanager.
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+rule_files:
+  - /etc/prometheus/alerts.yml
+
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets: ["alertmanager:9093"]
+
+scrape_configs:
+  - job_name: spring
+    metrics_path: /actuator/prometheus
+    static_configs:
+      - targets: ["discovery-server:8761"]
+        labels: { service: discovery-server }
+      - targets: ["api-gateway:8080"]
+        labels: { service: api-gateway }
+      - targets: ["auth-service:8081"]
+        labels: { service: auth }
+      - targets: ["identity-service:8082"]
+        labels: { service: identity }
+      - targets: ["partners-service:8083"]
+        labels: { service: partners }
+      - targets: ["shipment-service:8084"]
+        labels: { service: shipment }
+      - targets: ["network-service:8085"]
+        labels: { service: network }
+      - targets: ["pricing-service:8086"]
+        labels: { service: pricing }
+      - targets: ["operations-service:8087"]
+        labels: { service: operations }
+      - targets: ["billing-service:8088"]
+        labels: { service: billing }
+      - targets: ["fleet-service:8089"]
+        labels: { service: fleet }
+      - targets: ["notifications-service:8090"]
+        labels: { service: notifications }
+
+  # Queue depths, including the dead-letter queues (*.dlq, *.dead).
+  - job_name: rabbitmq
+    metrics_path: /metrics/detailed
+    params:
+      family: [queue_coarse_metrics]
+      vhost: [pavex]
+    static_configs:
+      - targets: ["rabbitmq:15692"]
+        labels: { service: rabbitmq }
+
+  - job_name: node
+    static_configs:
+      - targets: ["node-exporter:9100"]
+        labels: { service: server }
+
+  - job_name: caddy
+    static_configs:
+      - targets: ["caddy:2020"]
+        labels: { service: caddy }
+
+  - job_name: minio
+    metrics_path: /minio/v2/metrics/cluster
+    static_configs:
+      - targets: ["minio:9000"]
+        labels: { service: minio }
+
+  - job_name: prometheus
+    static_configs:
+      - targets: ["localhost:9090"]
+        labels: { service: prometheus }
