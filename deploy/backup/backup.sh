@@ -1,15 +1,16 @@
 #!/bin/sh
-# Dumps every pavex_* database (pg_dump custom format) plus the roles into /backups/daily/<date>/,
-# keeps BACKUP_KEEP_DAILY daily sets and, from Sunday's set, BACKUP_KEEP_WEEKLY weekly ones; then copies
-# them to S3-compatible storage when BACKUP_S3_BUCKET is set. Restore: deploy/restore.sh.
+# Dumps every pavex_* database (pg_dump custom format) plus the roles into /backups/daily/<date>/, copies every
+# MinIO bucket next to them (pavex-backup-objects), keeps BACKUP_KEEP_DAILY daily sets and, from Sunday's set,
+# BACKUP_KEEP_WEEKLY weekly ones; then copies them to S3-compatible storage when BACKUP_S3_BUCKET is set.
+# Restore: deploy/restore.sh.
 set -eu
+. /usr/local/lib/pavex-backup-common.sh
 PGPASSWORD="$(cat /run/secrets/POSTGRES_PASSWORD)"
 export PGPASSWORD
 root=/backups
 stamp="$(date +%Y-%m-%d_%H%M)"
 target="$root/daily/$stamp"
 work="$root/.in-progress-$stamp"
-log() { echo "[backup $(date '+%F %T')] $*"; }
 
 rm -rf "$work"
 mkdir -p "$work" "$root/daily" "$root/weekly"
@@ -22,6 +23,16 @@ done
 # Roles without their passwords: restore.sh recreates them from deploy/secrets when needed.
 pg_dumpall --globals-only --no-role-passwords >"$work/globals.sql"
 (cd "$work" && sha256sum ./*.dump globals.sql >SHA256SUMS)
+
+# After the dumps: every photo a dumped row points to is already in MinIO. A failed copy must not cost the
+# databases' backup: the set keeps the dumps, the job ends in error and BackupTooOld fires for MinIO.
+objects_ok=true
+if ! pavex-backup-objects "$work"; then
+  objects_ok=false
+  rm -rf "$work/objects" "$work/objects.list"
+  log "MinIO copy FAILED: $target has the databases only"
+fi
+rm -rf "$target" # a second run within the same minute replaces the first
 mv "$work" "$target"
 log "saved $target"
 
@@ -43,16 +54,16 @@ prune "$root/daily" "${BACKUP_KEEP_DAILY:-7}"
 prune "$root/weekly" "${BACKUP_KEEP_WEEKLY:-4}"
 
 if [ -n "${BACKUP_S3_BUCKET:-}" ]; then
-  export RCLONE_CONFIG_OFFSITE_TYPE=s3
-  export RCLONE_CONFIG_OFFSITE_PROVIDER="${BACKUP_S3_PROVIDER:-Other}"
-  export RCLONE_CONFIG_OFFSITE_ENDPOINT="${BACKUP_S3_ENDPOINT:-}"
-  export RCLONE_CONFIG_OFFSITE_REGION="${BACKUP_S3_REGION:-}"
-  export RCLONE_CONFIG_OFFSITE_ACCESS_KEY_ID="${BACKUP_S3_ACCESS_KEY:-}"
-  export RCLONE_CONFIG_OFFSITE_SECRET_ACCESS_KEY="${BACKUP_S3_SECRET_KEY:-}"
-  remote="offsite:${BACKUP_S3_BUCKET}/${BACKUP_S3_PREFIX:-pavex-staging}"
+  offsite_remote
   # copy, never sync: an emptied local folder must not empty the offsite copy.
-  rclone copy "$root" "$remote" --exclude '.in-progress-*/**' --s3-no-check-bucket
-  rclone delete "$remote" --min-age "${BACKUP_S3_KEEP:-35d}" --rmdirs
+  rclone copy "$root" "$remote" --exclude '.in-progress-*/**' --exclude '/fetched/**' \
+    --exclude '/{daily,weekly}/*/objects/**' --s3-no-check-bucket
+  # Objects go once into one shared folder (keys never change, so the size is enough to skip what is there);
+  # each set's objects.list says which of them belonged to it. pavex-fetch rebuilds a set from both.
+  if $objects_ok; then
+    rclone copy "$target/objects" "$remote/objects" --size-only --s3-no-check-bucket
+  fi
+  rclone delete "$remote" --min-age "${BACKUP_S3_KEEP:-35d}" --exclude '/objects/**' --rmdirs
   log "copied to $remote"
 fi
 
@@ -67,4 +78,27 @@ pavex_backup_last_success_timestamp_seconds $(date +%s)
 pavex_backup_last_size_bytes $size
 PROM
 mv /metrics/pavex_backup.prom.tmp /metrics/pavex_backup.prom
+
+# A failure keeps the last success time, so the alert counts from it; before any success it is 0 (alert at once).
+objects_prom=/metrics/pavex_backup_objects.prom
+if $objects_ok || [ ! -f "$objects_prom" ]; then
+  if $objects_ok; then
+    at="$(date +%s)" count="$(wc -l <"$target/objects.list")" bytes="$(du -sb "$target/objects" | cut -f1)"
+  else
+    at=0 count=0 bytes=0
+  fi
+  cat >"$objects_prom.tmp" <<PROM
+# HELP pavex_backup_objects_last_success_timestamp_seconds End of the last successful copy of the MinIO buckets.
+# TYPE pavex_backup_objects_last_success_timestamp_seconds gauge
+pavex_backup_objects_last_success_timestamp_seconds $at
+# HELP pavex_backup_objects_count Objects in the last copy of the MinIO buckets.
+# TYPE pavex_backup_objects_count gauge
+pavex_backup_objects_count $count
+# HELP pavex_backup_objects_bytes Size of the last copy of the MinIO buckets.
+# TYPE pavex_backup_objects_bytes gauge
+pavex_backup_objects_bytes $bytes
+PROM
+  mv "$objects_prom.tmp" "$objects_prom"
+fi
+$objects_ok || exit 1
 log "done"

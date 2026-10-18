@@ -40,10 +40,16 @@ groups:
           summary: "Hàng đợi lỗi {{ $labels.queue }} có {{ $value }} tin"
           description: "Tin nhắn xử lý thất bại nhiều lần. Xem trong RabbitMQ (SSH tunnel cổng 15672)."
 
+      # One series per part of the nightly set: the databases and the MinIO objects (photos, attachments).
       - alert: BackupTooOld
-        expr: time() - pavex_backup_last_success_timestamp_seconds > 26 * 3600
+        expr: |
+          label_replace(time() - pavex_backup_last_success_timestamp_seconds, "part", "PostgreSQL", "", "")
+            > 26 * 3600
+          or
+          label_replace(time() - pavex_backup_objects_last_success_timestamp_seconds, "part", "MinIO", "", "")
+            > 26 * 3600
         for: 30m
         labels: { severity: critical }
         annotations:
-          summary: "Bản sao lưu PostgreSQL gần nhất đã quá 26 giờ"
+          summary: "Bản sao lưu {{ $labels.part }} gần nhất đã quá 26 giờ"
           description: "Xem: docker compose -f deploy/compose.yml logs backup"

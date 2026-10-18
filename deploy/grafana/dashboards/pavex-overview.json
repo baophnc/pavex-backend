@@ -432,7 +432,16 @@
             "uid": "prometheus"
           },
           "expr": "time() - pavex_backup_last_success_timestamp_seconds",
-          "legendFormat": "tuổi"
+          "legendFormat": "PostgreSQL"
+        },
+        {
+          "refId": "B",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "time() - pavex_backup_objects_last_success_timestamp_seconds",
+          "legendFormat": "MinIO"
         }
       ],
       "fieldConfig": {

@@ -467,7 +467,8 @@ services:
       retries: 12
     logging: *logging
 
-  # Nightly pg_dump of every database (backup/backup.sh); restore with deploy/restore.sh.
+  # Nightly pg_dump of every database and copy of every MinIO bucket (backup/backup.sh); restore with
+  # deploy/restore.sh.
   backup:
     image: ${PAVEX_IMAGE_PREFIX:-pavex}/backup:${PAVEX_TAG:-staging}
     build: ./backup
@@ -477,6 +478,8 @@ services:
       TZ: ${TZ:-Asia/Ho_Chi_Minh}
       PGHOST: postgres
       PGUSER: postgres
+      MINIO_ENDPOINT: http://minio:9000
+      MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY:-pavex}
       BACKUP_SCHEDULE: ${BACKUP_SCHEDULE:-30 2 * * *}
       BACKUP_KEEP_DAILY: ${BACKUP_KEEP_DAILY:-7}
       BACKUP_KEEP_WEEKLY: ${BACKUP_KEEP_WEEKLY:-4}
@@ -488,12 +491,14 @@ services:
       BACKUP_S3_SECRET_KEY: ${BACKUP_S3_SECRET_KEY:-}
       BACKUP_S3_PROVIDER: ${BACKUP_S3_PROVIDER:-Other}
       BACKUP_S3_KEEP: ${BACKUP_S3_KEEP:-35d}
-    secrets: [POSTGRES_PASSWORD]
+    secrets: [POSTGRES_PASSWORD, MINIO_SECRET_KEY]
     volumes:
       - ${BACKUP_DIR:-./backups}:/backups
       - backup_metrics:/metrics
     depends_on:
       postgres:
+        condition: service_healthy
+      minio:
         condition: service_healthy
     logging: *logging
 
