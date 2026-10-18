@@ -2,9 +2,8 @@
 
 > Cập nhật ngày 18/10/2026. Đây là tài liệu duy nhất của dự án: kiến trúc, cách chạy, dữ liệu seed, vai trò và quyền,
 > nghiệp vụ, màn hình, entity và thuộc tính, API.
-> Bảng entity, enum và API ở mục 6 được trích tự động từ mã nguồn ngày 29/09/2026, nên chưa có Notifications và các
-> bảng, API thêm sau ngày đó. Nếu lệch với code thì code đúng (nguồn gốc: các class `@Entity` và `@RestController`
-> trong từng service).
+> Bảng entity, enum và API ở mục 6 được trích tự động từ mã nguồn ngày 18/10/2026. Nếu lệch với code thì code đúng
+> (nguồn gốc: các class `@Entity` và `@RestController` trong từng service).
 
 ## Mục lục
 
@@ -987,7 +986,7 @@ Chỉ giữ thông tin đăng nhập. Hồ sơ, vai trò và quyền nằm ở I
 </details>
 
 <details>
-<summary><b>UserAccount</b> — `auth.user_account` · 11 thuộc tính — Thông tin đăng nhập: email, mật khẩu (băm), trạng thái xác thực email, khoá tạm do đăng nhập sai</summary>
+<summary><b>UserAccount</b> — `auth.user_account` · 13 thuộc tính — Thông tin đăng nhập: email, mật khẩu (băm), trạng thái xác thực email, khoá tạm do đăng nhập sai</summary>
 
 | Thuộc tính | Cột | Kiểu | Ràng buộc |
 |---|---|---|---|
@@ -999,6 +998,8 @@ Chỉ giữ thông tin đăng nhập. Hồ sơ, vai trò và quyền nằm ở I
 | `failedLoginAttempts` | `failed_login_attempts` | `Int` | bắt buộc |
 | `lockoutEndAt` | `lockout_end_at` | `Instant?` | có thể rỗng |
 | `lastLoginAt` | `last_login_at` | `Instant?` | có thể rỗng |
+| `mustChangePassword` | `must_change_password` | `Boolean` | bắt buộc |
+| `temporaryPasswordExpiresAt` | `temporary_password_expires_at` | `Instant?` | có thể rỗng |
 | `createdAt` | `created_at` | `Instant` | bắt buộc |
 | `updatedAt` | `updated_at` | `Instant` | bắt buộc |
 | `version` | `version` | `Long` | khoá lạc quan (@Version), bắt buộc |
@@ -1010,14 +1011,14 @@ Chỉ giữ thông tin đăng nhập. Hồ sơ, vai trò và quyền nằm ở I
 
 | Enum | Giá trị |
 |---|---|
-| `AuthRateLimitPolicy` | `REGISTER_EMAIL`, `LOGIN_EMAIL`, `REFRESH_TOKEN`, `VERIFY_EMAIL_TOKEN`, `RESEND_EMAIL`, `FORGOT_PASSWORD_EMAIL`, `RESET_PASSWORD_TOKEN`, `ACCEPT_INVITE_TOKEN`, `GOOGLE_TOKEN` |
 | `OutboxStatus` | `PENDING`, `PUBLISHED`, `DEAD` |
 | `PasswordResetPortal` | `CLIENT`, `MANAGEMENT` |
+| `AuthRateLimitPolicy` | `REGISTER_EMAIL`, `LOGIN_EMAIL`, `REFRESH_TOKEN`, `VERIFY_EMAIL_TOKEN`, `RESEND_EMAIL`, `FORGOT_PASSWORD_EMAIL`, `RESET_PASSWORD_TOKEN`, `ACCEPT_INVITE_TOKEN`, `GOOGLE_TOKEN` |
 
 </details>
 
 <details>
-<summary>API (17 endpoint)</summary>
+<summary>API (19 endpoint)</summary>
 
 | Method | Đường dẫn | Quyền |
 |---|---|---|
@@ -1037,6 +1038,8 @@ Chỉ giữ thông tin đăng nhập. Hồ sơ, vai trò và quyền nằm ở I
 | `POST` | `/api/v1/auth/verify-email` | Công khai |
 | `POST` | `/internal/v1/credentials/invitations/provision` | Nội bộ (JWT dịch vụ) |
 | `POST` | `/internal/v1/credentials/invitations/send` | Nội bộ (JWT dịch vụ) |
+| `POST` | `/internal/v1/credentials/{userId}/close` | Nội bộ (JWT dịch vụ) |
+| `POST` | `/internal/v1/credentials/{userId}/email` | Nội bộ (JWT dịch vụ) |
 | `POST` | `/internal/v1/credentials/{userId}/revoke-sessions` | Nội bộ (JWT dịch vụ) |
 
 </details>
@@ -1082,7 +1085,7 @@ Nguồn duy nhất về tài khoản, hồ sơ, vai trò và quyền. Khoá tài
 </details>
 
 <details>
-<summary><b>UserAccount</b> — `identity.user_account` · 9 thuộc tính — Hồ sơ danh tính: trạng thái tài khoản, phiên bản quyền (token cũ tự hết hiệu lực khi quyền đổi)</summary>
+<summary><b>UserAccount</b> — `identity.user_account` · 12 thuộc tính — Hồ sơ danh tính: trạng thái tài khoản, phiên bản quyền (token cũ tự hết hiệu lực khi quyền đổi)</summary>
 
 | Thuộc tính | Cột | Kiểu | Ràng buộc |
 |---|---|---|---|
@@ -1094,6 +1097,9 @@ Nguồn duy nhất về tài khoản, hồ sơ, vai trò và quyền. Khoá tài
 | `authorizationVersion` | `authorization_version` | `Long` | bắt buộc |
 | `createdAt` | `created_at` | `Instant` | bắt buộc |
 | `updatedAt` | `updated_at` | `Instant` | bắt buộc |
+| `deletedAt` | `deleted_at` | `Instant?` | có thể rỗng |
+| `deletedByUserId` | `deleted_by_user_id` | `UUID?` | có thể rỗng |
+| `deletedEmail` | `deleted_email` | `String?` | tối đa 255 ký tự, có thể rỗng |
 | `version` | `version` | `Long` | khoá lạc quan (@Version), bắt buộc |
 
 </details>
@@ -1132,35 +1138,41 @@ Nguồn duy nhất về tài khoản, hồ sơ, vai trò và quyền. Khoá tài
 
 | Enum | Giá trị |
 |---|---|
-| `AccountStatus` | `ACTIVE`, `SUSPENDED`, `DISABLED` |
+| `AccountStatus` | `ACTIVE`, `SUSPENDED`, `DISABLED`, `DELETED` |
 | `ProfileStatus` | `INCOMPLETE`, `COMPLETED`, `PENDING_VERIFICATION`, `REJECTED` |
 | `Gender` | `UNSPECIFIED`, `MALE`, `FEMALE`, `OTHER` |
 
 </details>
 
 <details>
-<summary>API (25 endpoint)</summary>
+<summary>API (31 endpoint)</summary>
 
 | Method | Đường dẫn | Quyền |
 |---|---|---|
 | `GET` | `/api/v1/auth/me` | Đăng nhập (dữ liệu của chính mình) |
+| `POST` | `/api/v1/auth/me/avatar` | Đăng nhập (dữ liệu của chính mình) |
 | `PATCH` | `/api/v1/auth/me/profile` | Đăng nhập (dữ liệu của chính mình) |
+| `GET` | `/api/v1/avatars/{id}` | Công khai |
 | `GET` | `/api/v1/identities/me` | Đăng nhập (dữ liệu của chính mình) |
 | `PATCH` | `/api/v1/identities/me` | Đăng nhập (dữ liệu của chính mình) |
-| `GET` | `/api/v1/permissions` | `identity.roles.read` (kiểm tra trong service) |
-| `GET` | `/api/v1/roles` | `identity.roles.read` (kiểm tra trong service) |
-| `POST` | `/api/v1/roles` | `identity.roles.manage` (kiểm tra trong service) |
-| `DELETE` | `/api/v1/roles/{roleId}` | `identity.roles.manage` (kiểm tra trong service) |
-| `PATCH` | `/api/v1/roles/{roleId}` | `identity.roles.manage` (kiểm tra trong service) |
-| `PUT` | `/api/v1/roles/{roleId}/permissions` | `identity.roles.manage` (kiểm tra trong service) |
-| `GET` | `/api/v1/users` | `identity.users.read` (kiểm tra trong service) |
-| `POST` | `/api/v1/users` | `identity.users.create` (kiểm tra trong service) |
-| `GET` | `/api/v1/users/{userId}` | `identity.users.read` (kiểm tra trong service) |
-| `POST` | `/api/v1/users/{userId}/invite` | `identity.users.invite` (kiểm tra trong service) |
-| `PUT` | `/api/v1/users/{userId}/profile` | `identity.users.manage-profile` (kiểm tra trong service) |
-| `POST` | `/api/v1/users/{userId}/roles` | `identity.roles.assign` (kiểm tra trong service) |
-| `DELETE` | `/api/v1/users/{userId}/roles/{roleCode}` | `identity.roles.assign` (kiểm tra trong service) |
-| `PATCH` | `/api/v1/users/{userId}/status` | `identity.users.manage-status` (kiểm tra trong service) |
+| `GET` | `/api/v1/permissions` | `identity.roles.read` |
+| `GET` | `/api/v1/roles` | `identity.roles.read` |
+| `POST` | `/api/v1/roles` | `identity.roles.manage` và vai trò `ADMIN` |
+| `DELETE` | `/api/v1/roles/{roleId}` | `identity.roles.manage` và vai trò `ADMIN` |
+| `PATCH` | `/api/v1/roles/{roleId}` | `identity.roles.manage` và vai trò `ADMIN` |
+| `PUT` | `/api/v1/roles/{roleId}/permissions` | `identity.roles.manage` và vai trò `ADMIN` |
+| `GET` | `/api/v1/users` | `identity.users.read` |
+| `POST` | `/api/v1/users` | `identity.users.create` và `identity.roles.assign` |
+| `POST` | `/api/v1/users/names` | `identity.users.read` hoặc `scope.all-hubs` hoặc `operations.hub.read` hoặc `assignments.read-own` |
+| `DELETE` | `/api/v1/users/{userId}` | `identity.users.delete` |
+| `GET` | `/api/v1/users/{userId}` | `identity.users.read` |
+| `POST` | `/api/v1/users/{userId}/avatar` | `identity.users.manage-profile` |
+| `PUT` | `/api/v1/users/{userId}/email` | `identity.users.manage-profile` |
+| `POST` | `/api/v1/users/{userId}/invite` | `identity.users.invite` |
+| `PUT` | `/api/v1/users/{userId}/profile` | `identity.users.manage-profile` |
+| `POST` | `/api/v1/users/{userId}/roles` | `identity.roles.assign` và vai trò `ADMIN` |
+| `DELETE` | `/api/v1/users/{userId}/roles/{roleCode}` | `identity.roles.assign` và vai trò `ADMIN` |
+| `PATCH` | `/api/v1/users/{userId}/status` | `identity.users.manage-status` |
 | `POST` | `/internal/v1/identities` | Nội bộ (JWT dịch vụ) |
 | `GET` | `/internal/v1/identities/{userId}/auth-context` | Nội bộ (JWT dịch vụ) |
 | `PATCH` | `/internal/v1/identities/{userId}/email-verification` | Nội bộ (JWT dịch vụ) |
@@ -1175,6 +1187,24 @@ Nguồn duy nhất về tài khoản, hồ sơ, vai trò và quyền. Khoá tài
 ### 6.3 Partners — `pavex_partners` (5435, service 8083)
 
 Danh mục hành chính, sổ địa chỉ, shop, điểm lấy hàng, yêu cầu hỗ trợ.
+
+<details>
+<summary><b>CounterContact</b> — `partners.counter_contacts` · 10 thuộc tính — Khách gửi tại quầy bưu cục: một SĐT, một địa chỉ, tự điền lại ở lần gửi sau</summary>
+
+| Thuộc tính | Cột | Kiểu | Ràng buộc |
+|---|---|---|---|
+| `id` | `id` | `UUID` | khoá chính |
+| `phone` | `phone` | `String` | tối đa 20 ký tự, bắt buộc |
+| `name` | `name` | `String` | tối đa 120 ký tự, bắt buộc |
+| `addressLine` | `address_line` | `String` | tối đa 500 ký tự, bắt buộc |
+| `provinceCode` | `province_code` | `String` | tối đa 20 ký tự, bắt buộc |
+| `wardCode` | `ward_code` | `String` | tối đa 20 ký tự, bắt buộc |
+| `useCount` | `use_count` | `Int` | bắt buộc |
+| `lastUsedAt` | `last_used_at` | `Instant` | bắt buộc |
+| `createdAt` | `created_at` | `Instant` | bắt buộc |
+| `updatedAt` | `updated_at` | `Instant` | bắt buộc |
+
+</details>
 
 <details>
 <summary><b>Province</b> — `partners.provinces` · 6 thuộc tính — Tỉnh/thành (danh mục hành chính 2 cấp mới)</summary>
@@ -1206,7 +1236,7 @@ Danh mục hành chính, sổ địa chỉ, shop, điểm lấy hàng, yêu cầ
 </details>
 
 <details>
-<summary><b>Merchant</b> — `partners.merchants` · 18 thuộc tính — Shop/đối tác gửi hàng: mã, tên doanh nghiệp, MST, liên hệ, trạng thái duyệt</summary>
+<summary><b>Merchant</b> — `partners.merchants` · 26 thuộc tính — Shop/đối tác gửi hàng: mã, tên doanh nghiệp, MST, liên hệ, trạng thái duyệt</summary>
 
 | Thuộc tính | Cột | Kiểu | Ràng buộc |
 |---|---|---|---|
@@ -1218,6 +1248,14 @@ Danh mục hành chính, sổ địa chỉ, shop, điểm lấy hàng, yêu cầ
 | `contactPhone` | `contact_phone` | `String` | tối đa 30 ký tự, bắt buộc |
 | `contactEmail` | `contact_email` | `String?` | tối đa 320 ký tự, có thể rỗng |
 | `taxCode` | `tax_code` | `String?` | tối đa 50 ký tự, có thể rỗng |
+| `businessType` | `business_type` | `MerchantBusinessType?` | tối đa 20 ký tự, enum, có thể rỗng |
+| `registrationNumber` | `registration_number` | `String?` | tối đa 50 ký tự, có thể rỗng |
+| `representativeName` | `representative_name` | `String?` | tối đa 200 ký tự, có thể rỗng |
+| `registeredAddress` | `registered_address` | `String?` | tối đa 500 ký tự, có thể rỗng |
+| `salesChannel` | `sales_channel` | `String?` | tối đa 500 ký tự, có thể rỗng |
+| `productCategory` | `product_category` | `String?` | tối đa 100 ký tự, có thể rỗng |
+| `expectedMonthlyOrders` | `expected_monthly_orders` | `Int?` | có thể rỗng |
+| `servingHubId` | `serving_hub_id` | `UUID?` | có thể rỗng |
 | `status` | `status` | `MerchantStatus` | tối đa 50 ký tự, enum, bắt buộc |
 | `statusReasonCode` | `status_reason_code` | `MerchantStatusReason?` | tối đa 50 ký tự, enum, có thể rỗng |
 | `statusReasonDetail` | `status_reason_detail` | `String?` | tối đa 500 ký tự, có thể rỗng |
@@ -1314,7 +1352,7 @@ Danh mục hành chính, sổ địa chỉ, shop, điểm lấy hàng, yêu cầ
 </details>
 
 <details>
-<summary><b>SupportRequestAttachment</b> — `partners.support_request_attachments` · 7 thuộc tính — Tệp bằng chứng của khiếu nại (ảnh/PDF, tối đa 5 × 5 MB)</summary>
+<summary><b>SupportRequestAttachment</b> — `partners.support_request_attachments` · 8 thuộc tính — Tệp bằng chứng của khiếu nại (ảnh/PDF, tối đa 5 × 5 MB)</summary>
 
 | Thuộc tính | Cột | Kiểu | Ràng buộc |
 |---|---|---|---|
@@ -1323,7 +1361,8 @@ Danh mục hành chính, sổ địa chỉ, shop, điểm lấy hàng, yêu cầ
 | `fileName` | `file_name` | `String` | tối đa 200 ký tự, bắt buộc |
 | `contentType` | `content_type` | `String` | tối đa 50 ký tự, bắt buộc |
 | `sizeBytes` | `size_bytes` | `Int` | bắt buộc |
-| `data` | `data` | `ByteArray` | bắt buộc |
+| `objectKey` | `object_key` | `String?` | tối đa 200 ký tự, có thể rỗng |
+| `data` | `data` | `ByteArray?` | có thể rỗng |
 | `createdAt` | `created_at` | `Instant` | bắt buộc |
 
 </details>
@@ -1370,6 +1409,7 @@ Danh mục hành chính, sổ địa chỉ, shop, điểm lấy hàng, yêu cầ
 |---|---|
 | `MerchantStatus` | `PENDING_VERIFICATION`, `ACTIVE`, `SUSPENDED`, `REJECTED` |
 | `MerchantStatusReason` | `DOCUMENT_INVALID`, `FRAUD_REVIEW`, `POLICY_VIOLATION`, `MERCHANT_REQUEST`, `OTHER` |
+| `MerchantBusinessType` | `INDIVIDUAL`, `HOUSEHOLD`, `COMPANY` |
 | `SupportRequestKind` | `CONTACT`, `SUPPORT`, `CLAIM`, `CAREER` |
 | `SupportRequestStatus` | `NEW`, `IN_PROGRESS`, `RESOLVED`, `CLOSED` |
 | `SupportRequestAction` | `SUBMITTED`, `STATUS_CHANGED`, `ASSIGNED`, `UNASSIGNED` |
@@ -1377,11 +1417,12 @@ Danh mục hành chính, sổ địa chỉ, shop, điểm lấy hàng, yêu cầ
 </details>
 
 <details>
-<summary>API (34 endpoint)</summary>
+<summary>API (37 endpoint)</summary>
 
 | Method | Đường dẫn | Quyền |
 |---|---|---|
 | `GET` | `/api/v1/admin/merchants` | `partners.merchants.read` |
+| `POST` | `/api/v1/admin/merchants/names` | `partners.merchants.read` hoặc `scope.all-hubs` hoặc `billing.manage` hoặc `billing.cash.read-hub` hoặc `operations.hub.read` |
 | `GET` | `/api/v1/admin/merchants/{merchantId}` | `partners.merchants.read` |
 | `GET` | `/api/v1/admin/merchants/{merchantId}/readiness` | `partners.merchants.read` |
 | `PATCH` | `/api/v1/admin/merchants/{merchantId}/status` | `partners.merchants.manage-status` |
@@ -1404,6 +1445,8 @@ Danh mục hành chính, sổ địa chỉ, shop, điểm lấy hàng, yêu cầ
 | `POST` | `/api/v1/merchants/me/profile` | Đăng nhập (dữ liệu của chính mình) |
 | `PUT` | `/api/v1/merchants/me/profile` | Đăng nhập (dữ liệu của chính mình) |
 | `POST` | `/api/v1/merchants/me/profile/submit-verification` | Đăng nhập (dữ liệu của chính mình) |
+| `GET` | `/api/v1/partners/counter/contacts` | `shipments.counter.create` |
+| `PUT` | `/api/v1/partners/counter/contacts` | `shipments.counter.create` |
 | `GET` | `/api/v1/partners/me/addresses` | Đăng nhập (dữ liệu của chính mình) |
 | `POST` | `/api/v1/partners/me/addresses` | Đăng nhập (dữ liệu của chính mình) |
 | `DELETE` | `/api/v1/partners/me/addresses/{addressId}` | Đăng nhập (dữ liệu của chính mình) |
@@ -1422,7 +1465,7 @@ Danh mục hành chính, sổ địa chỉ, shop, điểm lấy hàng, yêu cầ
 ### 6.4 Network — `pavex_network` (5436, service 8085)
 
 <details>
-<summary><b>Hub</b> — `network.hubs` · 14 thuộc tính — Điểm khai thác: trung tâm miền, kho tỉnh, bưu cục phường/xã</summary>
+<summary><b>Hub</b> — `network.hubs` · 16 thuộc tính — Điểm khai thác: trung tâm miền, kho tỉnh, bưu cục phường/xã</summary>
 
 | Thuộc tính | Cột | Kiểu | Ràng buộc |
 |---|---|---|---|
@@ -1437,6 +1480,8 @@ Danh mục hành chính, sổ địa chỉ, shop, điểm lấy hàng, yêu cầ
 | `parentHubId` | `parent_hub_id` | `UUID?` | có thể rỗng |
 | `publicVisible` | `public_visible` | `Boolean` | bắt buộc |
 | `publicName` | `public_name` | `String?` | tối đa 200 ký tự, có thể rỗng |
+| `latitude` | `latitude` | `Double?` | có thể rỗng |
+| `longitude` | `longitude` | `Double?` | có thể rỗng |
 | `createdAt` | `created_at` | `Instant` | bắt buộc |
 | `updatedAt` | `updated_at` | `Instant` | bắt buộc |
 | `version` | `version` | `Long` | khoá lạc quan (@Version), bắt buộc |
@@ -1641,7 +1686,7 @@ Danh mục hành chính, sổ địa chỉ, shop, điểm lấy hàng, yêu cầ
 </details>
 
 <details>
-<summary>API (56 endpoint)</summary>
+<summary>API (59 endpoint)</summary>
 
 | Method | Đường dẫn | Quyền |
 |---|---|---|
@@ -1656,8 +1701,10 @@ Danh mục hành chính, sổ địa chỉ, shop, điểm lấy hàng, yêu cầ
 | `GET` | `/api/v1/admin/network/coverages/{id}` | `network.read` hoặc `network.manage` |
 | `PUT` | `/api/v1/admin/network/coverages/{id}` | `network.manage` |
 | `PATCH` | `/api/v1/admin/network/coverages/{id}/status` | `network.manage` |
+| `POST` | `/api/v1/admin/network/demo-reset` | vai trò `ADMIN` (chỉ có khi `PAVEX_DEMO_RESET_ENABLED=true`) |
 | `GET` | `/api/v1/admin/network/hubs` | `network.read` hoặc `network.manage` |
 | `POST` | `/api/v1/admin/network/hubs` | `network.manage` |
+| `GET` | `/api/v1/admin/network/hubs/directory` | `network.read` hoặc `network.manage` hoặc `scope.all-hubs` hoặc `operations.hub.read` hoặc `assignments.read-own` |
 | `GET` | `/api/v1/admin/network/hubs/{id}` | `network.read` hoặc `network.manage` |
 | `PUT` | `/api/v1/admin/network/hubs/{id}` | `network.manage` |
 | `PATCH` | `/api/v1/admin/network/hubs/{id}/status` | `network.manage` |
@@ -1696,6 +1743,7 @@ Danh mục hành chính, sổ địa chỉ, shop, điểm lấy hàng, yêu cầ
 | `POST` | `/internal/v1/network/locations/resolve` | Nội bộ (JWT dịch vụ) |
 | `POST` | `/internal/v1/network/operations/hubs/snapshots` | Nội bộ (JWT dịch vụ) |
 | `POST` | `/internal/v1/network/operations/hubs/snapshots-by-codes` | Nội bộ (JWT dịch vụ) |
+| `POST` | `/internal/v1/network/partners/serving-hub` | Nội bộ (JWT dịch vụ) |
 | `POST` | `/internal/v1/network/shipments/capacity/reservations` | Nội bộ (JWT dịch vụ) |
 | `POST` | `/internal/v1/network/shipments/capacity/reservations/{shipmentId}/revisions/{routeRevision}/confirm` | Nội bộ (JWT dịch vụ) |
 | `POST` | `/internal/v1/network/shipments/capacity/reservations/{shipmentId}/revisions/{routeRevision}/release` | Nội bộ (JWT dịch vụ) |
@@ -1870,12 +1918,13 @@ Danh mục hành chính, sổ địa chỉ, shop, điểm lấy hàng, yêu cầ
 </details>
 
 <details>
-<summary>API (16 endpoint)</summary>
+<summary>API (17 endpoint)</summary>
 
 | Method | Đường dẫn | Quyền |
 |---|---|---|
 | `GET` | `/api/v1/admin/pricing/audit` | `pricing.read` hoặc `pricing.manage` |
 | `GET` | `/api/v1/admin/pricing/audit/{id}` | `pricing.read` hoặc `pricing.manage` |
+| `POST` | `/api/v1/admin/pricing/demo-reset` | vai trò `ADMIN` (chỉ có khi `PAVEX_DEMO_RESET_ENABLED=true`) |
 | `GET` | `/api/v1/admin/pricing/quotes/{quoteId}` | `pricing.read` hoặc `pricing.manage` |
 | `GET` | `/api/v1/admin/pricing/rate-plans` | `pricing.read` hoặc `pricing.manage` |
 | `POST` | `/api/v1/admin/pricing/rate-plans` | `pricing.manage` |
@@ -2097,7 +2146,7 @@ giao lâu nhất được thử trước.
 </details>
 
 <details>
-<summary>API (50 endpoint)</summary>
+<summary>API (55 endpoint)</summary>
 
 | Method | Đường dẫn | Quyền |
 |---|---|---|
@@ -2105,6 +2154,7 @@ giao lâu nhất được thử trước.
 | `POST` | `/api/v1/admin/operations/assignments/{id}/assign` | `operations.assignments.manage` hoặc `operations.dispatch.manage` hoặc `operations.hub.manage` |
 | `POST` | `/api/v1/admin/operations/assignments/{id}/cancel` | `operations.assignments.manage` hoặc `operations.dispatch.manage` hoặc `operations.hub.manage` |
 | `GET` | `/api/v1/admin/operations/assignments/{id}/events` | `operations.assignments.read` hoặc `operations.assignments.manage` hoặc `operations.dispatch.manage` hoặc `operations.hub.manage` |
+| `POST` | `/api/v1/admin/operations/demo-reset` | vai trò `ADMIN` (chỉ có khi `PAVEX_DEMO_RESET_ENABLED=true`) |
 | `GET` | `/api/v1/admin/operations/dispatch-events` | `operations.assignments.read` hoặc `operations.assignments.manage` hoặc `operations.dispatch.manage` hoặc `operations.hub.manage` |
 | `GET` | `/api/v1/admin/operations/outbox/dead-letters` | `operations.assignments.read` hoặc `operations.assignments.manage` hoặc `operations.dispatch.manage` hoặc `operations.hub.manage` |
 | `GET` | `/api/v1/admin/operations/outbox/dead-letters/{id}` | `operations.assignments.read` hoặc `operations.assignments.manage` hoặc `operations.dispatch.manage` hoặc `operations.hub.manage` |
@@ -2142,6 +2192,9 @@ giao lâu nhất được thử trước.
 | `POST` | `/internal/v1/operations/access/check` | Nội bộ (JWT dịch vụ) |
 | `GET` | `/internal/v1/operations/fleet/users/{userId}/hub-scope` | Nội bộ (JWT dịch vụ) |
 | `GET` | `/internal/v1/operations/fleet/users/{userId}/line-haul-assignments` | Nội bộ (JWT dịch vụ) |
+| `GET` | `/internal/v1/operations/notifications/hubs/{hubId}/people` | Nội bộ (JWT dịch vụ) |
+| `GET` | `/internal/v1/operations/notifications/people/{userId}` | Nội bộ (JWT dịch vụ) |
+| `GET` | `/internal/v1/operations/partners/hub-scope/{userId}` | Nội bộ (JWT dịch vụ) |
 | `POST` | `/internal/v1/operations/shipments/access/check` | Nội bộ (JWT dịch vụ) |
 | `GET` | `/internal/v1/operations/shipments/assignments/by-user/{userId}` | Nội bộ (JWT dịch vụ) |
 | `GET` | `/internal/v1/operations/shipments/case-admin-scope/{userId}` | Nội bộ (JWT dịch vụ) |
@@ -2184,7 +2237,7 @@ giao lâu nhất được thử trước.
 </details>
 
 <details>
-<summary><b>DeliveryEvidence</b> — `shipments.delivery_evidence` · 7 thuộc tính — Ảnh chứng từ giao hàng</summary>
+<summary><b>DeliveryEvidence</b> — `shipments.delivery_evidence` · 8 thuộc tính — Ảnh chứng từ giao hàng</summary>
 
 | Thuộc tính | Cột | Kiểu | Ràng buộc |
 |---|---|---|---|
@@ -2193,7 +2246,8 @@ giao lâu nhất được thử trước.
 | `contentType` | `content_type` | `String` | tối đa 50 ký tự, bắt buộc |
 | `sizeBytes` | `size_bytes` | `Int` | bắt buộc |
 | `sha256` | `sha256` | `String` | tối đa 64 ký tự, bắt buộc |
-| `data` | `data` | `ByteArray` | bắt buộc |
+| `objectKey` | `object_key` | `String?` | tối đa 200 ký tự, có thể rỗng |
+| `data` | `data` | `ByteArray?` | có thể rỗng |
 | `createdAt` | `created_at` | `Instant` | bắt buộc |
 
 </details>
@@ -2234,13 +2288,14 @@ giao lâu nhất được thử trước.
 </details>
 
 <details>
-<summary><b>Shipment</b> — `shipments.shipments` · 76 thuộc tính — Vận đơn: người gửi/nhận, bảng giá đã chốt, tuyến, trạng thái, tiền thu hộ, vòng đời</summary>
+<summary><b>Shipment</b> — `shipments.shipments` · 79 thuộc tính — Vận đơn: người gửi/nhận, bảng giá đã chốt, tuyến, trạng thái, tiền thu hộ, vòng đời</summary>
 
 | Thuộc tính | Cột | Kiểu | Ràng buộc |
 |---|---|---|---|
 | `id` | `id` | `UUID` | khoá chính |
 | `trackingCode` | `tracking_code` | `String` | tối đa 32 ký tự, bắt buộc |
-| `merchantId` | `merchant_id` | `UUID` | bắt buộc |
+| `merchantId` | `merchant_id` | `UUID?` | có thể rỗng |
+| `channel` | `channel` | `ShipmentChannel` | tối đa 20 ký tự, enum, bắt buộc |
 | `createdByUserId` | `created_by_user_id` | `UUID` | bắt buộc |
 | `idempotencyKey` | `idempotency_key` | `String` | tối đa 100 ký tự, bắt buộc |
 | `requestFingerprint` | `request_fingerprint` | `String` | tối đa 64 ký tự, bắt buộc |
@@ -2307,6 +2362,8 @@ giao lâu nhất được thử trước.
 | `holdHubId` | `hold_hub_id` | `UUID?` | có thể rỗng |
 | `heldAt` | `held_at` | `Instant?` | có thể rỗng |
 | `hasPendingWeightReview` | `has_pending_weight_review` | `Boolean` | bắt buộc |
+| `counterFeePaidAmount` | `counter_fee_paid_amount` | `Long?` | có thể rỗng |
+| `counterFeePaidAt` | `counter_fee_paid_at` | `Instant?` | có thể rỗng |
 | `networkConfirmedAt` | `network_confirmed_at` | `Instant?` | có thể rỗng |
 | `networkConfirmationError` | `network_confirmation_error` | `String?` | tối đa 200 ký tự, có thể rỗng |
 | `version` | `version` | `Long` | khoá lạc quan (@Version), bắt buộc |
@@ -2333,7 +2390,7 @@ giao lâu nhất được thử trước.
 </details>
 
 <details>
-<summary><b>ShipmentCase</b> — `shipments.shipment_cases` · 20 thuộc tính — Hồ sơ sự cố (kiện có vấn đề, kiện không xác định)</summary>
+<summary><b>ShipmentCase</b> — `shipments.shipment_cases` · 21 thuộc tính — Hồ sơ sự cố (kiện có vấn đề, kiện không xác định)</summary>
 
 | Thuộc tính | Cột | Kiểu | Ràng buộc |
 |---|---|---|---|
@@ -2351,6 +2408,7 @@ giao lâu nhất được thử trước.
 | `reportedByUserId` | `reported_by_user_id` | `UUID` | bắt buộc |
 | `assignedToUserId` | `assigned_to_user_id` | `UUID?` | có thể rỗng |
 | `resolution` | `resolution` | `String?` | tối đa 2000 ký tự, có thể rỗng |
+| `outcome` | `outcome` | `ShipmentCaseOutcome?` | tối đa 30 ký tự, enum, có thể rỗng |
 | `createdAt` | `created_at` | `Instant` | bắt buộc |
 | `updatedAt` | `updated_at` | `Instant` | bắt buộc |
 | `resolvedAt` | `resolved_at` | `Instant?` | có thể rỗng |
@@ -2493,6 +2551,7 @@ giao lâu nhất được thử trước.
 
 | Enum | Giá trị |
 |---|---|
+| `NetworkConfirmationResult` | `CONFIRMED`, `ALREADY_RELEASED`, `NOT_FOUND` |
 | `ShipmentControlAlertType` | `SENT_BUT_NOT_ARRIVED`, `MISSING_ARRIVAL_SCAN`, `ARRIVED_NOT_OUT_FOR_DELIVERY`, `ROUTE_DEVIATION`, `SHIPMENT_STUCK`, `CASE_OVERDUE`, `SIGNATURE_WITHOUT_DELIVERY`, `DELIVERED_WITHOUT_SIGNATURE` |
 | `ShipmentControlAlertSeverity` | `INFO`, `WARNING`, `CRITICAL` |
 | `ShipmentExceptionQueueKind` | `RETURN`, `FORWARD`, `CANCELLATION`, `WEIGHT_REVIEW` |
@@ -2505,8 +2564,10 @@ giao lâu nhất được thử trước.
 | `ShipmentCaseType` | `PROBLEM_PARCEL`, `UNIDENTIFIED_PARCEL` |
 | `ShipmentCaseStatus` | `OPEN`, `ASSIGNED`, `INVESTIGATING`, `RESOLVED`, `CLOSED` |
 | `ShipmentCaseSeverity` | `LOW`, `MEDIUM`, `HIGH`, `CRITICAL` |
+| `ShipmentCaseOutcome` | `CONTINUE`, `RETURN_TO_SENDER`, `LOST`, `DAMAGED`, `OTHER` |
 | `ShipmentControlSignalType` | `ROUTE_DEVIATION` |
 | `ShipmentStatus` | `AWAITING_PICKUP`, `PICKED_UP`, `AT_ORIGIN_HUB`, `IN_TRANSIT`, `AT_DESTINATION_HUB`, `OUT_FOR_DELIVERY`, `DELIVERY_FAILED`, `PARTIALLY_DELIVERED`, `DELIVERED`, `RETURNING`, `RETURNED`, `CANCELLED` |
+| `ShipmentChannel` | `MERCHANT_WEB`, `COUNTER` |
 | `ShipmentLifecycleStatus` | `ACTIVE`, `COMPLETED`, `CANCELLED` |
 | `ShippingFeePayer` | `SENDER`, `RECIPIENT` |
 | `ShipmentCollectionStatus` | `NOT_REQUIRED`, `PENDING`, `COLLECTED`, `VOIDED` |
@@ -2523,15 +2584,15 @@ giao lâu nhất được thử trước.
 | `ShipmentOutboxStatus` | `PENDING`, `PUBLISHED`, `FAILED` |
 | `ShipmentExceptionRequestKind` | `RETURN`, `FORWARD`, `CANCELLATION` |
 | `ShipmentExceptionRequestStatus` | `PENDING_APPROVAL`, `APPROVED`, `REJECTED`, `PROCESSING`, `COMPLETED` |
-| `NetworkConfirmationResult` | `CONFIRMED`, `ALREADY_RELEASED`, `NOT_FOUND` |
 
 </details>
 
 <details>
-<summary>API (48 endpoint)</summary>
+<summary>API (57 endpoint)</summary>
 
 | Method | Đường dẫn | Quyền |
 |---|---|---|
+| `GET` | `/api/v1/admin/control-tower` | `shipments.control-tower.read` |
 | `GET` | `/api/v1/admin/control-tower/alerts` | `shipments.control-tower.read` |
 | `GET` | `/api/v1/admin/control-tower/summary` | `shipments.control-tower.read` |
 | `GET` | `/api/v1/admin/shipment-cases` | `shipments.cases.read` hoặc `shipments.cases.manage` |
@@ -2549,27 +2610,35 @@ giao lâu nhất được thử trước.
 | `GET` | `/api/v1/admin/shipment-exceptions` | `shipments.exceptions.read` hoặc `shipments.exceptions.manage` |
 | `GET` | `/api/v1/admin/shipment-exceptions/summary` | `shipments.exceptions.read` hoặc `shipments.exceptions.manage` |
 | `GET` | `/api/v1/admin/shipments` | `shipments.admin.read` hoặc `shipments.read-hub` |
-| `POST` | `/api/v1/admin/shipments/{shipmentId}/cancellation-requests` | `shipments.exceptions.manage` |
+| `POST` | `/api/v1/admin/shipments/codes` | `shipments.admin.read` hoặc `shipments.read-hub` hoặc `scope.all-hubs` hoặc `operations.hub.read` hoặc `assignments.read-own` hoặc `billing.cash.read-hub` |
+| `POST` | `/api/v1/admin/shipments/counter` | `shipments.counter.create` |
+| `POST` | `/api/v1/admin/shipments/demo-reset` | vai trò `ADMIN` (chỉ có khi `PAVEX_DEMO_RESET_ENABLED=true`) |
+| `GET` | `/api/v1/admin/shipments/stats` | `shipments.admin.read` hoặc `shipments.read-hub` |
+| `POST` | `/api/v1/admin/shipments/{shipmentId}/cancellation-requests` | `shipments.exceptions.request` hoặc `shipments.exceptions.manage` |
 | `POST` | `/api/v1/admin/shipments/{shipmentId}/cancellation-requests/{requestId}/complete` | `shipments.exceptions.manage` |
 | `POST` | `/api/v1/admin/shipments/{shipmentId}/cancellation-requests/{requestId}/review` | `shipments.exceptions.manage` |
 | `GET` | `/api/v1/admin/shipments/{shipmentId}/exceptions` | `shipments.exceptions.read` hoặc `shipments.exceptions.manage` |
-| `POST` | `/api/v1/admin/shipments/{shipmentId}/forward-requests` | `shipments.exceptions.manage` |
+| `POST` | `/api/v1/admin/shipments/{shipmentId}/forward-requests` | `shipments.exceptions.request` hoặc `shipments.exceptions.manage` |
 | `POST` | `/api/v1/admin/shipments/{shipmentId}/forward-requests/{requestId}/complete` | `shipments.exceptions.manage` |
 | `POST` | `/api/v1/admin/shipments/{shipmentId}/forward-requests/{requestId}/review` | `shipments.exceptions.manage` |
 | `POST` | `/api/v1/admin/shipments/{shipmentId}/hold` | `shipments.exceptions.manage` |
 | `POST` | `/api/v1/admin/shipments/{shipmentId}/hold/release` | `shipments.exceptions.manage` |
-| `POST` | `/api/v1/admin/shipments/{shipmentId}/return-requests` | `shipments.exceptions.manage` |
+| `POST` | `/api/v1/admin/shipments/{shipmentId}/return-requests` | `shipments.exceptions.request` hoặc `shipments.exceptions.manage` |
 | `POST` | `/api/v1/admin/shipments/{shipmentId}/return-requests/{requestId}/complete` | `shipments.exceptions.manage` |
 | `POST` | `/api/v1/admin/shipments/{shipmentId}/return-requests/{requestId}/review` | `shipments.exceptions.manage` |
 | `POST` | `/api/v1/admin/shipments/{shipmentId}/weight-adjustments` | `shipments.weight.adjust` |
 | `POST` | `/api/v1/admin/shipments/{shipmentId}/weight-adjustments/{adjustmentId}/review` | `shipments.exceptions.manage` |
 | `GET` | `/api/v1/admin/shipments/{trackingCode}` | `shipments.admin.read` hoặc `shipments.read-hub` |
+| `PATCH` | `/api/v1/admin/shipments/{trackingCode}` | `shipments.admin.update` |
+| `GET` | `/api/v1/admin/shipments/{trackingCode}/labels` | `shipments.admin.read` hoặc `shipments.read-hub` |
 | `POST` | `/api/v1/deliveries/attempts` | `deliveries.complete-own` |
 | `GET` | `/api/v1/deliveries/mine` | `deliveries.complete-own` |
 | `POST` | `/api/v1/parcel-scans` | `scans.create` |
 | `GET` | `/api/v1/shipments` | `shipments.read-own` |
 | `POST` | `/api/v1/shipments` | `shipments.create` |
+| `GET` | `/api/v1/shipments/stats` | `shipments.read-own` |
 | `GET` | `/api/v1/shipments/{trackingCode}` | `shipments.read-own` |
+| `PATCH` | `/api/v1/shipments/{trackingCode}` | `shipments.create` |
 | `POST` | `/api/v1/shipments/{trackingCode}/cancel` | `shipments.cancel-own` |
 | `GET` | `/api/v1/shipments/{trackingCode}/labels` | `shipments.read-own` |
 | `GET` | `/api/v1/tracking/{code}` | Công khai |
@@ -2587,15 +2656,17 @@ giao lâu nhất được thử trước.
 ### 6.8 Billing — `pavex_billing` (5440, service 8088)
 
 <details>
-<summary><b>CashCollection</b> — `billing.cash_collections` · 27 thuộc tính — Tiền bưu tá thu của người nhận (COD + cước nếu người nhận trả), chuỗi giữ tiền</summary>
+<summary><b>CashCollection</b> — `billing.cash_collections` · 29 thuộc tính — Tiền bưu tá thu của người nhận (COD + cước nếu người nhận trả), chuỗi giữ tiền</summary>
 
 | Thuộc tính | Cột | Kiểu | Ràng buộc |
 |---|---|---|---|
 | `id` | `id` | `UUID` | khoá chính |
 | `shipmentId` | `shipment_id` | `UUID` | bắt buộc |
 | `trackingCode` | `tracking_code` | `String` | tối đa 40 ký tự, bắt buộc |
-| `merchantId` | `merchant_id` | `UUID` | bắt buộc |
-| `deliveryAttemptId` | `delivery_attempt_id` | `UUID` | bắt buộc |
+| `merchantId` | `merchant_id` | `UUID?` | có thể rỗng |
+| `deliveryAttemptId` | `delivery_attempt_id` | `UUID?` | có thể rỗng |
+| `source` | `source` | `CashSource` | tối đa 20 ký tự, enum, bắt buộc |
+| `codPayee` | `cod_payee` | `CodPayee` | tối đa 20 ký tự, enum, bắt buộc |
 | `amount` | `amount` | `Long` | bắt buộc |
 | `codAmount` | `cod_amount` | `Long` | bắt buộc |
 | `feeAmount` | `fee_amount` | `Long` | bắt buộc |
@@ -2657,6 +2728,49 @@ giao lâu nhất được thử trước.
 | `collectionId` | `collection_id` | `UUID` | bắt buộc |
 | `amount` | `amount` | `Long` | bắt buộc |
 | `createdAt` | `created_at` | `Instant` | bắt buộc |
+
+</details>
+
+<details>
+<summary><b>CounterShipment</b> — `billing.counter_shipments` · 12 thuộc tính — Vận đơn nhận tại quầy bưu cục: người gửi, cước, tiền thu tại quầy, COD, quầy nào chịu trách nhiệm thanh toán với họ</summary>
+
+| Thuộc tính | Cột | Kiểu | Ràng buộc |
+|---|---|---|---|
+| `shipmentId` | `shipment_id` | `UUID` | khoá chính |
+| `trackingCode` | `tracking_code` | `String` | tối đa 40 ký tự, bắt buộc |
+| `hubId` | `hub_id` | `UUID` | bắt buộc |
+| `clerkUserId` | `clerk_user_id` | `UUID` | bắt buộc |
+| `senderName` | `sender_name` | `String` | tối đa 120 ký tự, bắt buộc |
+| `senderPhone` | `sender_phone` | `String` | tối đa 20 ký tự, bắt buộc |
+| `shippingFeePayer` | `shipping_fee_payer` | `String` | tối đa 20 ký tự, bắt buộc |
+| `shippingFee` | `shipping_fee` | `Long` | bắt buộc |
+| `feePaidAtCounter` | `fee_paid_at_counter` | `Long` | bắt buộc |
+| `codAmount` | `cod_amount` | `Long` | bắt buộc |
+| `acceptedAt` | `accepted_at` | `Instant` | bắt buộc |
+| `createdAt` | `created_at` | `Instant` | bắt buộc |
+
+</details>
+
+<details>
+<summary><b>CounterSettlement</b> — `billing.counter_settlements` · 15 thuộc tính — Khoản tiền quầy bưu cục phải trả người gửi tại quầy (COD) hoặc thu của họ (cước hoàn), xong khi người gửi đến quầy</summary>
+
+| Thuộc tính | Cột | Kiểu | Ràng buộc |
+|---|---|---|---|
+| `id` | `id` | `UUID` | khoá chính |
+| `shipmentId` | `shipment_id` | `UUID` | bắt buộc |
+| `trackingCode` | `tracking_code` | `String` | tối đa 40 ký tự, bắt buộc |
+| `hubId` | `hub_id` | `UUID` | bắt buộc |
+| `kind` | `kind` | `CounterSettlementKind` | tối đa 30 ký tự, enum, bắt buộc |
+| `amount` | `amount` | `Long` | bắt buộc |
+| `senderName` | `sender_name` | `String` | tối đa 120 ký tự, bắt buộc |
+| `senderPhone` | `sender_phone` | `String` | tối đa 20 ký tự, bắt buộc |
+| `status` | `status` | `CounterSettlementStatus` | tối đa 20 ký tự, enum, bắt buộc |
+| `completedByUserId` | `completed_by_user_id` | `UUID?` | có thể rỗng |
+| `completedAt` | `completed_at` | `Instant?` | có thể rỗng |
+| `note` | `note` | `String?` | tối đa 500 ký tự, có thể rỗng |
+| `createdAt` | `created_at` | `Instant` | bắt buộc |
+| `updatedAt` | `updated_at` | `Instant` | bắt buộc |
+| `version` | `version` | `Long` | khoá lạc quan (@Version), bắt buộc |
 
 </details>
 
@@ -2828,7 +2942,11 @@ giao lâu nhất được thử trước.
 | Enum | Giá trị |
 |---|---|
 | `CashCollectionStatus` | `HELD`, `SUBMITTED`, `APPROVED` |
+| `CashSource` | `DELIVERY`, `COUNTER` |
+| `CodPayee` | `MERCHANT`, `SENDER` |
 | `CashRemittanceStatus` | `SUBMITTED`, `APPROVED`, `REJECTED` |
+| `CounterSettlementKind` | `PAYOUT_COD`, `COLLECT_RETURN_FEE` |
+| `CounterSettlementStatus` | `PENDING`, `DONE` |
 | `InvoiceStatus` | `ISSUED`, `PARTIALLY_PAID`, `PAID`, `CANCELLED` |
 | `InvoicePaymentMethod` | `CASH`, `QR`, `COD_OFFSET` |
 | `InvoicePaymentStatus` | `PENDING`, `COMPLETED`, `CANCELLED`, `EXPIRED` |
@@ -2836,21 +2954,24 @@ giao lâu nhất được thử trước.
 | `PayoutStatus` | `NOT_REQUIRED`, `PENDING`, `PAID` |
 | `PayOsWebhookOutcome` | `PROCESSED`, `DUPLICATE`, `IGNORED`, `INVALID`, `RETRY` |
 | `PaymentGatewayPaymentStatus` | `PENDING`, `PROCESSING`, `PAID`, `CANCELLED`, `UNKNOWN` |
-| `Result` | `SETTLED`, `CANCELLED`, `PENDING`, `FAILED` |
 
 </details>
 
 <details>
-<summary>API (30 endpoint)</summary>
+<summary>API (36 endpoint)</summary>
 
 | Method | Đường dẫn | Quyền |
 |---|---|---|
+| `GET` | `/api/v1/admin/billing/cash/approved` | `billing.cash.approve` |
 | `GET` | `/api/v1/admin/billing/cash/collections` | `billing.cash.approve` |
 | `POST` | `/api/v1/admin/billing/cash/collections/{collectionId}/approve` | `billing.cash.approve` |
 | `POST` | `/api/v1/admin/billing/cash/collections/{collectionId}/reject` | `billing.cash.approve` |
+| `GET` | `/api/v1/admin/billing/cash/counter-settlements` | `billing.cash.approve` |
+| `GET` | `/api/v1/admin/billing/cash/outstanding` | `billing.cash.approve` |
 | `GET` | `/api/v1/admin/billing/cash/remittances` | `billing.cash.approve` |
 | `POST` | `/api/v1/admin/billing/cash/remittances/{remittanceId}/approve` | `billing.cash.approve` |
 | `POST` | `/api/v1/admin/billing/cash/remittances/{remittanceId}/reject` | `billing.cash.approve` |
+| `POST` | `/api/v1/admin/billing/demo-reset` | vai trò `ADMIN` (chỉ có khi `PAVEX_DEMO_RESET_ENABLED=true`) |
 | `GET` | `/api/v1/admin/billing/invoices` | `billing.manage` |
 | `GET` | `/api/v1/admin/billing/invoices/{invoiceId}` | `billing.manage` |
 | `POST` | `/api/v1/admin/billing/invoices/{invoiceId}/cancel` | `billing.manage` |
@@ -2864,7 +2985,9 @@ giao lâu nhất được thử trước.
 | `POST` | `/api/v1/admin/billing/statements/{statementId}/payout` | `billing.manage` |
 | `GET` | `/api/v1/billing/cash/collections/mine` | `billing.cash.collect` |
 | `POST` | `/api/v1/billing/cash/collections/{collectionId}/resubmit` | `billing.cash.read-hub` |
+| `POST` | `/api/v1/billing/cash/counter-settlements/{settlementId}/complete` | `billing.counter.settle` |
 | `GET` | `/api/v1/billing/cash/hubs/{hubId}/collections` | `billing.cash.read-hub` |
+| `GET` | `/api/v1/billing/cash/hubs/{hubId}/counter-settlements` | `billing.counter.settle` |
 | `POST` | `/api/v1/billing/cash/remittances` | `billing.cash.submit-own` |
 | `GET` | `/api/v1/billing/cash/remittances/mine` | `billing.cash.submit-own` |
 | `GET` | `/api/v1/billing/invoices` | `billing.invoices.read-own` |
@@ -2908,7 +3031,7 @@ Mỗi dòng gồm: chuyến, số thứ tự trên máy, thời điểm ghi, th�
 </details>
 
 <details>
-<summary><b>FleetTrip</b> — `fleet.trips` · 34 thuộc tính — Chuyến xe trung chuyển: tài xế, tuyến, hub đi/đến, giờ kế hoạch và thực tế, vị trí mới nhất, quãng đường</summary>
+<summary><b>FleetTrip</b> — `fleet.trips` · 38 thuộc tính — Chuyến xe trung chuyển: tài xế, tuyến, hub đi/đến, giờ kế hoạch và thực tế, vị trí mới nhất, quãng đường</summary>
 
 | Thuộc tính | Cột | Kiểu | Ràng buộc |
 |---|---|---|---|
@@ -2926,6 +3049,10 @@ Mỗi dòng gồm: chuyến, số thứ tự trên máy, thời điểm ghi, th�
 | `plannedDepartureAt` | `planned_departure_at` | `Instant` | bắt buộc |
 | `plannedArrivalAt` | `planned_arrival_at` | `Instant` | bắt buộc |
 | `distanceKm` | `distance_km` | `BigDecimal?` | có thể rỗng |
+| `fromLat` | `from_lat` | `Double?` | có thể rỗng |
+| `fromLng` | `from_lng` | `Double?` | có thể rỗng |
+| `toLat` | `to_lat` | `Double?` | có thể rỗng |
+| `toLng` | `to_lng` | `Double?` | có thể rỗng |
 | `vehiclePlate` | `vehicle_plate` | `String?` | tối đa 20 ký tự, có thể rỗng |
 | `status` | `status` | `FleetTripStatus` | tối đa 20 ký tự, enum, bắt buộc |
 | `startSource` | `start_source` | `TripStartSource` | tối đa 20 ký tự, enum, bắt buộc |
@@ -2962,10 +3089,11 @@ Mỗi dòng gồm: chuyến, số thứ tự trên máy, thời điểm ghi, th�
 </details>
 
 <details>
-<summary>API (10 endpoint)</summary>
+<summary>API (12 endpoint)</summary>
 
 | Method | Đường dẫn | Quyền |
 |---|---|---|
+| `POST` | `/api/v1/fleet/admin/demo-reset` | vai trò `ADMIN` (chỉ có khi `PAVEX_DEMO_RESET_ENABLED=true`) |
 | `GET` | `/api/v1/fleet/me/consent` | `fleet.trips.report-own` |
 | `PUT` | `/api/v1/fleet/me/consent` | `fleet.trips.report-own` |
 | `GET` | `/api/v1/fleet/me/trips` | `fleet.trips.report-own` |
@@ -2974,18 +3102,111 @@ Mỗi dòng gồm: chuyến, số thứ tự trên máy, thời điểm ghi, th�
 | `POST` | `/api/v1/fleet/me/trips/{tripId}/arrive` | `fleet.trips.report-own` |
 | `POST` | `/api/v1/fleet/me/trips/{tripId}/locations` | `fleet.trips.report-own` |
 | `GET` | `/api/v1/fleet/trips` | `fleet.trips.read-hub` |
+| `GET` | `/api/v1/fleet/trips/by-route-leg/{routeLegId}` | `fleet.trips.read-hub` |
 | `GET` | `/api/v1/fleet/trips/{tripId}` | `fleet.trips.read-hub` |
 | `GET` | `/api/v1/fleet/trips/{tripId}/track` | `fleet.trips.read-hub` |
 
 </details>
 
-### 6.10 Thư viện dùng chung (`libs/`)
+
+### 6.10 Notifications — `pavex_notifications` (5442, service 8090)
+
+Hộp thư thông báo của mọi người dùng (khách, shop, nhân viên, bưu tá, tài xế) và tin nhắn nhân viên gửi cho
+bưu cục hoặc shop. Nhận sự kiện của các service khác qua RabbitMQ (hàng đợi `notifications.events`) rồi tạo thông báo.
+
+<details>
+<summary><b>UserNotification</b> — `notifications.user_notifications` · 15 thuộc tính — Thông báo trong hộp thư của một người dùng: nhóm, mức độ, tiêu đề, nội dung, liên kết, đã đọc chưa</summary>
+
+| Thuộc tính | Cột | Kiểu | Ràng buộc |
+|---|---|---|---|
+| `id` | `id` | `UUID` | khoá chính |
+| `recipientUserId` | `recipient_user_id` | `UUID` | bắt buộc |
+| `code` | `code` | `String` | tối đa 100 ký tự, bắt buộc |
+| `category` | `category` | `NotificationCategory` | tối đa 20 ký tự, enum, bắt buộc |
+| `severity` | `severity` | `NotificationSeverity` | tối đa 20 ký tự, enum, bắt buộc |
+| `title` | `title` | `String` | tối đa 160 ký tự, bắt buộc |
+| `body` | `body` | `String` | tối đa 1000 ký tự, bắt buộc |
+| `actionUrl` | `action_url` | `String?` | tối đa 500 ký tự, có thể rỗng |
+| `subjectType` | `subject_type` | `String?` | tối đa 80 ký tự, có thể rỗng |
+| `subjectId` | `subject_id` | `String?` | tối đa 100 ký tự, có thể rỗng |
+| `deduplicationKey` | `deduplication_key` | `String?` | tối đa 160 ký tự, có thể rỗng |
+| `senderUserId` | `sender_user_id` | `UUID?` | có thể rỗng |
+| `messageId` | `message_id` | `UUID?` | có thể rỗng |
+| `createdAt` | `created_at` | `Instant` | bắt buộc |
+| `readAt` | `read_at` | `Instant?` | có thể rỗng |
+
+</details>
+
+<details>
+<summary><b>NotificationMessage</b> — `notifications.messages` · 9 thuộc tính — Tin nhắn một người gửi cho nhân sự một bưu cục hoặc cho shop của một vận đơn</summary>
+
+| Thuộc tính | Cột | Kiểu | Ràng buộc |
+|---|---|---|---|
+| `id` | `id` | `UUID` | khoá chính |
+| `senderUserId` | `sender_user_id` | `UUID` | bắt buộc |
+| `audience` | `audience` | `MessageAudience` | tối đa 30 ký tự, enum, bắt buộc |
+| `hubId` | `hub_id` | `UUID?` | có thể rỗng |
+| `trackingCode` | `tracking_code` | `String?` | tối đa 40 ký tự, có thể rỗng |
+| `title` | `title` | `String` | tối đa 160 ký tự, bắt buộc |
+| `body` | `body` | `String` | tối đa 1000 ký tự, bắt buộc |
+| `recipientCount` | `recipient_count` | `Int` | bắt buộc |
+| `createdAt` | `created_at` | `Instant` | bắt buộc |
+
+</details>
+
+<details>
+<summary><b>KnownShipment</b> — `notifications.shipments` · 7 thuộc tính — Vận đơn Notifications biết qua sự kiện: mã, người tạo, kênh, hub đầu và hub cuối, để biết báo cho ai</summary>
+
+| Thuộc tính | Cột | Kiểu | Ràng buộc |
+|---|---|---|---|
+| `shipmentId` | `shipment_id` | `UUID` | khoá chính |
+| `trackingCode` | `tracking_code` | `String` | tối đa 40 ký tự, bắt buộc |
+| `createdByUserId` | `created_by_user_id` | `UUID` | bắt buộc |
+| `channel` | `channel` | `String` | tối đa 30 ký tự, bắt buộc |
+| `originHubId` | `origin_hub_id` | `UUID?` | có thể rỗng |
+| `destinationHubId` | `destination_hub_id` | `UUID?` | có thể rỗng |
+| `createdAt` | `created_at` | `Instant` | bắt buộc |
+
+</details>
+
+<details>
+<summary>Enum trạng thái và danh mục</summary>
+
+| Enum | Giá trị |
+|---|---|
+| `NotificationCategory` | `Shipment`, `Operations`, `Account`, `Billing`, `System` |
+| `NotificationSeverity` | `Info`, `Success`, `Warning`, `Critical` |
+| `MessageAudience` | `HUB_STAFF`, `HUB_COURIERS`, `HUB_DRIVERS`, `HUB_EVERYONE`, `SHIPMENT_SHOP` |
+
+</details>
+
+<details>
+<summary>API (10 endpoint)</summary>
+
+| Method | Đường dẫn | Quyền |
+|---|---|---|
+| `GET` | `/api/v1/notifications` | Đăng nhập (dữ liệu của chính mình) |
+| `POST` | `/api/v1/notifications/admin/demo-reset` | vai trò `ADMIN` (chỉ có khi `PAVEX_DEMO_RESET_ENABLED=true`) |
+| `POST` | `/api/v1/notifications/messages/hub` | Đăng nhập: trưởng bưu cục, nhân viên bưu cục hoặc người có `scope.all-hubs` (kiểm tra trong service) |
+| `GET` | `/api/v1/notifications/messages/options` | Đăng nhập (dữ liệu của chính mình) |
+| `GET` | `/api/v1/notifications/messages/sent` | Đăng nhập (dữ liệu của chính mình) |
+| `POST` | `/api/v1/notifications/messages/shipment` | Đăng nhập: nhân sự xử lý vận đơn ở bưu cục đầu hoặc cuối, hoặc người có `scope.all-hubs` (kiểm tra trong service) |
+| `POST` | `/api/v1/notifications/read-all` | Đăng nhập (dữ liệu của chính mình) |
+| `GET` | `/api/v1/notifications/unread-count` | Đăng nhập (dữ liệu của chính mình) |
+| `PATCH` | `/api/v1/notifications/{notificationId}/read` | Đăng nhập (dữ liệu của chính mình) |
+| `PATCH` | `/api/v1/notifications/{notificationId}/unread` | Đăng nhập (dữ liệu của chính mình) |
+
+</details>
+
+
+### 6.11 Thư viện dùng chung (`libs/`)
 
 | Thư viện | Nội dung chính |
 |---|---|
 | `libs/platform-common` | `PavexActor` / `requirePavexActor()` (đọc người gọi từ JWT), `HubAccessScope` (phạm vi bưu cục), chuẩn hoá SĐT `VietnamesePhone` |
 | `libs/platform-contracts` | DTO của API nội bộ, để service gọi và service nhận dùng chung một định nghĩa |
 | `libs/platform-config` | `RequiredSettingsCheck`: service dừng ngay khi khởi động nếu `application.yaml` dùng một biến không có mặc định (`${BILLING_DB_PASSWORD}`) mà không ai đặt, và liệt kê các biến còn thiếu |
+| `libs/platform-storage` | `ObjectStorage`: lưu tệp ngoài database (ảnh chứng từ giao hàng, tệp khiếu nại, ảnh đại diện) trên MinIO hoặc kho tương thích S3, mỗi loại một bucket; Identity, Partners và Shipment dùng |
 | `libs/platform-test` | Chỉ dùng trong test: `@PostgresIntegrationTest` khởi động cả service trên PostgreSQL thật (Testcontainers, Flyway, Hibernate `validate`), không cần RabbitMQ, Eureka hay khoá thật (mục 7) |
 | `platform/discovery-server` | Eureka (cổng 8761) |
 | `platform/api-gateway` | Gateway (cổng 8080): định tuyến, CORS, giới hạn tần suất theo IP; riêng `/api/v1/fleet/**` giới hạn theo người dùng, vì điện thoại 4G hay dùng chung IP |
