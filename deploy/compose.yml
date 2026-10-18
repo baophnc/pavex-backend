@@ -1,0 +1,617 @@
+# Pavex on one Linux server with Docker: the staging stack.
+#
+#   cp deploy/.env.example deploy/.env      # then fill in deploy/.env (domain, emails, SMTP, ...)
+#   ./deploy/gen-secrets.sh                  # passwords and JWT keys into deploy/secrets/
+#   docker compose -f deploy/compose.yml up -d --build
+#
+# Step by step (DNS, first administrator, upgrades, payOS webhook, logs, backups): docs/PAVEX-TAI-LIEU-TONG-HOP.md,
+# section 9.7. Only Caddy publishes ports (80/443 and the operator UIs on the server's loopback); everything
+# else talks over the private "pavex" network. Secrets never go into environment variables: each container
+# mounts the files it needs from deploy/secrets/ read-only (Spring reads them as a config tree).
+
+name: ${COMPOSE_PROJECT_NAME:-pavex-staging}
+
+x-java-service: &java-service
+  restart: unless-stopped
+  mem_limit: ${JAVA_MEM_LIMIT:-640m}
+  networks: [pavex]
+  logging: &logging
+    driver: json-file
+    options:
+      max-size: 20m
+      max-file: "5"
+
+x-java-health: &java-health
+  interval: 10s
+  timeout: 5s
+  retries: 6
+  start_period: 180s
+
+# Settings every Spring service shares. Values that must stay this way on any real server are written here,
+# not in .env: demo reset, Swagger/API docs, demo data and the fleet simulator stay off.
+x-spring-env: &spring-env
+  SPRING_CONFIG_IMPORT: optional:configtree:/run/secrets/
+  JAVA_TOOL_OPTIONS: ${JAVA_TOOL_OPTIONS:--XX:+UseSerialGC -Xss512k}
+  EUREKA_DEFAULT_ZONE: http://discovery-server:8761/eureka/
+  PAVEX_PUBLIC_BASE_URL: https://api.${PAVEX_DOMAIN:?Set PAVEX_DOMAIN in deploy/.env}
+  RABBITMQ_HOST: rabbitmq
+  RABBITMQ_USERNAME: pavex
+  RABBITMQ_VHOST: pavex
+  MINIO_ENDPOINT: http://minio:9000
+  MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY:-pavex}
+  # Prometheus scrapes /actuator/prometheus over the private network; Caddy refuses /actuator/* on
+  # api.<domain> except /actuator/health.
+  MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE: health,info,prometheus
+  MANAGEMENT_ENDPOINT_HEALTH_PROBES_ENABLED: "true"
+  # Latency histograms (p95 in Grafana). In JSON because an environment variable name cannot tell
+  # "percentiles-histogram" from the "percentiles" map.
+  SPRING_APPLICATION_JSON: '{"management.metrics.distribution.percentiles-histogram.http.server.requests":true}'
+  PAVEX_DEMO_RESET_ENABLED: "false"
+  SPRINGDOC_API_DOCS_ENABLED: "false"
+  SPRINGDOC_SWAGGER_UI_ENABLED: "false"
+
+x-mail-env: &mail-env
+  MAIL_HOST: ${MAIL_HOST:?Set MAIL_HOST in deploy/.env}
+  MAIL_PORT: ${MAIL_PORT:-587}
+  MAIL_USERNAME: ${MAIL_USERNAME:-}
+  MAIL_PASSWORD: ${MAIL_PASSWORD:-}
+  MAIL_SMTP_AUTH: ${MAIL_SMTP_AUTH:-true}
+  MAIL_STARTTLS: ${MAIL_STARTTLS:-true}
+  MAIL_FROM: ${MAIL_FROM:?Set MAIL_FROM in deploy/.env}
+
+x-depends-core: &depends-core
+  postgres:
+    condition: service_healthy
+  discovery-server:
+    condition: service_healthy
+
+services:
+  # ---------------------------------------------------------------------------------------------------------
+  # Edge
+  # ---------------------------------------------------------------------------------------------------------
+  caddy:
+    image: caddy:2.11-alpine
+    restart: unless-stopped
+    networks: [pavex]
+    ports:
+      - "${HTTP_PORT:-80}:80"
+      - "${HTTPS_PORT:-443}:443"
+      - "${HTTPS_PORT:-443}:443/udp"
+      # Operator UIs, on the server's loopback only: reach them with an SSH tunnel (docs section 9.7).
+      - "127.0.0.1:${OPS_RABBITMQ_PORT:-15672}:15672"
+      - "127.0.0.1:${OPS_MINIO_PORT:-9001}:9001"
+      - "127.0.0.1:${OPS_PROMETHEUS_PORT:-9090}:9090"
+      - "127.0.0.1:${OPS_ALERTMANAGER_PORT:-9093}:9093"
+    environment:
+      PAVEX_DOMAIN: ${PAVEX_DOMAIN}
+      ACME_EMAIL: ${ACME_EMAIL:?Set ACME_EMAIL in deploy/.env}
+      # An email address = certificates from Let's Encrypt/ZeroSSL; "internal" = Caddy's own CA (local tests).
+      CADDY_TLS: ${CADDY_TLS:-${ACME_EMAIL}}
+      GRAFANA_ALLOW_FROM: ${GRAFANA_ALLOW_FROM:-0.0.0.0/0 ::/0}
+    volumes:
+      - ./caddy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on: [api-gateway, client-portal, management-portal, grafana]
+    logging: *logging
+
+  client-portal:
+    image: ${CLIENT_PORTAL_IMAGE:-pavex/client-portal:staging}
+    restart: unless-stopped
+    networks: [pavex]
+    mem_limit: 512m
+    environment:
+      API_BASE_URL: http://api-gateway:8080
+      NEXT_PUBLIC_SITE_URL: https://${PAVEX_DOMAIN}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+      PORT: "3000"
+      HOSTNAME: 0.0.0.0
+    depends_on: [api-gateway]
+    logging: *logging
+
+  management-portal:
+    image: ${MANAGEMENT_PORTAL_IMAGE:-pavex/management-portal:staging}
+    restart: unless-stopped
+    networks: [pavex]
+    mem_limit: 512m
+    environment:
+      API_BASE_URL: http://api-gateway:8080
+      PORT: "3001"
+      HOSTNAME: 0.0.0.0
+    depends_on: [api-gateway]
+    logging: *logging
+
+  # ---------------------------------------------------------------------------------------------------------
+  # Platform
+  # ---------------------------------------------------------------------------------------------------------
+  discovery-server:
+    <<: *java-service
+    image: ${PAVEX_IMAGE_PREFIX:-pavex}/discovery-server:${PAVEX_TAG:-staging}
+    build: { context: .., args: { MODULE: platform/discovery-server } }
+    mem_limit: 512m
+    environment:
+      JAVA_TOOL_OPTIONS: ${JAVA_TOOL_OPTIONS:--XX:+UseSerialGC -Xss512k}
+      MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE: health,info,prometheus
+    healthcheck:
+      <<: *java-health
+      test: ["CMD", "curl", "-fsS", "http://localhost:8761/actuator/health"]
+
+  api-gateway:
+    <<: *java-service
+    image: ${PAVEX_IMAGE_PREFIX:-pavex}/api-gateway:${PAVEX_TAG:-staging}
+    build: { context: .., args: { MODULE: platform/api-gateway } }
+    environment:
+      <<: *spring-env
+      REDIS_HOST: redis
+      # Browsers call the gateway only through the portals; the CORS origin is the client portal.
+      GATEWAY_ALLOWED_ORIGIN: https://${PAVEX_DOMAIN}
+      # Caddy and the two portals: X-Forwarded-For is trusted only when it comes from this network.
+      GATEWAY_TRUSTED_PROXIES: ${PAVEX_SUBNET:-172.30.0.0/24}
+    secrets:
+      - source: REDIS_PASSWORD
+        target: spring.data.redis.password
+    healthcheck:
+      <<: *java-health
+      test: ["CMD", "curl", "-fsS", "http://localhost:8080/actuator/health/readiness"]
+    depends_on:
+      discovery-server:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  # ---------------------------------------------------------------------------------------------------------
+  # Business services
+  # ---------------------------------------------------------------------------------------------------------
+  identity-service:
+    <<: *java-service
+    image: ${PAVEX_IMAGE_PREFIX:-pavex}/identity-service:${PAVEX_TAG:-staging}
+    build: { context: .., args: { MODULE: identity } }
+    environment:
+      <<: *spring-env
+      IDENTITY_DB_URL: jdbc:postgresql://postgres:5432/pavex_identity
+      IDENTITY_DB_USERNAME: pavex_identity
+      PAVEX_BOOTSTRAPADMIN_ENABLED: ${PAVEX_BOOTSTRAPADMIN_ENABLED:-false}
+      PAVEX_BOOTSTRAPADMIN_EMAIL: ${PAVEX_BOOTSTRAPADMIN_EMAIL:?Set PAVEX_BOOTSTRAPADMIN_EMAIL in deploy/.env}
+    secrets: [IDENTITY_DB_PASSWORD, MINIO_SECRET_KEY]
+    volumes:
+      - ./secrets/service-keys/identity:/etc/pavex/keys:ro
+    healthcheck:
+      <<: *java-health
+      test: ["CMD", "curl", "-fsS", "http://localhost:8082/actuator/health/readiness"]
+    depends_on:
+      <<: *depends-core
+      minio:
+        condition: service_healthy
+
+  auth-service:
+    <<: *java-service
+    image: ${PAVEX_IMAGE_PREFIX:-pavex}/auth-service:${PAVEX_TAG:-staging}
+    build: { context: .., args: { MODULE: auth } }
+    environment:
+      <<: [*spring-env, *mail-env]
+      AUTH_DB_URL: jdbc:postgresql://postgres:5432/pavex_auth
+      AUTH_DB_USERNAME: pavex_auth
+      PAVEX_BOOTSTRAPADMIN_ENABLED: ${PAVEX_BOOTSTRAPADMIN_ENABLED:-false}
+      PAVEX_BOOTSTRAPADMIN_EMAIL: ${PAVEX_BOOTSTRAPADMIN_EMAIL}
+      PAVEX_BOOTSTRAPADMIN_RESET_PASSWORD: "false"
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+      EMAIL_VERIFICATION_URL: https://${PAVEX_DOMAIN}/verify-email
+      PASSWORD_RESET_URL: https://${PAVEX_DOMAIN}/reset-password
+      INVITATION_URL: https://${PAVEX_DOMAIN}/accept-invite
+      MANAGEMENT_PASSWORD_RESET_URL: https://admin.${PAVEX_DOMAIN}/reset-password
+      MANAGEMENT_INVITATION_URL: https://admin.${PAVEX_DOMAIN}/accept-invite
+    secrets:
+      - AUTH_DB_PASSWORD
+      - RABBITMQ_PASSWORD
+      - AUTH_KEY_HASH_SECRET
+      - AUTH_OUTBOX_PAYLOAD_ENCRYPTION_KEY
+      - STAFF_TEMPORARY_PASSWORD
+      - PAVEX_BOOTSTRAPADMIN_PASSWORD
+    volumes:
+      - ./secrets/service-keys/auth:/etc/pavex/keys:ro
+    healthcheck:
+      <<: *java-health
+      test: ["CMD", "curl", "-fsS", "http://localhost:8081/actuator/health/readiness"]
+    depends_on:
+      <<: *depends-core
+      rabbitmq:
+        condition: service_healthy
+      identity-service:
+        condition: service_healthy
+
+  partners-service:
+    <<: *java-service
+    image: ${PAVEX_IMAGE_PREFIX:-pavex}/partners-service:${PAVEX_TAG:-staging}
+    build: { context: .., args: { MODULE: partners } }
+    environment:
+      <<: [*spring-env, *mail-env]
+      PARTNERS_DB_URL: jdbc:postgresql://postgres:5432/pavex_partners
+      PARTNERS_DB_USERNAME: pavex_partners
+    secrets: [PARTNERS_DB_PASSWORD, MINIO_SECRET_KEY]
+    volumes:
+      - ./secrets/service-keys/partners:/etc/pavex/keys:ro
+    healthcheck:
+      <<: *java-health
+      test: ["CMD", "curl", "-fsS", "http://localhost:8083/actuator/health/readiness"]
+    depends_on:
+      <<: *depends-core
+      minio:
+        condition: service_healthy
+
+  network-service:
+    <<: *java-service
+    image: ${PAVEX_IMAGE_PREFIX:-pavex}/network-service:${PAVEX_TAG:-staging}
+    build: { context: .., args: { MODULE: network } }
+    environment:
+      <<: *spring-env
+      NETWORK_DB_URL: jdbc:postgresql://postgres:5432/pavex_network
+      NETWORK_DB_USERNAME: pavex_network
+      NETWORK_DEMO_SEED_ENABLED: "false"
+    secrets: [NETWORK_DB_PASSWORD]
+    volumes:
+      - ./secrets/service-keys/network:/etc/pavex/keys:ro
+    healthcheck:
+      <<: *java-health
+      test: ["CMD", "curl", "-fsS", "http://localhost:8085/actuator/health/readiness"]
+    depends_on: *depends-core
+
+  pricing-service:
+    <<: *java-service
+    image: ${PAVEX_IMAGE_PREFIX:-pavex}/pricing-service:${PAVEX_TAG:-staging}
+    build: { context: .., args: { MODULE: pricing } }
+    environment:
+      <<: *spring-env
+      PRICING_DB_URL: jdbc:postgresql://postgres:5432/pavex_pricing
+      PRICING_DB_USERNAME: pavex_pricing
+      PRICING_DEMO_SEED_ENABLED: "false"
+    secrets: [PRICING_DB_PASSWORD]
+    volumes:
+      - ./secrets/service-keys/pricing:/etc/pavex/keys:ro
+    healthcheck:
+      <<: *java-health
+      test: ["CMD", "curl", "-fsS", "http://localhost:8086/actuator/health/readiness"]
+    depends_on: *depends-core
+
+  shipment-service:
+    <<: *java-service
+    image: ${PAVEX_IMAGE_PREFIX:-pavex}/shipment-service:${PAVEX_TAG:-staging}
+    build: { context: .., args: { MODULE: shipment } }
+    environment:
+      <<: *spring-env
+      SHIPMENT_DB_URL: jdbc:postgresql://postgres:5432/pavex_shipments
+      SHIPMENT_DB_USERNAME: pavex_shipments
+    secrets: [SHIPMENT_DB_PASSWORD, RABBITMQ_PASSWORD, MINIO_SECRET_KEY]
+    volumes:
+      - ./secrets/service-keys/shipment:/etc/pavex/keys:ro
+    healthcheck:
+      <<: *java-health
+      test: ["CMD", "curl", "-fsS", "http://localhost:8084/actuator/health/readiness"]
+    depends_on:
+      <<: *depends-core
+      rabbitmq:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+
+  operations-service:
+    <<: *java-service
+    image: ${PAVEX_IMAGE_PREFIX:-pavex}/operations-service:${PAVEX_TAG:-staging}
+    build: { context: .., args: { MODULE: operations } }
+    environment:
+      <<: *spring-env
+      OPERATIONS_DB_URL: jdbc:postgresql://postgres:5432/pavex_operations
+      OPERATIONS_DB_USERNAME: pavex_operations
+      OPERATIONS_SHIFT_FULL_DAY: "false"
+    secrets: [OPERATIONS_DB_PASSWORD, RABBITMQ_PASSWORD]
+    volumes:
+      - ./secrets/service-keys/operations:/etc/pavex/keys:ro
+    healthcheck:
+      <<: *java-health
+      test: ["CMD", "curl", "-fsS", "http://localhost:8087/actuator/health/readiness"]
+    depends_on:
+      <<: *depends-core
+      rabbitmq:
+        condition: service_healthy
+
+  billing-service:
+    <<: *java-service
+    image: ${PAVEX_IMAGE_PREFIX:-pavex}/billing-service:${PAVEX_TAG:-staging}
+    build: { context: .., args: { MODULE: billing } }
+    environment:
+      <<: *spring-env
+      BILLING_DB_URL: jdbc:postgresql://postgres:5432/pavex_billing
+      BILLING_DB_USERNAME: pavex_billing
+      BILLING_PAYMENT_PROVIDER: ${BILLING_PAYMENT_PROVIDER:-fake}
+      PAYOS_ENABLED: ${PAYOS_ENABLED:-false}
+      PAYOS_CLIENT_ID: ${PAYOS_CLIENT_ID:-}
+      PAYOS_API_KEY: ${PAYOS_API_KEY:-}
+      PAYOS_CHECKSUM_KEY: ${PAYOS_CHECKSUM_KEY:-}
+      PAYOS_RETURN_URL: https://${PAVEX_DOMAIN}/account/billing
+      PAYOS_CANCEL_URL: https://${PAVEX_DOMAIN}/account/billing
+      # Ask payOS again for payments whose webhook never arrived.
+      BILLING_RECONCILIATION_ENABLED: "true"
+    secrets: [BILLING_DB_PASSWORD, RABBITMQ_PASSWORD, BILLING_QR_SIGNING_KEY]
+    volumes:
+      - ./secrets/service-keys/billing:/etc/pavex/keys:ro
+    healthcheck:
+      <<: *java-health
+      test: ["CMD", "curl", "-fsS", "http://localhost:8088/actuator/health/readiness"]
+    depends_on:
+      <<: *depends-core
+      rabbitmq:
+        condition: service_healthy
+
+  fleet-service:
+    <<: *java-service
+    image: ${PAVEX_IMAGE_PREFIX:-pavex}/fleet-service:${PAVEX_TAG:-staging}
+    build: { context: .., args: { MODULE: fleet } }
+    environment:
+      <<: *spring-env
+      FLEET_DB_URL: jdbc:postgresql://postgres:5432/pavex_fleet
+      FLEET_DB_USERNAME: pavex_fleet
+      FLEET_SIMULATOR_ENABLED: "false"
+    secrets: [FLEET_DB_PASSWORD, RABBITMQ_PASSWORD]
+    volumes:
+      - ./secrets/service-keys/fleet:/etc/pavex/keys:ro
+    healthcheck:
+      <<: *java-health
+      test: ["CMD", "curl", "-fsS", "http://localhost:8089/actuator/health/readiness"]
+    depends_on:
+      <<: *depends-core
+      rabbitmq:
+        condition: service_healthy
+
+  notifications-service:
+    <<: *java-service
+    image: ${PAVEX_IMAGE_PREFIX:-pavex}/notifications-service:${PAVEX_TAG:-staging}
+    build: { context: .., args: { MODULE: notifications } }
+    environment:
+      <<: *spring-env
+      NOTIFICATIONS_DB_URL: jdbc:postgresql://postgres:5432/pavex_notifications
+      NOTIFICATIONS_DB_USERNAME: pavex_notifications
+    secrets: [NOTIFICATIONS_DB_PASSWORD, RABBITMQ_PASSWORD]
+    volumes:
+      - ./secrets/service-keys/notifications:/etc/pavex/keys:ro
+    healthcheck:
+      <<: *java-health
+      test: ["CMD", "curl", "-fsS", "http://localhost:8090/actuator/health/readiness"]
+    depends_on:
+      <<: *depends-core
+      rabbitmq:
+        condition: service_healthy
+
+  # ---------------------------------------------------------------------------------------------------------
+  # Data
+  # ---------------------------------------------------------------------------------------------------------
+  # One PostgreSQL server, one database and one login per service (postgres/init-databases.sh): ten
+  # servers would cost ~1 GB of RAM more on a single machine for no extra isolation, since they would share
+  # its disk and CPU anyway. Each service still only reaches its own database.
+  postgres:
+    image: postgres:18.6-alpine
+    restart: unless-stopped
+    networks: [pavex]
+    shm_size: 256m
+    command: ["postgres", "-c", "max_connections=250", "-c", "shared_buffers=256MB"]
+    environment:
+      POSTGRES_PASSWORD_FILE: /run/secrets/POSTGRES_PASSWORD
+    secrets:
+      - POSTGRES_PASSWORD
+      - AUTH_DB_PASSWORD
+      - IDENTITY_DB_PASSWORD
+      - PARTNERS_DB_PASSWORD
+      - NETWORK_DB_PASSWORD
+      - PRICING_DB_PASSWORD
+      - SHIPMENT_DB_PASSWORD
+      - OPERATIONS_DB_PASSWORD
+      - BILLING_DB_PASSWORD
+      - FLEET_DB_PASSWORD
+      - NOTIFICATIONS_DB_PASSWORD
+    volumes:
+      - postgres_data:/var/lib/postgresql
+      - ./postgres/init-databases.sh:/docker-entrypoint-initdb.d/10-pavex-databases.sh:ro
+    healthcheck:
+      # Over TCP: during the first start the init scripts run on a server that only listens on its socket.
+      test: ["CMD", "pg_isready", "-h", "127.0.0.1", "-U", "postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    logging: *logging
+
+  rabbitmq:
+    image: rabbitmq:4.1-management-alpine
+    restart: unless-stopped
+    networks: [pavex]
+    hostname: rabbitmq
+    mem_limit: 512m
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+      - ./secrets/rabbitmq.conf:/etc/rabbitmq/conf.d/20-pavex.conf:ro
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 10s
+      timeout: 10s
+      retries: 12
+    logging: *logging
+
+  redis:
+    image: redis:8.2-alpine
+    restart: unless-stopped
+    networks: [pavex]
+    # Rate-limit counters only: nothing to persist.
+    command: ["sh", "-c", "exec redis-server --appendonly no --save '' --maxmemory 64mb --maxmemory-policy allkeys-lru --requirepass \"$$(cat /run/secrets/REDIS_PASSWORD)\""]
+    secrets: [REDIS_PASSWORD]
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli --no-auth-warning -a \"$$(cat /run/secrets/REDIS_PASSWORD)\" ping | grep -q PONG"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    logging: *logging
+
+  # Delivery photos, support attachments and avatars.
+  minio:
+    image: pgsty/minio:RELEASE.2026-08-04T00-00-00Z
+    restart: unless-stopped
+    networks: [pavex]
+    command: ["server", "/data", "--console-address", ":9001"]
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ACCESS_KEY:-pavex}
+      MINIO_ROOT_PASSWORD_FILE: MINIO_SECRET_KEY
+      MINIO_PROMETHEUS_AUTH_TYPE: public
+    secrets: [MINIO_SECRET_KEY]
+    volumes:
+      - minio_data:/data
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+    logging: *logging
+
+  # Nightly pg_dump of every database (backup/backup.sh); restore with deploy/restore.sh.
+  backup:
+    image: ${PAVEX_IMAGE_PREFIX:-pavex}/backup:${PAVEX_TAG:-staging}
+    build: ./backup
+    restart: unless-stopped
+    networks: [pavex]
+    environment:
+      TZ: ${TZ:-Asia/Ho_Chi_Minh}
+      PGHOST: postgres
+      PGUSER: postgres
+      BACKUP_SCHEDULE: ${BACKUP_SCHEDULE:-30 2 * * *}
+      BACKUP_KEEP_DAILY: ${BACKUP_KEEP_DAILY:-7}
+      BACKUP_KEEP_WEEKLY: ${BACKUP_KEEP_WEEKLY:-4}
+      BACKUP_S3_ENDPOINT: ${BACKUP_S3_ENDPOINT:-}
+      BACKUP_S3_REGION: ${BACKUP_S3_REGION:-}
+      BACKUP_S3_BUCKET: ${BACKUP_S3_BUCKET:-}
+      BACKUP_S3_PREFIX: ${BACKUP_S3_PREFIX:-pavex-staging}
+      BACKUP_S3_ACCESS_KEY: ${BACKUP_S3_ACCESS_KEY:-}
+      BACKUP_S3_SECRET_KEY: ${BACKUP_S3_SECRET_KEY:-}
+      BACKUP_S3_PROVIDER: ${BACKUP_S3_PROVIDER:-Other}
+      BACKUP_S3_KEEP: ${BACKUP_S3_KEEP:-35d}
+    secrets: [POSTGRES_PASSWORD]
+    volumes:
+      - ${BACKUP_DIR:-./backups}:/backups
+      - backup_metrics:/metrics
+    depends_on:
+      postgres:
+        condition: service_healthy
+    logging: *logging
+
+  # ---------------------------------------------------------------------------------------------------------
+  # Monitoring
+  # ---------------------------------------------------------------------------------------------------------
+  prometheus:
+    image: prom/prometheus:v3.7.0
+    restart: unless-stopped
+    networks: [pavex]
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --storage.tsdb.path=/prometheus
+      - --storage.tsdb.retention.time=${PROMETHEUS_RETENTION:-15d}
+      - --web.external-url=http://localhost:${OPS_PROMETHEUS_PORT:-9090}/
+    volumes:
+      - ./prometheus:/etc/prometheus:ro
+      - prometheus_data:/prometheus
+    logging: *logging
+
+  alertmanager:
+    image: prom/alertmanager:v0.28.1
+    restart: unless-stopped
+    networks: [pavex]
+    entrypoint: ["/bin/sh", "/etc/alertmanager/start.sh"]
+    environment:
+      ALERT_EMAIL_TO: ${ALERT_EMAIL_TO:-}
+      PAVEX_DOMAIN: ${PAVEX_DOMAIN}
+      MAIL_HOST: ${MAIL_HOST}
+      MAIL_PORT: ${MAIL_PORT:-587}
+      MAIL_USERNAME: ${MAIL_USERNAME:-}
+      MAIL_PASSWORD: ${MAIL_PASSWORD:-}
+      MAIL_STARTTLS: ${MAIL_STARTTLS:-true}
+      MAIL_FROM: ${MAIL_FROM}
+    volumes:
+      - ./alertmanager:/etc/alertmanager:ro
+      - alertmanager_data:/alertmanager
+    logging: *logging
+
+  grafana:
+    image: grafana/grafana:12.2.0
+    restart: unless-stopped
+    networks: [pavex]
+    environment:
+      GF_SERVER_ROOT_URL: https://grafana.${PAVEX_DOMAIN}
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD__FILE: /run/secrets/GRAFANA_ADMIN_PASSWORD
+      GF_SECURITY_COOKIE_SECURE: "true"
+      GF_USERS_ALLOW_SIGN_UP: "false"
+      GF_AUTH_ANONYMOUS_ENABLED: "false"
+      GF_ANALYTICS_REPORTING_ENABLED: "false"
+      GF_ANALYTICS_CHECK_FOR_UPDATES: "false"
+      GF_NEWS_NEWS_FEED_ENABLED: "false"
+    secrets: [GRAFANA_ADMIN_PASSWORD]
+    volumes:
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./grafana/dashboards:/var/lib/grafana/dashboards:ro
+      - grafana_data:/var/lib/grafana
+    depends_on: [prometheus]
+    logging: *logging
+
+  # Disk, memory and CPU of the server, plus the result of the last backup.
+  node-exporter:
+    image: prom/node-exporter:v1.10.2
+    restart: unless-stopped
+    networks: [pavex]
+    command:
+      - --path.rootfs=/host
+      - --collector.textfile.directory=/textfile
+    volumes:
+      # Read-only view of the server's filesystems, for free disk space.
+      - /:/host:ro
+      - backup_metrics:/textfile:ro
+    logging: *logging
+
+  # Only with `--profile mailtest`: catches every email instead of a real SMTP server (local tests,
+  # MAIL_HOST=mailpit MAIL_PORT=1025 MAIL_SMTP_AUTH=false MAIL_STARTTLS=false).
+  mailpit:
+    image: axllent/mailpit
+    profiles: [mailtest]
+    networks: [pavex]
+
+networks:
+  pavex:
+    ipam:
+      config:
+        - subnet: ${PAVEX_SUBNET:-172.30.0.0/24}
+
+volumes:
+  postgres_data:
+  rabbitmq_data:
+  minio_data:
+  caddy_data:
+  caddy_config:
+  prometheus_data:
+  alertmanager_data:
+  grafana_data:
+  backup_metrics:
+
+# Files created by gen-secrets.sh; mounted read-only at /run/secrets/<name>.
+secrets:
+  POSTGRES_PASSWORD: { file: ./secrets/values/POSTGRES_PASSWORD }
+  AUTH_DB_PASSWORD: { file: ./secrets/values/AUTH_DB_PASSWORD }
+  IDENTITY_DB_PASSWORD: { file: ./secrets/values/IDENTITY_DB_PASSWORD }
+  PARTNERS_DB_PASSWORD: { file: ./secrets/values/PARTNERS_DB_PASSWORD }
+  NETWORK_DB_PASSWORD: { file: ./secrets/values/NETWORK_DB_PASSWORD }
+  PRICING_DB_PASSWORD: { file: ./secrets/values/PRICING_DB_PASSWORD }
+  SHIPMENT_DB_PASSWORD: { file: ./secrets/values/SHIPMENT_DB_PASSWORD }
+  OPERATIONS_DB_PASSWORD: { file: ./secrets/values/OPERATIONS_DB_PASSWORD }
+  BILLING_DB_PASSWORD: { file: ./secrets/values/BILLING_DB_PASSWORD }
+  FLEET_DB_PASSWORD: { file: ./secrets/values/FLEET_DB_PASSWORD }
+  NOTIFICATIONS_DB_PASSWORD: { file: ./secrets/values/NOTIFICATIONS_DB_PASSWORD }
+  RABBITMQ_PASSWORD: { file: ./secrets/values/RABBITMQ_PASSWORD }
+  MINIO_SECRET_KEY: { file: ./secrets/values/MINIO_SECRET_KEY }
+  REDIS_PASSWORD: { file: ./secrets/values/REDIS_PASSWORD }
+  AUTH_KEY_HASH_SECRET: { file: ./secrets/values/AUTH_KEY_HASH_SECRET }
+  AUTH_OUTBOX_PAYLOAD_ENCRYPTION_KEY: { file: ./secrets/values/AUTH_OUTBOX_PAYLOAD_ENCRYPTION_KEY }
+  BILLING_QR_SIGNING_KEY: { file: ./secrets/values/BILLING_QR_SIGNING_KEY }
+  STAFF_TEMPORARY_PASSWORD: { file: ./secrets/values/STAFF_TEMPORARY_PASSWORD }
+  PAVEX_BOOTSTRAPADMIN_PASSWORD: { file: ./secrets/values/PAVEX_BOOTSTRAPADMIN_PASSWORD }
+  GRAFANA_ADMIN_PASSWORD: { file: ./secrets/values/GRAFANA_ADMIN_PASSWORD }

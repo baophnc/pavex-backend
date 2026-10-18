@@ -41,3 +41,7 @@ __MACOSX/
 
 ### Python ###
 __pycache__/
+
+### Staging deployment (deploy/gen-secrets.sh, deploy/.env, nightly dumps) ###
+deploy/secrets/
+deploy/backups/

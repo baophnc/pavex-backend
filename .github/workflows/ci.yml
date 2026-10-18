@@ -37,6 +37,19 @@ jobs:
           path: "**/target/surefire-reports/"
           retention-days: 7
 
+  deploy:
+    name: Staging compose file
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      # deploy/compose.yml with the example settings and throwaway secrets must stay valid.
+      - name: docker compose config
+        run: |
+          cp deploy/.env.example deploy/.env
+          ./deploy/gen-secrets.sh
+          docker compose -f deploy/compose.yml config --quiet
+
   docker:
     name: Docker image (${{ matrix.module }})
     needs: test

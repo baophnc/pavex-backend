@@ -1,0 +1,85 @@
+# Reverse proxy and automatic HTTPS for the staging stack (deploy/compose.yml).
+# {$VAR} values come from deploy/.env through the caddy service's environment.
+#
+#   https://<domain>          client portal       (www.<domain> redirects here)
+#   https://admin.<domain>    management portal
+#   https://api.<domain>      API gateway (mobile app, payOS webhook /api/v1/integrations/payos/webhook, avatars)
+#   https://grafana.<domain>  Grafana, with its own login; GRAFANA_ALLOW_FROM limits who may open it
+#   127.0.0.1:15672/9001/9090/9093 on the server: RabbitMQ, MinIO console, Prometheus, Alertmanager (SSH tunnel)
+{
+	email {$ACME_EMAIL}
+	# With CADDY_TLS=internal, never try to add Caddy's local CA to the container's trust store.
+	skip_install_trust
+	# Request counts and latency per host on the metrics listener at the end of this file.
+	metrics {
+		per_host
+	}
+}
+
+(common) {
+	tls {$CADDY_TLS}
+	encode zstd gzip
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		-Server
+	}
+	log {
+		output stdout
+		format json
+	}
+}
+
+{$PAVEX_DOMAIN} {
+	import common
+	reverse_proxy client-portal:3000
+}
+
+www.{$PAVEX_DOMAIN} {
+	import common
+	redir https://{$PAVEX_DOMAIN}{uri} permanent
+}
+
+admin.{$PAVEX_DOMAIN} {
+	import common
+	reverse_proxy management-portal:3001
+}
+
+api.{$PAVEX_DOMAIN} {
+	import common
+	# Metrics and other actuator endpoints stay on the private network; health stays public.
+	@actuator {
+		path /actuator /actuator/*
+		not path /actuator/health /actuator/health/*
+	}
+	respond @actuator 404
+	reverse_proxy api-gateway:8080
+}
+
+grafana.{$PAVEX_DOMAIN} {
+	import common
+	@denied not remote_ip {$GRAFANA_ALLOW_FROM}
+	respond @denied 403
+	reverse_proxy grafana:3000
+}
+
+# Operator UIs: published on the server's loopback only (compose.yml), never on the internet.
+http://:15672 {
+	reverse_proxy rabbitmq:15672
+}
+
+http://:9001 {
+	reverse_proxy minio:9001
+}
+
+http://:9090 {
+	reverse_proxy prometheus:9090
+}
+
+http://:9093 {
+	reverse_proxy alertmanager:9093
+}
+
+# Caddy's own metrics for Prometheus; not published, only reachable inside the private network.
+http://:2020 {
+	metrics
+}
