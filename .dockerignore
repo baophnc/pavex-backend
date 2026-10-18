@@ -12,4 +12,6 @@
 !**/src/test/resources/keys/*.pem
 docs
 scripts
-**/http
+deploy
+# IntelliJ HTTP request files (a bare **/http would also drop the com.pavex.common.http package).
+**/*.http
