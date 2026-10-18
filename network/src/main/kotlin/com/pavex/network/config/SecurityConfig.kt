@@ -114,6 +114,8 @@ class SecurityConfig {
                     "/v3/api-docs/**",
                     "/actuator/health",
                     "/actuator/health/**",
+                    // Metrics for Prometheus on the internal network; served only where a deployment exposes them.
+                    "/actuator/prometheus",
                 ).permitAll()
                     .requestMatchers(HttpMethod.GET, "/api/v1/network/hubs").permitAll()
                     .requestMatchers("/api/v1/admin/network/**").authenticated()

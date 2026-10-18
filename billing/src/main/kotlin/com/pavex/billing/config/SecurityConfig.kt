@@ -32,6 +32,8 @@ class SecurityConfig {
                     "/v3/api-docs/**",
                     "/actuator/health",
                     "/actuator/health/**",
+                    // Metrics for Prometheus on the internal network; served only where a deployment exposes them.
+                    "/actuator/prometheus",
                 ).permitAll()
                     // payOS calls this without a user token; the payload signature is verified instead.
                     .requestMatchers(HttpMethod.POST, "/api/v1/integrations/payos/webhook").permitAll()

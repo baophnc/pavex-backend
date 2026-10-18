@@ -70,6 +70,8 @@ class SecurityConfig {
                     "/api/v1/auth/google",
                     "/actuator/health",
                     "/actuator/health/**",
+                    // Metrics for Prometheus on the internal network; served only where a deployment exposes them.
+                    "/actuator/prometheus",
                 ).permitAll()
                     .anyRequest()
                     .authenticated()
