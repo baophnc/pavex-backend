@@ -1,5 +1,6 @@
 package com.pavex.operations.dispatch
 
+import com.pavex.outbox.JdbcOutboxLease
 import org.springframework.jdbc.core.JdbcTemplate
 import org.springframework.stereotype.Repository
 import org.springframework.transaction.annotation.Transactional
@@ -13,59 +14,47 @@ import java.util.UUID
 class OperationsOutboxStore(
     private val jdbc: JdbcTemplate,
 ) {
-    @Transactional
-    fun claimBatch(lockId: UUID, now: Instant, batchSize: Int, lockDuration: Duration): List<OperationsOutboxDelivery> {
-        val candidates = jdbc.query(
-            """
-            SELECT candidate.id, candidate.event_type, candidate.aggregate_type, candidate.aggregate_id,
-                   candidate.payload::text, candidate.occurred_at, candidate.attempt_count
-            FROM operations.outbox_messages candidate
-            WHERE candidate.processed_at IS NULL
-              AND candidate.dead_lettered_at IS NULL
-              AND candidate.discarded_at IS NULL
-              AND candidate.available_at <= ?
-              AND (candidate.locked_until IS NULL OR candidate.locked_until <= ?)
-              AND NOT EXISTS (
-                  SELECT 1 FROM operations.outbox_messages predecessor
-                  WHERE predecessor.aggregate_type = candidate.aggregate_type
-                    AND predecessor.aggregate_id = candidate.aggregate_id
-                    AND predecessor.processed_at IS NULL
-                    AND predecessor.discarded_at IS NULL
-                    AND (
-                        predecessor.occurred_at < candidate.occurred_at OR
-                        (predecessor.occurred_at = candidate.occurred_at AND predecessor.id < candidate.id)
-                    )
-              )
-            ORDER BY candidate.occurred_at, candidate.id
-            LIMIT ?
-            FOR UPDATE SKIP LOCKED
-            """.trimIndent(),
-            { rs, _ -> delivery(rs) },
-            Timestamp.from(now),
-            Timestamp.from(now),
-            batchSize,
-        )
-        if (candidates.isEmpty()) return emptyList()
+    private val lease = JdbcOutboxLease(
+        jdbc,
+        label = "Outbox message",
+        selectDue = """
+        SELECT candidate.id, candidate.event_type, candidate.aggregate_type, candidate.aggregate_id,
+               candidate.payload::text, candidate.occurred_at, candidate.attempt_count
+        FROM operations.outbox_messages candidate
+        WHERE candidate.processed_at IS NULL
+          AND candidate.dead_lettered_at IS NULL
+          AND candidate.discarded_at IS NULL
+          AND candidate.available_at <= ?
+          AND (candidate.locked_until IS NULL OR candidate.locked_until <= ?)
+          AND NOT EXISTS (
+              SELECT 1 FROM operations.outbox_messages predecessor
+              WHERE predecessor.aggregate_type = candidate.aggregate_type
+                AND predecessor.aggregate_id = candidate.aggregate_id
+                AND predecessor.processed_at IS NULL
+                AND predecessor.discarded_at IS NULL
+                AND (
+                    predecessor.occurred_at < candidate.occurred_at OR
+                    (predecessor.occurred_at = candidate.occurred_at AND predecessor.id < candidate.id)
+                )
+          )
+        ORDER BY candidate.occurred_at, candidate.id
+        LIMIT ?
+        FOR UPDATE SKIP LOCKED
+        """.trimIndent(),
+        lease = """
+        UPDATE operations.outbox_messages
+        SET lock_id = ?, locked_until = ?, attempt_count = attempt_count + 1
+        WHERE id = ?
+          AND processed_at IS NULL
+          AND dead_lettered_at IS NULL
+          AND discarded_at IS NULL
+        """.trimIndent(),
+    )
 
-        val lockedUntil = now.plus(lockDuration)
-        candidates.forEach { candidate ->
-            val updated = jdbc.update(
-                """
-                UPDATE operations.outbox_messages
-                SET lock_id = ?, locked_until = ?, attempt_count = attempt_count + 1
-                WHERE id = ?
-                  AND processed_at IS NULL
-                  AND dead_lettered_at IS NULL
-                  AND discarded_at IS NULL
-                """.trimIndent(),
-                lockId,
-                Timestamp.from(lockedUntil),
-                candidate.messageId,
-            )
-            check(updated == 1) { "Outbox message ${candidate.messageId} could not be locked." }
-        }
-        return candidates.map { it.copy(attemptCount = it.attemptCount + 1) }
-    }
+    @Transactional
+    fun claimBatch(lockId: UUID, now: Instant, batchSize: Int, lockDuration: Duration): List<OperationsOutboxDelivery> =
+        lease.claim(lockId, now, batchSize, lockDuration, { rs, _ -> delivery(rs) }, OperationsOutboxDelivery::messageId)
+            .map { it.copy(attemptCount = it.attemptCount + 1) }
 
     fun markProcessed(messageId: UUID, lockId: UUID, processedAt: Instant): Boolean = jdbc.update(
         """

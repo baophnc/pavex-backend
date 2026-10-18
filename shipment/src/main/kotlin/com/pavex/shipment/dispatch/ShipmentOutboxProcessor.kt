@@ -1,68 +1,53 @@
 package com.pavex.shipment.dispatch
 
+import com.pavex.outbox.OutboxBatchResult
+import com.pavex.outbox.OutboxLeaseSettings
+import com.pavex.outbox.OutboxRelay
+import com.pavex.outbox.OutboxRelayStore
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import java.time.Duration
 import java.time.Instant
 import java.util.UUID
-import kotlin.math.pow
 
+/** Leases a batch, publishes each event to RabbitMQ and records the outcome under this batch's lease. */
 @Service
 class ShipmentOutboxProcessor(
     private val store: ShipmentOutboxStore,
     private val publisher: RabbitShipmentEventPublisher,
-    @Value("\${shipment.outbox.batch-size:50}") private val batchSize: Int,
-    @Value("\${shipment.outbox.lock-duration:PT30S}") private val lockDuration: Duration,
-    @Value("\${shipment.outbox.base-retry-delay:PT5S}") private val baseRetryDelay: Duration,
-    @Value("\${shipment.outbox.max-retry-delay:PT5M}") private val maxRetryDelay: Duration,
-    @Value("\${shipment.outbox.max-attempts:8}") private val maxAttempts: Int,
+    @Value("\${shipment.outbox.batch-size:50}") batchSize: Int,
+    @Value("\${shipment.outbox.lock-duration:PT30S}") lockDuration: Duration,
+    @Value("\${shipment.outbox.base-retry-delay:PT5S}") baseRetryDelay: Duration,
+    @Value("\${shipment.outbox.max-retry-delay:PT5M}") maxRetryDelay: Duration,
+    @Value("\${shipment.outbox.max-attempts:8}") maxAttempts: Int,
 ) {
+    private val settings = OutboxLeaseSettings(batchSize, lockDuration, baseRetryDelay, maxRetryDelay, maxAttempts)
+    private val relay = OutboxRelay<ShipmentOutboxDelivery>(
+        label = "Shipment outbox event",
+        log = log,
+        backoff = settings.backoff,
+        maxAttempts = maxAttempts,
+        idOf = { it.id },
+        attemptOf = { it.attempts },
+    )
+
     fun processBatch(): ShipmentOutboxBatchResult {
-        validateOptions()
+        settings.validate()
         val lockId = UUID.randomUUID()
-        val claimed = store.claimBatch(lockId, Instant.now(), batchSize, lockDuration)
-        var published = 0
-        var failed = 0
-        var deadLettered = 0
-
-        claimed.forEach { event ->
-            try {
-                publisher.publish(event)
-                if (store.markPublished(event.id, lockId, Instant.now())) published++ else failed++
-            } catch (exception: Exception) {
-                failed++
-                val error = "${exception::class.simpleName}: ${exception.message ?: "unknown"}".take(2000)
-                if (event.attempts >= maxAttempts) {
-                    if (store.markDeadLettered(event.id, lockId, error)) deadLettered++
-                    log.error("Shipment outbox event {} dead-lettered after {} attempts.", event.id, event.attempts, exception)
-                } else {
-                    val retryAt = Instant.now().plus(retryDelay(event.attempts))
-                    store.markRetry(event.id, lockId, retryAt, error)
-                    log.warn(
-                        "Shipment outbox event {} failed on attempt {}; retry scheduled for {}.",
-                        event.id,
-                        event.attempts,
-                        retryAt,
-                    )
-                }
-            }
-        }
-        return ShipmentOutboxBatchResult(claimed.size, published, failed, deadLettered)
+        val claimed = store.claimBatch(lockId, Instant.now(), settings.batchSize, settings.lockDuration)
+        return relay.relay(claimed, leasedBy(lockId)) { publisher.publish(it) }
     }
 
-    private fun retryDelay(attempt: Int): Duration {
-        val exponent = (attempt - 1).coerceIn(0, 20)
-        val millis = baseRetryDelay.toMillis() * 2.0.pow(exponent.toDouble())
-        return Duration.ofMillis(millis.coerceAtMost(maxRetryDelay.toMillis().toDouble()).toLong())
-    }
+    private fun leasedBy(lockId: UUID) = object : OutboxRelayStore<ShipmentOutboxDelivery> {
+        override fun markPublished(message: ShipmentOutboxDelivery, at: Instant) =
+            store.markPublished(message.id, lockId, at)
 
-    private fun validateOptions() {
-        require(batchSize in 1..500)
-        require(!lockDuration.isZero && !lockDuration.isNegative)
-        require(!baseRetryDelay.isZero && !baseRetryDelay.isNegative)
-        require(maxRetryDelay >= baseRetryDelay)
-        require(maxAttempts in 1..100)
+        override fun markRetry(message: ShipmentOutboxDelivery, nextAttemptAt: Instant, error: String) =
+            store.markRetry(message.id, lockId, nextAttemptAt, error)
+
+        override fun markDeadLettered(message: ShipmentOutboxDelivery, at: Instant, error: String) =
+            store.markDeadLettered(message.id, lockId, error)
     }
 
     companion object {
@@ -70,9 +55,4 @@ class ShipmentOutboxProcessor(
     }
 }
 
-data class ShipmentOutboxBatchResult(
-    val claimed: Int,
-    val published: Int,
-    val failed: Int,
-    val deadLettered: Int,
-)
+typealias ShipmentOutboxBatchResult = OutboxBatchResult

@@ -1,6 +1,9 @@
 package com.pavex.partners.service
 
 import com.pavex.contracts.identity.MerchantRoleSyncRequest
+import com.pavex.outbox.OutboxRelay
+import com.pavex.outbox.OutboxRelayStore
+import com.pavex.outbox.RetryBackoff
 import com.pavex.partners.entity.MerchantRoleOutboxMessage
 import com.pavex.partners.repository.MerchantRoleOutboxRepository
 import org.slf4j.LoggerFactory
@@ -16,6 +19,17 @@ class MerchantRoleOutboxProcessor(
     private val identityClient: IdentityMerchantGateway,
 ) {
     private val logger = LoggerFactory.getLogger(javaClass)
+
+    /** A role change is retried until Identity takes it; it is never dead-lettered. */
+    private val relay = OutboxRelay<MerchantRoleOutboxMessage>(
+        label = "Merchant role outbox message",
+        log = logger,
+        backoff = BACKOFF,
+        maxAttempts = null,
+        idOf = { it.id },
+        attemptOf = { it.attemptCount + 1 },
+        describeError = { (it.message ?: it.javaClass.simpleName).take(2000) },
+    )
 
     /**
      * Rows stay locked (FOR UPDATE SKIP LOCKED) until this transaction commits, so a
@@ -43,32 +57,39 @@ class MerchantRoleOutboxProcessor(
             return
         }
 
-        try {
+        relay.deliver(message, LockedRows) {
             identityClient.synchronizeMerchantRole(
-                message.userId,
-                MerchantRoleSyncRequest(message.enabled, message.assignedByUserId),
-            )
-            message.processedAt = Instant.now()
-            message.lastError = null
-        } catch (exception: RuntimeException) {
-            message.attemptCount += 1
-            message.lastError = (exception.message ?: exception.javaClass.simpleName).take(2000)
-            message.availableAt = now.plus(retryDelay(message.attemptCount))
-            logger.warn(
-                "Merchant role sync failed for outbox message {}; retry {} scheduled at {}",
-                message.id,
-                message.attemptCount,
-                message.availableAt,
+                it.userId,
+                MerchantRoleSyncRequest(it.enabled, it.assignedByUserId),
             )
         }
     }
 
-    internal fun retryDelay(attempt: Int): Duration {
-        val seconds = (5L shl (attempt - 1).coerceIn(0, 8)).coerceAtMost(1800)
-        return Duration.ofSeconds(seconds)
+    internal fun retryDelay(attempt: Int): Duration = BACKOFF.delayAfter(attempt)
+
+    /** The rows are locked JPA entities; [dispatchPending] saves them. */
+    private object LockedRows : OutboxRelayStore<MerchantRoleOutboxMessage> {
+        override fun markPublished(message: MerchantRoleOutboxMessage, at: Instant): Boolean {
+            message.processedAt = at
+            message.lastError = null
+            return true
+        }
+
+        override fun markRetry(message: MerchantRoleOutboxMessage, nextAttemptAt: Instant, error: String): Boolean {
+            message.attemptCount += 1
+            message.lastError = error
+            message.availableAt = nextAttemptAt
+            return true
+        }
+
+        override fun markDeadLettered(message: MerchantRoleOutboxMessage, at: Instant, error: String): Boolean =
+            error("Merchant role changes are retried, never dead-lettered.")
     }
 
     companion object {
         private const val BATCH_SIZE = 20
+
+        /** 5 s, doubling up to 21 min 20 s (5 s × 2⁸). */
+        private val BACKOFF = RetryBackoff(Duration.ofSeconds(5), Duration.ofSeconds(1800), maxDoublings = 8)
     }
 }

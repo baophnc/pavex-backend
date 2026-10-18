@@ -1,53 +1,43 @@
 package com.pavex.shipment.dispatch
 
-import org.springframework.amqp.rabbit.connection.CorrelationData
+import com.pavex.outbox.OutboxRabbitMessage
+import com.pavex.outbox.RabbitOutboxPublisher
 import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import java.time.Duration
-import java.util.Date
-import java.util.concurrent.TimeUnit
 
 @Service
 class RabbitShipmentEventPublisher(
-    private val rabbitTemplate: RabbitTemplate,
+    rabbitTemplate: RabbitTemplate,
     @Value("\${shipment.messaging.exchange:${ShipmentMessagingConfig.EVENTS_EXCHANGE}}")
     private val exchange: String,
     @Value("\${shipment.outbox.confirm-timeout:PT5S}")
-    private val confirmTimeout: Duration,
+    confirmTimeout: Duration,
 ) {
-    fun publish(event: ShipmentOutboxDelivery) {
-        val correlation = CorrelationData(event.id.toString())
-        rabbitTemplate.convertAndSend(
-            exchange,
-            event.eventType,
-            event.payload,
-            { message ->
-                message.messageProperties.apply {
-                    messageId = event.id.toString()
-                    contentType = "application/json"
-                    contentEncoding = "UTF-8"
-                    timestamp = Date.from(event.occurredAt)
-                    setHeader("X-Pavex-Event-Id", event.id.toString())
-                    setHeader("X-Pavex-Event-Type", event.eventType)
-                    setHeader("X-Pavex-Event-Version", event.eventVersion)
-                    setHeader("X-Pavex-Producer", "shipment-service")
-                    setHeader("X-Pavex-Aggregate-Type", "Shipment")
-                    setHeader("X-Pavex-Aggregate-Id", event.aggregateId.toString())
-                    setHeader("X-Pavex-Aggregate-Code", event.aggregateCode)
-                    setHeader("X-Pavex-Attempt", event.attempts)
-                    setHeader("X-Pavex-Occurred-At", event.occurredAt.toString())
-                }
-                message
-            },
-            correlation,
-        )
+    private val rabbit = RabbitOutboxPublisher(rabbitTemplate, confirmTimeout, "shipment outbox event")
 
-        val confirm = correlation.future.get(confirmTimeout.toMillis(), TimeUnit.MILLISECONDS)
-        if (!confirm.ack()) {
-            throw IllegalStateException(
-                "RabbitMQ publisher nack for shipment outbox event ${event.id}: ${confirm.reason() ?: "unknown"}",
-            )
-        }
+    fun publish(event: ShipmentOutboxDelivery) {
+        rabbit.publish(
+            OutboxRabbitMessage(
+                exchange = exchange,
+                routingKey = event.eventType,
+                body = event.payload,
+                messageId = event.id.toString(),
+                contentType = "application/json",
+                occurredAt = event.occurredAt,
+                headers = linkedMapOf(
+                    "X-Pavex-Event-Id" to event.id.toString(),
+                    "X-Pavex-Event-Type" to event.eventType,
+                    "X-Pavex-Event-Version" to event.eventVersion,
+                    "X-Pavex-Producer" to "shipment-service",
+                    "X-Pavex-Aggregate-Type" to "Shipment",
+                    "X-Pavex-Aggregate-Id" to event.aggregateId.toString(),
+                    "X-Pavex-Aggregate-Code" to event.aggregateCode,
+                    "X-Pavex-Attempt" to event.attempts,
+                    "X-Pavex-Occurred-At" to event.occurredAt.toString(),
+                ),
+            ),
+        )
     }
 }

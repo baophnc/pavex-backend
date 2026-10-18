@@ -46,6 +46,7 @@
         <module>libs/platform-storage</module>
         <module>libs/platform-config</module>
         <module>libs/platform-security</module>
+        <module>libs/platform-outbox</module>
         <module>libs/platform-test</module>
         <module>auth</module>
         <module>identity</module>
