@@ -3417,9 +3417,10 @@ Tạo DNS **trước** lần chạy đầu: Caddy xin chứng chỉ ngay khi kh�
   `ghcr.io/pavex/auth-service:2026-10-18`), đặt hai biến đó trong `.env`, rồi `docker compose ... pull` và
   `up -d --no-build`.
 - **Management portal:** trong repo `pavex-management-portal`: `docker build -t pavex/management-portal:staging .`
-- **Client portal:** repo `pavex-client-portal-env` **chưa có image production** (Dockerfile hiện chỉ chạy `pnpm dev`).
-  Cần thêm một stage `next build` + `next start`; lưu ý `NEXT_PUBLIC_SITE_URL` được ghi vào lúc build, nên build với
-  `NEXT_PUBLIC_SITE_URL=https://<domain>`.
+- **Client portal:** trong repo `pavex-client-portal`:
+  `docker build --build-arg NEXT_PUBLIC_SITE_URL=https://<domain> -t pavex/client-portal:staging .`
+  `NEXT_PUBLIC_SITE_URL` được ghi vào lúc build (link chuẩn, sitemap, ảnh chia sẻ), nên đổi tên miền thì phải build lại;
+  biến cùng tên trong `deploy/compose.yml` không có tác dụng với image đã build.
 - Tên image hai portal đặt bằng `CLIENT_PORTAL_IMAGE`, `MANAGEMENT_PORTAL_IMAGE`. Không có registry thì chuyển image
   thẳng sang VPS: `docker save pavex/management-portal:staging | ssh user@vps docker load`.
 
