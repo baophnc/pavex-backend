@@ -1,0 +1,5 @@
+# Settings the tests need on top of com.pavex.test.PostgresIntegrationTest (libs/platform-test).
+billing:
+  payments:
+    qr:
+      signing-key: test-only-qr-signing-key-of-32-bytes!

@@ -1,0 +1,10 @@
+# Settings the tests need on top of com.pavex.test.PostgresIntegrationTest (libs/platform-test).
+operations:
+  outbox:
+    # No RabbitMQ in tests: leave outbox rows unpublished instead of retrying every two seconds.
+    enabled: false
+  redispatch:
+    enabled: false
+  shifts:
+    roster:
+      enabled: false
