@@ -4,7 +4,7 @@
 
 @baseUrl = http://localhost:8081
 @email = baofuc1205@gmail.com
-@password = 1205@Phuc
+@password = <mật khẩu hiện tại của tài khoản trên; không commit>
 
 
 ### ==================================================

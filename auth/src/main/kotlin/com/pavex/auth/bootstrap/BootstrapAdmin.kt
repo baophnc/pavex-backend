@@ -34,6 +34,11 @@ class BootstrapAdmin(
     private val resetPassword: Boolean,
 ) : ApplicationRunner {
 
+    init {
+        // Enabled without PAVEX_BOOTSTRAPADMIN_PASSWORD: stop startup instead of failing later or never.
+        requireBootstrapPassword()
+    }
+
     @Transactional
     override fun run(args: ApplicationArguments) {
         val adminId = UUID.fromString(configuredAdminId.trim())
@@ -123,7 +128,7 @@ class BootstrapAdmin(
     private fun requireBootstrapPassword(): String {
         val password = configuredPassword
         require(password.length in MIN_BOOTSTRAP_PASSWORD_LENGTH..MAX_PASSWORD_LENGTH) {
-            "pavex.bootstrap-admin.password must be between $MIN_BOOTSTRAP_PASSWORD_LENGTH and $MAX_PASSWORD_LENGTH characters when creating or resetting the bootstrap admin"
+            "pavex.bootstrap-admin.password (PAVEX_BOOTSTRAPADMIN_PASSWORD) must be between $MIN_BOOTSTRAP_PASSWORD_LENGTH and $MAX_PASSWORD_LENGTH characters when the bootstrap admin is enabled"
         }
         return password
     }

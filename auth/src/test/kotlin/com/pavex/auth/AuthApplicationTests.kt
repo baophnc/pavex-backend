@@ -24,7 +24,7 @@ class AuthApplicationTests {
 
     @Test
     fun `login with missing email returns 400 not misleading 401`() {
-        val response = postLogin("""{"login":"admin@pavex.com","password":"1205@Phuc"}""")
+        val response = postLogin("""{"login":"admin@pavex.com","password":"any-password"}""")
         assertEquals(400, response.statusCode())
         assertTrue(response.body().contains("invalid_request_body"))
     }

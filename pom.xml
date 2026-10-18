@@ -44,6 +44,7 @@
         <module>libs/platform-common</module>
         <module>libs/platform-contracts</module>
         <module>libs/platform-storage</module>
+        <module>libs/platform-config</module>
         <module>auth</module>
         <module>identity</module>
         <module>partners</module>

@@ -1,4 +1,6 @@
-# LOCAL DEVELOPMENT ONLY. Do not deploy with these credentials or bootstrap settings.
+# Safe to deploy as is: nothing here is a secret.
+# Locally ./scripts/dev-up.sh writes the local values into .env; for a real deployment see
+# "Triển khai thật" in docs/PAVEX-TAI-LIEU-TONG-HOP.md.
 gateway:
   client-ip:
     # Empty by default: forwarded headers are ignored unless the direct peer is
@@ -414,9 +416,9 @@ spring:
 
 springdoc:
   api-docs:
-    enabled: ${SPRINGDOC_API_DOCS_ENABLED:true}
+    enabled: ${SPRINGDOC_API_DOCS_ENABLED:false}
   swagger-ui:
-    enabled: ${SPRINGDOC_SWAGGER_UI_ENABLED:true}
+    enabled: ${SPRINGDOC_SWAGGER_UI_ENABLED:false}
     path: /swagger-ui.html
     disable-swagger-default-url: true
     urls-primary-name: Auth API
@@ -468,10 +470,11 @@ eureka:
   instance:
     initial-instance-info-replication-interval-seconds: 5
     instance-info-replication-interval-seconds: 10
-    # All services currently run on this machine. Do not advertise macOS .local hostnames.
+    # Address this instance gives the other services. Locally .env sets 127.0.0.1 (scripts/dev-up.sh) so a
+    # macOS .local hostname is never advertised; elsewhere it is the detected address of the host or container.
     prefer-ip-address: true
-    ip-address: 127.0.0.1
-    hostname: 127.0.0.1
+    ip-address: ${EUREKA_INSTANCE_IP_ADDRESS:${spring.cloud.client.ip-address}}
+    hostname: ${EUREKA_INSTANCE_HOSTNAME:${spring.cloud.client.hostname}}
 
 management:
   health:

@@ -1,0 +1,15 @@
+# Only sources and the Maven wrapper go into the build; never local settings, keys or build output.
+.git
+.claude
+.idea
+.run
+.local
+.kotlin
+**/target
+.env
+.env.*
+**/*.pem
+!**/src/test/resources/keys/*.pem
+docs
+scripts
+**/http

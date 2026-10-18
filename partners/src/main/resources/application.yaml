@@ -1,4 +1,6 @@
-# LOCAL DEVELOPMENT ONLY. Do not deploy with these credentials or bootstrap settings.
+# Safe to deploy as is: secrets have no default, so a missing one stops startup ("Missing required settings").
+# Locally ./scripts/dev-up.sh writes the local values into .env; for a real deployment see
+# "Triển khai thật" in docs/PAVEX-TAI-LIEU-TONG-HOP.md.
 spring:
   # Settings from .env at the repository root (see .env.example), whether the service is started by
   # scripts/dev-up.sh (from the root) or from the IDE (from the module folder). Variables exported in
@@ -12,7 +14,7 @@ spring:
   datasource:
     url: ${PARTNERS_DB_URL:jdbc:postgresql://localhost:5435/pavex_partners}
     username: ${PARTNERS_DB_USERNAME:pavex}
-    password: ${PARTNERS_DB_PASSWORD:pavex}
+    password: ${PARTNERS_DB_PASSWORD}
 
   jpa:
     open-in-view: false
@@ -88,7 +90,7 @@ pavex:
   storage:
     endpoint: ${MINIO_ENDPOINT:http://localhost:9000}
     access-key: ${MINIO_ACCESS_KEY:pavex}
-    secret-key: ${MINIO_SECRET_KEY:pavex-minio}
+    secret-key: ${MINIO_SECRET_KEY}
     attachments-bucket: ${MINIO_ATTACHMENTS_BUCKET:pavex-attachments}
   gateway-url: ${PAVEX_PUBLIC_BASE_URL:http://localhost:8080}
 
@@ -105,14 +107,15 @@ eureka:
   instance:
     initial-instance-info-replication-interval-seconds: 5
     instance-info-replication-interval-seconds: 10
-    # All services currently run on this machine. Do not advertise macOS .local hostnames.
+    # Address this instance gives the other services. Locally .env sets 127.0.0.1 (scripts/dev-up.sh) so a
+    # macOS .local hostname is never advertised; elsewhere it is the detected address of the host or container.
     prefer-ip-address: true
-    ip-address: 127.0.0.1
-    hostname: 127.0.0.1
+    ip-address: ${EUREKA_INSTANCE_IP_ADDRESS:${spring.cloud.client.ip-address}}
+    hostname: ${EUREKA_INSTANCE_HOSTNAME:${spring.cloud.client.hostname}}
 
 springdoc:
   api-docs:
-    enabled: ${SPRINGDOC_API_DOCS_ENABLED:true}
+    enabled: ${SPRINGDOC_API_DOCS_ENABLED:false}
   paths-to-match:
     - /api/**
 

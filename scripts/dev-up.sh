@@ -18,6 +18,8 @@ bash "$script_dir/security-bootstrap.sh"
 
 # Settings such as Google, real email or payOS live in .env at the repository root (see .env.example).
 # Every service reads that file itself, so the same settings apply when a service is started from the IDE.
+# Passwords, keys and the local admin have no default in application.yaml: add the local values to .env.
+bash "$script_dir/local-env.sh"
 
 started_pid_files=()
 
