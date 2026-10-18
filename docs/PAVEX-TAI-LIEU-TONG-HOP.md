@@ -3473,36 +3473,80 @@ thì khôi phục bản sao lưu vừa làm (mục 9.7.6). Dọn image cũ cho �
 
 #### 9.7.6 Sao lưu và khôi phục
 
-- Container `backup` chạy `pg_dump` **mọi database `pavex_*` lúc 02:30 mỗi đêm** (giờ Việt Nam; `BACKUP_SCHEDULE`, `TZ`)
-  vào `deploy/backups/daily/<ngày_giờ>/` (một file `.dump` mỗi database, `globals.sql`, `SHA256SUMS`). Giữ **7 bản
-  ngày**; bản Chủ nhật được giữ thêm làm **bản tuần**, giữ **4 bản tuần** (`deploy/backups/weekly/`).
-- Có `BACKUP_S3_BUCKET` (cùng `BACKUP_S3_ENDPOINT`, `BACKUP_S3_ACCESS_KEY`, `BACKUP_S3_SECRET_KEY`, …) thì sau mỗi lần
-  sao lưu, các bản được chép lên S3/R2/B2/MinIO (bucket phải có sẵn); bản trên đó cũ hơn `BACKUP_S3_KEEP` (35 ngày)
-  bị xoá. Chỉ chép thêm, không đồng bộ xoá: lỡ xoá thư mục local thì bản trên S3 vẫn còn.
-- Sao lưu ngay: `docker compose -f deploy/compose.yml exec backup pavex-backup`. Kết quả: `logs backup`; Grafana có ô
-  "Sao lưu gần nhất", và cảnh báo `BackupTooOld` khi bản gần nhất cũ hơn 26 giờ.
-- **Chưa sao lưu:** ảnh và tệp trong MinIO (ảnh giao hàng, tệp đính kèm, ảnh đại diện). Volume `minio_data` cần được
-  chụp (snapshot VPS) hoặc chép bằng `mc mirror` nếu staging giữ ảnh quan trọng.
+- Container `backup` chạy lúc **02:30 mỗi đêm** (giờ Việt Nam; `BACKUP_SCHEDULE`, `TZ`) và ghi một **bộ sao lưu**
+  vào `deploy/backups/daily/<ngày_giờ>/`:
+  - `pg_dump` **mọi database `pavex_*`** (một file `.dump` mỗi database), `globals.sql`, `SHA256SUMS`;
+  - sau đó chép **mọi bucket MinIO** bằng `mc mirror` vào `objects/<bucket>/<key>`, kèm danh sách `objects.list`
+    (mỗi dòng một `<bucket>/<key>`). Hiện có ba bucket: `pavex-evidence` (ảnh giao hàng, Shipment,
+    `MINIO_EVIDENCE_BUCKET`), `pavex-attachments` (tệp đính kèm yêu cầu hỗ trợ, Partners, `MINIO_ATTACHMENTS_BUCKET`),
+    `pavex-avatars` (ảnh đại diện, Identity, `MINIO_AVATARS_BUCKET`). Bucket nào có trên MinIO thì được chép, kể cả
+    bucket thêm sau này; bucket chỉ được tạo khi có tệp đầu tiên, nên lúc mới dựng có thể chưa có bucket nào.
 
-**Khôi phục** (dừng service sở hữu database, xoá và tạo lại database, nạp bản dump, chạy lại service):
+  Giữ **7 bộ ngày**; bộ Chủ nhật được giữ thêm làm **bộ tuần**, giữ **4 bộ tuần** (`deploy/backups/weekly/`).
+- **Vì sao ảnh không tốn gấp 11 lần dung lượng:** service ghi mỗi tệp một lần dưới một key UUID mới và không bao giờ
+  sửa nó (`libs/platform-storage`). Nên bộ mới bắt đầu bằng **hard link** tới tệp của bộ hôm trước, `mc mirror` chỉ
+  tải tệp mới và bỏ tệp đã bị xoá. Mỗi bộ vẫn là bản đầy đủ của đêm đó (xoá bộ nào cũng không ảnh hưởng bộ khác),
+  nhưng trên đĩa mỗi tệp chỉ chiếm chỗ một lần cho cả 11 bộ. Sao chép đầy đủ mỗi đêm sẽ cần 11 lần dung lượng bucket
+  và đọc lại toàn bộ MinIO mỗi đêm.
+- Ảnh được chép **sau** khi dump database, nên mọi dòng trong dump đều có ảnh tương ứng trong bộ. Chép ảnh lỗi thì bộ
+  đêm đó chỉ có database (không có `objects/`), job kết thúc lỗi và cảnh báo `BackupTooOld` báo phần MinIO.
+- Có `BACKUP_S3_BUCKET` (cùng `BACKUP_S3_ENDPOINT`, `BACKUP_S3_ACCESS_KEY`, `BACKUP_S3_SECRET_KEY`, …) thì sau mỗi lần
+  sao lưu, các bộ được chép lên S3/R2/B2/MinIO (bucket phải có sẵn); bộ trên đó cũ hơn `BACKUP_S3_KEEP` (35 ngày) bị
+  xoá. Chỉ chép thêm, không đồng bộ xoá: lỡ xoá thư mục local thì bản trên S3 vẫn còn. Ảnh lên S3 **một lần** vào thư
+  mục chung `<prefix>/objects/` (chỉ tải tệp mới), còn `objects.list` của mỗi bộ cho biết bộ đó gồm những tệp nào.
+  Thư mục `objects/` trên S3 không bị xoá theo `BACKUP_S3_KEEP` (giữ mọi ảnh từng có).
+- Sao lưu ngay: `docker compose -f deploy/compose.yml exec backup pavex-backup`. Kết quả: `logs backup`; Grafana có ô
+  "Sao lưu gần nhất" (hai số: PostgreSQL và MinIO), và cảnh báo `BackupTooOld` khi phần PostgreSQL hoặc phần MinIO
+  của bản gần nhất cũ hơn 26 giờ.
+- Dung lượng: `du -sh deploy/backups` (đếm hard link một lần) cho biết chỗ thật sự dùng; ảnh giao hàng tối đa 3 MB mỗi
+  ảnh, theo dõi số tệp và dung lượng qua `pavex_backup_objects_count` / `pavex_backup_objects_bytes` trong Prometheus.
+
+**Khôi phục** (bucket trước: đưa mọi tệp của bộ trở lại MinIO; rồi mỗi database: dừng service sở hữu, xoá và tạo lại
+database, nạp bản dump, chạy lại service):
 
 ```bash
 ls deploy/backups/daily/
-./deploy/restore.sh deploy/backups/daily/2026-10-18_0230                   # mọi database của bản đó
+./deploy/restore.sh deploy/backups/daily/2026-10-18_0230                   # mọi database và mọi bucket của bộ đó
 ./deploy/restore.sh deploy/backups/daily/2026-10-18_0230 pavex_billing     # chỉ một database
+./deploy/restore.sh deploy/backups/daily/2026-10-18_0230 pavex-evidence    # chỉ ảnh giao hàng (không dừng service)
 ```
 
-Script hỏi gõ `RESTORE` để xác nhận (`--yes` để bỏ qua). Khôi phục trên một VPS mới: dựng như mục 9.7.3 **với thư mục
-`deploy/secrets/` cũ** (chép vào trước khi chạy `gen-secrets.sh`), chép bản sao lưu vào `deploy/backups/`, rồi chạy
-`restore.sh`. Khôi phục một phần (chỉ vài database) có thể làm lệch dữ liệu giữa các service; khi nghi ngờ, khôi phục
-cả bộ.
+Script hỏi gõ `RESTORE` để xác nhận (`--yes` để bỏ qua). Khôi phục bucket **không xoá** tệp được ghi sau bản sao lưu
+(sau khi khôi phục database, chúng chỉ là tệp thừa không ai trỏ tới); tệp bị xoá hoặc hỏng thì được ghi lại. Bộ phải
+nằm trong thư mục sao lưu (`BACKUP_DIR`, mặc định `deploy/backups/`) vì việc chép vào MinIO chạy trong container
+`backup`; tệp nào trong `objects.list` mà thiếu thì script từ chối.
+
+Khôi phục trên một VPS mới: dựng như mục 9.7.3 **với thư mục `deploy/secrets/` cũ** (chép vào trước khi chạy
+`gen-secrets.sh`), chép bộ sao lưu vào `deploy/backups/` (hoặc lấy từ S3, dưới đây), rồi chạy `restore.sh`. Khôi phục
+một phần (chỉ vài database) có thể làm lệch dữ liệu giữa các service; khi nghi ngờ, khôi phục cả bộ.
+
+**Lấy một bộ từ S3** (máy cũ mất hẳn): `pavex-fetch` tải dump và đúng các ảnh trong `objects.list` của bộ đó về
+`deploy/backups/fetched/<tên>/`:
+
+```bash
+docker compose -f deploy/compose.yml exec backup pavex-fetch                        # liệt kê các bộ trên S3
+docker compose -f deploy/compose.yml exec backup pavex-fetch daily/2026-10-18_0230
+./deploy/restore.sh deploy/backups/fetched/2026-10-18_0230
+```
 
 **Diễn tập đã chạy (18/10/2026, trên máy local với bộ `deploy/` này):** sao lưu 10 database (kèm chép lên MinIO thay
 cho S3) → đăng ký thêm một tài khoản → xoá sạch bảng tài khoản của Auth (admin không đăng nhập được nữa) →
 `./deploy/restore.sh --yes deploy/backups/daily/2026-10-18_1854`. Kết quả: 10 database được nạp lại trong 107 giây;
 bảng thuộc lại login `pavex_auth`; khoảng 1 phút sau khi service healthy, admin đăng nhập lại được ở management
 portal, tài khoản shop đăng nhập được ở client portal; tài khoản tạo sau bản sao lưu không còn (đúng như mong đợi).
-Nên diễn tập lại mỗi quý trên một VPS thử.
+
+**Diễn tập ảnh giao hàng (18/10/2026, máy local, project `pavex-minio-drill`, thêm một MinIO thứ hai làm "S3"):** tải một
+ảnh giao hàng PNG (12 KB) qua `POST /api/v1/workforce/evidence` → `pavex-backup` (2 tệp trong 2 bucket, kèm một tệp
+đính kèm thử) → xoá tệp ảnh trong MinIO (`GET /api/v1/workforce/evidence/<id>` trả 404) →
+`./deploy/restore.sh --yes deploy/backups/daily/2026-10-18_2055 pavex-evidence` (khoảng 1 giây) → đọc lại: 200,
+`image/png`, SHA-256 trùng ảnh gốc. Lặp lại từ S3: xoá ảnh, `pavex-fetch daily/2026-10-18_2055`, `restore.sh` bộ
+`fetched/…`: ảnh trở lại, trùng SHA-256. Cũng đã thử: khôi phục chung `pavex_shipments` + `pavex-evidence` (ảnh vẫn
+đọc được sau khi Shipment chạy lại); hai bộ liên tiếp dùng chung inode (hard link, không tốn thêm chỗ); tệp bị thay
+nội dung thì bộ mới có tệp mới còn bộ cũ giữ nguyên; MinIO tắt lúc sao lưu thì bộ đêm đó chỉ có database, job lỗi,
+`BackupTooOld` (phần MinIO) chuyển sang chờ báo và hết khi lần sau thành công. Tệp vừa khôi phục được MinIO coi là
+mới, nên lần sao lưu kế tiếp tải lại chúng một lần.
+
+Nên diễn tập lại mỗi quý trên một VPS thử, cả database lẫn ảnh.
 
 #### 9.7.7 Giám sát và cảnh báo
 
@@ -3520,7 +3564,7 @@ Nên diễn tập lại mỗi quý trên một VPS thử.
   | `HighServerErrorRate` | Hơn 5% request (không tính `/actuator`) của một service lỗi 5xx trong 5 phút |
   | `DiskAlmostFull` | Một ổ đĩa còn dưới 10% |
   | `DeadLetterMessages` | Hàng đợi lỗi (`*.dlq`, `*.dead`) có tin quá 10 phút |
-  | `BackupTooOld` | Bản sao lưu gần nhất cũ hơn 26 giờ |
+  | `BackupTooOld` | Phần PostgreSQL hoặc phần MinIO (ảnh, tệp) của bản sao lưu gần nhất cũ hơn 26 giờ |
 
   Lúc mới khởi động cả hệ thống có thể nhận vài email `ServiceDown` (service Java chưa kịp lên); chúng tự gửi
   "RESOLVED" sau đó.

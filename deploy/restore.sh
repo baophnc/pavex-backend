@@ -1,13 +1,16 @@
 #!/usr/bin/env bash
-# Restores databases from a backup set made by the backup container (deploy/backups/daily/<date>/ or weekly/).
+# Restores databases and MinIO objects from a backup set made by the backup container (deploy/backups/daily/<date>/,
+# weekly/<week>/, or fetched/<date>/ from the offsite copy).
 #
-#   ./deploy/restore.sh deploy/backups/daily/2026-10-18_0230                  # every database of the set
-#   ./deploy/restore.sh deploy/backups/daily/2026-10-18_0230 pavex_billing    # only these
+#   ./deploy/restore.sh deploy/backups/daily/2026-10-18_0230                  # every database and bucket of the set
+#   ./deploy/restore.sh deploy/backups/daily/2026-10-18_0230 pavex_billing    # only these databases
+#   ./deploy/restore.sh deploy/backups/daily/2026-10-18_0230 pavex-evidence   # only these buckets (photos)
 #   ./deploy/restore.sh --yes ...                                             # no confirmation question
 #
-# For each database: stops the service that owns it, drops and recreates the database (owner: the service's
-# login), restores the dump, starts the service again. Everything written since the backup is lost.
-# The stack must be running (at least postgres). Drill: docs section 9.7.6.
+# Buckets first: every object of the set is put back into MinIO (objects written since stay). Then for each
+# database: stops the service that owns it, drops and recreates the database (owner: the service's login),
+# restores the dump, starts the service again. Everything written to those databases since the backup is lost.
+# The stack must be running (at least postgres, minio and backup). Drill: docs section 9.7.6.
 set -euo pipefail
 
 deploy_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -18,7 +21,7 @@ if [[ "${1:-}" == "--yes" ]]; then
   assume_yes=true
   shift
 fi
-set_dir="${1:?Usage: restore.sh [--yes] <backup set folder> [database ...]}"
+set_dir="${1:?Usage: restore.sh [--yes] <backup set folder> [database | bucket ...]}"
 shift
 [[ -d "$set_dir" ]] || { echo "No such folder: $set_dir" >&2; exit 1; }
 set_dir="$(cd "$set_dir" && pwd)"
@@ -39,17 +42,33 @@ service_of() {
   esac
 }
 
+databases=()
+buckets=()
 if (($# > 0)); then
-  databases=("$@")
+  for item in "$@"; do
+    if [[ -f "$set_dir/$item.dump" ]]; then
+      databases+=("$item")
+    elif [[ -d "$set_dir/objects/$item" ]]; then
+      buckets+=("$item")
+    else
+      echo "No dump or bucket named $item in $set_dir" >&2
+      exit 1
+    fi
+  done
 else
-  databases=()
   for dump in "$set_dir"/*.dump; do
     databases+=("$(basename "$dump" .dump)")
   done
+  if [[ -f "$set_dir/objects.list" ]]; then
+    for dir in "$set_dir"/objects/*/; do
+      [[ -d "$dir" ]] && buckets+=("$(basename "$dir")")
+    done
+  else
+    echo "Note: this set has no MinIO objects (its copy failed that night); only the databases are restored."
+  fi
 fi
 services=()
-for db in "${databases[@]}"; do
-  [[ -f "$set_dir/$db.dump" ]] || { echo "No dump for $db in $set_dir" >&2; exit 1; }
+for db in ${databases[@]+"${databases[@]}"}; do
   service="$(service_of "$db")" || { echo "Unknown database: $db" >&2; exit 1; }
   services+=("$service")
 done
@@ -63,12 +82,31 @@ if [[ -f "$set_dir/SHA256SUMS" ]]; then
   fi
 fi
 
-echo "Restore from $set_dir: ${databases[*]}"
-echo "Stops: ${services[*]}. Data written after this backup is lost."
+# The backup container sees the backup folder as /backups: the set is <kind>/<name> inside it.
+container_set="/backups/$(basename "$(dirname "$set_dir")")/$(basename "$set_dir")"
+if ((${#buckets[@]} > 0)); then
+  "${compose[@]}" exec -T backup cat "$container_set/objects.list" </dev/null 2>/dev/null \
+    | cmp -s - "$set_dir/objects.list" \
+    || { echo "The backup container does not see $set_dir as $container_set (BACKUP_DIR in deploy/.env?)" >&2; exit 1; }
+fi
+
+echo "Restore from $set_dir"
+if ((${#buckets[@]} > 0)); then
+  echo "  MinIO buckets: ${buckets[*]} (objects written since the backup stay)"
+fi
+if ((${#databases[@]} > 0)); then
+  echo "  Databases: ${databases[*]}"
+  echo "  Stops: ${services[*]}. Data written to these databases after this backup is lost."
+fi
 if ! $assume_yes; then
   read -r -p "Type RESTORE to continue: " answer
   [[ "$answer" == "RESTORE" ]] || { echo "Cancelled."; exit 1; }
 fi
+
+if ((${#buckets[@]} > 0)); then
+  "${compose[@]}" exec -T backup pavex-restore-objects "$container_set" "${buckets[@]}" </dev/null
+fi
+((${#databases[@]} > 0)) || { echo "Done."; exit 0; }
 
 "${compose[@]}" stop "${services[@]}"
 
