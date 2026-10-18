@@ -1,153 +1,38 @@
 package com.pavex.operations.config
 
-import com.pavex.common.security.PavexJwtClaims
-import com.pavex.common.security.PavexTokenTypes
-import org.springframework.beans.factory.annotation.Value
+import com.pavex.security.TrustedServiceTokens
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
-import org.springframework.core.io.Resource
-import org.springframework.security.converter.RsaKeyConverters
-import org.springframework.security.oauth2.core.DelegatingOAuth2TokenValidator
-import org.springframework.security.oauth2.core.OAuth2Error
-import org.springframework.security.oauth2.core.OAuth2TokenValidator
-import org.springframework.security.oauth2.core.OAuth2TokenValidatorResult
-import org.springframework.security.oauth2.jwt.Jwt
 import org.springframework.security.oauth2.jwt.JwtDecoder
-import org.springframework.security.oauth2.jwt.JwtValidators
-import org.springframework.security.oauth2.jwt.NimbusJwtDecoder
 
+/** The services that may call Operations' internal API, and the one scope each must carry. */
 @Configuration
 class InternalServiceJwtConfig(
-    @Value("\${security.trusted-services.shipment.public-key}")
-    private val shipmentPublicKey: Resource,
-    @Value("\${security.trusted-services.shipment.issuer}")
-    private val shipmentIssuer: String,
-    @Value("\${security.trusted-services.billing.public-key}")
-    private val billingPublicKey: Resource,
-    @Value("\${security.trusted-services.billing.issuer}")
-    private val billingIssuer: String,
-    @Value("\${security.trusted-services.fleet.public-key}")
-    private val fleetPublicKey: Resource,
-    @Value("\${security.trusted-services.fleet.issuer}")
-    private val fleetIssuer: String,
-    @Value("\${security.trusted-services.partners.public-key}")
-    private val partnersPublicKey: Resource,
-    @Value("\${security.trusted-services.partners.issuer}")
-    private val partnersIssuer: String,
-    @Value("\${security.trusted-services.notifications.public-key}")
-    private val notificationsPublicKey: Resource,
-    @Value("\${security.trusted-services.notifications.issuer}")
-    private val notificationsIssuer: String,
+    private val trusted: TrustedServiceTokens,
 ) {
     /** Notifications may only read who works where, to address hub messages and alerts. */
     @Bean("notificationsServiceJwtDecoder")
-    fun notificationsServiceJwtDecoder(): JwtDecoder {
-        val publicKey = notificationsPublicKey.inputStream.use {
-            requireNotNull(RsaKeyConverters.x509().convert(it))
-        }
-        val decoder = NimbusJwtDecoder.withPublicKey(publicKey).build()
-        decoder.setJwtValidator(
-            DelegatingOAuth2TokenValidator(
-                JwtValidators.createDefaultWithIssuer(notificationsIssuer),
-                exactClaim("sub", NOTIFICATIONS_SERVICE),
-                exactClaim(PavexJwtClaims.TOKEN_TYPE, PavexTokenTypes.SERVICE),
-                audience(OPERATIONS_SERVICE),
-                scope(OPERATIONS_PEOPLE_READ),
-            ),
-        )
-        return decoder
-    }
+    fun notificationsServiceJwtDecoder(): JwtDecoder =
+        trusted.trustedService("notifications", NOTIFICATIONS_SERVICE, OPERATIONS_SERVICE, OPERATIONS_PEOPLE_READ)
 
     /** Partners may only ask which hubs a user works at, to scope merchant lists. */
     @Bean("partnersServiceJwtDecoder")
-    fun partnersServiceJwtDecoder(): JwtDecoder {
-        val publicKey = partnersPublicKey.inputStream.use {
-            requireNotNull(RsaKeyConverters.x509().convert(it))
-        }
-        val decoder = NimbusJwtDecoder.withPublicKey(publicKey).build()
-        decoder.setJwtValidator(
-            DelegatingOAuth2TokenValidator(
-                JwtValidators.createDefaultWithIssuer(partnersIssuer),
-                exactClaim("sub", PARTNERS_SERVICE),
-                exactClaim(PavexJwtClaims.TOKEN_TYPE, PavexTokenTypes.SERVICE),
-                audience(OPERATIONS_SERVICE),
-                scope(OPERATIONS_HUB_SCOPE_READ),
-            ),
-        )
-        return decoder
-    }
+    fun partnersServiceJwtDecoder(): JwtDecoder =
+        trusted.trustedService("partners", PARTNERS_SERVICE, OPERATIONS_SERVICE, OPERATIONS_HUB_SCOPE_READ)
 
     /** Billing may only ask whether a user can handle cash at a hub. */
     @Bean("billingServiceJwtDecoder")
-    fun billingServiceJwtDecoder(): JwtDecoder {
-        val publicKey = billingPublicKey.inputStream.use {
-            requireNotNull(RsaKeyConverters.x509().convert(it))
-        }
-        val decoder = NimbusJwtDecoder.withPublicKey(publicKey).build()
-        decoder.setJwtValidator(
-            DelegatingOAuth2TokenValidator(
-                JwtValidators.createDefaultWithIssuer(billingIssuer),
-                exactClaim("sub", BILLING_SERVICE),
-                exactClaim(PavexJwtClaims.TOKEN_TYPE, PavexTokenTypes.SERVICE),
-                audience(OPERATIONS_SERVICE),
-                scope(OPERATIONS_ACCESS_CHECK_SCOPE),
-            ),
-        )
-        return decoder
-    }
+    fun billingServiceJwtDecoder(): JwtDecoder =
+        trusted.trustedService("billing", BILLING_SERVICE, OPERATIONS_SERVICE, OPERATIONS_ACCESS_CHECK_SCOPE)
 
     /** Fleet may only read a driver's line-haul work and a viewer's hub memberships. */
     @Bean("fleetServiceJwtDecoder")
-    fun fleetServiceJwtDecoder(): JwtDecoder {
-        val publicKey = fleetPublicKey.inputStream.use {
-            requireNotNull(RsaKeyConverters.x509().convert(it))
-        }
-        val decoder = NimbusJwtDecoder.withPublicKey(publicKey).build()
-        decoder.setJwtValidator(
-            DelegatingOAuth2TokenValidator(
-                JwtValidators.createDefaultWithIssuer(fleetIssuer),
-                exactClaim("sub", FLEET_SERVICE),
-                exactClaim(PavexJwtClaims.TOKEN_TYPE, PavexTokenTypes.SERVICE),
-                audience(OPERATIONS_SERVICE),
-                scope(OPERATIONS_FLEET_READ_SCOPE),
-            ),
-        )
-        return decoder
-    }
+    fun fleetServiceJwtDecoder(): JwtDecoder =
+        trusted.trustedService("fleet", FLEET_SERVICE, OPERATIONS_SERVICE, OPERATIONS_FLEET_READ_SCOPE)
 
     @Bean("shipmentServiceJwtDecoder")
-    fun shipmentServiceJwtDecoder(): JwtDecoder {
-        val publicKey = shipmentPublicKey.inputStream.use {
-            requireNotNull(RsaKeyConverters.x509().convert(it))
-        }
-        val decoder = NimbusJwtDecoder.withPublicKey(publicKey).build()
-        decoder.setJwtValidator(
-            DelegatingOAuth2TokenValidator(
-                JwtValidators.createDefaultWithIssuer(shipmentIssuer),
-                exactClaim("sub", SHIPMENT_SERVICE),
-                exactClaim(PavexJwtClaims.TOKEN_TYPE, PavexTokenTypes.SERVICE),
-                audience(OPERATIONS_SERVICE),
-                scope(OPERATIONS_SHIPMENT_SCOPE),
-            ),
-        )
-        return decoder
-    }
-
-    private fun exactClaim(name: String, expected: String): OAuth2TokenValidator<Jwt> =
-        OAuth2TokenValidator { jwt -> result(jwt.getClaimAsString(name) == expected, "Invalid $name claim") }
-
-    private fun audience(expected: String): OAuth2TokenValidator<Jwt> =
-        OAuth2TokenValidator { jwt -> result(expected in jwt.audience.orEmpty(), "Invalid audience") }
-
-    private fun scope(expected: String): OAuth2TokenValidator<Jwt> =
-        OAuth2TokenValidator { jwt ->
-            val scopes = jwt.getClaimAsString(PavexJwtClaims.SCOPE)?.split(' ').orEmpty()
-            result(expected in scopes, "Invalid scope")
-        }
-
-    private fun result(valid: Boolean, description: String): OAuth2TokenValidatorResult =
-        if (valid) OAuth2TokenValidatorResult.success()
-        else OAuth2TokenValidatorResult.failure(OAuth2Error("invalid_token", description, null))
+    fun shipmentServiceJwtDecoder(): JwtDecoder =
+        trusted.trustedService("shipment", SHIPMENT_SERVICE, OPERATIONS_SERVICE, OPERATIONS_SHIPMENT_SCOPE)
 
     companion object {
         private const val SHIPMENT_SERVICE = "shipment-service"
