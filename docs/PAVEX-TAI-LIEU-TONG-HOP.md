@@ -1,9 +1,10 @@
 # Pavex — Tài liệu tổng hợp
 
-> Cập nhật ngày 29/09/2026. Đây là tài liệu duy nhất của dự án: kiến trúc, cách chạy, dữ liệu seed, vai trò và quyền,
+> Cập nhật ngày 18/10/2026. Đây là tài liệu duy nhất của dự án: kiến trúc, cách chạy, dữ liệu seed, vai trò và quyền,
 > nghiệp vụ, màn hình, entity và thuộc tính, API.
-> Bảng entity, enum và API ở mục 6 được trích tự động từ mã nguồn vào ngày trên. Nếu lệch với code thì code đúng
-> (nguồn gốc: các class `@Entity` và `@RestController` trong từng service).
+> Bảng entity, enum và API ở mục 6 được trích tự động từ mã nguồn ngày 29/09/2026, nên chưa có Notifications và các
+> bảng, API thêm sau ngày đó. Nếu lệch với code thì code đúng (nguồn gốc: các class `@Entity` và `@RestController`
+> trong từng service).
 
 ## Mục lục
 
@@ -28,21 +29,25 @@ lưới bưu cục toàn quốc, giao cho người nhận và thu tiền, sau đ
 
 | Repo | Đường dẫn | Nội dung |
 |---|---|---|
-| `pavex-backend` | `~/IdeaProjects/pavex-backend` | 9 service nghiệp vụ Kotlin/Spring Boot 4, API Gateway, Eureka, thư viện dùng chung (`libs/`), script (`scripts/`) và tài liệu này |
+| `pavex-backend` | `~/IdeaProjects/pavex-backend` | 10 service nghiệp vụ Kotlin/Spring Boot 4, API Gateway, Eureka, thư viện dùng chung (`libs/`), script (`scripts/`) và tài liệu này |
 | `pavex-client-portal` | `~/Documents/GitHub/pavex-client-portal` | Website cho khách hàng và shop (Next.js 16, pnpm) |
-| `pavex-management-portal` | `~/Documents/GitHub/pavex-management-portal` | Trang quản trị cho nhân viên Pavex, gồm cả màn giao hàng của bưu tá (Next.js 16, pnpm) |
+| `pavex-management-portal` | `~/Documents/GitHub/pavex-management-portal` | Trang quản trị cho nhân viên Pavex (Next.js 16, pnpm). Bưu tá làm việc trên app hiện trường |
 | `pavex-warehouse` | `~/Documents/GitHub/pavex-warehouse` | App hiện trường cho bưu tá, nhân viên bưu cục, trưởng bưu cục và tài xế trung chuyển (Flutter) |
 
 ### 1.2 Quy mô
 
 | Hạng mục | Số lượng |
 |---|---|
-| Service | 9 service nghiệp vụ + API Gateway + Eureka |
-| Entity (bảng) | 76 |
-| Enum | 89 |
-| API | 286 (250 qua Gateway, 36 nội bộ giữa các service) |
-| Trang client portal | 36 |
-| Trang management portal | 48 |
+| Service | 10 service nghiệp vụ + API Gateway + Eureka |
+| Entity (bảng) | 81 |
+| Enum | 98 |
+| API | 333 (290 qua Gateway, 43 nội bộ giữa các service) |
+| Trang client portal | 37 |
+| Trang management portal | 55 |
+
+Đếm từ code ngày 18/10/2026: class `@Entity`, `enum class` và hàm `@Get/Post/Put/Patch/DeleteMapping` trong 10
+service (API nội bộ là đường dẫn `/internal/...`); trang là file `page.tsx` trên nhánh `develop` của từng portal
+(management portal không tính trang gốc `/` chỉ để chuyển hướng).
 
 ### 1.3 Kiến trúc
 
@@ -53,8 +58,8 @@ App hiện trường (Flutter) ──────────────┤   g
                                          ▼
                           API Gateway :8080  (định tuyến qua Eureka, CORS, giới hạn tần suất bằng Redis)
                                          ▼
-  Auth · Identity · Partners · Network · Pricing · Operations · Shipment · Billing · Fleet
-     │  mỗi service một PostgreSQL riêng (cổng 5433–5441)
+  Auth · Identity · Partners · Network · Pricing · Operations · Shipment · Billing · Fleet · Notifications
+     │  mỗi service một PostgreSQL riêng (cổng 5433–5442)
      └─ RabbitMQ: email, đồng bộ vai trò, sự kiện vận hành, sự kiện tiền (Shipment → Billing)
 ```
 
@@ -69,6 +74,7 @@ App hiện trường (Flutter) ──────────────┤   g
 | **Shipment** | Vận đơn, kiện, nhãn, quét kiện, giao hàng, thu tiền khi giao, ngoại lệ, sự cố, giám sát | Partners, Pricing, Network, Operations; gửi sự kiện cho Billing |
 | **Billing** | Tiền bưu tá thu, phiếu nộp tiền, đối soát COD, hoá đơn cước, thanh toán payOS | Partners, Shipment, Operations |
 | **Fleet** | Chuyến xe trung chuyển giữa các hub: vị trí GPS do app tài xế gửi, lộ trình, trễ và mất tín hiệu | Operations (việc LINE_HAUL, bưu cục của người xem), Network (tuyến, giờ đi/đến) |
+| **Notifications** | Hộp thông báo của từng người: tạo từ sự kiện vận đơn, phân công và nộp tiền (RabbitMQ), và tin nhắn nhân viên gửi cho người của một bưu cục hoặc cho shop | Operations (ai làm ở bưu cục nào) |
 
 ### 1.4 Nguyên tắc kỹ thuật chung
 
@@ -766,7 +772,7 @@ Menu tài khoản của shop có: Vận đơn, Hoá đơn, Đối soát COD, S�
 | `/login` | Đăng nhập | Công khai |
 | `/merchant/onboarding` | Đăng ký đối tác Merchant | Đã đăng nhập |
 | `/network` | Mạng lưới trung tâm khai thác | Công khai |
-| `/notifications` | Thông báo | Đã đăng nhập (chưa có backend) |
+| `/notifications` | Thông báo | Đã đăng nhập |
 | `/post-offices` | Chuyển hướng (không có nội dung riêng) | Công khai |
 | `/pricing` | Ước tính cước giao hàng | Công khai |
 | `/privacy` | Chính sách quyền riêng tư | Công khai |
@@ -2980,6 +2986,7 @@ Mỗi dòng gồm: chuyến, số thứ tự trên máy, thời điểm ghi, th�
 | `libs/platform-common` | `PavexActor` / `requirePavexActor()` (đọc người gọi từ JWT), `HubAccessScope` (phạm vi bưu cục), chuẩn hoá SĐT `VietnamesePhone` |
 | `libs/platform-contracts` | DTO của API nội bộ, để service gọi và service nhận dùng chung một định nghĩa |
 | `libs/platform-config` | `RequiredSettingsCheck`: service dừng ngay khi khởi động nếu `application.yaml` dùng một biến không có mặc định (`${BILLING_DB_PASSWORD}`) mà không ai đặt, và liệt kê các biến còn thiếu |
+| `libs/platform-test` | Chỉ dùng trong test: `@PostgresIntegrationTest` khởi động cả service trên PostgreSQL thật (Testcontainers, Flyway, Hibernate `validate`), không cần RabbitMQ, Eureka hay khoá thật (mục 7) |
 | `platform/discovery-server` | Eureka (cổng 8761) |
 | `platform/api-gateway` | Gateway (cổng 8080): định tuyến, CORS, giới hạn tần suất theo IP; riêng `/api/v1/fleet/**` giới hạn theo người dùng, vì điện thoại 4G hay dùng chung IP |
 
@@ -2989,17 +2996,23 @@ Mỗi dòng gồm: chuyến, số thứ tự trên máy, thời điểm ghi, th�
 
 Flyway tự áp migration còn thiếu khi service khởi động. File nằm ở `<service>/src/main/resources/db/migration/`.
 
-| Service | Số migration | Mới nhất | Mới thêm 27/09–01/10/2026 |
-|---|---:|---|---|
-| Auth | 17 | `V19__add_refresh_session_absolute_lifetime.sql` | — |
-| Identity | 15 | `V16__fleet_trip_permissions.sql` | `V15`, `V16` |
-| Partners | 7 | `V7__create_support_requests.sql` | `V7` |
-| Network | 5 | `V5__expire_unconfirmed_shipment_reservations.sql` | — |
-| Pricing | 5 | `V5__province_pricing_zones.sql` | — |
-| Operations | 10 | `V10__fair_dispatch_queue.sql` | `V10` |
-| Shipment | 15 | `V16__charge_cancellation_after_pickup.sql` | `V16` |
-| Billing | 1 | `V1__create_billing.sql` | — |
-| Fleet | 1 | `V1__create_fleet.sql` | `V1` (service mới) |
+| Service | Số migration | Mới nhất |
+|---|---:|---|
+| Auth | 18 | `V20__staff_temporary_password.sql` |
+| Identity | 21 | `V22__exception_requests_by_hub_staff.sql` |
+| Partners | 11 | `V11__merchant_business_details.sql` |
+| Network | 6 | `V6__hub_location.sql` |
+| Pricing | 5 | `V5__province_pricing_zones.sql` |
+| Operations | 12 | `V12__same_hub_shipments_skip_destination_handling.sql` |
+| Shipment | 18 | `V19__case_outcome.sql` |
+| Billing | 2 | `V2__counter_cash.sql` |
+| Fleet | 2 | `V2__trip_endpoints.sql` |
+| Notifications | 1 | `V1__create_notifications.sql` |
+
+Mỗi service có một test (`<Service>DatabaseTest`) chạy toàn bộ migration trên PostgreSQL thật (cùng image
+`postgres:18.6-alpine` với `compose.yml`, khởi động bằng Testcontainers) rồi để Hibernate `validate` mọi entity với bảng
+vừa tạo. Migration mới mà sai cú pháp hoặc lệch với entity thì `./mvnw test` báo lỗi ngay. Cần Docker; máy không có
+Docker thì các test này được bỏ qua chứ không báo lỗi. Phần dùng chung nằm ở `libs/platform-test`.
 
 ---
 
@@ -3007,16 +3020,16 @@ Flyway tự áp migration còn thiếu khi service khởi động. File nằm �
 
 | Mảng | Hiện trạng |
 |---|---|
-| Thông báo (client `/notifications`) | Chỉ có giao diện; backend chưa có service và Gateway chưa có route |
-| Chat hỗ trợ trên website | Giao diện demo, chưa nối backend. Khách dùng form hỗ trợ (mục 4.8) |
+| Thông báo | Hai portal và app hiện trường đọc hộp thông báo của service Notifications. Chưa gửi thông báo đẩy (push) về điện thoại hay email khi có thông báo mới |
 | Chứng từ giao hàng dạng mã | Bưu tá nhập tay; hệ thống chưa gửi OTP cho người nhận để đối chiếu |
 | Cước | Không tính lại khi cân lại kiện; chưa có phí hoàn hàng |
-| App hiện trường | Có app Flutter `pavex-warehouse` cho bưu tá, nhân viên, trưởng bưu cục và tài xế. Bưu tá vẫn dùng được màn Giao hàng trên web |
+| App hiện trường | Bưu tá chỉ làm việc trên app Flutter `pavex-warehouse`; management portal không còn màn Giao hàng |
 | Kế toán | Chưa xuất dữ liệu sang phần mềm kế toán |
-| IntelliJ | `.run/` chưa có cấu hình chạy Billing và Fleet (mục 2.3.4) |
+| IntelliJ | `.run/` chưa có cấu hình chạy Billing, Fleet và Notifications (mục 2.3.4) |
 | Bản đồ xe | Dùng tile OpenStreetMap công cộng, chỉ hợp cho dev. Chạy thật nên đổi sang nhà cung cấp Việt Nam (Goong, VietMap) để hiển thị đúng chủ quyền |
-| Theo dõi xe | Chưa có toạ độ hub nên chưa tự nhận biết xe vào/rời hub bằng vị trí; chưa có danh mục xe (biển số do tài xế tự nhập); chưa dự báo giờ tới |
+| Theo dõi xe | Bưu cục đã có toạ độ (có thể để trống), nhưng Fleet chưa dùng để tự nhận biết xe vào/rời hub; chưa có danh mục xe (biển số do tài xế tự nhập); chưa dự báo giờ tới |
 | GPS nền trên iPhone | Cần tài xế cho phép vị trí; iOS có thể dừng app nếu tài xế vuốt tắt hẳn app giữa chuyến |
+| Kiểm thử | Phần lớn là unit test. Test trên PostgreSQL thật mới có ở mức migration và entity cho mỗi service (mục 7), cộng một luồng đối soát COD của Billing; chưa có test chạy nhiều service cùng lúc qua RabbitMQ |
 | Triển khai thật | Mặc định đã an toàn để deploy và có Dockerfile cho mọi service (mục 9). Chưa chọn nơi chạy; chưa có CI, giám sát, nơi giữ secret và cấu hình chạy (compose/manifest) cho môi trường thật |
 
 ---
