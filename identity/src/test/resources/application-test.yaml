@@ -1,6 +1,8 @@
 pavex:
   bootstrap-admin:
     enabled: false
+  storage:
+    secret-key: test
 
 spring:
   datasource:

@@ -1,4 +1,6 @@
-# LOCAL DEVELOPMENT ONLY. Do not deploy with these credentials or bootstrap settings.
+# Safe to deploy as is: secrets have no default, so a missing one stops startup ("Missing required settings").
+# Locally ./scripts/dev-up.sh writes the local values into .env; for a real deployment see
+# "Triển khai thật" in docs/PAVEX-TAI-LIEU-TONG-HOP.md.
 spring:
   # Settings from .env at the repository root (see .env.example), whether the service is started by
   # scripts/dev-up.sh (from the root) or from the IDE (from the module folder). Variables exported in
@@ -10,9 +12,9 @@ spring:
     name: auth-service
 
   datasource:
-    url: ${DB_URL:jdbc:postgresql://localhost:5433/pavex_auth}
-    username: ${DB_USERNAME:pavex}
-    password: ${DB_PASSWORD:pavex}
+    url: ${AUTH_DB_URL:jdbc:postgresql://localhost:5433/pavex_auth}
+    username: ${AUTH_DB_USERNAME:pavex}
+    password: ${AUTH_DB_PASSWORD}
 
   jpa:
     open-in-view: false
@@ -44,7 +46,7 @@ spring:
     host: ${RABBITMQ_HOST:localhost}
     port: ${RABBITMQ_PORT:5672}
     username: ${RABBITMQ_USERNAME:pavex}
-    password: ${RABBITMQ_PASSWORD:pavex}
+    password: ${RABBITMQ_PASSWORD}
     virtual-host: ${RABBITMQ_VHOST:pavex}
     connection-timeout: ${RABBITMQ_CONNECTION_TIMEOUT:3s}
     publisher-confirm-type: correlated
@@ -99,17 +101,17 @@ auth:
 
   staff-credentials:
     # Accounts an administrator creates start with this password; the holder must change it at the
-    # first sign-in, and it stops working after the TTL (then: forgot password). Local default only.
-    temporary-password: ${STAFF_TEMPORARY_PASSWORD:123456}
+    # first sign-in, and it stops working after the TTL (then: forgot password).
+    temporary-password: ${STAFF_TEMPORARY_PASSWORD}
     temporary-password-ttl: ${STAFF_TEMPORARY_PASSWORD_TTL:PT72H}
 
   security:
-    # Local development secret only; do not deploy this configuration.
     verification-token-ttl: PT24H
     verification-resend-cooldown: PT2M
     password-reset-token-ttl: PT1H
     invitation-token-ttl: PT24H
-    key-hash-secret: cGF2ZXgtbG9jYWwtZGV2LWtleS0wMTIzNDU2Nzg5YWI=
+    # Base64 of at least 32 random bytes. Changing it signs every user out.
+    key-hash-secret: ${AUTH_KEY_HASH_SECRET}
 
   cleanup:
     enabled: ${AUTH_CLEANUP_ENABLED:true}
@@ -130,20 +132,22 @@ auth:
     confirm-timeout: ${AUTH_OUTBOX_CONFIRM_TIMEOUT:PT5S}
     published-retention: ${AUTH_OUTBOX_PUBLISHED_RETENTION:P7D}
     consumed-retention: ${AUTH_CONSUMED_MESSAGE_RETENTION:P30D}
-    # Local development secret only; do not deploy this configuration.
-    payload-encryption-key: cGF2ZXgtbG9jYWwtb3V0Ym94LWtleS0wMTIzNDU2Nzg=
+    # Base64 of 32 random bytes. Changing it makes unsent outbox messages unreadable.
+    payload-encryption-key: ${AUTH_OUTBOX_PAYLOAD_ENCRYPTION_KEY}
 
 
 pavex:
   keys-dir: ${user.home}/.pavex/keys
 
-  # Local bootstrap: same identity and credential in Auth and Identity.
+  # First administrator, created at startup with the same id in Auth and Identity. Off unless
+  # PAVEX_BOOTSTRAPADMIN_ENABLED=true; then PAVEX_BOOTSTRAPADMIN_PASSWORD is required. With
+  # reset-password the configured password replaces the stored one at every start (local only).
   bootstrap-admin:
-    enabled: true
+    enabled: ${PAVEX_BOOTSTRAPADMIN_ENABLED:false}
     id: '00000000-0000-0000-0000-000000000001'
-    email: admin@pavex.com
-    password: '1205@Phuc'
-    reset-password: true
+    email: ${PAVEX_BOOTSTRAPADMIN_EMAIL:admin@pavex.com}
+    password: ${PAVEX_BOOTSTRAPADMIN_PASSWORD:}
+    reset-password: ${PAVEX_BOOTSTRAPADMIN_RESET_PASSWORD:false}
   openapi:
     gateway-url: ${PAVEX_PUBLIC_BASE_URL:http://localhost:8080}
   email:
@@ -168,14 +172,15 @@ eureka:
   instance:
     initial-instance-info-replication-interval-seconds: 5
     instance-info-replication-interval-seconds: 10
-    # All services currently run on this machine. Do not advertise macOS .local hostnames.
+    # Address this instance gives the other services. Locally .env sets 127.0.0.1 (scripts/dev-up.sh) so a
+    # macOS .local hostname is never advertised; elsewhere it is the detected address of the host or container.
     prefer-ip-address: true
-    ip-address: 127.0.0.1
-    hostname: 127.0.0.1
+    ip-address: ${EUREKA_INSTANCE_IP_ADDRESS:${spring.cloud.client.ip-address}}
+    hostname: ${EUREKA_INSTANCE_HOSTNAME:${spring.cloud.client.hostname}}
 
 springdoc:
   api-docs:
-    enabled: ${SPRINGDOC_API_DOCS_ENABLED:true}
+    enabled: ${SPRINGDOC_API_DOCS_ENABLED:false}
   paths-to-match:
     - /api/**
 

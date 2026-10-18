@@ -17,6 +17,10 @@ import java.util.UUID
 
 class BootstrapAdminTest {
 
+    private companion object {
+        const val TEST_PASSWORD = "test-bootstrap-password"
+    }
+
     @Test
     fun `existing bootstrap admin keeps password hash unless reset is explicit`() {
         val adminId = UUID.randomUUID()
@@ -39,7 +43,7 @@ class BootstrapAdminTest {
             },
             configuredAdminId = adminId.toString(),
             configuredEmail = account.email,
-            configuredPassword = "1205@Phuc",
+            configuredPassword = TEST_PASSWORD,
             resetPassword = false,
         )
 
@@ -65,14 +69,14 @@ class BootstrapAdminTest {
             passwordEncoder = encoder { value -> "encoded:$value" },
             configuredAdminId = adminId.toString(),
             configuredEmail = account.email,
-            configuredPassword = "1205@Phuc",
+            configuredPassword = TEST_PASSWORD,
             resetPassword = true,
         )
 
         bootstrap.run(emptyArguments())
 
         assertNotEquals("existing-hash", account.passwordHash)
-        assertEquals("encoded:1205@Phuc", account.passwordHash)
+        assertEquals("encoded:$TEST_PASSWORD", account.passwordHash)
     }
 
     @Test
@@ -87,9 +91,9 @@ class BootstrapAdminTest {
             failedLoginAttempts = 5,
             lockoutEndAt = Instant.now().plusSeconds(900),
         )
-        val bootstrap = BootstrapAdmin(repository(account), encoder, account.id.toString(), account.email, "1205@Phuc", true)
+        val bootstrap = BootstrapAdmin(repository(account), encoder, account.id.toString(), account.email, TEST_PASSWORD, true)
         bootstrap.run(emptyArguments())
-        assertTrue(encoder.matches("1205@Phuc", account.passwordHash))
+        assertTrue(encoder.matches(TEST_PASSWORD, account.passwordHash))
         assertTrue(account.emailVerified)
         assertTrue(account.identityProvisioned)
         assertEquals(0, account.failedLoginAttempts)
@@ -112,12 +116,12 @@ class BootstrapAdminTest {
                 else -> defaultValue(method)
             }
         }
-        BootstrapAdmin(accounts, encoder, id.toString(), " ADMIN@PAVEX.COM ", "1205@Phuc", true)
+        BootstrapAdmin(accounts, encoder, id.toString(), " ADMIN@PAVEX.COM ", TEST_PASSWORD, true)
             .run(emptyArguments())
         val account = requireNotNull(saved)
         assertEquals(id, account.id)
         assertEquals("admin@pavex.com", account.email)
-        assertTrue(encoder.matches("1205@Phuc", account.passwordHash))
+        assertTrue(encoder.matches(TEST_PASSWORD, account.passwordHash))
         assertTrue(account.emailVerified && account.identityProvisioned)
     }
 
@@ -125,10 +129,19 @@ class BootstrapAdminTest {
     fun `bootstrap refuses to take over an email with a different id`() {
         val account = UserAccount(email = "admin@pavex.com", passwordHash = "old-hash")
         assertThrows(IllegalArgumentException::class.java) {
-            BootstrapAdmin(repository(account), BCryptPasswordEncoder(), UUID.randomUUID().toString(), account.email, "1205@Phuc", true)
+            BootstrapAdmin(repository(account), BCryptPasswordEncoder(), UUID.randomUUID().toString(), account.email, TEST_PASSWORD, true)
                 .run(emptyArguments())
         }
         assertEquals("old-hash", account.passwordHash)
+    }
+
+    @Test
+    fun `enabled bootstrap without a password stops startup`() {
+        val account = UserAccount(email = "admin@pavex.com", passwordHash = "old-hash")
+        val error = assertThrows(IllegalArgumentException::class.java) {
+            BootstrapAdmin(repository(account), BCryptPasswordEncoder(), account.id.toString(), account.email, "", false)
+        }
+        assertTrue(error.message!!.contains("PAVEX_BOOTSTRAPADMIN_PASSWORD"))
     }
 
     private fun repository(account: UserAccount): UserAccountRepository =

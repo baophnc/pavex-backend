@@ -20,6 +20,11 @@
     <description>Authentication and authorization service for Pavex</description>
 
     <dependencies>
+        <dependency>
+            <groupId>com.pavex</groupId>
+            <artifactId>platform-config</artifactId>
+            <version>${project.version}</version>
+        </dependency>
 
         <!-- Cross-service Identity contracts -->
         <dependency>

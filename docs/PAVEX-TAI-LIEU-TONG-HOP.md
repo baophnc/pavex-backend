@@ -15,6 +15,7 @@
 6. [Entity, thuộc tính, enum và API theo service](#6-entity-thuộc-tính-enum-và-api-theo-service)
 7. [Migration database](#7-migration-database)
 8. [Giới hạn hiện tại](#8-giới-hạn-hiện-tại)
+9. [Triển khai thật](#9-triển-khai-thật)
 
 ---
 
@@ -160,7 +161,7 @@ Mọi lệnh chạy trong thư mục `pavex-backend`.
 
 ```bash
 cp .env.example .env               # cấu hình riêng của máy (Google, email thật, payOS); để nguyên cũng chạy được
-./scripts/dev-up.sh                # tạo khoá JWT, bật container, build và chạy mọi service
+./scripts/dev-up.sh                # tạo khoá JWT, thêm giá trị local vào .env, bật container, build và chạy mọi service
 ./scripts/seed-mini/apply.sh       # nạp dữ liệu test nhỏ: 2 bưu cục, 14 tài khoản (mục 2.5)
 bash scripts/check-setup.sh        # khi chạy không lên: kiểm tra khoá, container và module
 ```
@@ -172,7 +173,8 @@ bash scripts/check-setup.sh        # khi chạy không lên: kiểm tra khoá, c
 ```
 
 Script này làm lần lượt:
-1. Tạo khoá JWT còn thiếu và bật container (`docker compose up -d --wait`): 9 PostgreSQL, Redis, RabbitMQ, Mailpit, MinIO.
+1. Tạo khoá JWT còn thiếu, thêm vào `.env` các giá trị chỉ dùng ở local còn thiếu (`scripts/local-env.sh`: mật khẩu
+   DB/RabbitMQ/MinIO, khoá, admin local, Eureka 127.0.0.1, Swagger, bảng giá demo) và bật container (`docker compose up -d --wait`): 9 PostgreSQL, Redis, RabbitMQ, Mailpit, MinIO.
 2. Build lại toàn bộ: `./mvnw -DskipTests clean install`. Vì vậy mọi thay đổi code đều được áp dụng.
 3. Chạy các service theo thứ tự: Discovery → Identity → Auth → Partners → Network → Pricing →
    Operations → Shipment → Billing → Fleet → Gateway. Mỗi service phải báo healthy thì mới chạy service tiếp theo.
@@ -199,7 +201,8 @@ Nếu chỉ muốn xem dữ liệu mà không chạy app, bật riêng database:
 
 1. Reload Maven project.
 2. Chạy các cấu hình **PAVEX - …** trong `.run/` theo đúng thứ tự ở mục 2.3.2. Mỗi service tự đọc `.env` ở thư mục gốc,
-   nên không cần plugin EnvFile.
+   nên không cần plugin EnvFile. Chưa từng chạy `dev-up.sh` trên máy này thì chạy một lần `bash scripts/local-env.sh`;
+   thiếu bước này service dừng ngay với lỗi `Missing required settings: …`.
 3. Đợi Identity và Auth khởi động xong rồi mới đăng nhập.
 
 `.run/` hiện **chưa có cấu hình cho Billing và Fleet**. Chạy hai service này bằng `dev-up.sh`, hoặc
@@ -319,8 +322,8 @@ tạo khi test.
 
 Danh sách tài khoản, mật khẩu và chi tiết mạng lưới: [`scripts/seed-mini/README.md`](../scripts/seed-mini/README.md).
 
-Tài khoản `admin@pavex.com` (tự tạo khi khởi động) dùng mật khẩu ở mục `bootstrap-admin` trong
-`identity/src/main/resources/application.yaml`.
+Tài khoản `admin@pavex.com` (tự tạo khi khởi động) dùng mật khẩu `PAVEX_BOOTSTRAPADMIN_PASSWORD` trong `.env`:
+`scripts/local-env.sh` sinh ngẫu nhiên cho từng máy. Muốn đổi thì sửa giá trị đó rồi khởi động lại Auth.
 
 ---
 
@@ -402,9 +405,7 @@ Muốn dùng thật, điền biến vào **`.env` ở thư mục gốc backend**
   `BILLING_RECONCILIATION_ENABLED=true` để Billing định kỳ hỏi lại trạng thái.
 - **Thời lượng viết theo ISO-8601:** `PT15S` = 15 giây, `PT2M` = 2 phút. Định dạng `00:00:15` của .NET sẽ làm Billing lỗi khi khởi động.
 
-**Khi deploy thật, đổi thêm:** mật khẩu admin khởi tạo (`PAVEX_BOOTSTRAPADMIN_PASSWORD`, hoặc tắt bằng
-`PAVEX_BOOTSTRAPADMIN_ENABLED=false`), khoá JWT riêng (`PAVEX_KEYSDIR`), mật khẩu database/RabbitMQ/Redis,
-`PAVEX_PUBLIC_BASE_URL`, `GATEWAY_ALLOWED_ORIGIN`, `GATEWAY_TRUSTED_PROXIES` (mục 2.3.7), và `PRICING_DEMO_SEED_ENABLED=false`.
+**Khi deploy thật:** danh sách biến đầy đủ ở mục 9 (Triển khai thật).
 
 ---
 
@@ -528,7 +529,9 @@ chỉ văn phòng thấy (an toàn là mặc định). Không tạo quyền ki�
   - App hiện trường có "Quên mật khẩu?" ở màn đăng nhập: gửi email, rồi dán liên kết trong thư vào app để đặt mật khẩu
     mới ngay trên điện thoại. Vì vậy không cần mở được trang web trên điện thoại.
 - Mọi sự kiện bảo mật (đăng nhập, đổi mật khẩu, thu hồi phiên) được ghi nhật ký.
-- Quản trị viên khởi tạo `admin@pavex.com` do Auth và Identity tự tạo khi khởi động. Mật khẩu nằm trong YAML, chỉ dùng ở local.
+- Quản trị viên khởi tạo `admin@pavex.com` do Auth và Identity tự tạo khi khởi động, chỉ khi
+  `PAVEX_BOOTSTRAPADMIN_ENABLED=true`. Mật khẩu lấy từ `PAVEX_BOOTSTRAPADMIN_PASSWORD` (bật mà thiếu thì Auth dừng ngay);
+  ở local `scripts/local-env.sh` đặt cả hai trong `.env`.
 
 ### 4.2 Shop và điểm lấy hàng
 
@@ -2976,6 +2979,7 @@ Mỗi dòng gồm: chuyến, số thứ tự trên máy, thời điểm ghi, th�
 |---|---|
 | `libs/platform-common` | `PavexActor` / `requirePavexActor()` (đọc người gọi từ JWT), `HubAccessScope` (phạm vi bưu cục), chuẩn hoá SĐT `VietnamesePhone` |
 | `libs/platform-contracts` | DTO của API nội bộ, để service gọi và service nhận dùng chung một định nghĩa |
+| `libs/platform-config` | `RequiredSettingsCheck`: service dừng ngay khi khởi động nếu `application.yaml` dùng một biến không có mặc định (`${BILLING_DB_PASSWORD}`) mà không ai đặt, và liệt kê các biến còn thiếu |
 | `platform/discovery-server` | Eureka (cổng 8761) |
 | `platform/api-gateway` | Gateway (cổng 8080): định tuyến, CORS, giới hạn tần suất theo IP; riêng `/api/v1/fleet/**` giới hạn theo người dùng, vì điện thoại 4G hay dùng chung IP |
 
@@ -3013,4 +3017,104 @@ Flyway tự áp migration còn thiếu khi service khởi động. File nằm �
 | Bản đồ xe | Dùng tile OpenStreetMap công cộng, chỉ hợp cho dev. Chạy thật nên đổi sang nhà cung cấp Việt Nam (Goong, VietMap) để hiển thị đúng chủ quyền |
 | Theo dõi xe | Chưa có toạ độ hub nên chưa tự nhận biết xe vào/rời hub bằng vị trí; chưa có danh mục xe (biển số do tài xế tự nhập); chưa dự báo giờ tới |
 | GPS nền trên iPhone | Cần tài xế cho phép vị trí; iOS có thể dừng app nếu tài xế vuốt tắt hẳn app giữa chuyến |
-| Triển khai thật | Cấu hình hiện tại chỉ dành cho local. Trước khi deploy cần: quản lý secret, khoá JWT riêng, tắt hoặc đổi mật khẩu admin khởi tạo, đổi mật khẩu DB/RabbitMQ/Redis, đặt domain, CORS và danh sách proxy tin cậy (mục 2.3.7, 2.8) |
+| Triển khai thật | Mặc định đã an toàn để deploy và có Dockerfile cho mọi service (mục 9). Chưa chọn nơi chạy; chưa có CI, giám sát, nơi giữ secret và cấu hình chạy (compose/manifest) cho môi trường thật |
+
+---
+
+## 9. Triển khai thật
+
+Mục này chỉ nói về backend: biến môi trường và image. Chọn nơi chạy, CI, giám sát và nơi giữ secret là quyết định riêng.
+
+### 9.1 Nguyên tắc
+
+- `application.yaml` của mọi service **an toàn để deploy nguyên trạng**: không chứa secret. Mật khẩu và khoá không có
+  giá trị mặc định; thiếu một biến thì service **dừng ngay khi khởi động** với lỗi
+  `Missing required settings: BILLING_DB_PASSWORD, …` (`libs/platform-config`).
+- Những thứ chỉ hợp cho local thì mặc định **tắt**: admin khởi tạo, Swagger/API docs, bảng giá demo, nút đặt lại dữ liệu
+  thử, xe giả lập, ca cả ngày.
+- **Không dùng `.env` của máy local, không chạy `scripts/local-env.sh` ở môi trường thật.** Các giá trị trong đó
+  (mật khẩu `pavex`, khoá local, `STAFF_TEMPORARY_PASSWORD=123456`) đã nằm trong git. Image không chứa `.env`
+  (`.dockerignore`).
+- Mật khẩu admin `admin@pavex.com` từng được ghi thẳng trong `auth/.../application.yaml`, file `.http` và test. Đã xoá
+  khỏi code nhưng **vẫn còn trong lịch sử git**: không bao giờ dùng giá trị đó (hay biến thể của nó) cho một admin
+  thật, và đổi ngay ở mọi tài khoản thật nào đang dùng nó.
+
+### 9.2 Image
+
+Một `Dockerfile` ở thư mục gốc cho mọi service (build nhiều tầng, chạy bằng JRE 21, user không phải root `pavex`):
+
+```bash
+docker build --build-arg MODULE=auth -t pavex/auth-service .
+docker build --build-arg MODULE=platform/api-gateway -t pavex/api-gateway .
+```
+
+`MODULE` là thư mục module: `auth`, `identity`, `partners`, `network`, `pricing`, `shipment`, `operations`, `billing`,
+`fleet`, `notifications`, `platform/discovery-server`, `platform/api-gateway`. Cổng của từng service ở mục 2.1;
+container nên được kiểm tra sẵn sàng qua `GET /actuator/health/readiness`. Thứ tự khởi động như mục 2.3.2
+(Discovery → Identity → Auth → … → Gateway). Flyway tự tạo bảng ở lần chạy đầu. Cờ JVM thêm đặt qua `JAVA_TOOL_OPTIONS`.
+
+### 9.3 Secret bắt buộc
+
+Thiếu biến nào trong bảng này thì service tương ứng không khởi động.
+
+| Biến | Service | Ghi chú |
+|---|---|---|
+| `<SERVICE>_DB_PASSWORD` | 10 service có DB: `AUTH`, `IDENTITY`, `PARTNERS`, `NETWORK`, `PRICING`, `SHIPMENT`, `OPERATIONS`, `BILLING`, `FLEET`, `NOTIFICATIONS` | Đặt cùng `<SERVICE>_DB_URL` (mặc định trỏ `localhost`) và `<SERVICE>_DB_USERNAME` (mặc định `pavex`). Mỗi service một database và một user riêng |
+| `RABBITMQ_PASSWORD` | auth, billing, fleet, notifications, operations, shipment | Cùng `RABBITMQ_HOST`, `RABBITMQ_PORT`, `RABBITMQ_USERNAME`, `RABBITMQ_VHOST` |
+| `MINIO_SECRET_KEY` | identity, partners, shipment | Cùng `MINIO_ENDPOINT`, `MINIO_ACCESS_KEY`; MinIO hoặc S3 bất kỳ |
+| `AUTH_KEY_HASH_SECRET` | auth | `openssl rand -base64 32`. Đổi giá trị thì mọi người dùng bị đăng xuất |
+| `AUTH_OUTBOX_PAYLOAD_ENCRYPTION_KEY` | auth | `openssl rand -base64 32`. Đổi giá trị thì tin outbox chưa gửi không đọc được nữa |
+| `BILLING_QR_SIGNING_KEY` | billing | Ít nhất 32 byte, ví dụ `openssl rand -base64 48` |
+| `STAFF_TEMPORARY_PASSWORD` | auth | Mật khẩu tạm của tài khoản do quản trị viên tạo (bắt đổi ở lần đăng nhập đầu, hết hạn sau `STAFF_TEMPORARY_PASSWORD_TTL`). Không dùng `123456` |
+| Khoá JWT | mọi service trừ Discovery và Gateway | Thư mục `PAVEX_KEYSDIR` (trong image: `/etc/pavex/keys`, mount chỉ đọc) có cùng bố cục với `~/.pavex/keys`: `<service>/private.pem` và `<service>/public.pem` cho `auth`, `identity`, `partners`, `pricing`, `shipment`, `operations`, `billing`, `fleet`, `notifications`. Tạo bằng `openssl` như `scripts/security-bootstrap.sh`, riêng cho môi trường thật; mỗi service chỉ cần private key của chính nó và public key của các service khác |
+| `SPRING_DATA_REDIS_PASSWORD` | api-gateway | Chỉ khi Redis có mật khẩu (nên có). Cùng `REDIS_HOST`, `REDIS_PORT` |
+
+**Admin khởi tạo** (auth và identity, mặc định tắt):
+
+1. Lần deploy đầu đặt `PAVEX_BOOTSTRAPADMIN_ENABLED=true`, `PAVEX_BOOTSTRAPADMIN_EMAIL=<email thật>` và
+   `PAVEX_BOOTSTRAPADMIN_PASSWORD=<mật khẩu mạnh, 8–128 ký tự>` cho **cả auth và identity** (cùng email). Bật mà thiếu
+   mật khẩu thì auth dừng ngay.
+2. Admin đăng nhập, đổi mật khẩu, tạo các quản trị viên khác.
+3. Đặt lại `PAVEX_BOOTSTRAPADMIN_ENABLED=false` và xoá mật khẩu khỏi nơi giữ secret.
+
+Để nguyên `PAVEX_BOOTSTRAPADMIN_RESET_PASSWORD` (mặc định `false`): khi `true`, mỗi lần khởi động auth ghi đè mật khẩu
+admin bằng giá trị trong biến (chỉ dùng ở local).
+
+### 9.4 Địa chỉ, domain và email
+
+| Biến | Service | Ghi chú |
+|---|---|---|
+| `EUREKA_DEFAULT_ZONE` | mọi service và gateway | Ví dụ `http://discovery-server:8761/eureka/`. Mặc định `localhost` chỉ đúng khi mọi thứ chạy trên một máy |
+| `EUREKA_INSTANCE_IP_ADDRESS`, `EUREKA_INSTANCE_HOSTNAME` | mọi service và gateway | Không bắt buộc: mặc định là địa chỉ máy/container tự phát hiện. Chỉ đặt khi máy có nhiều card mạng và địa chỉ phát hiện sai. Không đặt `127.0.0.1` (chỉ dành cho local) |
+| `PAVEX_PUBLIC_BASE_URL` | mọi service có DB | Địa chỉ công khai của gateway, ví dụ `https://api.pavex.vn`; dùng cho link ảnh đại diện, tệp và OpenAPI |
+| `GATEWAY_ALLOWED_ORIGIN` | api-gateway | Origin được gọi API qua CORS, ví dụ `https://pavex.vn` (mặc định `http://localhost:3000`) |
+| `GATEWAY_TRUSTED_PROXIES` | api-gateway | Địa chỉ/CIDR của các server Next.js, xem mục 2.3.7 |
+| `EMAIL_VERIFICATION_URL`, `PASSWORD_RESET_URL`, `MANAGEMENT_PASSWORD_RESET_URL`, `INVITATION_URL`, `MANAGEMENT_INVITATION_URL` | auth | Link trong email, trỏ về domain thật của hai portal (mặc định `localhost:3000`/`3001`) |
+| `MAIL_HOST`, `MAIL_PORT`, `MAIL_USERNAME`, `MAIL_PASSWORD`, `MAIL_SMTP_AUTH=true`, `MAIL_STARTTLS=true`, `MAIL_FROM` | auth, partners | SMTP thật; mặc định gửi vào Mailpit `localhost:1025` |
+| `GOOGLE_CLIENT_ID` | auth | Nếu bật đăng nhập Google (mục 2.8) |
+| `JWT_ISSUER`, `<SERVICE>_SERVICE_JWT_ISSUER` | nhiều service | Không bắt buộc. Nếu đổi thì đổi đồng loạt ở mọi service, vì service nhận token so khớp đúng chuỗi này |
+
+### 9.5 Thanh toán payOS
+
+| Biến | Giá trị |
+|---|---|
+| `BILLING_PAYMENT_PROVIDER` | `payos` (mặc định `fake`: QR giả, tài chính tự bấm xác nhận) |
+| `PAYOS_ENABLED` | `true` |
+| `PAYOS_CLIENT_ID`, `PAYOS_API_KEY`, `PAYOS_CHECKSUM_KEY` | Khoá kênh thanh toán trong trang quản lý payOS (secret) |
+| `PAYOS_RETURN_URL`, `PAYOS_CANCEL_URL` | Trang hoá đơn của client portal trên domain thật |
+| `BILLING_RECONCILIATION_ENABLED` | **`true`**: Billing định kỳ hỏi lại payOS, phòng khi webhook bị lỡ (mặc định `false`) |
+
+Đăng ký webhook trong trang quản lý payOS: `https://<domain gateway>/api/v1/integrations/payos/webhook`.
+
+### 9.6 Phải giữ tắt
+
+Các cờ dưới đây mặc định đã tắt; **không đặt** chúng ở môi trường thật.
+
+| Biến | Vì sao |
+|---|---|
+| `PAVEX_DEMO_RESET_ENABLED` | **Phải luôn `false`**. Khi bật, quản trị viên xoá được mọi vận đơn, tiền và thông báo bằng một nút |
+| `PRICING_DEMO_SEED_ENABLED` | Tự tạo bảng giá demo. Môi trường thật nhập bảng giá thật |
+| `SPRINGDOC_API_DOCS_ENABLED`, `SPRINGDOC_SWAGGER_UI_ENABLED` | Mở mô tả mọi API và Swagger UI ra ngoài. Nếu cần, chỉ bật ở môi trường thử nội bộ |
+| `FLEET_SIMULATOR_ENABLED` | Xe giả lập tự chạy trên bản đồ |
+| `OPERATIONS_SHIFT_FULL_DAY`, `OPERATIONS_ACCEPT_TIMEOUT` | Chế độ test ca làm và nhận việc (`.env.example`, mục 6) |
+| `PAVEX_BOOTSTRAPADMIN_RESET_PASSWORD` | Xem mục 9.3 |
