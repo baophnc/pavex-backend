@@ -30,6 +30,8 @@ Flutter: backend, hai portal và app hiện trường đều được build tron
 Tài khoản test: mật khẩu `Pavex2026!` cho mọi tài khoản `@pavex.test` (danh sách ở
 [scripts/seed-mini/README.md](scripts/seed-mini/README.md)), ví dụ `shop.daduyet@pavex.test` (client portal),
 `admin@pavex.test` (management portal), `buuta.hn@pavex.test` (app hiện trường).
+Ở stack này mọi nhân sự có ca 00:00–24:00 mỗi ngày, không ngày nghỉ, nên vào ca và nhận việc được bất cứ ngày giờ
+nào; thử luồng không cần điện thoại: `scripts/sim/shop-invoice.sh`, `scripts/sim/line-haul.sh`.
 
 Sau `git pull`: chạy lại `./pavex up` (chỉ build lại phần đã đổi). Chi tiết, cấu hình riêng của máy và lỗi thường
 gặp: mục 2.0 của tài liệu.

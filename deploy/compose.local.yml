@@ -112,6 +112,10 @@ services:
       <<: *local-spring
       # Staff loaded by the seed job get their shifts within minutes instead of the next hourly run.
       OPERATIONS_SHIFT_ROSTER_INTERVAL: PT2M
+      # Testing at any day and hour: everyone gets a 00:00–24:00 shift every day and no day off (seed-mini
+      # has a single line-haul driver). Set OPERATIONS_SHIFT_FULL_DAY=false in deploy/.env.local to try the
+      # real 6-days-on/1-off rotation; staging and production always use it (compose.yml).
+      OPERATIONS_SHIFT_FULL_DAY: ${OPERATIONS_SHIFT_FULL_DAY:-true}
   billing-service:
     environment:
       <<: *local-spring

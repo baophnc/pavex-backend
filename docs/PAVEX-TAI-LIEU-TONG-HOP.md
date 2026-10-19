@@ -144,6 +144,13 @@ code app hiện trường đổi thì thêm ~25 phút cho APK. Các image đư�
 `@pavex.test` đăng nhập bằng `Pavex2026!`. Thêm `admin@pavex.com` với mật khẩu trong
 `deploy/secrets/values/PAVEX_BOOTSTRAPADMIN_PASSWORD`. Bảng giá demo `DEMO-2026-08` có sẵn để tạo đơn.
 
+**Ca làm để test bất cứ lúc nào:** stack local bật ca cả ngày (`OPERATIONS_SHIFT_FULL_DAY=true` trong
+`deploy/compose.local.yml`): mọi nhân sự có một ca 00:00–24:00 mỗi ngày và không có ngày nghỉ, nên tài xế duy nhất
+của seed-mini nhận được việc trung chuyển cả vào ngày nghỉ theo lịch thật và sau 17:30. `scripts/sim/shop-invoice.sh`
+và `scripts/sim/line-haul.sh` chạy được ở mọi ngày giờ. Muốn thử lịch thật (6 ngày làm, 1 ngày nghỉ; ca hành chính
+07:30–17:30 ở bưu cục nhỏ) thì đặt `OPERATIONS_SHIFT_FULL_DAY=false` trong `deploy/.env.local` rồi `./pavex up`. Staging
+và production luôn dùng lịch thật (`deploy/compose.yml`).
+
 **App hiện trường trên điện thoại:** APK được build để gọi Gateway ở `http://<IP của máy>:8080`. `./pavex up` tự tìm
 IP của máy trong mạng hiện tại; đổi mạng Wi-Fi thì chạy lại `./pavex up` để build lại APK với IP mới, hoặc đặt
 `PAVEX_LAN_IP` trong `deploy/.env.local`. Điện thoại phải cùng mạng và tường lửa macOS phải cho Docker nhận kết nối.
@@ -736,6 +743,8 @@ Chưa có phí hoàn hàng riêng.
   - Tạo ca tại bưu cục, phân người vào ca, check-in/check-out, đánh vắng.
   - Hệ thống **tự giữ sẵn ca 7 ngày tới** theo lịch luân phiên (làm 6 ngày nghỉ 1), và tự check-out người quên
     check-out sau khi ca kết thúc 1 giờ.
+  - Chế độ test `OPERATIONS_SHIFT_FULL_DAY=true` (bật sẵn ở `./pavex up`, mục 2.0): mỗi bưu cục một ca 00:00–24:00 mỗi
+    ngày cho mọi người, không ngày nghỉ; người đang trong ca được chuyển sang ca hôm sau khi qua 00:00.
 - **Điều kiện được giao việc:**
   - Là thành viên của hub có việc, đang check-in một ca, và đang bật Sẵn sàng.
   - Riêng tài xế trung chuyển: check-in ca ở kho tỉnh là đủ để nhận việc ở mọi bưu cục trên tuyến của mình.

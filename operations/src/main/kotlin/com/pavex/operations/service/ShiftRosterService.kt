@@ -203,9 +203,9 @@ class ShiftRosterService(
         for ((key, members) in rosters) {
             val (hubId, drivers) = key
             val hubType = hubTypes[hubId] ?: continue
-            val slots = if (properties.fullDay) listOf(ShiftRotation.FULL_DAY) else ShiftRotation.slots(hubType, members.size, drivers)
+            val slots = ShiftRotation.slots(hubType, members.size, drivers, properties.fullDay)
             for (day in days) {
-                val plan = if (properties.fullDay) mapOf(0 to members) else ShiftRotation.plan(members, slots.size, day)
+                val plan = ShiftRotation.plan(members, slots.size, day, daysOff = !properties.fullDay)
                 for (slot in slots) {
                     val startsAt = day.atTime(slot.start).atZone(zone).toInstant()
                     val endsAt = startsAt.plus(slot.length)

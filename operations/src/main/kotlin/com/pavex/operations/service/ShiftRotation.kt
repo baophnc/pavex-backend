@@ -21,6 +21,8 @@ data class ShiftSlot(val index: Int, val name: String, val start: LocalTime, val
  *   weekday `i % 7` and works shift `(i + week) % shifts`, so the shifts rotate every ISO week.
  * - Because 7 and the shift count share no divisor, the members of one shift all rest on
  *   different days; with at least two per shift, every shift of every day has someone.
+ * - For testing (operations.shifts.roster.full-day) every hub runs one 00:00–24:00 shift and
+ *   nobody has a day off, so jobs can be dispatched on any day at any hour.
  */
 object ShiftRotation {
     private val OFFICE_HOURS = listOf(ShiftSlot(0, "Ca hành chính", LocalTime.of(7, 30), Duration.ofHours(10)))
@@ -40,8 +42,9 @@ object ShiftRotation {
     /** Post offices with fewer members than this open a single office-hours shift. */
     const val TWO_SHIFT_POST_OFFICE_MIN_MEMBERS = 5
 
-    fun slots(hubType: String, memberCount: Int, drivers: Boolean = false): List<ShiftSlot> = when {
+    fun slots(hubType: String, memberCount: Int, drivers: Boolean = false, fullDay: Boolean = false): List<ShiftSlot> = when {
         memberCount <= 0 -> emptyList()
+        fullDay -> listOf(FULL_DAY)
         drivers -> if (memberCount >= 4) ROUND_THE_CLOCK.take(2) else OFFICE_HOURS
         hubType == "LOCAL" -> if (memberCount >= TWO_SHIFT_POST_OFFICE_MIN_MEMBERS) POST_OFFICE else OFFICE_HOURS
         memberCount >= 6 -> ROUND_THE_CLOCK
@@ -53,12 +56,15 @@ object ShiftRotation {
 
     fun week(date: LocalDate): Int = date.get(IsoFields.WEEK_OF_WEEK_BASED_YEAR)
 
-    /** Members on each shift of [date]; [members] must be the hub's roster in a stable order. */
-    fun plan(members: List<UUID>, shiftCount: Int, date: LocalDate): Map<Int, List<UUID>> {
+    /**
+     * Members on each shift of [date]; [members] must be the hub's roster in a stable order.
+     * Without [daysOff] (full-day testing) everyone works every day.
+     */
+    fun plan(members: List<UUID>, shiftCount: Int, date: LocalDate, daysOff: Boolean = true): Map<Int, List<UUID>> {
         if (shiftCount <= 0) return emptyMap()
         val week = week(date)
         return members.withIndex()
-            .filter { (position, _) -> dayOff(position) != date.dayOfWeek }
+            .filter { (position, _) -> !daysOff || dayOff(position) != date.dayOfWeek }
             .groupBy({ (position, _) -> (position + week) % shiftCount }, { it.value })
     }
 

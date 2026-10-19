@@ -26,12 +26,27 @@ login() {
 }
 call() { local token=$1 method=$2 path=$3; shift 3; curl -fsS -X "$method" "$API$path" -H "authorization: Bearer $token" -H 'content-type: application/json' "$@"; }
 
+# Ca đang diễn ra (hoặc mở check-in trong 30 phút tới) ở bưu cục [hub] trong danh sách ca của tôi,
+# ưu tiên ca đã vào; rỗng nếu không có.
+current_shift() {
+  python3 -c '
+import sys, json, datetime as dt
+hub, now = sys.argv[1], dt.datetime.now(dt.timezone.utc)
+at = lambda v: dt.datetime.fromisoformat(v.replace("Z", "+00:00"))
+shifts = [s for s in json.load(sys.stdin) if s["hubCode"] == hub and s["assignmentStatus"] in ("SCHEDULED", "CHECKED_IN")
+          and at(s["startsAt"]) - dt.timedelta(minutes=30) <= now < at(s["endsAt"])]
+shifts.sort(key=lambda s: s["assignmentStatus"] != "CHECKED_IN")
+print(shifts[0]["shiftId"] if shifts else "")
+' "$1"
+}
+
 # Vào ca ở bưu cục của người đó (bỏ qua nếu đã vào) và bật "Sẵn sàng nhận việc".
 on_duty() {
   local token=$1 hub=$2
   local shift
-  shift=$(call "$token" GET /api/v1/operations/shifts/mine | json "next((s['shiftId'] for s in d if s['hubCode']=='$hub' and s['assignmentStatus'] in ('SCHEDULED','CHECKED_IN')), '')")
-  [ -n "$shift" ] && call "$token" POST "/api/v1/operations/shifts/$shift/check-in" -d '{}' >/dev/null 2>&1 || true
+  shift=$(call "$token" GET /api/v1/operations/shifts/mine | current_shift "$hub")
+  [ -n "$shift" ] || { echo "Không có ca nào đang diễn ra ở $hub (ngày nghỉ hoặc ngoài giờ; ./pavex up có ca cả ngày)." >&2; exit 1; }
+  call "$token" POST "/api/v1/operations/shifts/$shift/check-in" -d '{}' >/dev/null
   call "$token" PUT /api/v1/operations/availability -d '{"status":"AVAILABLE"}' >/dev/null
 }
 
