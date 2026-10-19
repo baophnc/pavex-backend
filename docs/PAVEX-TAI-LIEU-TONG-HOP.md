@@ -435,6 +435,7 @@ Tài khoản `admin@pavex.com` (tự tạo khi khởi động) dùng mật khẩ
 | Lệnh (chạy trong `pavex-backend`) | Tác dụng | Lưu ý |
 |---|---|---|
 | `./scripts/seed-mini/apply.sh` | Xoá mạng lưới, nhân sự, cửa hàng, vận đơn, báo giá, tiền, chuyến xe; nạp lại seed-mini rồi chạy `dev-up.sh` | **Xoá và thay dữ liệu hiện có.** Luôn sao lưu vào `.local/backups/<thời điểm>-seed-mini/` trước. Thêm `--no-start` để không khởi động lại |
+| `./pavex seed full` | Thay dữ liệu của stack `./pavex` bằng mạng lưới toàn quốc: mỗi phường 1 bưu cục, mỗi tỉnh 1 bưu cục tổng, 3 trung tâm miền, 6.714 tuyến, ~10.700 nhân viên, mỗi bưu cục đúng 1 quản lý (`scripts/seed-full/README.md`) | **Xoá và thay dữ liệu hiện có**, sao lưu vào `.local/backups/<thời điểm>-seed-full/` trước. Không có cửa hàng: tự tạo. `./pavex reset --seed=full` làm từ đầu; `./pavex reset` quay về seed-mini |
 
 **Chạy thử lại mà không seed lại:** đặt `PAVEX_DEMO_RESET_ENABLED=true` trong `.env` rồi chạy `dev-up.sh`. Quản trị
 (vai trò `ADMIN`) mở **Hệ thống → Giả lập → Đặt lại dữ liệu thử** ở management portal, gõ `DAT LAI` rồi bấm nút.

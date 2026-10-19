@@ -5,6 +5,9 @@
 #   ./pavex up       build what changed and start everything (first run: generates secrets, loads seed data)
 #   ./pavex down     stop everything; data is kept
 #   ./pavex reset    delete all data (databases, files, queues) and start again with fresh seed data
+#                    (add --seed=full for the nationwide dataset instead of seed-mini)
+#   ./pavex seed full    replace the data with the nationwide dataset: a post office per ward, a provincial
+#                    post office per province, 3 regional centres, ~10,700 staff (scripts/seed-full/apply.sh)
 #   ./pavex logs [service...]   follow the logs (all services, or e.g. auth-service client-portal)
 #   ./pavex ps       state of every container
 #   ./pavex compose <args>      any other docker compose command on this stack
@@ -160,15 +163,31 @@ case "$command" in
   up | start | update) up ;;
   down | stop) COMPOSE_PROFILES='*' compose down --remove-orphans ;;
   reset)
-    if [[ "${1:-}" != "--yes" ]]; then
+    full=false yes=false
+    for arg in "$@"; do
+      case "$arg" in
+        --yes) yes=true ;;
+        --seed=full) full=true ;;
+        --seed=mini) ;;
+        *) echo "Unknown option $arg (use --yes, --seed=full)" >&2; exit 2 ;;
+      esac
+    done
+    if ! $yes; then
       read -r -p "Delete every local Pavex database, file and queue, then start again with seed data? [y/N] " answer
       [[ "$answer" == [yY]* ]] || { echo "Cancelled."; exit 1; }
     fi
     COMPOSE_PROFILES='*' compose down --volumes --remove-orphans
     up
+    if $full; then "$repo_dir/scripts/seed-full/apply.sh"; fi
+    ;;
+  seed)
+    case "${1:-}" in
+      full) "$repo_dir/scripts/seed-full/apply.sh" ;;
+      *) echo "Usage: ./pavex seed full   (seed-mini comes back with ./pavex reset)" >&2; exit 2 ;;
+    esac
     ;;
   logs) compose logs -f --tail=200 "$@" ;;
   ps | status) compose ps -a ;;
   compose) compose "$@" ;;
-  *) sed -n '2,13p' "$0" | sed 's/^# \{0,1\}//'; [[ "$command" == help ]] || exit 1 ;;
+  *) sed -n '2,16p' "$0" | sed 's/^# \{0,1\}//'; [[ "$command" == help ]] || exit 1 ;;
 esac
