@@ -1,337 +1,272 @@
-# Pavex — Kịch bản kiểm thử luồng trên 3 app
+# Pavex — Khởi động và kiểm thử toàn bộ luồng
 
-> **Lưu ý (01/10/2026):** tài liệu này viết cho bộ seed toàn quốc cũ, đã được thay bằng seed-mini
-> (`scripts/seed-mini/README.md`). Các tài khoản và bưu cục bên dưới không còn tồn tại; kịch bản sẽ được viết lại
-> theo seed-mini khi làm lại phần vận đơn.
+> Cập nhật 19/10/2026, theo cách chạy bằng một lệnh `./pavex`. Kiến trúc, quy tắc nghiệp vụ, entity và API xem ở
+> [PAVEX-TAI-LIEU-TONG-HOP.md](PAVEX-TAI-LIEU-TONG-HOP.md).
 
-> Cập nhật ngày 30/09/2026. Tài liệu này hướng dẫn kiểm thử **bằng giao diện** của cả 3 app, theo đúng thứ tự
-> nghiệp vụ thật. Kiến trúc, cách chạy và dữ liệu seed xem ở [PAVEX-TAI-LIEU-TONG-HOP.md](PAVEX-TAI-LIEU-TONG-HOP.md).
+Tài liệu gồm 4 phần:
 
-| App | Ai dùng | Mở ở đâu |
+1. Khởi động cả hệ thống trên máy.
+2. Kiểm thử tự động trước khi push.
+3. Kịch bản có sẵn chạy bằng script.
+4. Kiểm thử từng luồng nghiệp vụ bằng giao diện của 3 app.
+
+---
+
+## 1. Khởi động
+
+### 1.1 Cần có
+
+- **Docker Desktop**, cấp cho Docker **ít nhất 8 GB RAM**. Cả hệ thống chiếm khoảng 6 GB.
+- Repo `pavex-backend`. Hai portal và app hiện trường được tự lấy từ GitHub (nhánh `develop`), không cần clone riêng.
+- (Tuỳ chọn) Điện thoại Android **cùng Wi‑Fi** với máy tính, để cài app hiện trường thật.
+
+### 1.2 Các lệnh
+
+Chạy trong thư mục `pavex-backend`:
+
+| Lệnh | Tác dụng |
+|---|---|
+| `./pavex up` | Build những gì thay đổi rồi bật tất cả. Lần đầu mất khoảng 10–20 phút (tải image, build 12 service Java, 2 portal, app). Script tự tạo mật khẩu, khoá JWT và nạp dữ liệu seed-mini |
+| `./pavex down` | Tắt tất cả, **giữ** dữ liệu |
+| `./pavex reset` | Xoá **toàn bộ** dữ liệu (database, file, hàng đợi) rồi bật lại với seed-mini |
+| `./pavex reset --seed=full` | Như trên nhưng nạp dữ liệu toàn quốc |
+| `./pavex seed full` | Thay dữ liệu của stack đang chạy bằng dữ liệu toàn quốc (có sao lưu trước) |
+| `./pavex ps` | Trạng thái từng container |
+| `./pavex logs [service…]` | Xem log, ví dụ `./pavex logs shipment-service client-portal` |
+
+Khi chạy xong, `./pavex up` in ra danh sách địa chỉ và tài khoản thử.
+
+### 1.3 Địa chỉ
+
+| Thành phần | Địa chỉ | Ai dùng |
 |---|---|---|
-| **Client portal** | Khách hàng, shop | Trình duyệt, http://localhost:3000 (mặc định) |
-| **Management portal** | Nhân viên văn phòng, trưởng bưu cục, kho, kế toán, CSKH | Trình duyệt, http://localhost:3001 (mặc định) |
-| **App hiện trường** (`pavex-warehouse`) | Bưu tá, nhân viên bưu cục, trưởng bưu cục, tài xế | iPhone, iOS Simulator hoặc Android |
-
-Nếu bạn chạy hai portal ở cổng khác (ví dụ management ở 3000, client ở 3001), thay cổng tương ứng trong tài liệu.
-
----
-
-## 1. Chuẩn bị
-
-### 1.1 Khởi động và làm sạch dữ liệu
-
-1. Chạy backend:
-   ```bash
-   ./scripts/dev-up.sh
-   ```
-   Mở http://localhost:8080/actuator/health, phải thấy `UP`.
-2. **Thanh toán giả lập.** Nếu `.env` đang bật payOS thật, chạy backend với cổng thanh toán giả, để không phát sinh
-   giao dịch thật:
-   ```bash
-   BILLING_PAYMENT_PROVIDER=fake ./scripts/dev-up.sh
-   ```
-3. **Email:** chọn một trong hai cách.
-   - **Mailpit:** thêm `#` trước các dòng `MAIL_*` trong `.env`, khởi động lại backend. Mọi thư hiện ở http://localhost:8025.
-   - **Gmail thật:** đăng ký khách bằng hộp thư bạn đọc được. Có thể dùng địa chỉ phụ kiểu `tenban+shop1@gmail.com`,
-     Gmail vẫn gửi về hộp thư chính.
-4. **Muốn test lại từ đầu:**
-   ```bash
-   ./scripts/seed-nationwide/apply.sh --staff-only
-   ```
-   Lệnh này xoá shop, vận đơn, tiền, chuyến xe và seed lại nhân sự, có backup trước.
-5. **Chạy hai portal:** `pnpm dev` trong từng repo. Chạy app bằng `flutter run` trong `pavex-warehouse`.
-   - Ở màn đăng nhập của app, bấm **Máy chủ** để trỏ tới Gateway:
-     - Simulator iOS: `http://localhost:8080`.
-     - Android emulator: `http://10.0.2.2:8080`.
-     - Điện thoại thật: `http://<IP máy Mac>:8080`, cùng Wi‑Fi với máy Mac. Nếu tường lửa macOS hỏi, cho phép Java
-       nhận kết nối.
-
-### 1.2 Tài khoản dùng trong kịch bản
-
-Mọi tài khoản seed dùng chung **mật khẩu dev** (in ở cuối `apply.sh`, nằm trong `.local/seed/nationwide/staff.json`).
-Danh sách đầy đủ nằm ở `.local/seed/nationwide/staff.csv`: lọc theo cột "Mã hub" để tìm người của một bưu cục.
-
-| Vai trò trong kịch bản | Email | Nơi làm | Ngày nghỉ |
-|---|---|---|---|
-| Kinh doanh & CSKH | `chau.vuminh.cskh@pavex.com` | Văn phòng | — |
-| Kế toán | `chi.nguyenthi.kt@pavex.com` | Văn phòng | — |
-| Vận hành miền Bắc | `huong.tranminh.qlvh@pavex.com` | Văn phòng | — |
-| Quản trị | `hung.phananh.qtht@pavex.com` | Văn phòng | — |
-| Bưu tá lấy hàng | `quynh.nguyenkim.bt@pavex.com` (dự phòng `khang.phamthanh.bt@pavex.com`) | BC-HN-BADINH (Ba Đình) | Thứ Tư (dự phòng: Thứ Ba) |
-| Nhân viên bưu cục gửi | `thanh.hoangbao.nvbc@pavex.com` | BC-HN-BADINH | Thứ Năm |
-| Trưởng bưu cục gửi | `nga.nguyenngoc.tbc@pavex.com` | BC-HN-BADINH | Chủ nhật |
-| Tài xế tuyến | `dung.nguyendinh.tx@pavex.com` (dự phòng `phong.nguyenxuan.tx2@pavex.com`) | KHO-HN, tuyến có Ba Đình và Ngọc Hà | Chủ nhật (dự phòng: Thứ Ba) |
-| Nhân viên khai thác kho | `quang.nguyenthanh.nvkt4@pavex.com` | KHO-HN | Thứ Tư |
-| Trưởng kho | `vy.hoangthuy.tk@pavex.com` | KHO-HN | Thứ Sáu |
-| Nhân viên bưu cục phát | `chau.buikim.nvbc@pavex.com` (dự phòng `phong.nguyentrung.nvbc@pavex.com`) | BC-HN-NGOCHA (Ngọc Hà) | Thứ Tư (dự phòng: Thứ Năm) |
-| Trưởng bưu cục phát | `yen.nguyenngoc.tbc@pavex.com` | BC-HN-NGOCHA | Thứ Hai |
-| Bưu tá giao hàng | `dung.phamxuan.bt@pavex.com` (dự phòng `tam.leanh.bt@pavex.com`) | BC-HN-NGOCHA | Thứ Sáu (dự phòng: Thứ Hai) |
-
-**Bốn quy tắc cần nhớ khi test:**
-
-1. **Chỉ người đã "Vào ca" và bật "Sẵn sàng nhận việc" mới được giao việc.** Không ai tự vào ca, nên việc sẽ chỉ rơi vào
-   đúng các tài khoản bạn đang dùng. Chưa có ai vào ca thì việc chờ; ai đó vào ca là hệ thống giao trong vài giây.
-   - Việc được giao mà 15 phút chưa bấm **Nhận việc**, hoặc người đó ra ca, thì việc chuyển cho người khác đang trong ca.
-   - Nhân viên kho và trưởng bưu cục **không cần Nhận việc**: quét **Nhập kho** là tự nhận việc khai thác của đơn.
-     Bưu cục không có nhân viên kho thì trưởng bưu cục nhận việc khai thác.
-2. **Mỗi người nghỉ 1 ngày trong tuần.** Nếu hôm nay là ngày nghỉ của người trong bảng, dùng người dự phòng hoặc tìm
-   người khác cùng mã hub trong `staff.csv`.
-3. **Chỉ vào ca được trong giờ ca.**
-   - Bưu cục lớn có ca 07:00–15:00 và 13:00–21:00, bưu cục nhỏ có ca 07:30–17:30.
-   - Kho và trung tâm có ca 06–14, 14–22, 22–06. Tài xế có ca 06–14 và 14–22.
-   - Tab **Hôm nay** trong app cho biết ca của người đó. Test ngoài giờ ca thì trưởng bưu cục có thể thêm ca ở
-     **Vận hành → Ca làm việc**.
-4. **Xem ai đang giữ việc** ở Management → **Vận hành → Phân công**: tìm theo mã vận đơn.
-
-Đổi vai trong app: tab **Hôm nay** → biểu tượng **Tài khoản** (góc trên phải) → **Đăng xuất**, rồi đăng nhập tài khoản khác. Dùng hai máy (iPhone và Simulator) thì
-đỡ phải đổi qua lại. Bưu tá cũng có thể dùng màn **Giao hàng** trên Management thay cho app.
-
----
-
-## 2. Kịch bản chính: một vận đơn đi trọn vòng
-
-Đơn đi từ **Phường Ba Đình** tới **Phường Ngọc Hà** (Hà Nội), có thu hộ (COD), người nhận trả cước. Đường đi:
-BC-HN-BADINH → xe tuyến → KHO-HN → xe tuyến → BC-HN-NGOCHA. Mỗi bước ghi rõ **app nào, ai làm, bấm gì, thấy gì**.
-
-### Bước 1 — Khách đăng ký và mở shop *(Client portal)*
-
-- [ ] **Đăng ký:** `/register`, nhập email bạn đọc được và mật khẩu 8+ ký tự. Kiểm tra thư, bấm link xác thực.
-  → Trang báo đã xác thực.
-- [ ] **Hoàn thiện hồ sơ:** đăng nhập, điền họ tên, SĐT, giới tính, ngày sinh ở `/complete-profile`.
-- [ ] **Gửi hồ sơ shop:** `/merchant/onboarding`, điền tên shop, MST, người liên hệ, gửi. → Trạng thái "Chờ duyệt".
-  Chưa có menu Vận đơn.
-
-### Bước 2 — Duyệt shop *(Management, `chau.vuminh.cskh`)*
-
-- [ ] **Mở hồ sơ:** **Khách hàng → Shop**, lọc hồ sơ chờ duyệt, mở shop vừa gửi.
-  → Tab **Sẵn sàng tạo đơn** báo còn thiếu điểm lấy hàng mặc định.
-- [ ] **Duyệt:** tab **Xét duyệt**, bấm **Phê duyệt Merchant**. → Trạng thái Đang hoạt động, lịch sử có dòng duyệt.
-
-### Bước 3 — Điểm lấy hàng *(Client portal, tài khoản shop)*
-
-- [ ] **Nhận quyền shop:** đăng xuất rồi đăng nhập lại. → Có menu **Vận đơn**, **Hoá đơn**, **Đối soát**.
-- [ ] **Thử SĐT sai:** **Sổ địa chỉ** → thêm điểm lấy hàng, nhập số máy bàn (`024…`) hoặc thiếu số.
-  → Báo lỗi "số di động Việt Nam".
-- [ ] **Thêm điểm lấy hàng:** Hà Nội → **Phường Ba Đình**, SĐT `09xxxxxxxx`, đặt làm mặc định.
-
-### Bước 4 — Tạo vận đơn và nhãn *(Client portal)*
-
-- [ ] **Nhập đơn:** **Vận đơn → Tạo vận đơn**. Chọn điểm lấy hàng Ba Đình. Người nhận ở Hà Nội → **Phường Ngọc Hà**,
-  SĐT di động. 1 kiện 2 kg, 20×20×20 cm. COD 300.000 ₫.
-- [ ] **Tính cước:** bấm tính cước. → Có phương án Tiêu chuẩn và Nhanh, dòng "Làm tròn lên 1.000 ₫", vùng giá "Nội tỉnh".
-- [ ] **Chọn người trả cước:** chọn **Người nhận trả**.
-  → Ô "Người nhận trả khi nhận hàng" = COD + cước; "Shop chịu cước" = 0 ₫. Đổi sang **Người gửi trả** thì hai số đổi
-  theo. Để lại **Người nhận trả**.
-- [ ] **Tạo đơn:** tạo xong ghi lại **mã vận đơn** (`PAVEX…`). → Trạng thái **Chờ lấy hàng**.
-- [ ] **Mở nhãn:** mở chi tiết đơn, bấm **In nhãn kiện**.
-  → Mỗi kiện có **mã vạch Code 128** và **QR** của mã kiện (`PAVEX…-01`), số tiền thu, dòng "Thu một lần cho cả N kiện"
-  nếu có nhiều kiện. **Để trang nhãn mở trên máy tính**, dùng để quét ở các bước sau.
-- [ ] **Tra cứu công khai:** `/tracking`, nhập mã vận đơn, không cần đăng nhập. → Thấy hành trình.
-
-### Bước 5 — Bưu tá lấy hàng *(App, `quynh.nguyenkim.bt`)*
-
-- [ ] **Vào ca:** đăng nhập app, tab **Hôm nay** → **Vào ca**, bật **Sẵn sàng nhận việc**.
-- [ ] **Nhận việc:** tab **Việc** → có việc **Lấy hàng** của mã vận đơn. Bấm **Nhận việc**, rồi **Bắt đầu**.
-- [ ] **Quét lấy hàng:** tab **Quét** → **Lấy hàng**, đưa camera vào **mã vạch hoặc QR** trên trang nhãn.
-  → "Đã chuyển sang: Đã lấy hàng". Client portal thấy trạng thái đổi.
-  - Chưa bấm Bắt đầu mà đã quét thì app báo và có nút **Bắt đầu việc này và quét lại**.
-
-### Bước 6 — Nhập kho bưu cục gửi *(App, `thanh.hoangbao.nvbc`)*
-
-- [ ] **Vào ca** ở tab Hôm nay.
-- [ ] **Nhập kho:** tab **Quét** → **Nhập kho**, quét mã, không cần bấm Nhận việc trước. → "Đã đến bưu cục gửi".
-  Management **Vận hành → Phân công**: việc khai thác bưu cục gửi thuộc người vừa quét, trạng thái Hoàn thành; việc
-  **Chuyến xe** chặng 1 đã có tài xế nếu tài xế đang trong ca.
-- [ ] **Kiểm kho:** thử **Kiểm kho** với cùng mã. → Xác nhận kiện đang trên kệ.
-- [ ] **Thử quét sai chỗ:** nhân viên bưu cục khác (không phải Ba Đình) quét Nhập kho mã này.
-  → App báo kiện không thuộc bưu cục này.
-
-### Bước 7 — Tài xế chở lên kho *(App, `dung.nguyendinh.tx`)*
-
-- [ ] **Vào ca:** tài xế thuộc KHO-HN, nên vào ca của KHO-HN, rồi bật Sẵn sàng.
-  → Tab **Việc** có việc **Chuyến xe** xuất phát từ Ba Đình, dù tài xế không đứng ở Ba Đình.
-- [ ] **Đồng ý chia sẻ vị trí:** tab **Chuyến**, bấm **Tôi đồng ý** (chỉ lần đầu).
-  → Chuyến BC-HN-BADINH → KHO-HN hiện "Chờ chạy".
-- [ ] **Bắt đầu việc:** tab **Việc** → **Nhận việc** → **Bắt đầu**.
-- [ ] **Lên xe:** tab **Quét** → **Lên xe**, quét mã. → "Đang trung chuyển" và thông báo **"Đã bắt đầu chuyến … Đang gửi
-  vị trí xe"**. Tab Chuyến có thẻ **Đang gửi vị trí xe**.
-- [ ] **Giả lập xe chạy:** trên iOS Simulator chọn Features → Location → **Freeway Drive**. Trên điện thoại thật thì đi
-  một đoạn. Sau khoảng 30 giây, dòng "Gửi lần cuối" có giờ.
-
-### Bước 8 — Xem xe trên bản đồ *(Management)*
-
-- [ ] **Trưởng bưu cục gửi thấy xe:** đăng nhập `nga.nguyenngoc.tbc`, mở **Vận hành → Xe trung chuyển**.
-  → Có xe BC-HN-BADINH → KHO-HN. Bấm vào xe để xem lộ trình, tốc độ, pin, "vị trí cập nhật … trước".
-- [ ] **Trưởng kho và vận hành miền thấy xe:** `vy.hoangthuy.tk` (hub đến) và `huong.tranminh.qlvh` (toàn quốc) cũng thấy.
-- [ ] **Người ngoài tuyến không thấy:** trưởng một bưu cục khác, ví dụ trưởng BC-HN-NGOCHA lúc này, không thấy chuyến.
-  Khách và shop không có trang này.
-- [ ] **Nhãn trễ:** chuyến quá giờ tới dự kiến có nhãn **Trễ … phút**.
-- [ ] **Mất tín hiệu:** tắt giả lập vị trí quá 5 phút → nhãn **Mất tín hiệu**.
-
-### Bước 9 — Nhập kho tỉnh *(App, `quang.nguyenthanh.nvkt4`)*
-
-- [ ] **Nhập kho:** vào ca KHO-HN, **Quét → Nhập kho**. → Kiện "Đã đến bưu cục trung chuyển". Việc khai thác KHO-HN
-  tự hoàn tất theo người quét, và chặng 2 KHO-HN → BC-HN-NGOCHA được giao cho tài xế đang trong ca.
-- [ ] **Chuyến tự kết thúc:** trong khoảng 1 phút, chuyến của tài xế chuyển **Đã tới** (lý do "Hub đến đã nhập đủ kiện")
-  và app tài xế ngừng gửi vị trí. Nếu chờ không muốn, tài xế có thể bấm **Đã tới nơi**.
-
-### Bước 10 — Tài xế chở về bưu cục phát *(App, `dung.nguyendinh.tx`)*
-
-- [ ] **Chạy chặng 2:** vẫn trong ca, tab **Việc** có chặng KHO-HN → BC-HN-NGOCHA. Nhận việc, Bắt đầu,
-  **Quét → Lên xe**. → Chuyến mới tự bắt đầu, lại gửi vị trí.
-- Nếu việc rơi vào tài xế khác của KHO-HN đang vào ca: xem ở **Vận hành → Phân công** rồi đăng nhập đúng người đó.
-
-### Bước 11 — Nhập kho bưu cục phát *(App, `chau.buikim.nvbc`)*
-
-- [ ] **Nhập kho:** vào ca BC-HN-NGOCHA, **Quét → Nhập kho**. → "Đã đến bưu cục phát". Chuyến chặng 2 tự kết thúc.
-  Việc khai thác bưu cục phát tự hoàn tất, và việc **Giao hàng** được giao cho bưu tá Ngọc Hà đang trong ca.
-
-### Bước 12 — Giao hàng và thu tiền *(App, `dung.phamxuan.bt`)*
-
-- [ ] **Nhận việc giao:** vào ca, bật Sẵn sàng. Tab **Việc** có việc **Giao hàng**, bấm **Nhận việc** → **Bắt đầu**.
-- [ ] **Xuất giao:** **Quét → Xuất giao**, quét mã. → "Đang giao".
-- [ ] **Giao thành công:** trên thẻ việc bấm **Giao hàng** → **Thành công**. Nhập tên người nhận, chọn **Chụp ảnh** (hoặc
-  **Chữ ký**). Ô số tiền hiện đúng COD + cước, kèm dòng "Thu đúng số tiền này, không thu thiếu hay thừa". Gửi.
-  → Kiện "Đã giao", vận đơn hoàn tất.
-- [ ] **Tiền đang giữ:** tab **Tiền** có khoản vừa thu ("… đơn chưa nộp về bưu cục").
-- [ ] **Shop thấy kết quả:** client portal thấy đơn "Đã giao", thu tiền "Đã thu".
-
-### Bước 13 — Nộp tiền và duyệt *(App bưu tá → Management kế toán)*
-
-- [ ] **Bưu tá nộp tiền:** tab **Tiền**, chọn khoản thu, bấm **Nộp … về bưu cục** → xác nhận **Nộp tiền**.
-  → "Đã tạo lô nộp tiền …", khoản tiền chuyển sang đã nộp.
-- [ ] **Trưởng bưu cục phát xem tiền:** `yen.nguyenngoc.tbc` mở tab **Tiền** trong app, mục **Tiền tại bưu cục**.
-- [ ] **Kế toán duyệt:** `chi.nguyenthi.kt` mở Management **Tài chính → Duyệt tiền nộp**, mở lô, bấm **Duyệt** (hoặc
-  **Đã nhận đủ tiền**). → Lô đã duyệt.
-- [ ] **Nhánh từ chối:** thử **Từ chối** kèm lý do. → Tiền nằm lại bưu cục. Trưởng bưu cục **Gửi lại** trong tab Tiền,
-  kế toán duyệt lại.
-
-### Bước 14 — Đối soát và hoá đơn *(Management kế toán → Client shop)*
-
-- [ ] **Tài khoản nhận tiền:** shop vào **Đối soát → Tài khoản nhận tiền**, nhập ngân hàng, số tài khoản, chủ tài khoản.
-- [ ] **Lập đối soát:** kế toán mở **Tài chính → Đối soát shop**, chọn shop, "Chốt số liệu đến" = bây giờ, bấm
-  **Lập đối soát**.
-  → Hiện COD đã duyệt, cước shop phải trả (0 ₫ vì người nhận đã trả), cấn trừ, số tiền chuyển cho shop.
-- [ ] **Ghi nhận chuyển khoản:** bấm **Ghi nhận đã chuyển khoản**, nhập mã giao dịch. → Bảng đối soát "Đã chuyển".
-- [ ] **Shop xem đối soát:** client **Đối soát** thấy bảng, số tiền và tài khoản đã chuyển.
-- [ ] **Tạo hoá đơn cước:** lặp lại bước 4–13 với một đơn **Người gửi trả**, rồi lập đối soát. → Có **hoá đơn cước**.
-- [ ] **Thanh toán hoá đơn:** shop mở **Hoá đơn**, bấm **Thanh toán bằng mã QR**.
-  - Cổng giả: kế toán bấm **Xác nhận (giả lập)** ở **Tài chính → Hóa đơn**.
-  - Hoặc kế toán bấm **Ghi nhận tiền mặt**. → Hoá đơn "Đã thanh toán".
-
----
-
-## 3. Kiểm thử theo nhóm chức năng
-
-Mỗi nhóm chạy độc lập được, trừ khi ghi cần một vận đơn ở bước nào của mục 2.
-
-### 3.1 Tài khoản và mật khẩu
-
-| # | Kiểm tra | App | Kết quả đúng |
-|---|---|---|---|
-| A1 | Đăng nhập Google | Client `/login` | Vào được, tài khoản được tạo nếu chưa có |
-| A2 | Quên mật khẩu (khách) | Client `/forgot-password` | Thư có link về client portal; đặt lại xong đăng nhập bằng mật khẩu mới |
-| A3 | Quên mật khẩu (nhân viên) | Management `/forgot-password` | Link về management portal |
-| A4 | Quên mật khẩu trong app | App → **Quên mật khẩu?** | Nhập email → thư; dán liên kết trong thư vào app, đặt mật khẩu mới, đăng nhập lại được |
-| A5 | Admin tạo nhân viên | Management **Tài khoản → Tạo tài khoản** (`hung.phananh.qtht`) | Tạo xong có thông báo mật khẩu tạm |
-| A6 | Đăng nhập bằng mật khẩu tạm `123456` | Management | Bị đưa tới **Đặt mật khẩu của bạn**; mở trang khác vẫn bị đưa về; không cho giữ `123456`; lưu xong phải đăng nhập lại |
-| A7 | Như A6 nhưng trong app | App | Hiện màn **Đặt mật khẩu của bạn**; lưu xong app tự đăng nhập lại |
-| A8 | Thêm nhân viên bưu cục | Management **Vận hành → Nhân sự bưu cục** (trưởng bưu cục) | Nhân viên mới đăng nhập bằng mật khẩu tạm; từ lần chạy xếp ca kế tiếp (tối đa 1 giờ) có ca |
-| A9 | Đổi mật khẩu, đăng xuất thiết bị khác | Management **Tài khoản của tôi**, client **Bảo mật** | Đổi xong phải đăng nhập lại; phiên ở máy khác bị đăng xuất |
-| A10 | Đăng nhập sai 5 lần | Bất kỳ | Tài khoản khoá tạm, app báo "tạm khoá … thử lại sau" |
-| A11 | Tài khoản bị khoá, đã nghỉ việc, mới mời | App hoặc Management (lấy email trong `staff.csv`, cột Trạng thái) | Không đăng nhập được, có thông báo phù hợp |
-| A12 | Khoá tài khoản đang đăng nhập | Management **Tài khoản** → đổi trạng thái | Phiên của người đó bị thu hồi: khi phiên cần làm mới (vài phút) thì bị đăng xuất và không đăng nhập lại được |
-
-### 3.2 Phân quyền: mỗi người chỉ thấy phần của mình
-
-- [ ] Bưu tá đăng nhập Management chỉ thấy **Việc của tôi → Giao hàng**.
-- [ ] Trưởng bưu cục chỉ thấy vận đơn, nhân sự, ca làm, tiền của bưu cục mình; bộ lọc bưu cục chỉ có bưu cục mình.
-- [ ] Kinh doanh & CSKH không thấy mục Tài chính. Kế toán không sửa được bảng giá.
-- [ ] Tài khoản khách hoặc shop đăng nhập Management bị từ chối ("chưa được cấp quyền").
-- [ ] Shop A không mở được vận đơn hoặc hoá đơn của shop B (thử dán link).
-
-### 3.3 Bảng giá và báo giá
-
-- [ ] Client `/pricing` (không đăng nhập): tính cước, thấy dòng làm tròn 1.000 ₫, vùng giá Nội tỉnh / Nội miền / Liên miền.
-- [ ] Management **Bảng giá & cước → Bảng giá**: **Tạo phiên bản mới**, sửa giá, **Bắt đầu áp dụng**.
-  → Có xem trước thời điểm bảng cũ ngừng áp dụng. Báo giá mới dùng bảng mới; đơn đã tạo giữ nguyên cước.
-- [ ] **Tính thử cước** và **Chi tiết cách tính cước** (dán mã báo giá) hiện đúng từng phần phí. **Nhật ký giá** có dòng thay bảng.
-
-### 3.4 Các nhánh của vận đơn
-
-| # | Kịch bản | Làm thế nào | Kết quả đúng |
-|---|---|---|---|
-| S1 | Shop huỷ trước khi lấy hàng | Client chi tiết đơn → **Hủy vận đơn** | Đơn Đã huỷ; shop không bị tính cước; việc lấy hàng biến mất khỏi app bưu tá |
-| S2 | Không có COD, người gửi trả | Tạo đơn COD 0 | Nhãn "Thu người nhận 0 ₫"; khi giao, app không hỏi thu tiền |
-| S3 | Giao thất bại rồi giao lại | Bước 12 chọn **Thất bại** + lý do | Kiện "Giao chưa thành công"; bưu tá xuất giao lại lần sau |
-| S4 | Hoàn hàng | Management chi tiết vận đơn → khu ngoại lệ → tạo yêu cầu **Hoàn hàng**; người có quyền **Duyệt** ở **Duyệt ngoại lệ** | Đơn Đang hoàn; làm tiếp các việc hệ thống tạo ra tới khi kiện về bưu cục gửi và được **Nhập kho** → Đã hoàn; shop chịu cước gốc |
-| S5 | Huỷ sau khi đã lấy hàng | Yêu cầu huỷ ở khu ngoại lệ, được duyệt | Đơn huỷ nhưng shop vẫn chịu cước |
-| S6 | Cân lại kiện | Chi tiết vận đơn → **Ghi nhận cân lại kiện hàng** → duyệt | Khối lượng mới được ghi; cước **không đổi** |
-| S7 | Giữ đơn | **Hold / Release shipment** | Đơn tạm dừng, mở lại tiếp tục bình thường |
-| S8 | Hồ sơ sự cố | **Vận hành → Hồ sơ sự cố**: tạo, nhận xử lý, ghi chú, đóng | Lịch sử đầy đủ; trưởng bưu cục chỉ thấy sự cố của bưu cục mình |
-| S9 | Giám sát | **Giám sát vận đơn** khi có đơn trễ hoặc lệch tuyến | Có cảnh báo tương ứng |
-| S10 | Quét trùng | Quét lại một mã đã quét | App báo "đã làm rồi", không lỗi |
-| S11 | Quét mã vận đơn thay vì mã kiện | Quét mã `PAVEX…` không có `-01` | Áp dụng cho mọi kiện của đơn |
-
-### 3.5 Mã vạch và tra cứu
-
-- [ ] Trang nhãn (client): quét **mã vạch** bằng app (Quét → Tra cứu). → Mở đúng đơn. Làm lại với **QR**.
-- [ ] Management chi tiết vận đơn → **Hiện mã vạch** ở từng kiện, quét được từ màn hình (dùng khi nhãn rách).
-- [ ] App **Quét → Nhập mã** (gõ tay) khi camera không đọc được.
-
-### 3.6 Xe trung chuyển
-
-- [ ] Tài xế chưa đồng ý chia sẻ vị trí mà quét Lên xe. → App nhắc đồng ý ở tab Chuyến; đồng ý xong bấm **Bắt đầu chuyến**.
-- [ ] **Bắt đầu chuyến** bằng tay (nhập biển số `29C-123.45`). → Biển số hiện trên bản đồ.
-- [ ] Đang có một chuyến chạy mà bắt đầu chuyến khác. → Bị từ chối.
-- [ ] Tắt mạng điện thoại 2–3 phút rồi bật lại. → "điểm chờ gửi" tăng rồi về 0, lộ trình trên bản đồ không bị đứt.
-- [ ] Đóng app giữa chuyến rồi mở lại. → Tab Chuyến tự tiếp tục gửi vị trí.
-- [ ] Sau khi xe tới: chuyến sang mục **Đã tới (24 giờ)** trên Management, có thời điểm tới và lý do kết thúc.
-
-### 3.7 Ca làm tự động
-
-- [ ] App **Hôm nay** hiện ca hôm nay. Người nghỉ hôm nay thấy "Hôm nay bạn chưa được xếp ca".
-- [ ] Management **Vận hành → Ca làm việc**: ca 7 ngày tới đã có sẵn, không cần tạo.
-- [ ] **Vào ca** rồi không **Ra ca**. → Khoảng 1 giờ sau khi ca kết thúc, hệ thống tự ra ca; hôm sau vào ca mới bình thường.
-- [ ] Tắt **Sẵn sàng nhận việc**. → Không nhận thêm việc mới; việc đã được giao mà chưa nhận chuyển cho người khác.
-- [ ] **Việc chưa nhận khi ra ca:** bưu tá A có việc Lấy hàng chưa bấm Nhận việc, bấm **Ra ca**. → Trong vài giây việc
-  chuyển cho bưu tá B đang trong ca (hoặc về hàng chờ nếu không còn ai). Lịch sử việc có dòng "Đưa lại hàng đợi".
-- [ ] **Quá 15 phút chưa nhận:** để một việc được giao tự động 15 phút không bấm Nhận việc. → Việc chuyển cho người
-  khác đang trong ca. Việc trưởng bưu cục phân công tay thì giữ nguyên người được chọn.
-- [ ] **Bưu cục không có nhân viên kho** (ví dụ BC-HN-DONGANH): trưởng bưu cục vào ca. → Nhận việc khai thác của đơn
-  gửi từ đó; quét Nhập kho là xong. Ở Phân công, trưởng bưu cục cũng có trong danh sách chọn người cho việc khai thác.
-
-### 3.8 Hỗ trợ khách hàng
-
-- [ ] Client **Liên hệ**, **Hỗ trợ**, **Khiếu nại** (đính kèm 1–5 ảnh/PDF ≤ 5 MB), **Tuyển dụng**: gửi được cả khi chưa
-  đăng nhập.
-  → Màn hình hiện mã `YC…`, email xác nhận không chép lại nội dung.
-- [ ] Đính kèm tệp đổi đuôi (ví dụ `.exe` đổi thành `.pdf`). → Bị từ chối.
-- [ ] Gửi quá 5 yêu cầu trong 1 giờ bằng cùng email. → Bị chặn.
-- [ ] Management **Khách hàng → Yêu cầu hỗ trợ** (`chau.vuminh.cskh`): **Nhận xử lý** → ghi chú → giải quyết (bắt buộc
-  ghi chú) → **Đóng (spam/trùng)** hoặc **Mở lại**.
-  - Người khác không nhận được yêu cầu đã có người nhận. **Trả lại hàng chờ** thì yêu cầu về Mới.
-- [ ] **Bảng điều hành** hiện số yêu cầu mới.
-
-### 3.9 Báo cáo và bảng điều hành
-
-- [ ] App tab **Báo cáo**: số việc, kiện đã quét, tiền trong khoảng ngày. Trưởng bưu cục xem được cả bưu cục.
-- [ ] Management **Bảng điều hành**: các thẻ số liệu đúng với dữ liệu vừa test, chỉ hiện thẻ người đó có quyền xem.
-
----
-
-## 4. Khi gặp lỗi
-
-| Hiện tượng | Nguyên nhân thường gặp | Cách xử lý |
+| Client portal | http://localhost:3000 | Khách hàng, cửa hàng |
+| Management portal | http://localhost:3001 | Nhân viên Pavex: quản trị, vận hành, bưu cục, kế toán |
+| App hiện trường (bản web) | http://localhost:3002 | Bưu tá, nhân viên bưu cục, trưởng bưu cục, tài xế |
+| Trang tải APK | `http://<IP máy tính>:3002/download/` (địa chỉ đúng được in ra cuối `./pavex up`) | Điện thoại Android |
+| API Gateway | http://localhost:8080 (Swagger: `/swagger-ui.html`) | Gọi API trực tiếp |
+| Mailpit (hộp thư thử) | http://localhost:8025 | Đọc mọi email hệ thống gửi |
+| RabbitMQ, MinIO | http://localhost:15672, http://localhost:9001 | Mật khẩu ở `deploy/secrets/values/` |
+| PostgreSQL | `localhost:15432`, user `postgres` | Mật khẩu ở `deploy/secrets/values/POSTGRES_PASSWORD` |
+
+### 1.4 Chọn bộ dữ liệu
+
+| Bộ | Có gì | Dùng khi |
 |---|---|---|
-| Việc không được giao cho ai | Chưa ai của hub đó **Vào ca** và bật **Sẵn sàng**, hoặc người đó nghỉ hôm nay | Vào ca đúng người (xem cột Ngày nghỉ); việc được giao trong vài giây |
-| Không vào ca được | Ngoài giờ ca | Chọn người đang trong ca, hoặc trưởng bưu cục thêm ca ở **Vận hành → Ca làm việc** |
-| Quét báo "Bấm Bắt đầu việc này trước khi quét" | Việc chưa ở trạng thái Đang làm | Bấm **Bắt đầu việc này và quét lại** |
-| App không kết nối được | Sai địa chỉ Máy chủ, hoặc tường lửa macOS chặn Java | Sửa ở màn đăng nhập; cho phép Java nhận kết nối |
-| Menu không đúng quyền sau khi seed lại | Token cũ | Đăng xuất, đăng nhập lại |
-| Bản đồ không thấy xe | Tài xế chưa đồng ý chia sẻ vị trí hoặc chưa cho app dùng vị trí | Tab Chuyến → đồng ý; Cài đặt máy → cho phép vị trí |
-| Không nhận được email | Mail đang gửi qua Gmail thật tới địa chỉ `@pavex.com` | Dùng Mailpit hoặc email bạn đọc được (mục 1.1) |
+| **seed-mini** (mặc định) | 2 bưu cục (Ba Đình – Hà Nội, Tân Sơn Hoà – TP.HCM), 1 tuyến trục, 12 tài khoản thử, 2 cửa hàng (1 đã duyệt, 1 chờ duyệt) | Thử nhanh các luồng ở mục 3 và 4 |
+| **seed-full** (`./pavex seed full`) | 3 trung tâm miền, 34 bưu cục tổng, 3.320 bưu cục phường, 6.714 tuyến, ~10.700 nhân viên, **không có cửa hàng** | Thử mạng lưới thật và hành trình nhiều chặng (mục 4.10) |
 
-Xem log backend ở `.local/logs/<service>.log`. Log quan trọng nhất khi luồng bị kẹt là `operations-service.log` (giao
-việc, xếp ca) và `shipment-service.log` (quét, giao hàng).
+- Mọi tài khoản `@pavex.test` dùng chung một mật khẩu, ghi trong `scripts/seed-mini/README.md` và in ra cuối `./pavex up`.
+- Mật khẩu của `admin@pavex.com` nằm ở `deploy/secrets/values/PAVEX_BOOTSTRAPADMIN_PASSWORD`.
+
+**Tài khoản seed-mini:**
+
+| Email | Vai trò | Dùng ở |
+|---|---|---|
+| `admin@pavex.test` | Quản trị hệ thống | Management |
+| `vanhanh@pavex.test` | Quản lý vận hành: xem mọi bưu cục, duyệt cửa hàng, tiền, đối soát | Management |
+| `truongbc.hn@pavex.test`, `nhanvien.hn@pavex.test`, `buuta.hn@pavex.test` | Trưởng bưu cục, nhân viên, bưu tá Ba Đình | App (trưởng bưu cục và nhân viên dùng được cả Management) |
+| `truongbc.hcm@pavex.test`, `nhanvien.hcm@pavex.test`, `buuta.hcm@pavex.test` | Như trên, ở Tân Sơn Hoà | App, Management |
+| `taixe@pavex.test` | Tài xế tuyến trục Ba Đình ↔ Tân Sơn Hoà | App |
+| `shop.daduyet@pavex.test` | Cửa hàng **đã duyệt** "Hoa Sen", lấy hàng ở Ba Đình | Client portal |
+| `shop.choduyet@pavex.test` | Cửa hàng **chờ duyệt** "Mai Vàng" | Client portal |
+| `khach@pavex.test` | Khách hàng thường | Client portal |
+
+Khi chạy bằng `./pavex`, mọi nhân viên có ca **00:00–24:00 mỗi ngày, không có ngày nghỉ**, nên thử lúc nào cũng được.
+Muốn thử lịch thật (làm 6 ngày nghỉ 1, ca ban ngày), thêm `OPERATIONS_SHIFT_FULL_DAY=false` vào
+`deploy/.env.local` rồi chạy `./pavex up`.
+
+### 1.5 App hiện trường
+
+- **Bản web** (http://localhost:3002): đủ để thử mọi màn hình. Không chạy GPS nền. Nếu không có camera, ở màn **Quét** bấm
+  biểu tượng bàn phím **Nhập mã** để gõ mã kiện.
+- **Bản Android:** mở trang tải APK trên điện thoại (cùng Wi‑Fi), tải và cài file APK (cho phép "cài từ nguồn không
+  xác định"). Đây là bản thử, gọi thẳng gateway trên máy tính qua mạng nội bộ.
+- **iPhone:** chạy từ Xcode (`flutter run` trong repo `pavex-warehouse`). Docker không build được bản iOS.
+
+### 1.6 Email và thanh toán khi chạy trên máy
+
+- **Email** (xác thực tài khoản, quên mật khẩu, lời mời nhân viên): mọi thư được giữ lại trong Mailpit, không gửi ra ngoài.
+- **Thanh toán:** dùng cổng **giả lập**. Mã QR là giả; kế toán bấm xác nhận để coi như đã nhận tiền.
+- Thanh toán payOS thật chỉ thử được trên staging có tên miền (tài liệu tổng hợp, mục 9.7).
+
+### 1.7 Sự cố thường gặp
+
+| Hiện tượng | Cách xử lý |
+|---|---|
+| `Ports already in use` | Tắt cách chạy cũ (`./scripts/dev-down.sh`) và mọi `pnpm dev` của portal, hoặc đổi cổng trong `deploy/.env.local` |
+| Chờ quá 15 phút chưa "ready" | `./pavex ps` để xem container nào chưa khoẻ, rồi `./pavex logs <tên>` |
+| Container tự tắt, máy chậm | Tăng RAM cho Docker (≥ 8 GB) |
+| Đăng nhập báo sai dù đúng mật khẩu | Sai 5 lần sẽ bị khoá 15 phút; chờ hoặc `./pavex reset` |
+| Thay đổi trong portal/app không thấy | Push lên `develop` rồi `./pavex up`; hoặc trỏ tới thư mục máy mình trong `deploy/.env.local` (xem README) |
+
+---
+
+## 2. Kiểm thử tự động (trước khi push)
+
+CI trên GitHub chạy đúng các lệnh này mỗi lần push hoặc mở PR.
+
+| Repo | Lệnh | Kiểm tra gì |
+|---|---|---|
+| `pavex-backend` | `./mvnw test` (cần Docker đang chạy) | Toàn bộ test, gồm test chạy trên PostgreSQL thật |
+| | `node --test scripts/tests/single-config.test.mjs` | Quy tắc cấu hình: không secret mặc định, tính năng chỉ dành cho local phải tắt sẵn |
+| `pavex-client-portal`, `pavex-management-portal` | `pnpm check && pnpm test && pnpm build` | Lint, kiểu TypeScript, test, build production |
+| `pavex-warehouse` | `flutter analyze && flutter test` | Phân tích mã và test của app |
+
+---
+
+## 3. Kịch bản có sẵn (seed-mini, không cần điện thoại)
+
+Chạy trong `pavex-backend` khi `./pavex up` đang chạy với seed-mini:
+
+| Lệnh | Làm gì | Xem kết quả ở đâu |
+|---|---|---|
+| `./scripts/sim/line-haul.sh` | Nhận 1 đơn tại quầy Tân Sơn Hoà, nhân viên kiểm kho, tài xế nhận việc và quét lên xe | http://localhost:3001/fleet: xe đang chạy |
+| `./scripts/sim/shop-invoice.sh` | Shop Hoa Sen tạo đơn Hà Nội → TP.HCM, lấy hàng, trung chuyển, giao, lập đối soát | Client portal → Hoá đơn của `shop.daduyet`: 1 hoá đơn "Đã phát hành" |
+
+---
+
+## 4. Kiểm thử từng luồng bằng giao diện
+
+Mặc định dùng seed-mini và làm theo thứ tự các luồng; luồng sau dùng kết quả của luồng trước. Mỗi bước ghi **Kết quả
+mong đợi**; nếu khác, ghi lại mã vận đơn, tài khoản và ảnh màn hình.
+
+### 4.1 Khách hàng đăng ký và trở thành cửa hàng
+
+1. Client portal → **Đăng ký** bằng một email mới (ví dụ `toi.thu@pavex.test`).
+   - **Kết quả mong đợi:** thư xác thực xuất hiện trong Mailpit.
+2. Mở thư trong Mailpit, bấm link xác thực, rồi đăng nhập và điền **Hoàn thiện hồ sơ**.
+3. Vào **Đăng ký cửa hàng** (`/merchant/onboarding`), điền tên shop và người liên hệ rồi gửi.
+   - **Kết quả mong đợi:** trạng thái "Chờ duyệt".
+4. Management, đăng nhập `vanhanh@pavex.test` → **Khách hàng → Cửa hàng** → mở shop vừa gửi → **Duyệt**.
+   - **Kết quả mong đợi:** lịch sử ghi lại người duyệt.
+5. Quay lại client portal, đăng xuất rồi đăng nhập lại.
+   - **Kết quả mong đợi:** có menu Vận đơn.
+6. **Sổ địa chỉ** → thêm **điểm lấy hàng** và đặt làm mặc định.
+   - **Kết quả mong đợi:** số điện thoại không hợp lệ bị báo lỗi ngay trên form.
+
+### 4.2 Tính cước và tạo đơn
+
+1. Không cần đăng nhập: mở `/pricing`, tính thử Hà Nội → TP.HCM, 2 kg.
+   - **Kết quả mong đợi:** có cước của dịch vụ Tiêu chuẩn và Nhanh, làm tròn lên bội số 1.000 ₫.
+2. `shop.daduyet` → **Tạo vận đơn**: người nhận ở TP.HCM, COD 300.000 ₫, người nhận trả cước.
+   - **Kết quả mong đợi:** vận đơn "Chờ lấy hàng", có mã vận đơn và mã kiện; số tiền thu người nhận = COD + cước.
+3. Mở **Nhãn kiện**.
+   - **Kết quả mong đợi:** mỗi kiện một nhãn có QR, ghi số tiền thu.
+4. **Sửa đơn** (tên, SĐT, địa chỉ) khi chưa lấy hàng.
+   - **Kết quả mong đợi:** lưu được. Huỷ được khi đơn chưa lấy hàng.
+5. `/tracking`: nhập mã vận đơn.
+   - **Kết quả mong đợi:** thấy hành trình, chỉ tới cấp phường, không lộ tên hay SĐT.
+
+### 4.3 Tạo đơn hàng loạt từ Excel
+
+1. `shop.daduyet` → **Vận đơn → Tạo từ Excel** → **Tải file mẫu**.
+2. Điền 4–5 đơn vào sheet "Don hang", chọn tỉnh, phường, loại hàng… trong danh sách thả xuống. Cố ý làm sai 1 dòng (ví dụ
+   SĐT `028…`) và cho 2 dòng trùng **Mã đơn của shop**.
+3. Tải file lên.
+   - **Kết quả mong đợi:** bảng xem trước báo "N hợp lệ, M cần sửa"; dòng sai có lý do bằng tiếng Việt.
+4. Bấm **Tạo … vận đơn hợp lệ**.
+   - **Kết quả mong đợi:** có thanh tiến độ. Mỗi dòng tạo được hiện mã vận đơn và cước. Dòng trùng mã đơn bị từ chối, kèm
+     tên vận đơn đã dùng mã đó.
+5. Tải **lại cùng file** và tạo lần nữa.
+   - **Kết quả mong đợi:** các dòng đã tạo hiện "đã tạo trước đó" với đúng mã cũ; số đơn trong danh sách không tăng.
+
+### 4.4 Lấy hàng, trung chuyển, giao hàng (3 app)
+
+Dùng đơn ở bước 4.2 (Hà Nội → TP.HCM). Ở app, mỗi tài khoản vào tab **Hôm nay**, vào ca và bật **Sẵn sàng**.
+
+| Bước | Ai, ở đâu | Làm gì | Kết quả mong đợi |
+|---|---|---|---|
+| 1 | `buuta.hn`, app | Tab **Việc** → nhận việc **Lấy hàng** → **Bắt đầu** → **Quét → Lấy hàng**, quét (hoặc nhập) mã kiện | Kiện "Đã lấy hàng" |
+| 2 | `nhanvien.hn`, app | **Quét → Nhập kho** mã kiện | Kiện "Đã đến bưu cục gửi"; việc khai thác tự hoàn tất |
+| 3 | `taixe`, app | Tab **Chuyến** → đồng ý chia sẻ vị trí (lần đầu) → tab **Việc** nhận việc trung chuyển → **Quét → Lên xe** | Kiện "Đang trung chuyển"; chuyến xe tự bắt đầu; app gửi GPS (bản Android) |
+| 4 | `vanhanh`, Management | **Xe trung chuyển** (`/fleet`) | Thấy xe trên bản đồ, lộ trình và giờ tới dự kiến |
+| 5 | `nhanvien.hcm`, app | **Quét → Nhập kho** mã kiện | Kiện "Đến bưu cục phát"; chuyến tự kết thúc khi đủ kiện; mở việc giao cho bưu tá |
+| 6 | `buuta.hcm`, app | Tab **Việc** → nhận việc giao → **Bắt đầu** → **Quét → Xuất giao** | Kiện "Đang giao" |
+| 7 | `buuta.hcm`, app | **Giao hàng** → chụp ảnh hoặc ký, nhập tên người nhận, xác nhận **đúng số tiền thu** | Vận đơn "Đã giao". Thu sai số tiền hoặc thu lần hai bị từ chối |
+| 8 | Shop, client portal | Mở chi tiết vận đơn; `/tracking` | Hành trình đủ các bước; trạng thái thu tiền "Đã thu" |
+
+**Đơn cùng bưu cục** (người nhận cũng ở Hà Nội): làm bước 1, 2, rồi 6, 7, không cần xe.
+
+### 4.5 Giao không thành công, hoàn hàng, sự cố
+
+1. Tạo một đơn mới, đưa tới bước "Đang giao" như 4.4.
+2. Bưu tá chọn **Giao không thành công** và chọn lý do.
+   - **Kết quả mong đợi:** vận đơn "Giao chưa thành công", bưu tá có thể giao lại.
+3. Management (`truongbc.hcm` hoặc `vanhanh`), mở vận đơn → **Yêu cầu hoàn hàng**.
+4. Người có quyền duyệt ở **Duyệt ngoại lệ** (`/shipments/exceptions`).
+   - **Kết quả mong đợi:** đơn chuyển "Đang hoàn"; hàng đi ngược về bưu cục gửi; nhập kho ở đó thì thành "Đã hoàn".
+5. Huỷ sau khi đã lấy hàng: shop không tự huỷ được; phải đi qua yêu cầu ngoại lệ như trên.
+6. **Hồ sơ sự cố** (`/shipments/cases`): mở hồ sơ cho một kiện, giao người xử lý, đóng hồ sơ.
+   - **Kết quả mong đợi:** có lịch sử xử lý.
+7. **Giám sát vận đơn** (`/control-tower`).
+   - **Kết quả mong đợi:** đơn trễ hạn hoặc kẹt hiện trong danh sách cảnh báo.
+
+### 4.6 Tiền: nộp tiền, duyệt, đối soát, hoá đơn
+
+| Bước | Ai, ở đâu | Làm gì | Kết quả mong đợi |
+|---|---|---|---|
+| 1 | `buuta.hcm`, app tab **Tiền** | Chọn các khoản đã thu ở 4.4 → **Nộp … về bưu cục** | Khoản tiền chuyển sang "Đã nộp, chờ duyệt"; tổng khai phải bằng đúng tổng các khoản |
+| 2 | `truongbc.hcm`, app hoặc Management | Xem tiền của bưu cục | Thấy phiếu nộp của bưu tá |
+| 3 | `vanhanh`, Management **Tài chính → Duyệt tiền nộp** | **Duyệt** phiếu (thử cả **Từ chối** với một phiếu khác) | Duyệt: tiền vào "Đã duyệt". Từ chối: tiền quay về bưu cục, nộp lại được |
+| 4 | `vanhanh`, **Đối soát cửa hàng** | **Lập bảng đối soát** cho Hoa Sen | Bảng cấn trừ COD đã duyệt với cước; COD còn lại chờ chuyển cho shop; cước còn lại thành hoá đơn |
+| 5 | `shop.daduyet`, client portal **Hoá đơn** | Mở hoá đơn → **Tạo mã QR thanh toán** | Có mã QR (giả lập khi chạy trên máy) |
+| 6 | `vanhanh`, Management **Hoá đơn** | Xác nhận thanh toán QR | Hoá đơn "Đã thanh toán"; shop thấy ngay |
+| 7 | Shop | **Tài khoản nhận tiền** (`/account/settlements`): khai tài khoản; xem bảng đối soát | Kế toán ghi được mã giao dịch chuyển COD |
+
+### 4.7 Gửi hàng tại quầy
+
+1. `truongbc.hn` → Management **Gửi hàng tại quầy** (`/counter/new`): nhập người gửi (khách vãng lai), người nhận, kiện,
+   tính cước, thu tiền mặt → **In nhãn**.
+   - **Kết quả mong đợi:** đơn bắt đầu ở bưu cục gửi, không có bước lấy hàng.
+2. Cho đơn đi hết luồng 4.4 rồi hoàn về (4.5).
+3. **Trả thu hộ tại quầy** (`/counter/settlements`).
+   - **Kết quả mong đợi:** trả COD hoặc thu phí hoàn cho khách vãng lai.
+
+### 4.8 Ca làm và phân việc
+
+1. Management `vanhanh` → **Nhân sự & ca → Ca làm việc**.
+   - **Kết quả mong đợi:** ca được tự xếp cho 7 ngày tới.
+2. **Điều phối vận hành** và **Phân công**: xem việc của từng đơn; phân tay một việc cho người khác.
+3. **Hàng đợi sự kiện** (`/operations/dispatch`): xem sự kiện gửi lỗi.
+4. Ở app, tắt **Sẵn sàng** khi đang có việc chưa nhận.
+   - **Kết quả mong đợi:** việc quay về hàng chờ và được giao cho người khác.
+
+### 4.9 Tài khoản, phân quyền, hỗ trợ, thông báo
+
+1. `admin` → **Hệ thống → Tài khoản → Tạo tài khoản** cho một nhân viên mới.
+   - **Kết quả mong đợi:** nhân viên phải đổi mật khẩu tạm ở lần đăng nhập đầu, cả trên web lẫn app.
+2. **Quên mật khẩu** (client portal và app).
+   - **Kết quả mong đợi:** thư trong Mailpit; link đặt lại dùng được 1 giờ.
+3. Khoá một tài khoản.
+   - **Kết quả mong đợi:** người đó bị đăng xuất ngay (phiên cũ hết hiệu lực).
+4. Phạm vi: `truongbc.hn` chỉ thấy đơn và tiền liên quan tới Ba Đình; `buuta.hn` không mở được trang quản trị.
+5. Client portal **Hỗ trợ / Khiếu nại** (`/support`, `/claims`, đính kèm ảnh) → Management **Yêu cầu hỗ trợ**: nhận, xử lý,
+   đóng.
+   - **Kết quả mong đợi:** khách nhận thư xác nhận kèm mã `YC…`.
+6. **Thông báo:** sau mỗi bước ở 4.4–4.6, chuông thông báo trên portal và app có tin mới.
+
+### 4.10 Trên dữ liệu toàn quốc
+
+`./pavex seed full` (hoặc `./pavex reset --seed=full`), rồi:
+
+1. Tạo một cửa hàng theo 4.1 với điểm lấy hàng ở Hà Nội.
+2. Tạo đơn tới một phường ở TP.HCM, Đà Nẵng và Lào Cai.
+   - **Kết quả mong đợi:** đơn liên miền có 5 chặng xe (phường → bưu cục tổng → trung tâm miền → trung tâm miền →
+     bưu cục tổng → phường); đơn nội tỉnh có 2 chặng; xã vùng cao có phụ phí vùng xa.
+3. Đăng nhập theo mẫu email:
+   - quản lý: `truongbc.hn-badinh@pavex.test`, `quanly.kho-hn@…`, `quanly.tt-mienbac@…`;
+   - bưu tá: `buuta1.hn-badinh@…`;
+   - tài xế: `taixe.kho-hn-t01@…` (tuyến có Ba Đình), `taixe.kho-hn-truc1@…`, `taixe.mienbac-miennam-1@…`.
+
+   Danh sách đầy đủ ở `.local/seed/full/staff.csv`.
+4. Management: **Tuyến vận chuyển**, **Tìm tuyến**, **Hành trình mẫu** chọn được bất kỳ bưu cục nào trong 3.357 bưu cục;
+   **Xe trung chuyển** lọc theo bưu cục.
+
+---
+
+## 5. Làm lại từ đầu
+
+- `./pavex reset` đưa mọi thứ về seed-mini. Các kịch bản ở mục 3 và 4 lại chạy được từ đầu.
+- Nút **Hệ thống → Giả lập → Đặt lại dữ liệu thử** ở Management **tắt** trong stack `./pavex`. Nó chỉ bật khi chạy bằng
+  `./scripts/dev-up.sh` với `PAVEX_DEMO_RESET_ENABLED=true` (tài liệu tổng hợp, mục 2.6).

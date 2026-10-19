@@ -6,6 +6,9 @@ Notifications), API Gateway và Eureka.
 **Tài liệu đầy đủ:** [docs/PAVEX-TAI-LIEU-TONG-HOP.md](docs/PAVEX-TAI-LIEU-TONG-HOP.md). Tài liệu gồm kiến trúc,
 cách chạy, dữ liệu seed, vai trò và quyền, nghiệp vụ, màn hình, entity và API.
 
+**Khởi động và kiểm thử toàn bộ luồng:** [docs/KIEM-THU-LUONG-TREN-3-APP.md](docs/KIEM-THU-LUONG-TREN-3-APP.md): các lệnh
+`./pavex`, địa chỉ, tài khoản thử, kiểm thử tự động và từng luồng nghiệp vụ trên 3 app kèm kết quả mong đợi.
+
 ## Chạy cả hệ thống bằng một lệnh
 
 Chỉ cần Docker Desktop (cấp cho Docker **ít nhất 8 GB RAM**), `git`, `curl` và OpenSSL. Không cần Java, Node hay
