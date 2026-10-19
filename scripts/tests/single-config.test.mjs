@@ -99,3 +99,10 @@ test("one Dockerfile builds any service as a non-root JRE 21 image without local
   const ignored = readFileSync(join(root, ".dockerignore"), "utf8").split("\n");
   for (const entry of [".env", ".env.*", ".local", ".claude", "**/target"]) assert.ok(ignored.includes(entry), entry);
 });
+
+test("only the local stack runs full-day shifts with no day off; staging keeps the 6-on/1-off rotation", () => {
+  assert.match(yamlOf("operations"), /full-day: \$\{OPERATIONS_SHIFT_FULL_DAY:false\}/);
+  const operations = file => readFileSync(join(root, "deploy", file), "utf8").split("\n  operations-service:\n")[1].split(/\n  [a-z]/)[0];
+  assert.match(operations("compose.yml"), /OPERATIONS_SHIFT_FULL_DAY: "false"/);
+  assert.match(operations("compose.local.yml"), /OPERATIONS_SHIFT_FULL_DAY: \$\{OPERATIONS_SHIFT_FULL_DAY:-true\}/);
+});

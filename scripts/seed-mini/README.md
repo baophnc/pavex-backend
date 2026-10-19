@@ -38,8 +38,10 @@ Mật khẩu chung: **`Pavex2026!`**
 | `shop.choduyet@pavex.test` | Cửa hàng **chờ duyệt** "Mai Vàng" | Client portal |
 | `khach@pavex.test` | Khách hàng thường | Client portal |
 
-Ca làm việc do Operations tự xếp sau khi khởi động (6 ngày làm, 1 ngày nghỉ): nếu hôm nay là ngày nghỉ của
-ai đó thì người đó không vào ca được hôm nay.
+Ca làm việc do Operations tự xếp sau khi khởi động. Với `./pavex up`, mọi người có ca 00:00–24:00 mỗi ngày, không
+ngày nghỉ (`OPERATIONS_SHIFT_FULL_DAY=true` trong `deploy/compose.local.yml`), nên vào ca được bất cứ lúc nào. Ở chế
+độ thường (staging, hoặc `./scripts/dev-up.sh` khi `.env` không đặt biến này) lịch là 6 ngày làm, 1 ngày nghỉ: nếu hôm nay là ngày
+nghỉ của ai đó thì người đó không vào ca được hôm nay, và `taixe@pavex.test` là tài xế duy nhất.
 
 ## Khôi phục dữ liệu trước khi seed
 

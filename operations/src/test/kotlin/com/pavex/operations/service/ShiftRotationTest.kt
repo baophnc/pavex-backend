@@ -5,7 +5,9 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
+import java.time.Duration
 import java.time.LocalDate
+import java.time.LocalTime
 import java.util.UUID
 
 class ShiftRotationTest {
@@ -40,6 +42,23 @@ class ShiftRotationTest {
                 assertEquals(6, daysWorked, "$hubType/$size member works $daysWorked days a week")
             }
         }
+    }
+
+    @Test
+    fun `full-day testing roster has everyone on one 24-hour shift every day`() {
+        assertEquals(LocalTime.MIDNIGHT, ShiftRotation.FULL_DAY.start)
+        assertEquals(Duration.ofHours(24), ShiftRotation.FULL_DAY.length)
+        for ((hubType, size, drivers) in listOf(Triple("LOCAL", 1, true), Triple("LOCAL", 3, false), Triple("REGIONAL_GATEWAY", 70, false))) {
+            val members = ShiftRotation.ordered(List(size) { UUID.randomUUID() })
+            val slots = ShiftRotation.slots(hubType, size, drivers, fullDay = true)
+            assertEquals(listOf(ShiftRotation.FULL_DAY), slots)
+            for (day in (0L until 14L).map(monday::plusDays)) {
+                assertEquals(mapOf(0 to members), ShiftRotation.plan(members, slots.size, day, daysOff = false), "$hubType/$size on $day")
+            }
+        }
+        // The same lone driver has a day off in the standing rotation.
+        val driver = listOf(UUID.randomUUID())
+        assertTrue(ShiftRotation.plan(driver, 1, monday).isEmpty())
     }
 
     @Test
