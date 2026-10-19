@@ -76,13 +76,76 @@ Khi chạy bằng `./pavex`, mọi nhân viên có ca **00:00–24:00 mỗi ngà
 Muốn thử lịch thật (làm 6 ngày nghỉ 1, ca ban ngày), thêm `OPERATIONS_SHIFT_FULL_DAY=false` vào
 `deploy/.env.local` rồi chạy `./pavex up`.
 
-### 1.5 App hiện trường
+### 1.5 Khởi động app mobile (app hiện trường)
 
-- **Bản web** (http://localhost:3002): đủ để thử mọi màn hình. Không chạy GPS nền. Nếu không có camera, ở màn **Quét** bấm
-  biểu tượng bàn phím **Nhập mã** để gõ mã kiện.
-- **Bản Android:** mở trang tải APK trên điện thoại (cùng Wi‑Fi), tải và cài file APK (cho phép "cài từ nguồn không
-  xác định"). Đây là bản thử, gọi thẳng gateway trên máy tính qua mạng nội bộ.
-- **iPhone:** chạy từ Xcode (`flutter run` trong repo `pavex-warehouse`). Docker không build được bản iOS.
+App hiện trường (repo `pavex-warehouse`, Flutter) dùng cho bưu tá, nhân viên bưu cục, trưởng bưu cục và tài xế. Backend
+phải đang chạy (`./pavex up`). Có 4 cách, từ nhanh nhất tới giống thật nhất:
+
+| Cách | Cần gì | Khi nào dùng |
+|---|---|---|
+| **A. Bản web** | Chỉ trình duyệt | Thử nhanh mọi màn hình trên máy tính |
+| **B. Cài APK lên điện thoại Android** | Điện thoại Android cùng Wi‑Fi | Thử camera quét mã, chụp ảnh giao hàng, GPS thật |
+| **C. Chạy trên máy ảo** (iOS Simulator, Android Emulator) | Flutter, Xcode hoặc Android Studio | Sửa code app và xem ngay |
+| **D. Chạy từ mã nguồn lên điện thoại thật** | Flutter, cáp USB (Android) hoặc Xcode + tài khoản Apple (iPhone) | Sửa code app và thử trên máy thật, iPhone |
+
+**A. Bản web**
+
+1. Mở http://localhost:3002, đăng nhập bằng tài khoản app, ví dụ `buuta.hn@pavex.test`.
+2. Bản web không chạy GPS nền. Nếu máy không có camera: ở màn **Quét**, bấm biểu tượng bàn phím **Nhập mã** để gõ mã kiện.
+
+**B. Cài APK lên điện thoại Android**
+
+1. Điện thoại và máy tính cùng một mạng Wi‑Fi.
+2. Trên điện thoại, mở trang tải APK. Địa chỉ được in ở cuối `./pavex up`, dạng `http://<IP máy tính>:3002/download/`;
+   trang có mã QR để quét.
+3. Tải file `pavex-field.apk`, cho phép "cài ứng dụng từ nguồn không xác định", rồi cài.
+4. Mở app **Pavex Hiện trường** và đăng nhập. App đã được gắn sẵn địa chỉ gateway trên máy tính, không cần cài đặt gì
+   thêm.
+5. Nếu app báo không kết nối được:
+   - kiểm tra hai máy cùng Wi‑Fi;
+   - cho phép Docker nhận kết nối nếu tường lửa macOS hỏi;
+   - nếu máy tính đổi IP, đặt `PAVEX_LAN_IP=<IP>` trong `deploy/.env.local` rồi chạy lại `./pavex up` để build lại APK.
+
+**C. Chạy trên máy ảo** (cài Flutter 3.44; iOS cần Xcode, Android cần Android Studio)
+
+```bash
+cd ~/Documents/GitHub/pavex-warehouse
+flutter pub get
+open -a Simulator               # iOS; hoặc mở một máy ảo trong Android Studio
+flutter run                      # chọn máy ảo nếu có nhiều thiết bị
+```
+
+Ở màn đăng nhập, bấm **Máy chủ** và nhập địa chỉ gateway:
+
+- iOS Simulator: `http://localhost:8080`
+- Android Emulator: `http://10.0.2.2:8080`
+
+Nút **Máy chủ** chỉ có ở bản debug; bản phát hành dùng địa chỉ gắn lúc build.
+
+**D. Chạy từ mã nguồn lên điện thoại thật**
+
+- **Android qua cáp USB** (dễ nhất): bật *Tuỳ chọn nhà phát triển → Gỡ lỗi USB*, cắm cáp, rồi:
+
+  ```bash
+  ~/Library/Android/sdk/platform-tools/adb reverse tcp:8080 tcp:8080
+  flutter run --dart-define=PAVEX_API_BASE_URL=http://localhost:8080
+  ```
+
+  Rút cáp ra cắm lại thì chạy lại lệnh `adb reverse`.
+- **iPhone:**
+  1. Mở `ios/Runner.xcworkspace` trong Xcode, chọn *Signing & Capabilities* với tài khoản Apple của bạn.
+  2. Cắm iPhone, chạy `flutter run`.
+  3. Trong app, bấm **Máy chủ** và nhập `http://<IP máy tính>:8080` (cùng Wi‑Fi).
+
+  Docker không build được bản iOS.
+
+**Đăng nhập app:** dùng tài khoản nhân viên, ví dụ:
+
+- seed-mini: `buuta.hn`, `nhanvien.hn`, `truongbc.hn`, `taixe`, `buuta.hcm`, `nhanvien.hcm` (đuôi `@pavex.test`);
+- seed-full: `buuta1.hn-badinh`, `truongbc.hn-badinh`, `taixe.kho-hn-t01`.
+
+Tài khoản văn phòng và cửa hàng không dùng app này. Mỗi lần làm việc: tab **Hôm nay** → **Vào ca** → bật **Sẵn sàng nhận việc**
+để nhận việc. Tài xế lần đầu vào tab **Chuyến** phải đồng ý chia sẻ vị trí.
 
 ### 1.6 Email và thanh toán khi chạy trên máy
 
