@@ -694,6 +694,13 @@ chỉ văn phòng thấy (an toàn là mặc định). Không tạo quyền ki�
 4. Backend kiểm tra shop, báo giá và SĐT, giữ chỗ trên tuyến, rồi tạo vận đơn ở trạng thái **Chờ lấy hàng** kèm mã vận
    đơn và mã từng kiện.
 
+**Tạo đơn hàng loạt** (shop, `/shipments/import`): tải file mẫu `mau-tao-don-hang-loat.xlsx` (mỗi dòng một đơn một kiện,
+tỉnh/phường/loại hàng/dịch vụ/người trả cước chọn trong danh sách), điền rồi tải lên. Trình duyệt đọc file, kiểm tra từng
+dòng và cho xem trước; các dòng hợp lệ được gửi theo nhóm 10 tới `POST /api/v1/shipments/bulk` (tối đa 50 dòng mỗi lần).
+Shipment tính cước từng dòng theo dịch vụ đã chọn rồi tạo đơn đúng như form tạo đơn, trả kết quả theo từng dòng; một dòng
+lỗi không chặn các dòng khác. Mỗi dòng mang `clientKey` tính từ nội dung dòng, nên tải lại cùng file (hoặc file đã sửa)
+trả về đơn đã tạo thay vì tạo trùng; hai dòng giống hệt nhau trong một file vẫn là hai đơn.
+
 **Số tiền thu người nhận** = COD + cước (nếu người nhận trả). Số này cố định từ lúc tạo đơn.
 
 **Nhãn kiện** (`/shipments/<id>/labels`): mỗi kiện một nhãn có mã QR (mã kiện), người gửi/nhận, số tiền thu và dòng
