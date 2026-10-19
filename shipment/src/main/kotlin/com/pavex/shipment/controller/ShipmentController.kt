@@ -1,6 +1,8 @@
 package com.pavex.shipment.controller
 
 import com.pavex.common.http.PavexHeaders
+import com.pavex.shipment.dto.BulkCreateShipmentsRequest
+import com.pavex.shipment.dto.BulkCreateShipmentsResponse
 import com.pavex.shipment.dto.CancelShipmentRequest
 import com.pavex.shipment.dto.CreateShipmentRequest
 import com.pavex.shipment.dto.ShipmentCreatedResponse
@@ -8,6 +10,7 @@ import com.pavex.shipment.dto.ShipmentDetailResponse
 import com.pavex.shipment.dto.ShipmentLabelsResponse
 import com.pavex.shipment.dto.ShipmentPageResponse
 import com.pavex.shipment.dto.UpdateShipmentRequest
+import com.pavex.shipment.service.BulkCreateShipmentService
 import com.pavex.shipment.service.CancelShipmentService
 import com.pavex.shipment.service.CreateShipmentService
 import com.pavex.shipment.service.ShipmentQueryService
@@ -36,6 +39,7 @@ import java.util.UUID
 @RestController
 @RequestMapping("/api/v1/shipments")
 class ShipmentController(
+    private val bulkCreate: BulkCreateShipmentService,
     private val createShipment: CreateShipmentService,
     private val queries: ShipmentQueryService,
     private val cancellations: CancelShipmentService,
@@ -60,6 +64,14 @@ class ShipmentController(
             .header(HttpHeaders.CACHE_CONTROL, "no-store")
             .body(result.shipment)
     }
+
+    /** A slice (up to 50 rows) of a shop's spreadsheet upload; the result says per row what was created. */
+    @PostMapping("/bulk")
+    @PreAuthorize("hasAuthority('shipments.create')")
+    fun createBulk(
+        @AuthenticationPrincipal jwt: Jwt,
+        @Valid @RequestBody request: BulkCreateShipmentsRequest,
+    ): BulkCreateShipmentsResponse = bulkCreate.create(UUID.fromString(jwt.subject), request)
 
     @GetMapping
     @PreAuthorize("hasAuthority('shipments.read-own')")
