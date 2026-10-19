@@ -7,6 +7,13 @@ PGPASSWORD="$(cat /run/secrets/POSTGRES_PASSWORD)"
 export PGPASSWORD PGOPTIONS="-c client_min_messages=warning"
 run() { db="$1"; shift; psql -v ON_ERROR_STOP=1 -q -d "$db" "$@" >/dev/null; }
 
+# After `./pavex seed full` the nationwide dataset is in place and must not be replaced by seed-mini.
+nationwide="$(psql -tA -d pavex_network -c "SELECT count(*) FROM network.hubs WHERE code = 'TT-MIENBAC'")"
+if [ "$nationwide" != 0 ]; then
+  echo "[seed] the nationwide dataset (./pavex seed full) is loaded: nothing to do."
+  exit 0
+fi
+
 # The shops are loaded last: if they exist, every step ran. Each step can run again after a partial failure.
 seeded="$(psql -tA -d pavex_partners -c "SELECT count(*) FROM partners.merchants WHERE merchant_code = 'PVM000001'")"
 if [ "$seeded" != 0 ]; then
