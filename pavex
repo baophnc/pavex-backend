@@ -66,11 +66,21 @@ check_ports() {
   fi
 }
 
+routed_status() { curl -s -o /dev/null -w '%{http_code}' "$@" 2>/dev/null || true; }
+
 wait_until_ready() {
   local gateway="http://localhost:$(setting GATEWAY_PORT)" deadline=$((SECONDS + 900)) seed_state
   printf 'Waiting for the services (first start: 2-4 minutes)'
   until curl -fsS "$gateway/actuator/health/readiness" >/dev/null 2>&1; do
     ((SECONDS < deadline)) || { echo; echo "The gateway is not ready after 15 minutes: ./pavex ps, ./pavex logs" >&2; exit 1; }
+    printf '.'
+    sleep 5
+  done
+  # The gateway is up before it has found the services in Eureka: wait until it routes to Auth and Identity
+  # (an empty login answers 400 and an anonymous /me 401 once they are reachable, 502/503 before).
+  until [[ "$(routed_status -X POST -H 'Content-Type: application/json' -d '{}' "$gateway/api/v1/auth/login")" == 4* &&
+    "$(routed_status "$gateway/api/v1/auth/me")" == 4* ]]; do
+    ((SECONDS < deadline)) || { echo; echo "The gateway does not reach Auth/Identity: ./pavex logs api-gateway" >&2; exit 1; }
     printf '.'
     sleep 5
   done
