@@ -1,0 +1,164 @@
+#!/usr/bin/env bash
+# The whole Pavex system on this machine with Docker: 12 Java services, PostgreSQL, RabbitMQ, Redis, MinIO,
+# Mailpit, the two portals and the field app, plus the scripts/seed-mini data on the first start.
+#
+#   ./pavex up       build what changed and start everything (first run: generates secrets, loads seed data)
+#   ./pavex down     stop everything; data is kept
+#   ./pavex reset    delete all data (databases, files, queues) and start again with fresh seed data
+#   ./pavex logs [service...]   follow the logs (all services, or e.g. auth-service client-portal)
+#   ./pavex ps       state of every container
+#   ./pavex compose <args>      any other docker compose command on this stack
+#
+# Same images and settings as the staging stack (deploy/compose.yml) with the local overlay
+# (deploy/compose.local.yml, deploy/local.env, your own deploy/.env.local). Docs: README.md and
+# docs/PAVEX-TAI-LIEU-TONG-HOP.md, section 2.3.
+set -euo pipefail
+
+repo_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+deploy_dir="$repo_dir/deploy"
+user_env="$deploy_dir/.env.local"
+
+compose() {
+  local files=(-f "$deploy_dir/compose.yml" -f "$deploy_dir/compose.local.yml" --env-file "$deploy_dir/local.env")
+  [[ -f "$user_env" ]] && files+=(--env-file "$user_env")
+  docker compose "${files[@]}" "$@"
+}
+
+setting() { # value of a setting: environment first, then deploy/.env.local, then deploy/local.env
+  local name="$1" file
+  if [[ -n "${!name:-}" ]]; then echo "${!name}"; return; fi
+  for file in "$user_env" "$deploy_dir/local.env"; do
+    [[ -f "$file" ]] || continue
+    if grep -qE "^${name}=" "$file"; then grep -E "^${name}=" "$file" | tail -1 | cut -d= -f2-; return; fi
+  done
+}
+
+# The address of this machine on the local network: the APK on a phone calls the gateway there.
+lan_ip() {
+  local ip iface
+  ip="$(setting PAVEX_LAN_IP)"
+  if [[ -z "$ip" ]]; then
+    if [[ "$(uname)" == Darwin ]]; then
+      iface="$(route -n get default 2>/dev/null | awk '/interface:/ {print $2}')"
+      ip="$(ipconfig getifaddr "${iface:-en0}" 2>/dev/null || true)"
+    else
+      ip="$(ip -4 route get 1.1.1.1 2>/dev/null | awk '{for (i = 1; i < NF; i++) if ($i == "src") print $(i + 1)}')"
+    fi
+  fi
+  echo "${ip:-localhost}"
+}
+
+running() { [[ -n "$(compose ps -q 2>/dev/null)" ]]; }
+
+check_ports() {
+  running && return 0
+  local busy=() port
+  for name in GATEWAY_PORT CLIENT_PORTAL_PORT MANAGEMENT_PORTAL_PORT FIELD_APP_PORT LOCAL_POSTGRES_PORT \
+    LOCAL_RABBITMQ_UI_PORT LOCAL_MINIO_CONSOLE_PORT LOCAL_MAILPIT_PORT; do
+    port="$(setting "$name")"
+    if lsof -nP -iTCP:"$port" -sTCP:LISTEN >/dev/null 2>&1; then busy+=("$port"); fi
+  done
+  if ((${#busy[@]} > 0)); then
+    echo "Ports already in use: ${busy[*]}." >&2
+    echo "The old way of running Pavex uses the same ports: stop it with ./scripts/dev-down.sh (and any" >&2
+    echo "'pnpm dev' of the portals), or choose other ports in deploy/.env.local." >&2
+    exit 1
+  fi
+}
+
+wait_until_ready() {
+  local gateway="http://localhost:$(setting GATEWAY_PORT)" deadline=$((SECONDS + 900)) seed_state
+  printf 'Waiting for the services (first start: 2-4 minutes)'
+  until curl -fsS "$gateway/actuator/health/readiness" >/dev/null 2>&1; do
+    ((SECONDS < deadline)) || { echo; echo "The gateway is not ready after 15 minutes: ./pavex ps, ./pavex logs" >&2; exit 1; }
+    printf '.'
+    sleep 5
+  done
+  while :; do
+    seed_state="$(docker inspect -f '{{.State.Status}} {{.State.ExitCode}}' "$(compose ps -a -q seed)" 2>/dev/null || echo "missing 0")"
+    case "$seed_state" in
+      "exited 0") break ;;
+      exited*) echo; echo "Loading the seed data failed: ./pavex logs seed" >&2; exit 1 ;;
+    esac
+    ((SECONDS < deadline)) || { echo; echo "The seed job did not finish: ./pavex logs seed" >&2; exit 1; }
+    printf '.'
+    sleep 5
+  done
+  for port in "$(setting CLIENT_PORTAL_PORT)" "$(setting MANAGEMENT_PORTAL_PORT)" "$(setting FIELD_APP_PORT)"; do
+    until curl -fsS -o /dev/null "http://localhost:$port/" 2>/dev/null; do
+      ((SECONDS < deadline)) || { echo; echo "Nothing answers on port $port: ./pavex ps" >&2; exit 1; }
+      printf '.'
+      sleep 3
+    done
+  done
+  echo " ready."
+}
+
+summary() {
+  local ip="$1" seed_password
+  seed_password="$(sed -n 's/^SEED_PASSWORD="\(.*\)"$/\1/p' "$repo_dir/scripts/seed-mini/apply.sh")"
+  cat <<TEXT
+
+  Client portal      http://localhost:$(setting CLIENT_PORTAL_PORT)
+  Management portal  http://localhost:$(setting MANAGEMENT_PORTAL_PORT)
+  Field app (web)    http://localhost:$(setting FIELD_APP_PORT)    APK: http://$ip:$(setting FIELD_APP_PORT)/download/
+  API gateway        http://localhost:$(setting GATEWAY_PORT)    Swagger: /swagger-ui.html
+  Emails (Mailpit)   http://localhost:$(setting LOCAL_MAILPIT_PORT)
+  RabbitMQ, MinIO    http://localhost:$(setting LOCAL_RABBITMQ_UI_PORT), http://localhost:$(setting LOCAL_MINIO_CONSOLE_PORT)   (passwords in deploy/secrets/values/)
+  PostgreSQL         localhost:$(setting LOCAL_POSTGRES_PORT), user postgres   (deploy/secrets/values/POSTGRES_PASSWORD)
+
+  Test accounts (scripts/seed-mini/README.md), password $seed_password:
+    shop.daduyet@pavex.test (shop), khach@pavex.test (customer)          -> client portal
+    admin@pavex.test, vanhanh@pavex.test, truongbc.hn@pavex.test          -> management portal
+    buuta.hn@pavex.test (courier), taixe@pavex.test (driver)              -> field app
+  admin@pavex.com: password in deploy/secrets/values/PAVEX_BOOTSTRAPADMIN_PASSWORD
+
+TEXT
+}
+
+# Built in small batches: all at once (12 Maven builds, 2 Next.js builds, Flutter) does not fit in 8 GB.
+build_images() {
+  local batch="${PAVEX_BUILD_PARALLEL:-3}" i
+  local java=(discovery-server api-gateway identity-service auth-service partners-service network-service
+    pricing-service shipment-service operations-service billing-service fleet-service notifications-service)
+  for ((i = 0; i < ${#java[@]}; i += batch)); do
+    compose build "${java[@]:i:batch}"
+  done
+  compose build client-portal
+  compose build management-portal
+  compose build field-app
+}
+
+up() {
+  command -v docker >/dev/null || { echo "Docker is required (Docker Desktop with at least 8 GB of memory)." >&2; exit 1; }
+  check_ports
+  "$deploy_dir/gen-secrets.sh" >/dev/null
+  local ip
+  ip="$(lan_ip)"
+  [[ "$ip" == localhost ]] && echo "No local network address found: the APK will only work in an emulator (set PAVEX_LAN_IP in deploy/.env.local)."
+  echo "Building and starting Pavex (field app APK -> gateway at http://$ip:$(setting GATEWAY_PORT))"
+  export PAVEX_LAN_IP="$ip"
+  build_images
+  compose up -d --no-build --remove-orphans
+  wait_until_ready
+  summary "$ip"
+}
+
+command="${1:-help}"
+shift || true
+case "$command" in
+  up | start | update) up ;;
+  down | stop) COMPOSE_PROFILES='*' compose down --remove-orphans ;;
+  reset)
+    if [[ "${1:-}" != "--yes" ]]; then
+      read -r -p "Delete every local Pavex database, file and queue, then start again with seed data? [y/N] " answer
+      [[ "$answer" == [yY]* ]] || { echo "Cancelled."; exit 1; }
+    fi
+    COMPOSE_PROFILES='*' compose down --volumes --remove-orphans
+    up
+    ;;
+  logs) compose logs -f --tail=200 "$@" ;;
+  ps | status) compose ps -a ;;
+  compose) compose "$@" ;;
+  *) sed -n '2,13p' "$0" | sed 's/^# \{0,1\}//'; [[ "$command" == help ]] || exit 1 ;;
+esac

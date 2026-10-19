@@ -1,0 +1,166 @@
+# The whole Pavex system on a developer machine, with one command:
+#
+#   ./pavex up        (from the repository root; docs/PAVEX-TAI-LIEU-TONG-HOP.md, section 2.3)
+#
+# This file goes on top of compose.yml (the staging stack) and only changes what differs locally: no Caddy
+# and no TLS, ports published on this machine, the two portals and the field app built from their Git
+# repositories, emails into Mailpit, Swagger and the demo price list on, a one-shot job that loads the
+# scripts/seed-mini data, and monitoring/backups behind the "monitoring" profile to save memory.
+# Settings: deploy/local.env (committed, no secrets) and an optional deploy/.env.local of your own.
+
+x-local-spring: &local-spring
+  PAVEX_PUBLIC_BASE_URL: http://localhost:${GATEWAY_PORT:-8080}
+  SPRINGDOC_API_DOCS_ENABLED: "true"
+
+services:
+  # ---------------------------------------------------------------------------------------------------------
+  # Off locally unless asked for (COMPOSE_PROFILES=monitoring / edge)
+  # ---------------------------------------------------------------------------------------------------------
+  caddy:
+    profiles: [edge]
+  prometheus:
+    profiles: [monitoring]
+  alertmanager:
+    profiles: [monitoring]
+  grafana:
+    profiles: [monitoring]
+  node-exporter:
+    profiles: [monitoring]
+  backup:
+    profiles: [monitoring]
+
+  # ---------------------------------------------------------------------------------------------------------
+  # Front ends, built from their own repositories
+  # ---------------------------------------------------------------------------------------------------------
+  client-portal:
+    image: pavex/client-portal:local
+    build:
+      context: ${CLIENT_PORTAL_SOURCE:-https://github.com/baophnc/pavex-client-portal.git#develop}
+      args:
+        NEXT_PUBLIC_SITE_URL: http://localhost:${CLIENT_PORTAL_PORT:-3000}
+    ports:
+      - "${CLIENT_PORTAL_PORT:-3000}:3000"
+    environment:
+      NEXT_PUBLIC_SITE_URL: http://localhost:${CLIENT_PORTAL_PORT:-3000}
+
+  management-portal:
+    image: pavex/management-portal:local
+    build:
+      context: ${MANAGEMENT_PORTAL_SOURCE:-https://github.com/baophnc/pavex-management-portal.git#develop}
+    ports:
+      - "${MANAGEMENT_PORTAL_PORT:-3001}:3001"
+
+  # Field app (Flutter): the web build at /, the Android APK at /download/. The web build runs in this
+  # machine's browser and calls localhost; the APK runs on a phone, so it calls the gateway at this machine's
+  # address on the local network (PAVEX_LAN_IP, found by ./pavex).
+  field-app:
+    image: pavex/field-app:local
+    build:
+      context: ${FIELD_APP_SOURCE:-https://github.com/baophnc/pavex-warehouse.git#develop}
+      args:
+        PAVEX_API_BASE_URL: http://localhost:${GATEWAY_PORT:-8080}
+        APK_API_BASE_URL: http://${PAVEX_LAN_IP:-localhost}:${GATEWAY_PORT:-8080}
+        APK_MODE: ${FIELD_APP_APK_MODE:-debug}
+    restart: unless-stopped
+    networks: [pavex]
+    ports:
+      - "${FIELD_APP_PORT:-3002}:8080"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:8080/healthz >/dev/null || curl -fsS http://127.0.0.1:8080/healthz >/dev/null"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+
+  # ---------------------------------------------------------------------------------------------------------
+  # Backend: same images as staging, local settings
+  # ---------------------------------------------------------------------------------------------------------
+  api-gateway:
+    ports:
+      - "${GATEWAY_PORT:-8080}:8080"
+    environment:
+      <<: *local-spring
+      # Browsers call the gateway directly only from the field app's web build; the portals go through
+      # their own servers. Opening the web build by the LAN address is allowed too.
+      GATEWAY_ALLOWED_ORIGIN: >-
+        http://localhost:${CLIENT_PORTAL_PORT:-3000},http://localhost:${MANAGEMENT_PORTAL_PORT:-3001},http://localhost:${FIELD_APP_PORT:-3002},http://${PAVEX_LAN_IP:-localhost}:${FIELD_APP_PORT:-3002}
+      SPRINGDOC_SWAGGER_UI_ENABLED: "true"
+
+  auth-service:
+    environment:
+      <<: *local-spring
+      EMAIL_VERIFICATION_URL: http://localhost:${CLIENT_PORTAL_PORT:-3000}/verify-email
+      PASSWORD_RESET_URL: http://localhost:${CLIENT_PORTAL_PORT:-3000}/reset-password
+      INVITATION_URL: http://localhost:${CLIENT_PORTAL_PORT:-3000}/accept-invite
+      MANAGEMENT_PASSWORD_RESET_URL: http://localhost:${MANAGEMENT_PORTAL_PORT:-3001}/reset-password
+      MANAGEMENT_INVITATION_URL: http://localhost:${MANAGEMENT_PORTAL_PORT:-3001}/accept-invite
+
+  identity-service:
+    environment: *local-spring
+  partners-service:
+    environment: *local-spring
+  network-service:
+    environment: *local-spring
+  pricing-service:
+    environment:
+      <<: *local-spring
+      # The DEMO-2026-08 price list, needed to price shop orders on a fresh machine.
+      PRICING_DEMO_SEED_ENABLED: "true"
+  shipment-service:
+    environment: *local-spring
+  operations-service:
+    environment:
+      <<: *local-spring
+      # Staff loaded by the seed job get their shifts within minutes instead of the next hourly run.
+      OPERATIONS_SHIFT_ROSTER_INTERVAL: PT2M
+  billing-service:
+    environment:
+      <<: *local-spring
+      PAYOS_RETURN_URL: http://localhost:${CLIENT_PORTAL_PORT:-3000}/account/billing
+      PAYOS_CANCEL_URL: http://localhost:${CLIENT_PORTAL_PORT:-3000}/account/billing
+      # Locally payOS cannot call a webhook on this machine, and the fake provider has nothing to ask.
+      BILLING_RECONCILIATION_ENABLED: ${BILLING_RECONCILIATION_ENABLED:-false}
+  fleet-service:
+    environment: *local-spring
+  notifications-service:
+    environment: *local-spring
+
+  # ---------------------------------------------------------------------------------------------------------
+  # Data and tools, reachable from this machine (IntelliJ database tool, RabbitMQ and MinIO consoles, emails)
+  # ---------------------------------------------------------------------------------------------------------
+  postgres:
+    ports:
+      - "127.0.0.1:${LOCAL_POSTGRES_PORT:-15432}:5432"
+  rabbitmq:
+    ports:
+      - "127.0.0.1:${LOCAL_RABBITMQ_UI_PORT:-15672}:15672"
+  minio:
+    ports:
+      - "127.0.0.1:${LOCAL_MINIO_CONSOLE_PORT:-9001}:9001"
+  mailpit:
+    ports:
+      - "127.0.0.1:${LOCAL_MAILPIT_PORT:-8025}:8025"
+
+  # Loads scripts/seed-mini once, when the databases have no seed accounts yet; then exits.
+  seed:
+    image: postgres:18.6-alpine
+    restart: "no"
+    networks: [pavex]
+    entrypoint: ["sh", "/local/seed.sh"]
+    environment:
+      PGHOST: postgres
+      PGUSER: postgres
+    secrets: [POSTGRES_PASSWORD]
+    volumes:
+      - ./local:/local:ro
+      - ../scripts/seed-mini:/seed-mini:ro
+    depends_on:
+      identity-service:
+        condition: service_healthy
+      auth-service:
+        condition: service_healthy
+      network-service:
+        condition: service_healthy
+      operations-service:
+        condition: service_healthy
+      partners-service:
+        condition: service_healthy

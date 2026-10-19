@@ -4,7 +4,8 @@ Chạy mọi lệnh từ thư mục gốc của repo.
 
 | Lệnh | Khi nào dùng | Làm gì |
 |---|---|---|
-| `./scripts/dev-up.sh` | Mỗi lần bắt đầu làm việc | Tạo khoá JWT nếu chưa có, thêm giá trị local còn thiếu vào `.env` (`local-env.sh`), bật Docker (DB, RabbitMQ, Redis, Mailpit, MinIO), build rồi chạy 11 service theo thứ tự và chờ từng service sẵn sàng. |
+| `./pavex up` (thư mục gốc) | Cách khuyến nghị: cả hệ thống trong Docker | Không thuộc thư mục này; xem README.md và mục 2.0 của tài liệu. Dừng nó (`./pavex down`) trước khi dùng `dev-up.sh`: hai cách dùng chung cổng. |
+| `./scripts/dev-up.sh` | Khi cần debug backend bằng IntelliJ | Tạo khoá JWT nếu chưa có, thêm giá trị local còn thiếu vào `.env` (`local-env.sh`), bật Docker (DB, RabbitMQ, Redis, Mailpit, MinIO), build rồi chạy 11 service theo thứ tự và chờ từng service sẵn sàng. |
 | `./scripts/dev-down.sh` | Khi xong việc | Tắt các service và Docker. **Dữ liệu DB vẫn giữ.** |
 | `./scripts/seed-mini/apply.sh` | Khi cần dữ liệu test sạch | Sao lưu DB rồi thay bằng bộ dữ liệu nhỏ: 2 bưu cục, 14 tài khoản, 2 cửa hàng. Xem `seed-mini/README.md`. |
 | `./scripts/sim/line-haul.sh [HN-BD]` | Khi muốn thử xe trung chuyển | Trên dữ liệu seed-mini: nhận gửi 1 đơn tại quầy, nhân viên kiểm kho, tài xế nhận việc và quét lên xe. Chuyến xe tự được tạo; bật `FLEET_SIMULATOR_ENABLED=true` trong `.env` để xe tự chạy trên bản đồ. |

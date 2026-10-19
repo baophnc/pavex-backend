@@ -38,7 +38,7 @@ jobs:
           retention-days: 7
 
   deploy:
-    name: Staging compose file
+    name: Compose files (staging, local)
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
@@ -49,6 +49,8 @@ jobs:
           cp deploy/.env.example deploy/.env
           ./deploy/gen-secrets.sh
           docker compose -f deploy/compose.yml config --quiet
+          # The local stack of ./pavex: the same file plus the local overlay.
+          docker compose -f deploy/compose.yml -f deploy/compose.local.yml --env-file deploy/local.env config --quiet
 
   docker:
     name: Docker image (${{ matrix.module }})

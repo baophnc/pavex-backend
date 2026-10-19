@@ -103,6 +103,92 @@ App hiện trường (Flutter) ──────────────┤   g
 
 ## 2. Cách chạy hệ thống và dữ liệu seed
 
+Có hai cách chạy trên máy dev. **Cách khuyến nghị (mục 2.0):** cả hệ thống (backend, hai portal, app hiện trường,
+dữ liệu seed) trong Docker bằng một lệnh `./pavex up`, không cần cài Java, Node hay Flutter. **Cách cũ (mục 2.3–2.4):**
+chạy backend bằng `./scripts/dev-up.sh` và từng frontend bằng `pnpm dev`, dùng khi cần debug code bằng IntelliJ hoặc
+hot reload. Hai cách dùng chung các cổng 3000, 3001, 8080, 8025: dừng cách này trước khi chạy cách kia.
+
+### 2.0 Cả hệ thống bằng một lệnh (khuyến nghị)
+
+**Cần có:** Docker Desktop, cấp cho Docker **ít nhất 8 GB RAM** (Settings → Resources; máy nên có 16 GB), khoảng
+25 GB đĩa trống cho image và cache build, `git`, `curl`, OpenSSL. Chạy trong thư mục `pavex-backend`.
+
+| Lệnh | Làm gì |
+|---|---|
+| `./pavex up` | Sinh mật khẩu và khoá JWT nếu chưa có (`deploy/secrets/`), build những image đã thay đổi, chạy mọi container, chờ tất cả sẵn sàng, nạp dữ liệu seed-mini nếu database còn trống, rồi in địa chỉ và tài khoản |
+| `./pavex down` | Dừng và xoá container. **Dữ liệu giữ nguyên** (volume Docker) |
+| `./pavex reset` | Hỏi xác nhận, xoá **toàn bộ** dữ liệu (database, ảnh MinIO, hàng đợi), chạy lại từ đầu với dữ liệu seed mới (`--yes` để bỏ câu hỏi) |
+| `./pavex logs [service…]` | Theo dõi log, ví dụ `./pavex logs auth-service client-portal`; không có tên thì xem tất cả |
+| `./pavex ps` | Trạng thái từng container (healthy, đang khởi động, đã dừng) |
+| `./pavex compose <lệnh>` | Lệnh `docker compose` bất kỳ trên stack này, ví dụ `./pavex compose restart billing-service` |
+
+**Lần chạy đầu lâu (khoảng 1 giờ trên MacBook Apple Silicon)**, chủ yếu do app hiện trường: tải image Android SDK
+vài GB (~25 phút), cài SDK/NDK (~7 phút), rồi build APK Android trong môi trường giả lập x86_64 (~20 phút, vì công cụ
+build Android chỉ có bản x86_64). 12 image Java và hai portal mất thêm khoảng 3–10 phút tuỳ dependency đã có sẵn hay
+chưa. Những lần sau chỉ build lại phần thay đổi: không đổi gì thì `./pavex up` mất 2–3 phút (chờ các service Java),
+code app hiện trường đổi thì thêm ~25 phút cho APK. Các image được build lần lượt từng nhóm nhỏ
+(`PAVEX_BUILD_PARALLEL`, mặc định 3) vì build tất cả cùng lúc không đủ 8 GB RAM.
+
+| Ứng dụng | Địa chỉ |
+|---|---|
+| Client portal | http://localhost:3000 |
+| Management portal | http://localhost:3001 |
+| App hiện trường, bản web | http://localhost:3002 |
+| App hiện trường, tải APK | `http://<IP của máy trong mạng Wi-Fi>:3002/download/` (mở bằng điện thoại cùng Wi-Fi; `./pavex up` in sẵn địa chỉ) |
+| API Gateway, Swagger | http://localhost:8080, http://localhost:8080/swagger-ui.html |
+| Email (Mailpit) | http://localhost:8025: mọi email xác thực, quên mật khẩu, mời nhân viên |
+| RabbitMQ, MinIO | http://localhost:15672 (user `pavex`), http://localhost:9001 (user `pavex`); mật khẩu trong `deploy/secrets/values/RABBITMQ_PASSWORD`, `MINIO_SECRET_KEY` |
+| PostgreSQL | `localhost:15432`, user `postgres`, mật khẩu `deploy/secrets/values/POSTGRES_PASSWORD`; database `pavex_auth`, `pavex_identity`, … |
+
+**Tài khoản:** dữ liệu seed-mini (mục 2.5) được nạp tự động ở lần chạy đầu và sau mỗi `./pavex reset`: mọi tài khoản
+`@pavex.test` đăng nhập bằng `Pavex2026!`. Thêm `admin@pavex.com` với mật khẩu trong
+`deploy/secrets/values/PAVEX_BOOTSTRAPADMIN_PASSWORD`. Bảng giá demo `DEMO-2026-08` có sẵn để tạo đơn.
+
+**App hiện trường trên điện thoại:** APK được build để gọi Gateway ở `http://<IP của máy>:8080`. `./pavex up` tự tìm
+IP của máy trong mạng hiện tại; đổi mạng Wi-Fi thì chạy lại `./pavex up` để build lại APK với IP mới, hoặc đặt
+`PAVEX_LAN_IP` trong `deploy/.env.local`. Điện thoại phải cùng mạng và tường lửa macOS phải cho Docker nhận kết nối.
+
+**Sau `git pull`** (repo này): chạy lại `./pavex up`. Hai portal và app hiện trường được build từ nhánh `develop` trên
+GitHub (`https://github.com/baophnc/…`), nên `./pavex up` cũng lấy bản mới nhất của chúng. Migration database tự chạy
+khi service khởi động.
+
+**Cấu hình riêng của máy:** tạo `deploy/.env.local` (không commit), ghi đè giá trị trong `deploy/local.env`:
+
+```dotenv
+# Build từ thư mục local đang sửa thay cho GitHub (đường dẫn tuyệt đối)
+CLIENT_PORTAL_SOURCE=/Users/ban/code/pavex-client-portal-env
+MANAGEMENT_PORTAL_SOURCE=/Users/ban/code/pavex-management-portal
+FIELD_APP_SOURCE=/Users/ban/code/pavex-warehouse
+# Cổng khác nếu bị trùng
+MANAGEMENT_PORTAL_PORT=3011
+# Email thật thay cho Mailpit, đăng nhập Google
+MAIL_HOST=smtp.gmail.com
+MAIL_PORT=587
+MAIL_SMTP_AUTH=true
+MAIL_STARTTLS=true
+MAIL_USERNAME=ban@gmail.com
+MAIL_PASSWORD=app-password-16-ky-tu
+MAIL_FROM=ban@gmail.com
+GOOGLE_CLIENT_ID=xxxxxxxxxxxx-xxxxxxxxxxxxxxxx.apps.googleusercontent.com
+```
+
+**Bên trong:** `./pavex` chạy `docker compose` với `deploy/compose.yml` (đúng bộ dùng cho staging, mục 9.7) cộng
+`deploy/compose.local.yml` (chỉ phần khác ở máy dev: không Caddy và HTTPS, mở cổng trên máy, build hai portal và app từ
+Git, email vào Mailpit, Swagger và bảng giá demo bật, job nạp seed). Project Docker tên `pavex-local`, không đụng
+container của `./scripts/dev-up.sh` (`pavex-backend`) hay staging (`pavex-staging`). Giám sát và sao lưu tắt ở máy dev
+để đỡ RAM; bật bằng `COMPOSE_PROFILES=mailtest,monitoring ./pavex up` (Grafana khi đó không có cổng riêng).
+Khi chạy, stack dùng khoảng 5,5–6 GB RAM (đo trên máy dev: 12 service Java 300–490 MB mỗi service, PostgreSQL ~290 MB, MinIO ~170 MB, hai portal ~110 MB).
+
+| Hiện tượng | Cách xử lý |
+|---|---|
+| `Ports already in use: …` | Cách cũ đang chạy: `./scripts/dev-down.sh` và dừng các `pnpm dev`; hoặc đổi cổng trong `deploy/.env.local` |
+| Một service mãi "starting" hoặc khởi động lại liên tục | `./pavex logs <service>`; thường do Docker thiếu RAM (tăng lên 8 GB) |
+| `Loading the seed data failed` | `./pavex logs seed`; sửa xong chạy `./pavex reset` |
+| Service báo `password authentication failed` sau khi xoá `deploy/secrets/` hoặc chạy từ một bản checkout khác | Mật khẩu được ghi vào volume database ở lần chạy đầu; secret mới không khớp volume cũ. Chép lại `deploy/secrets/` cũ, hoặc `./pavex reset` (mất dữ liệu local) |
+| Build `field-app` báo không thấy `Dockerfile` | Nhánh `develop` của `pavex-warehouse` trên GitHub chưa có Dockerfile: đặt `FIELD_APP_SOURCE=<thư mục pavex-warehouse trên máy>` trong `deploy/.env.local` |
+| Điện thoại không mở được trang tải APK | Kiểm tra cùng Wi-Fi, IP in ra bởi `./pavex up`, tường lửa macOS (System Settings → Network → Firewall) |
+
+
 ### 2.1 Bản đồ cổng
 
 **Hạ tầng (Docker Compose trong `pavex-backend/compose.yml`):**
@@ -171,7 +257,7 @@ cp .env.example .env               # cấu hình riêng của máy (Google, emai
 bash scripts/check-setup.sh        # khi chạy không lên: kiểm tra khoá, container và module
 ```
 
-#### 2.3.2 Chạy toàn bộ bằng một lệnh (khuyến nghị)
+#### 2.3.2 Chạy toàn bộ backend bằng script
 
 ```bash
 ./scripts/dev-up.sh
@@ -259,7 +345,9 @@ công khai chỉ còn được bảo vệ bằng ô bẫy bot và giới hạn 5
 
 ### 2.4 Chạy frontend
 
+Chỉ cần khi sửa code frontend (hot reload); để dùng thì `./pavex up` đã chạy sẵn cả hai portal và app (mục 2.0).
 **Chạy backend trước** và đợi Gateway (8080) healthy. Frontend chỉ gọi Gateway, không gọi thẳng service nào.
+Nếu đang chạy `./pavex`, dừng container của portal đang sửa để nhả cổng: `./pavex compose stop client-portal`.
 
 #### 2.4.1 Client portal (khách hàng, shop)
 
@@ -303,6 +391,9 @@ flutter analyze && flutter test  # app hiện trường
 ```
 
 #### 2.4.4 App hiện trường (Flutter)
+
+Không cần Flutter để dùng app: `./pavex up` (mục 2.0) chạy sẵn bản web ở http://localhost:3002 và trang tải APK
+Android ở `http://<IP máy>:3002/download/`. Các bước dưới đây chỉ cần khi sửa code app.
 
 ```bash
 cd ~/Documents/GitHub/pavex-warehouse
@@ -3371,6 +3462,7 @@ container sao lưu. Mọi thứ khác nhau giữa các server (domain, email, SM
 | `deploy/postgres/init-databases.sh` | Mỗi service một database và một login riêng |
 | `deploy/prometheus/`, `deploy/alertmanager/`, `deploy/grafana/` | Thu số liệu, luật cảnh báo, dashboard |
 | `deploy/backup/`, `deploy/restore.sh` | Sao lưu hằng đêm và khôi phục |
+| `deploy/compose.local.yml`, `deploy/local.env`, `deploy/local/seed.sh`, `./pavex` | Không dùng cho staging: chạy cả hệ thống trên máy dev bằng cùng `compose.yml` (mục 2.0) |
 
 **Các lựa chọn và lý do:**
 

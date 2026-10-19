@@ -47,6 +47,8 @@ spring:
             add-to-simple-url-handler-mapping: true
             cors-configurations:
               '[/**]':
+                # One origin or several separated by commas (Spring splits them), e.g. the portals and the
+                # field app's web build. Tested in CorsAllowedOriginsTest.
                 allowed-origins:
                   - ${GATEWAY_ALLOWED_ORIGIN:http://localhost:3000}
                 allowed-methods:
